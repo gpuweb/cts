@@ -32,7 +32,7 @@
 </script>
 <script type=module src=/webgpu/common/runtime/wpt.js></script>
 
-<!-- Prefix: "?q="; 22564 variants generated from 2817 tests in 611 files -->
+<!-- Prefix: "?q="; 22571 variants generated from 2817 tests in 611 files -->
 <meta name=variant content='?q=webgpu:api,operation,adapter,info:adapter_info:*'><!-- estimated: 32.901 ms -->
 <meta name=variant content='?q=webgpu:api,operation,adapter,requestAdapter:requestAdapter:*'><!-- estimated: 1368.747 ms -->
 <meta name=variant content='?q=webgpu:api,operation,adapter,requestAdapter:requestAdapter_no_parameters:*'><!-- estimated: 384.601 ms -->
@@ -15725,8 +15725,15 @@
 <meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,extractBits:values:stage="override";type="vec2%3Cu32%3E"'><!-- estimated: undefined ms -->
 <meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,extractBits:values:stage="override";type="vec3%3Cu32%3E"'><!-- estimated: undefined ms -->
 <meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,extractBits:values:stage="override";type="vec4%3Cu32%3E"'><!-- estimated: undefined ms -->
-<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,extractBits:count_offset:stage="constant";*'><!-- estimated: 1973.595 ms -->
-<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,extractBits:count_offset:stage="override";*'><!-- estimated: 1973.595 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,extractBits:count_offset:offsetStage="constant";countStage="constant";*'><!-- estimated: 1973.595 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,extractBits:count_offset:offsetStage="constant";countStage="override";*'><!-- estimated: 1973.595 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,extractBits:count_offset:offsetStage="constant";countStage="runtime";*'><!-- estimated: 1973.595 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,extractBits:count_offset:offsetStage="override";countStage="constant";*'><!-- estimated: 1973.595 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,extractBits:count_offset:offsetStage="override";countStage="override";*'><!-- estimated: 1973.595 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,extractBits:count_offset:offsetStage="override";countStage="runtime";*'><!-- estimated: 1973.595 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,extractBits:count_offset:offsetStage="runtime";countStage="constant";*'><!-- estimated: 1973.595 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,extractBits:count_offset:offsetStage="runtime";countStage="override";*'><!-- estimated: 1973.595 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,extractBits:count_offset:offsetStage="runtime";countStage="runtime";*'><!-- estimated: 1973.595 ms -->
 <meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,extractBits:typed_arguments:input="u32"'><!-- estimated: undefined ms -->
 <meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,extractBits:typed_arguments:input="abstract-float"'><!-- estimated: undefined ms -->
 <meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,extractBits:typed_arguments:input="f32"'><!-- estimated: undefined ms -->
