@@ -48,7 +48,11 @@ combine('depthStencilFormat', [
 'depth32float',
 '']
 ).
-combine('hasColor', [false, true])
+combine('hasColor', [false, true]).
+unless(({ depthStencilFormat, hasColor }) => {
+  // Render pipeline needs at least one attachement
+  return hasColor === false && depthStencilFormat === '';
+})
 ).
 fn((t) => {
   const { isAsync, depthStencilFormat, hasColor } = t.params;

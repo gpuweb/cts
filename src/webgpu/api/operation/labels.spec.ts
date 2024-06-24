@@ -106,6 +106,14 @@ const kTestFunctions: { [name: string]: TestFunction } = {
         module,
         entryPoint: 'foo',
       },
+      // Specify a color attachment so we have at least one render target. Otherwise, details here
+      // are not relevant to this test.
+      fragment: {
+        targets: [{ format: 'rgba8unorm' }],
+        module: t.device.createShaderModule({
+          code: `@fragment fn main() -> @location(0) vec4f { return vec4f(0); }`,
+        }),
+      },
     });
     t.expect(renderPipeline.label === label);
   },
@@ -142,6 +150,14 @@ const kTestFunctions: { [name: string]: TestFunction } = {
       vertex: {
         module,
         entryPoint: 'foo',
+      },
+      // Specify a color attachment so we have at least one render target. Otherwise, details here
+      // are not relevant to this test.
+      fragment: {
+        targets: [{ format: 'rgba8unorm' }],
+        module: t.device.createShaderModule({
+          code: `@fragment fn main() -> @location(0) vec4f { return vec4f(0); }`,
+        }),
       },
     });
     t.expect(renderPipeline.label === label);
