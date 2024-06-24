@@ -199,21 +199,25 @@ g.test('duplicates')
   })
   .fn(t => {
     const p1 =
-      t.params.first === 'p1' ? '@builtin(sample_mask)' : '@location(1) @interpolate(flat)';
+      t.params.first === 'p1' ? '@builtin(sample_mask)' : '@location(1) @interpolate(perspective)';
     const p2 =
-      t.params.second === 'p2' ? '@builtin(sample_mask)' : '@location(2) @interpolate(flat)';
+      t.params.second === 'p2' ? '@builtin(sample_mask)' : '@location(2) @interpolate(perspective)';
     const s1a =
-      t.params.first === 's1a' ? '@builtin(sample_mask)' : '@location(3) @interpolate(flat)';
+      t.params.first === 's1a' ? '@builtin(sample_mask)' : '@location(3) @interpolate(perspective)';
     const s1b =
-      t.params.second === 's1b' ? '@builtin(sample_mask)' : '@location(4) @interpolate(flat)';
+      t.params.second === 's1b'
+        ? '@builtin(sample_mask)'
+        : '@location(4) @interpolate(perspective)';
     const s2a =
-      t.params.first === 's2a' ? '@builtin(sample_mask)' : '@location(5) @interpolate(flat)';
+      t.params.first === 's2a' ? '@builtin(sample_mask)' : '@location(5) @interpolate(perspective)';
     const s2b =
-      t.params.second === 's2b' ? '@builtin(sample_mask)' : '@location(6) @interpolate(flat)';
+      t.params.second === 's2b'
+        ? '@builtin(sample_mask)'
+        : '@location(6) @interpolate(perspective)';
     const ra =
-      t.params.first === 'ra' ? '@builtin(sample_mask)' : '@location(1) @interpolate(flat)';
+      t.params.first === 'ra' ? '@builtin(sample_mask)' : '@location(1) @interpolate(perspective)';
     const rb =
-      t.params.second === 'rb' ? '@builtin(sample_mask)' : '@location(2) @interpolate(flat)';
+      t.params.second === 'rb' ? '@builtin(sample_mask)' : '@location(2) @interpolate(perspective)';
     const code = `
     struct S1 {
       ${s1a} a : u32,

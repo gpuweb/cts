@@ -544,7 +544,7 @@ export class BufferSyncTest extends GPUTest {
       vertex: `
       struct VertexOutput {
         @builtin(position) position : vec4<f32>,
-        @location(0) @interpolate(flat) data : u32,
+        @location(0) @interpolate(flat, either) data : u32,
       };
 
       @vertex fn vert_main(@location(0) input: u32) -> VertexOutput {
@@ -561,7 +561,7 @@ export class BufferSyncTest extends GPUTest {
 
       @group(0) @binding(0) var<storage, read_write> data : Data;
 
-      @fragment fn frag_main(@location(0) @interpolate(flat) input : u32) -> @location(0) vec4<f32> {
+      @fragment fn frag_main(@location(0) @interpolate(flat, either) input : u32) -> @location(0) vec4<f32> {
         data.a = input;
         return vec4<f32>();  // result does't matter
       }

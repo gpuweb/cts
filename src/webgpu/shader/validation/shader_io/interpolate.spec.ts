@@ -11,7 +11,7 @@ export const g = makeTestGroup(ShaderValidationTest);
 // List of valid interpolation attributes.
 const kValidCompatInterpolationAttributes = new Set([
   '',
-  '@interpolate(flat)',
+  '@interpolate(flat, either)',
   '@interpolate(perspective)',
   '@interpolate(perspective, center)',
   '@interpolate(perspective, centroid)',
@@ -19,6 +19,8 @@ const kValidCompatInterpolationAttributes = new Set([
 const kValidInterpolationAttributes = new Set([
   ...kValidCompatInterpolationAttributes,
   '@interpolate(flat)',
+  '@interpolate(flat, first)',
+  '@interpolate(flat, either)',
   '@interpolate(perspective)',
   '@interpolate(perspective, center)',
   '@interpolate(perspective, centroid)',
@@ -44,6 +46,8 @@ g.test('type_and_sampling')
         'center', // Invalid as first param
         'centroid', // Invalid as first param
         'sample', // Invalid as first param
+        'first', // Invalid as first param
+        'either', // Invalid as first param
       ] as const)
       // vertex output must include a position builtin, so must use a struct
       .filter(t => !(t.stage === 'vertex' && t.use_struct === false))
@@ -52,6 +56,8 @@ g.test('type_and_sampling')
         'center',
         'centroid',
         'sample',
+        'first',
+        'either',
         'flat', // Invalid as second param
         'perspective', // Invalid as second param
         'linear', // Invalid as second param
@@ -153,7 +159,7 @@ g.test('duplicate')
 
 const kValidationTests = {
   valid: {
-    src: `@interpolate(flat)`,
+    src: `@interpolate(perspective)`,
     pass: true,
   },
   no_space: {
@@ -169,11 +175,11 @@ const kValidationTests = {
     pass: true,
   },
   newline: {
-    src: '@\ninterpolate(flat)',
+    src: '@\ninterpolate(perspective)',
     pass: true,
   },
   comment: {
-    src: `@/* comment */interpolate(flat)`,
+    src: `@/* comment */interpolate(perspective)`,
     pass: true,
   },
 
@@ -182,7 +188,7 @@ const kValidationTests = {
     pass: false,
   },
   missing_left_paren: {
-    src: `@interpolate flat)`,
+    src: `@interpolate perspective)`,
     pass: false,
   },
   missing_value_and_left_paren: {
@@ -190,7 +196,7 @@ const kValidationTests = {
     pass: false,
   },
   missing_right_paren: {
-    src: `@interpolate(flat`,
+    src: `@interpolate(perspective`,
     pass: false,
   },
   missing_parens: {
