@@ -19,6 +19,20 @@ g.test('basic')
     t.doCreateRenderPipelineTest(isAsync, true, descriptor);
   });
 
+g.test('no_attachment')
+  .desc(`Test that createRenderPipeline fails without any attachment.`)
+  .params(u => u.combine('isAsync', [false, true]))
+  .fn(t => {
+    const { isAsync } = t.params;
+
+    const descriptor = t.getDescriptor({
+      noFragment: true,
+      depthStencil: undefined,
+    });
+
+    t.doCreateRenderPipelineTest(isAsync, false, descriptor);
+  });
+
 g.test('vertex_state_only')
   .desc(
     `Tests creating vertex-state-only render pipeline. A vertex-only render pipeline has no fragment
