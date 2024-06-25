@@ -5140,6 +5140,14 @@ export const listing = [
       "shader",
       "validation",
       "extension",
+      "dual_source_blending"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "extension",
       "pointer_composite_access"
     ]
   },
