@@ -249,7 +249,7 @@ g.test('query_set_reflection_attributes')
     const { descriptor } = t.params;
 
     t.expectValidationError(() => {
-      const querySet = t.device.createQuerySet(descriptor);
+      const querySet = t.createQuerySetTracked(descriptor);
 
       t.expect(querySet.type === descriptor.type);
       t.expect(querySet.count === descriptor.count);
@@ -270,9 +270,9 @@ g.test('query_set_creation_from_reflection')
   .fn(t => {
     const { descriptor } = t.params;
 
-    const querySet = t.device.createQuerySet(descriptor);
+    const querySet = t.createQuerySetTracked(descriptor);
     t.trackForCleanup(querySet);
-    const querySet2 = t.device.createQuerySet(querySet);
+    const querySet2 = t.createQuerySetTracked(querySet);
     t.trackForCleanup(querySet2);
 
     const querySetAsObject = querySet as unknown as { [k: string]: unknown };

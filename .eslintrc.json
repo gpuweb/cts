@@ -36,6 +36,15 @@
           { "terms": ["todo", "fixme", "xxx"], "location": "anywhere" }
         ],
 
+        "no-restricted-syntax": [
+          "warn",
+          {
+            "message": "createQuerySet must be immediately tracked using trackForCleanup (or use createQuerySetTracked).",
+            // This selector disallows any call to createQuerySet that is not directly inside a trackForCleanup call.
+            "selector": ":not(CallExpression[callee.property.name=\"trackForCleanup\"]) > CallExpression > MemberExpression > Identifier[name=\"createQuerySet\"]"
+          }
+        ],
+
         // Plugin: gpuweb-cts
         "gpuweb-cts/string-trailing-space": "warn",
         "gpuweb-cts/string-tabs": "warn",
