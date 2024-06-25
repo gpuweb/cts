@@ -108,7 +108,7 @@ g.test('require_location')
     }
 
     const code = generateShader({
-      attribute: t.params.attribute + `@interpolate(flat)`,
+      attribute: t.params.attribute + `@interpolate(flat, either)`,
       type: 'vec4<f32>',
       stage: t.params.stage,
       io: t.params.stage === 'fragment' ? 'in' : 'out',
@@ -140,7 +140,10 @@ g.test('integral_types')
       use_struct: t.params.use_struct,
     });
 
-    t.expectCompileResult(t.params.attribute === '@interpolate(flat)', code);
+    const expectSuccess = t.isCompatibility
+      ? t.params.attribute === '@interpolate(flat, either)'
+      : t.params.attribute.startsWith('@interpolate(flat');
+    t.expectCompileResult(expectSuccess, code);
   });
 
 g.test('duplicate')
@@ -148,7 +151,7 @@ g.test('duplicate')
   .params(u => u.combine('attr', ['', '@interpolate(flat)'] as const))
   .fn(t => {
     const code = generateShader({
-      attribute: `@location(0) @interpolate(flat) ${t.params.attr}`,
+      attribute: `@location(0) @interpolate(flat, either) ${t.params.attr}`,
       type: 'vec4<f32>',
       stage: 'fragment',
       io: 'in',
@@ -157,7 +160,7 @@ g.test('duplicate')
     t.expectCompileResult(t.params.attr === '', code);
   });
 
-const kValidationTests = {
+const kValidationTests: { [key: string]: { src: string; pass: boolean; compatPass?: boolean } } = {
   valid: {
     src: `@interpolate(perspective)`,
     pass: true,
@@ -169,6 +172,7 @@ const kValidationTests = {
   trailing_comma_one_arg: {
     src: `@interpolate(flat,)`,
     pass: true,
+    compatPass: false,
   },
   trailing_comma_two_arg: {
     src: `@interpolate(perspective, center,)`,
@@ -226,5 +230,9 @@ g.test('interpolation_validation')
     @builtin(position) vec4<f32> {
   return vec4f(0);
 }`;
-    t.expectCompileResult(kValidationTests[t.params.attr].pass, code);
+    const expectSuccess =
+      kValidationTests[t.params.attr].pass &&
+      (t.isCompatibility ? kValidationTests[t.params.attr].compatPass ?? true : true);
+
+    t.expectCompileResult(expectSuccess, code);
   });
