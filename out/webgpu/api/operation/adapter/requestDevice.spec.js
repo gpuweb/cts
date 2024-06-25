@@ -433,4 +433,47 @@ fn(async (t) => {
     t.shouldReject('OperationError', adapter.requestDevice({ requiredLimits }));
   }
 });
+
+g.test('always_returns_device').
+desc(
+  `
+    Test that if requestAdapter returns an adapter then requestDevice must return a device.
+
+    requestAdapter -> null = ok
+    requestAdapter -> adapter, requestDevice -> device (lost or not) = ok
+    requestAdapter -> adapter, requestDevice = null = Invalid: not spec compliant.
+
+    Note: requestDevice can throw for invalid parameters like requesting features not
+    in the adapter, reqesting limits not in the adapter, requesting limits larger than
+    the maximum for the adapter. Otherwise it does not throw.
+
+    Note: This is a regression test for a Chrome bug crbug.com/349062459
+    Checking that a requestDevice always return a device is checked in other tests above
+    but those tests have 'compatibilityMode: true' set for them by the API that getGPU
+    returns when the test suite is run in compatibility mode.
+
+    This test tries to force both compat and core separately so both code paths are
+    tested in the same browser configuration.
+  `
+).
+params((u) => u.combine('compatibilityMode', [false, true])).
+fn(async (t) => {
+  const { compatibilityMode } = t.params;
+  const gpu = getGPU(t.rec);
+  // MAINTENANCE_TODO: Remove this cast compatibilityMode is added.
+  const adapter = await gpu.requestAdapter({ compatibilityMode });
+  if (adapter) {
+    if (!compatibilityMode) {
+      // This check is to make sure something lower-level is not forcing compatibility mode
+      // MAINTENANCE_TODO: Remove this cast compatibilityMode is added.
+      t.expect(
+        !adapter.isCompatibilityMode,
+        'must not be compatibility mode'
+      );
+    }
+    const device = await adapter.requestDevice();
+    t.expect(device instanceof GPUDevice, 'requestDevice must return a device or throw');
+    device.destroy();
+  }
+});
 //# sourceMappingURL=requestDevice.spec.js.map
