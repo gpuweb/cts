@@ -182,6 +182,9 @@ fn indexToCoord(id : u32) -> vec3<${type}> {
 
 // Mutates 'coords' to produce an out-of-bounds value.
 // 1D workgroups are launched so 'gid.x' is the linear id.
+//
+// This code is only executed for odd global ids (gid.x % 2 == 1).
+// All the values are chosen such they will further divide the odd invocations.
 function outOfBoundsValue(dim: GPUTextureDimension, type: string): string {
   switch (dim) {
     case '1d': {
@@ -236,6 +239,9 @@ function outOfBoundsValue(dim: GPUTextureDimension, type: string): string {
   return ``;
 }
 
+// Returns the number of texels for a given mip level.
+//
+// 1D textures cannot have multiple mip levels so always return the input number of texels.
 function getMipTexels(numTexels: number, dim: GPUTextureDimension, mip: number): number {
   let texels = numTexels;
   if (mip === 0) {
@@ -274,6 +280,15 @@ g.test('out_of_bounds')
   )
   .fn(t => {
     const texel_format = 'r32uint';
+    // Chosen such that the even at higher mip counts,
+    // the texture is laid out without padding.
+    // This simplifies the checking code below.
+    //
+    // Mip level | 1d   | 2d       | 3d
+    // -----------------------------------------
+    // 0         | 4096 | 256 x 16 | 256 x 8 x 2
+    // 1         | -    | 128 x 8  | 128 x 4 x 1
+    // 2         | -    | 64  x 4  | -
     const num_texels = 4096;
     const view_texels = getMipTexels(num_texels, t.params.dim, t.params.mip);
 
