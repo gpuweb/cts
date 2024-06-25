@@ -32,7 +32,7 @@
 </script>
 <script type=module src=/webgpu/common/runtime/wpt.js></script>
 
-<!-- Prefix: "?q="; 22647 variants generated from 2821 tests in 612 files -->
+<!-- Prefix: "?q="; 22654 variants generated from 2821 tests in 612 files -->
 <meta name=variant content='?q=webgpu:api,operation,adapter,info:adapter_info:*'><!-- estimated: 32.901 ms -->
 <meta name=variant content='?q=webgpu:api,operation,adapter,requestAdapter:requestAdapter:*'><!-- estimated: 1368.747 ms -->
 <meta name=variant content='?q=webgpu:api,operation,adapter,requestAdapter:requestAdapter_no_parameters:*'><!-- estimated: 384.601 ms -->
@@ -16055,8 +16055,15 @@
 <meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,insertBits:mismatched:arg0="vec4%3Cu32%3E";arg1="vec2%3Cu32%3E";*'><!-- estimated: 659.718 ms -->
 <meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,insertBits:mismatched:arg0="vec4%3Cu32%3E";arg1="vec3%3Cu32%3E";*'><!-- estimated: 659.718 ms -->
 <meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,insertBits:mismatched:arg0="vec4%3Cu32%3E";arg1="vec4%3Cu32%3E";*'><!-- estimated: 659.718 ms -->
-<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,insertBits:count_offset:stage="constant"'><!-- estimated: undefined ms -->
-<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,insertBits:count_offset:stage="override"'><!-- estimated: undefined ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,insertBits:count_offset:offsetStage="constant";countStage="constant"'><!-- estimated: undefined ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,insertBits:count_offset:offsetStage="constant";countStage="override"'><!-- estimated: undefined ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,insertBits:count_offset:offsetStage="constant";countStage="runtime"'><!-- estimated: undefined ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,insertBits:count_offset:offsetStage="override";countStage="constant"'><!-- estimated: undefined ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,insertBits:count_offset:offsetStage="override";countStage="override"'><!-- estimated: undefined ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,insertBits:count_offset:offsetStage="override";countStage="runtime"'><!-- estimated: undefined ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,insertBits:count_offset:offsetStage="runtime";countStage="constant"'><!-- estimated: undefined ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,insertBits:count_offset:offsetStage="runtime";countStage="override"'><!-- estimated: undefined ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,insertBits:count_offset:offsetStage="runtime";countStage="runtime"'><!-- estimated: undefined ms -->
 <meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,insertBits:typed_arguments:input="u32"'><!-- estimated: undefined ms -->
 <meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,insertBits:typed_arguments:input="abstract-float"'><!-- estimated: undefined ms -->
 <meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,insertBits:typed_arguments:input="f32"'><!-- estimated: undefined ms -->
