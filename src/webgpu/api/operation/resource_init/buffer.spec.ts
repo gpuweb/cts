@@ -408,7 +408,7 @@ remaining part of it will be initialized to 0.`
     });
     t.trackForCleanup(dstBuffer);
 
-    const querySet = t.device.createQuerySet({ type: 'occlusion', count: 1 });
+    const querySet = t.createQuerySetTracked({ type: 'occlusion', count: 1 });
     const encoder = t.device.createCommandEncoder();
     encoder.resolveQuerySet(querySet, 0, 1, dstBuffer, bufferOffset);
     t.queue.submit([encoder.finish()]);

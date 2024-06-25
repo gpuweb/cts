@@ -5,7 +5,7 @@ export function createQuerySetWithType(
   type: GPUQueryType,
   count: GPUSize32
 ): GPUQuerySet {
-  return t.device.createQuerySet({
+  return t.createQuerySetTracked({
     type,
     count,
   });

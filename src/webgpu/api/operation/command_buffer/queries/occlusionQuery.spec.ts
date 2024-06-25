@@ -259,9 +259,6 @@ class OcclusionQueryTest extends GPUTest {
   createTexture(desc: GPUTextureDescriptor) {
     return this.trackForCleanup(this.device.createTexture(desc));
   }
-  createQuerySet(desc: GPUQuerySetDescriptor) {
-    return this.trackForCleanup(this.device.createQuerySet(desc));
-  }
   createVertexBuffer(data: TypedArrayBufferView) {
     return this.makeBufferWithContents(data, GPUBufferUsage.VERTEX);
   }
@@ -390,7 +387,7 @@ class OcclusionQueryTest extends GPUTest {
     });
 
     const querySetOffset = params?.querySetOffset === 'non-zero' ? 7 : 0;
-    const occlusionQuerySet = this.createQuerySet({
+    const occlusionQuerySet = this.createQuerySetTracked({
       type: 'occlusion',
       count: numQueries + querySetOffset,
     });
