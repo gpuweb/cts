@@ -90,14 +90,14 @@ export class ValidationTest extends GPUTest {
 
     switch (state) {
       case 'valid':
-        return this.trackForCleanup(this.device.createQuerySet(descriptor));
+        return this.createQuerySetTracked(descriptor);
       case 'invalid': {
         // Make the queryset invalid because of the count out of bounds.
         descriptor.count = kMaxQueryCount + 1;
-        return this.expectGPUError('validation', () => this.device.createQuerySet(descriptor));
+        return this.expectGPUError('validation', () => this.createQuerySetTracked(descriptor));
       }
       case 'destroyed': {
-        const queryset = this.device.createQuerySet(descriptor);
+        const queryset = this.createQuerySetTracked(descriptor);
         queryset.destroy();
         return queryset;
       }

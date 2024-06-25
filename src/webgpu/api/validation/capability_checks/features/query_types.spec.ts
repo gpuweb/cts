@@ -39,7 +39,7 @@ g.test('createQuerySet')
     const shouldException = type === 'timestamp' && !featureContainsTimestampQuery;
 
     t.shouldThrow(shouldException ? 'TypeError' : false, () => {
-      t.device.createQuerySet({ type, count });
+      t.createQuerySetTracked({ type, count });
     });
   });
 
@@ -66,7 +66,7 @@ g.test('timestamp')
   .fn(t => {
     const { featureContainsTimestampQuery } = t.params;
 
-    const querySet = t.device.createQuerySet({
+    const querySet = t.createQuerySetTracked({
       type: featureContainsTimestampQuery ? 'timestamp' : 'occlusion',
       count: 2,
     });
