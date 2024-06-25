@@ -32,7 +32,7 @@
 </script>
 <script type=module src=/webgpu/common/runtime/wpt.js></script>
 
-<!-- Prefix: "?q="; 22654 variants generated from 2821 tests in 612 files -->
+<!-- Prefix: "?q="; 22675 variants generated from 2823 tests in 612 files -->
 <meta name=variant content='?q=webgpu:api,operation,adapter,info:adapter_info:*'><!-- estimated: 32.901 ms -->
 <meta name=variant content='?q=webgpu:api,operation,adapter,requestAdapter:requestAdapter:*'><!-- estimated: 1368.747 ms -->
 <meta name=variant content='?q=webgpu:api,operation,adapter,requestAdapter:requestAdapter_no_parameters:*'><!-- estimated: 384.601 ms -->
@@ -8741,6 +8741,27 @@
 <meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,textureStore:store_3d_coords:format="rgba32uint";*'><!-- estimated: 967.356 ms -->
 <meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,textureStore:store_3d_coords:format="rgba32sint";*'><!-- estimated: 967.356 ms -->
 <meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,textureStore:store_3d_coords:format="rgba32float";*'><!-- estimated: 967.356 ms -->
+<meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,textureStore:out_of_bounds:dim="1d";*'><!-- estimated: 1884.836 ms -->
+<meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,textureStore:out_of_bounds:dim="2d";coords="i32";mipCount=1;*'><!-- estimated: 942.418 ms -->
+<meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,textureStore:out_of_bounds:dim="2d";coords="i32";mipCount=2;*'><!-- estimated: 1884.836 ms -->
+<meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,textureStore:out_of_bounds:dim="2d";coords="i32";mipCount=3;mip=0;*'><!-- estimated: 942.418 ms -->
+<meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,textureStore:out_of_bounds:dim="2d";coords="i32";mipCount=3;mip=1;*'><!-- estimated: 942.418 ms -->
+<meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,textureStore:out_of_bounds:dim="2d";coords="i32";mipCount=3;mip=2;*'><!-- estimated: 942.418 ms -->
+<meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,textureStore:out_of_bounds:dim="2d";coords="u32";mipCount=1;*'><!-- estimated: 942.418 ms -->
+<meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,textureStore:out_of_bounds:dim="2d";coords="u32";mipCount=2;*'><!-- estimated: 1884.836 ms -->
+<meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,textureStore:out_of_bounds:dim="2d";coords="u32";mipCount=3;mip=0;*'><!-- estimated: 942.418 ms -->
+<meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,textureStore:out_of_bounds:dim="2d";coords="u32";mipCount=3;mip=1;*'><!-- estimated: 942.418 ms -->
+<meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,textureStore:out_of_bounds:dim="2d";coords="u32";mipCount=3;mip=2;*'><!-- estimated: 942.418 ms -->
+<meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,textureStore:out_of_bounds:dim="3d";coords="i32";mipCount=1;*'><!-- estimated: 942.418 ms -->
+<meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,textureStore:out_of_bounds:dim="3d";coords="i32";mipCount=2;*'><!-- estimated: 1884.836 ms -->
+<meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,textureStore:out_of_bounds:dim="3d";coords="u32";mipCount=1;*'><!-- estimated: 942.418 ms -->
+<meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,textureStore:out_of_bounds:dim="3d";coords="u32";mipCount=2;*'><!-- estimated: 1884.836 ms -->
+<meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,textureStore:out_of_bounds_array:baseLevel=0;arrayLevels=1;*'><!-- estimated: 1219.130 ms -->
+<meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,textureStore:out_of_bounds_array:baseLevel=0;arrayLevels=2;*'><!-- estimated: 1219.130 ms -->
+<meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,textureStore:out_of_bounds_array:baseLevel=0;arrayLevels=3;*'><!-- estimated: 1219.130 ms -->
+<meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,textureStore:out_of_bounds_array:baseLevel=0;arrayLevels=4;*'><!-- estimated: 1219.130 ms -->
+<meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,textureStore:out_of_bounds_array:baseLevel=1;arrayLevels=2;*'><!-- estimated: 1219.130 ms -->
+<meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,textureStore:out_of_bounds_array:baseLevel=1;arrayLevels=3;*'><!-- estimated: 1219.130 ms -->
 <meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,transpose:abstract_float:inputSource="const";cols=2;rows=2'><!-- estimated: undefined ms -->
 <meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,transpose:abstract_float:inputSource="const";cols=2;rows=3'><!-- estimated: undefined ms -->
 <meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,transpose:abstract_float:inputSource="const";cols=2;rows=4'><!-- estimated: undefined ms -->
