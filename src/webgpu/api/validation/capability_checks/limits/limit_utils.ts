@@ -718,11 +718,19 @@ export class LimitTestsImpl extends GPUTestBase {
   }
 
   _createRenderPipelineDescriptor(module: GPUShaderModule): GPURenderPipelineDescriptor {
+    const { device } = this;
     return {
       layout: 'auto',
       vertex: {
         module,
         entryPoint: 'mainVS',
+      },
+      // Specify a color attachment so we have at least one render target.
+      fragment: {
+        targets: [{ format: 'rgba8unorm' }],
+        module: device.createShaderModule({
+          code: `@fragment fn main() -> @location(0) vec4f { return vec4f(0); }`,
+        }),
       },
     };
   }
