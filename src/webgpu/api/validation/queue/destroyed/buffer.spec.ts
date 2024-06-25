@@ -269,12 +269,10 @@ Tests that using a destroyed buffer referenced via resolveQuerySet fails
   .paramsSubcasesOnly(u => u.combine('destroyed', [false, true] as const))
   .fn(t => {
     const { destroyed } = t.params;
-    const querySet = t.trackForCleanup(
-      t.device.createQuerySet({
-        type: 'occlusion',
-        count: 1,
-      })
-    );
+    const querySet = t.createQuerySetTracked({
+      type: 'occlusion',
+      count: 1,
+    });
     const querySetBuffer = t.trackForCleanup(
       t.device.createBuffer({
         size: 8,

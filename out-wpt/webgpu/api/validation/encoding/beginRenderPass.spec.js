@@ -157,11 +157,12 @@ fn((t) => {
   const { mismatched } = t.params;
   const sourceDevice = mismatched ? t.mismatchedDevice : t.device;
 
-  const occlusionQuerySet = sourceDevice.createQuerySet({
-    type: 'occlusion',
-    count: 1
-  });
-  t.trackForCleanup(occlusionQuerySet);
+  const occlusionQuerySet = t.trackForCleanup(
+    sourceDevice.createQuerySet({
+      type: 'occlusion',
+      count: 1
+    })
+  );
 
   const encoder = t.createEncoder('render pass', { occlusionQuerySet });
   encoder.validateFinish(!mismatched);
@@ -182,10 +183,12 @@ fn((t) => {
   const { mismatched } = t.params;
   const sourceDevice = mismatched ? t.mismatchedDevice : t.device;
 
-  const timestampQuerySet = sourceDevice.createQuerySet({
-    type: 'timestamp',
-    count: 1
-  });
+  const timestampQuerySet = t.trackForCleanup(
+    sourceDevice.createQuerySet({
+      type: 'timestamp',
+      count: 1
+    })
+  );
 
   const timestampWrites = {
     querySet: timestampQuerySet,

@@ -1060,6 +1060,21 @@ export class GPUTestBase extends Fixture {
     }
   }
 
+  /** Create a GPUBuffer and track it for cleanup at the end of the test. */
+  createBufferTracked(descriptor) {
+    return this.trackForCleanup(this.device.createBuffer(descriptor));
+  }
+
+  /** Create a GPUTexture and track it for cleanup at the end of the test. */
+  createTextureTracked(descriptor) {
+    return this.trackForCleanup(this.device.createTexture(descriptor));
+  }
+
+  /** Create a GPUQuerySet and track it for cleanup at the end of the test. */
+  createQuerySetTracked(descriptor) {
+    return this.trackForCleanup(this.device.createQuerySet(descriptor));
+  }
+
   /**
    * Create a GPUBuffer with the specified contents and usage.
    *

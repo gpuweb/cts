@@ -177,7 +177,7 @@ const kTestFunctions: { [name: string]: TestFunction } = {
   },
 
   createQuerySet: (t: GPUTest, label: string) => {
-    const querySet = t.device.createQuerySet({
+    const querySet = t.createQuerySetTracked({
       label,
       type: 'occlusion',
       count: 1,

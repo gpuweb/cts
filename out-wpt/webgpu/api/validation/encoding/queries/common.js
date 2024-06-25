@@ -5,7 +5,7 @@ t,
 type,
 count)
 {
-  return t.device.createQuerySet({
+  return t.createQuerySetTracked({
     type,
     count
   });

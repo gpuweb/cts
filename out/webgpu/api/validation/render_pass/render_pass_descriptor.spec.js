@@ -1196,7 +1196,7 @@ fn((t) => {
   const { queryType } = t.params;
 
   const timestampWrites = {
-    querySet: t.device.createQuerySet({ type: queryType, count: 2 }),
+    querySet: t.createQuerySetTracked({ type: queryType, count: 2 }),
     beginningOfPassWriteIndex: 0,
     endOfPassWriteIndex: 1
   };
@@ -1231,7 +1231,7 @@ fn((t) => {
   const querySetCount = 2;
 
   const timestampWrites = {
-    querySet: t.device.createQuerySet({ type: 'timestamp', count: querySetCount }),
+    querySet: t.createQuerySetTracked({ type: 'timestamp', count: querySetCount }),
     beginningOfPassWriteIndex,
     endOfPassWriteIndex
   };
@@ -1261,7 +1261,7 @@ beforeAllSubcases((t) => {
 fn((t) => {
   const { queryType } = t.params;
 
-  const querySet = t.device.createQuerySet({
+  const querySet = t.createQuerySetTracked({
     type: queryType,
     count: 1
   });

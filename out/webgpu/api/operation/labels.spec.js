@@ -177,7 +177,7 @@ const kTestFunctions = {
   },
 
   createQuerySet: (t, label) => {
-    const querySet = t.device.createQuerySet({
+    const querySet = t.createQuerySetTracked({
       label,
       type: 'occlusion',
       count: 1

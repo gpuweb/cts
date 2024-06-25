@@ -138,6 +138,8 @@ export class Fixture {
   /**
    * Tracks an object to be cleaned up after the test finishes.
    *
+   * Usually when creating buffers/textures/query sets, you can use the helpers in GPUTest instead.
+   *
    * MAINTENANCE_TODO: Use this in more places. (Will be easier once .destroy() is allowed on
    * invalid objects.)
    */

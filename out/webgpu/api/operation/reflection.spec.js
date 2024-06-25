@@ -249,7 +249,7 @@ fn((t) => {
   const { descriptor } = t.params;
 
   t.expectValidationError(() => {
-    const querySet = t.device.createQuerySet(descriptor);
+    const querySet = t.createQuerySetTracked(descriptor);
 
     t.expect(querySet.type === descriptor.type);
     t.expect(querySet.count === descriptor.count);
@@ -270,9 +270,9 @@ u.combine('descriptor', kQuerySetSubcases).filter((p) => !p.descriptor.invalid)
 fn((t) => {
   const { descriptor } = t.params;
 
-  const querySet = t.device.createQuerySet(descriptor);
+  const querySet = t.createQuerySetTracked(descriptor);
   t.trackForCleanup(querySet);
-  const querySet2 = t.device.createQuerySet(querySet);
+  const querySet2 = t.createQuerySetTracked(querySet);
   t.trackForCleanup(querySet2);
 
   const querySetAsObject = querySet;

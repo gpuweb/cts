@@ -664,7 +664,7 @@ beforeAllSubcases((t) => {
 fn(async (t) => {
   const { awaitLost, type } = t.params;
   await t.executeAfterDestroy(() => {
-    t.device.createQuerySet({ type, count: 4 });
+    t.createQuerySetTracked({ type, count: 4 });
   }, awaitLost);
 });
 
@@ -894,7 +894,7 @@ beforeAllSubcases((t) => {
 }).
 fn(async (t) => {
   const { type, stage, awaitLost } = t.params;
-  const querySet = t.device.createQuerySet({ type, count: 2 });
+  const querySet = t.createQuerySetTracked({ type, count: 2 });
   await t.executeCommandsAfterDestroy(stage, awaitLost, 'non-pass', (maker) => {
     try {
 

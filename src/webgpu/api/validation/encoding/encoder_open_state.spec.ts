@@ -191,7 +191,7 @@ g.test('non_pass_commands')
       usage: GPUTextureUsage.COPY_DST,
     });
 
-    const querySet = t.device.createQuerySet({
+    const querySet = t.createQuerySetTracked({
       type: command === 'writeTimestamp' ? 'timestamp' : 'occlusion',
       count: 1,
     });
@@ -301,7 +301,7 @@ g.test('render_pass_commands')
   .fn(t => {
     const { command, finishBeforeCommand } = t.params;
 
-    const querySet = t.device.createQuerySet({ type: 'occlusion', count: 1 });
+    const querySet = t.createQuerySetTracked({ type: 'occlusion', count: 1 });
     const encoder = t.device.createCommandEncoder();
     const renderPass = beginRenderPassWithQuerySet(t, encoder, querySet);
 
