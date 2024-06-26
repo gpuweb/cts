@@ -157,8 +157,8 @@ g.test('type')
     const { isAsync, output, input } = t.params;
 
     const descriptor = t.getDescriptorWithStates(
-      t.getVertexStateWithOutputs([`@location(0) @interpolate(flat) vout0: ${output}`]),
-      t.getFragmentStateWithInputs([`@location(0) @interpolate(flat) fin0: ${input}`])
+      t.getVertexStateWithOutputs([`@location(0) @interpolate(flat, either) vout0: ${output}`]),
+      t.getFragmentStateWithInputs([`@location(0) @interpolate(flat, either) fin0: ${input}`])
     );
 
     t.doCreateRenderPipelineTest(isAsync, output === input, descriptor);
@@ -178,8 +178,8 @@ g.test('interpolation_type')
       { output: '', input: '@interpolate(linear)' },
       { output: '@interpolate(perspective)', input: '@interpolate(perspective)' },
       { output: '@interpolate(linear)', input: '@interpolate(perspective)' },
-      { output: '@interpolate(flat)', input: '@interpolate(perspective)' },
-      { output: '@interpolate(linear)', input: '@interpolate(flat)' },
+      { output: '@interpolate(flat, either)', input: '@interpolate(perspective)' },
+      { output: '@interpolate(linear)', input: '@interpolate(flat, either)' },
       {
         output: '@interpolate(linear, center)',
         input: '@interpolate(linear, center)',
@@ -223,7 +223,7 @@ g.test('interpolation_sampling')
         _success: true,
         _compat_success: false,
       },
-      { output: '@interpolate(flat)', input: '@interpolate(flat)' },
+      { output: '@interpolate(flat, either)', input: '@interpolate(flat, either)' },
       { output: '@interpolate(perspective)', input: '@interpolate(perspective, sample)' },
       { output: '@interpolate(perspective, center)', input: '@interpolate(perspective, sample)' },
       {

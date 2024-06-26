@@ -66,7 +66,7 @@ g.test('interpolate')
   .params(u =>
     u.combineWithParams([
       { success: true, interpolate: '' },
-      { success: true, interpolate: '@interpolate(linear)' },
+      { success: false, interpolate: '@interpolate(linear)' },
       { success: false, interpolate: '@interpolate(linear, sample)' },
       { success: false, interpolate: '@interpolate(perspective, sample)' },
       { success: false, interpolate: '@interpolate(flat)' },

@@ -70,7 +70,7 @@ export function runDerivativeTest(
   const code = `
 struct CaseInfo {
   @builtin(position) position: vec4f,
-  @location(0) @interpolate(flat) quad_idx: u32,
+  @location(0) @interpolate(flat, either) quad_idx: u32,
 }
 
 @vertex
