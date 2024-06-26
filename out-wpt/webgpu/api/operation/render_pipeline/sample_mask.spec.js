@@ -129,7 +129,7 @@ fragmentShaderOutputMaskOrAlphaToCoverageMask)
 const kSampleMaskTestShader = `
 struct Varyings {
   @builtin(position) Position : vec4<f32>,
-  @location(0) @interpolate(flat) uvFlat : vec2<f32>,
+  @location(0) @interpolate(flat, either) uvFlat : vec2<f32>,
   @location(1) @interpolate(perspective, sample) uvInterpolated : vec2<f32>,
 }
 

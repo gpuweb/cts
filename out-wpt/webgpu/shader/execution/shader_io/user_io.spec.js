@@ -18,9 +18,9 @@ function generateInterstagePassthroughCode(type) {
 ${type === 'f16' ? 'enable f16;' : ''}
 struct IOData {
   @builtin(position) pos : vec4f,
-  @location(0) @interpolate(flat) user0 : ${type},
-  @location(1) @interpolate(flat) user1 : vec2<${type}>,
-  @location(2) @interpolate(flat) user2 : vec4<${type}>,
+  @location(0) @interpolate(flat, either) user0 : ${type},
+  @location(1) @interpolate(flat, either) user1 : vec2<${type}>,
+  @location(2) @interpolate(flat, either) user2 : vec4<${type}>,
 }
 
 struct VertexInput {

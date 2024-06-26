@@ -92,7 +92,7 @@ fn(async (t) => {
 
       struct VFTest {
         @builtin(position) pos: vec4<f32>,
-        @location(0) @interpolate(flat) vertexIndex: u32,
+        @location(0) @interpolate(flat, either) vertexIndex: u32,
       };
 
       @vertex
@@ -129,7 +129,7 @@ fn(async (t) => {
 
       struct VFCheck {
         @builtin(position) pos: vec4<f32>,
-        @location(0) @interpolate(flat) vertexIndex: u32,
+        @location(0) @interpolate(flat, either) vertexIndex: u32,
       };
 
       @vertex
@@ -395,7 +395,7 @@ fn((t) => {
 
       struct VF {
         @builtin(position) pos: vec4<f32>,
-        @location(0) @interpolate(flat) vertexIndex: u32,
+        @location(0) @interpolate(flat, either) vertexIndex: u32,
       };
 
       @vertex

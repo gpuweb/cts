@@ -428,7 +428,7 @@ class F extends GPUTest {
           for (let layer = 0; layer < storageTexture.depthOrArrayLayers; ++layer) {
             vertexOutputs = vertexOutputs.concat(
               `
-            @location(${layer + 1}) @interpolate(flat)
+            @location(${layer + 1}) @interpolate(flat, either)
             vertex_out${layer}: ${this.GetOutputBufferWGSLType(format)},`
             );
           }
@@ -474,7 +474,7 @@ class F extends GPUTest {
         ${bindingResourceDeclaration}
         struct VertexOutput {
           @builtin(position) my_pos: vec4f,
-          @location(0) @interpolate(flat) tex_coord: vec2u,
+          @location(0) @interpolate(flat, either) tex_coord: vec2u,
           ${vertexOutputs}
         }
         @vertex

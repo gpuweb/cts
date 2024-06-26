@@ -163,7 +163,7 @@ fn((t) => {
   }
 
   code += generateShader({
-    attribute: '@location(0) @interpolate(flat)',
+    attribute: '@location(0) @interpolate(flat, either)',
     type: t.params.type,
     stage: 'fragment',
     io: 'in',

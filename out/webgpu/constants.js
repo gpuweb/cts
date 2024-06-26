@@ -61,6 +61,6 @@ export const GPUConst = {
 export const kMaxUnsignedLongValue = 4294967295;
 export const kMaxUnsignedLongLongValue = Number.MAX_SAFE_INTEGER;
 
-export const kInterpolationSampling = ['center', 'centroid', 'sample'];
+export const kInterpolationSampling = ['center', 'centroid', 'sample', 'first', 'either'];
 export const kInterpolationType = ['perspective', 'linear', 'flat'];
 //# sourceMappingURL=constants.js.map

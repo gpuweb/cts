@@ -758,7 +758,8 @@ combine('interpolation', [
 { type: 'linear', sampling: 'center' },
 { type: 'linear', sampling: 'centroid' },
 { type: 'linear', sampling: 'sample' },
-{ type: 'flat' }]
+{ type: 'flat', sampling: 'first' },
+{ type: 'flat', sampling: 'either' }]
 )
 ).
 beforeAllSubcases((t) => {
@@ -832,6 +833,8 @@ g.test('inputs,interStage').
 desc(
   `
     Test fragment shader inter-stage variable values except for centroid interpolation.
+
+    * TODO: Test @interpolation(flat, either)
   `
 ).
 params((u) =>
@@ -843,7 +846,7 @@ combine('interpolation', [
 { type: 'perspective', sampling: 'sample' },
 { type: 'linear', sampling: 'center' },
 { type: 'linear', sampling: 'sample' },
-{ type: 'flat' }]
+{ type: 'flat', sampling: 'first' }]
 )
 ).
 beforeAllSubcases((t) => {
@@ -1062,7 +1065,8 @@ combine('interpolation', [
 { type: 'linear', sampling: 'center' },
 { type: 'linear', sampling: 'centroid' },
 { type: 'linear', sampling: 'sample' },
-{ type: 'flat' }]
+{ type: 'flat', sampling: 'first' },
+{ type: 'flat', sampling: 'either' }]
 )
 ).
 beforeAllSubcases((t) => {
@@ -1146,7 +1150,8 @@ combine('interpolation', [
 { type: 'linear', sampling: 'center' },
 { type: 'linear', sampling: 'centroid' },
 { type: 'linear', sampling: 'sample' },
-{ type: 'flat' }]
+{ type: 'flat', sampling: 'first' },
+{ type: 'flat', sampling: 'either' }]
 )
 ).
 beforeAllSubcases((t) => {
@@ -1318,7 +1323,8 @@ combine('interpolation', [
 { type: 'linear', sampling: 'center' },
 { type: 'linear', sampling: 'centroid' },
 { type: 'linear', sampling: 'sample' },
-{ type: 'flat' }]
+{ type: 'flat', sampling: 'first' },
+{ type: 'flat', sampling: 'either' }]
 ).
 beginSubcases().
 combineWithParams([

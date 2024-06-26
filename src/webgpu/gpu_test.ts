@@ -294,6 +294,10 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
         sampling === 'sample',
         'interpolation type linear is not supported in compatibility mode'
       );
+      this.skipIf(
+        type === 'flat' && (!sampling || sampling === 'first'),
+        'interpolation type flat with sampling not set to either is not supported in compatibility mode'
+      );
     }
   }
 
