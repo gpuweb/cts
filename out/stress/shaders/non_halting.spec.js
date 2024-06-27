@@ -97,7 +97,7 @@ fn(async (t) => {
     }]
 
   });
-  const renderTarget = t.device.createTexture({
+  const renderTarget = t.createTextureTracked({
     size: [1, 1],
     usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
     format: 'rgba8unorm'
@@ -169,7 +169,7 @@ fn(async (t) => {
     }]
 
   });
-  const renderTarget = t.device.createTexture({
+  const renderTarget = t.createTextureTracked({
     size: [1, 1],
     usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
     format: 'rgba8unorm'

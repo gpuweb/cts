@@ -38,7 +38,6 @@ import {
 
   isTextureFormatUsableAsStorageFormat } from
 './format_info.js';
-import { makeBufferWithContents } from './util/buffer.js';
 import { checkElementsEqual, checkElementsBetween } from './util/check_contents.js';
 import { CommandBufferMaker } from './util/command_buffer_maker.js';
 
@@ -59,7 +58,7 @@ import {
 
   textureContentIsOKByT2B } from
 './util/texture/texture_ok.js';
-import { createTextureFromTexelView, createTextureFromTexelViews } from './util/texture.js';
+import { createTextureFromTexelViews } from './util/texture.js';
 import { reifyExtent3D, reifyOrigin3D } from './util/unions.js';
 
 const devicePool = new DevicePool();
@@ -372,11 +371,10 @@ export class GPUTestBase extends Fixture {
     assert(srcOffset % 4 === 0);
     assert(size % 4 === 0);
 
-    const dst = this.device.createBuffer({
+    const dst = this.createBufferTracked({
       size,
       usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST
     });
-    this.trackForCleanup(dst);
 
     const c = this.device.createCommandEncoder();
     c.copyBufferToBuffer(src, srcOffset, dst, 0, size);
@@ -616,11 +614,10 @@ export class GPUTestBase extends Fixture {
     }
 
     // Copy into a buffer suitable for STORAGE usage.
-    const storageBuffer = this.device.createBuffer({
+    const storageBuffer = this.createBufferTracked({
       size: bufferSize,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
     });
-    this.trackForCleanup(storageBuffer);
 
     // This buffer conveys the data we expect to see for a single value read. Since we read 32 bits at
     // a time, for values smaller than 32 bits we pad this expectation with repeated value data, or
@@ -628,12 +625,11 @@ export class GPUTestBase extends Fixture {
     // than 32 bits, we assume they're a multiple of 32 bits and expect to read exact matches of
     // `expectedValue` as-is.
     const expectedDataSize = Math.max(4, valueSize);
-    const expectedDataBuffer = this.device.createBuffer({
+    const expectedDataBuffer = this.createBufferTracked({
       size: expectedDataSize,
       usage: GPUBufferUsage.STORAGE,
       mappedAtCreation: true
     });
-    this.trackForCleanup(expectedDataBuffer);
     const expectedData = new Uint32Array(expectedDataBuffer.getMappedRange());
     if (valueSize === 1) {
       const value = new Uint8Array(expectedValue)[0];
@@ -652,11 +648,10 @@ export class GPUTestBase extends Fixture {
 
     // The output buffer has one 32-bit entry per buffer row. An entry's value will be 1 if every
     // read from the corresponding row matches the expected data derived above, or 0 otherwise.
-    const resultBuffer = this.device.createBuffer({
+    const resultBuffer = this.createBufferTracked({
       size: numRows * 4,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
     });
-    this.trackForCleanup(resultBuffer);
 
     const readsPerRow = Math.ceil(minBytesPerRow / expectedDataSize);
     const reducer = `
@@ -759,11 +754,10 @@ export class GPUTestBase extends Fixture {
     const rep = kTexelRepresentationInfo[format];
     const expectedTexelData = rep.pack(rep.encode(exp));
 
-    const buffer = this.device.createBuffer({
+    const buffer = this.createBufferTracked({
       size: byteLength,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
     });
-    this.trackForCleanup(buffer);
 
     const commandEncoder = this.device.createCommandEncoder();
     commandEncoder.copyTextureToBuffer(
@@ -801,11 +795,10 @@ export class GPUTestBase extends Fixture {
       [1, 1],
       layout
     );
-    const buffer = this.device.createBuffer({
+    const buffer = this.createBufferTracked({
       size: byteLength,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
     });
-    this.trackForCleanup(buffer);
 
     const commandEncoder = this.device.createCommandEncoder();
     commandEncoder.copyTextureToBuffer(
@@ -932,11 +925,10 @@ export class GPUTestBase extends Fixture {
       }
     });
 
-    const storageBuffer = this.device.createBuffer({
+    const storageBuffer = this.createBufferTracked({
       size: sampleCount * type.size * componentCount * width * height,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC
     });
-    this.trackForCleanup(storageBuffer);
 
     const uniformBuffer = this.makeBufferWithContents(
       new Uint32Array([origin.x, origin.y, width, height]),
@@ -1080,12 +1072,21 @@ export class GPUTestBase extends Fixture {
   }
 
   /**
-   * Create a GPUBuffer with the specified contents and usage.
+   * Creates a buffer with the contents of some TypedArray.
+   * The buffer size will always be aligned to 4 as we set mappedAtCreation === true when creating the
+   * buffer.
    *
    * MAINTENANCE_TODO: Several call sites would be simplified if this took ArrayBuffer as well.
    */
   makeBufferWithContents(dataArray, usage) {
-    return this.trackForCleanup(makeBufferWithContents(this.device, dataArray, usage));
+    const buffer = this.createBufferTracked({
+      mappedAtCreation: true,
+      size: align(dataArray.byteLength, 4),
+      usage
+    });
+    memcpy({ src: dataArray }, { dst: buffer.getMappedRange() });
+    buffer.unmap();
+    return buffer;
   }
 
   /**
@@ -1159,14 +1160,12 @@ export class GPUTestBase extends Fixture {
         }
       case 'render pass':{
           const makeAttachmentView = (format) =>
-          this.trackForCleanup(
-            this.device.createTexture({
-              size: [16, 16, 1],
-              format,
-              usage: GPUTextureUsage.RENDER_ATTACHMENT,
-              sampleCount: fullAttachmentInfo.sampleCount
-            })
-          ).createView();
+          this.createTextureTracked({
+            size: [16, 16, 1],
+            format,
+            usage: GPUTextureUsage.RENDER_ATTACHMENT,
+            sampleCount: fullAttachmentInfo.sampleCount
+          }).createView();
 
           let depthStencilAttachment = undefined;
           if (fullAttachmentInfo.depthStencilFormat !== undefined) {
@@ -1494,18 +1493,21 @@ Base)
   Base
 
   {
+    /**
+     * Creates a 1 mip level texture with the contents of a TexelView.
+     */
     createTextureFromTexelView(
     texelView,
     desc)
     {
-      return this.trackForCleanup(createTextureFromTexelView(this.device, texelView, desc));
+      return createTextureFromTexelViews(this, [texelView], desc);
     }
 
     createTextureFromTexelViewsMultipleMipmaps(
     texelViews,
     desc)
     {
-      return this.trackForCleanup(createTextureFromTexelViews(this.device, texelViews, desc));
+      return createTextureFromTexelViews(this, texelViews, desc);
     }
 
     expectTexelViewComparisonIsOkInTexture(
@@ -1630,24 +1632,22 @@ Base)
       const readbackPromisesPerTexturePerLayer = [actualTexture, expectedTexture].map(
         (texture, ndx) => {
           const attachmentSize = virtualMipSize('2d', [texture.width, texture.height, 1], mipLevel);
-          const attachment = this.device.createTexture({
+          const attachment = this.createTextureTracked({
             label: `readback${ndx}`,
             size: attachmentSize,
             format: 'rgba8unorm',
             usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT
           });
-          this.trackForCleanup(attachment);
 
           const sampler = this.device.createSampler();
 
           const numLayers = texture.depthOrArrayLayers;
           const readbackPromisesPerLayer = [];
 
-          const uniformBuffer = this.device.createBuffer({
+          const uniformBuffer = this.createBufferTracked({
             size: 4,
             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
           });
-          this.trackForCleanup(uniformBuffer);
 
           for (let layer = 0; layer < numLayers; ++layer) {
             const viewDescriptor = {
@@ -1787,11 +1787,10 @@ Base)
 
     {
       const { byteLength, bytesPerRow, rowsPerImage } = resultDataLayout;
-      const buffer = this.device.createBuffer({
+      const buffer = this.createBufferTracked({
         size: align(byteLength, 4), // this is necessary because we need to copy and map data from this buffer
         usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
       });
-      this.trackForCleanup(buffer);
 
       const mipSize = physicalMipSizeFromTexture(texture, mipLevel || 0);
       const encoder = this.device.createCommandEncoder();

@@ -99,13 +99,11 @@ fn((t) => {
   {
     const encoder = t.createEncoder('non-pass');
     const view = t.
-    trackForCleanup(
-      t.device.createTexture({
-        size: [16, 16, 1],
-        format: 'rgba8unorm',
-        usage: GPUTextureUsage.RENDER_ATTACHMENT
-      })
-    ).
+    createTextureTracked({
+      size: [16, 16, 1],
+      format: 'rgba8unorm',
+      usage: GPUTextureUsage.RENDER_ATTACHMENT
+    }).
     createView();
     encoder.encoder.
     beginRenderPass({

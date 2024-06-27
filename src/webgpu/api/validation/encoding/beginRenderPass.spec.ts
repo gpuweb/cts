@@ -125,7 +125,7 @@ g.test('depth_stencil_attachment,device_mismatch')
 
     const depthStencilTexture = mismatched
       ? t.getDeviceMismatchedTexture(descriptor)
-      : t.device.createTexture(descriptor);
+      : t.createTextureTracked(descriptor);
 
     const encoder = t.createEncoder('non-pass');
     const pass = encoder.encoder.beginRenderPass({
@@ -195,7 +195,7 @@ g.test('timestamp_query_set,device_mismatch')
       beginningOfPassWriteIndex: 0,
     };
 
-    const colorTexture = t.device.createTexture({
+    const colorTexture = t.createTextureTracked({
       format: 'rgba8unorm',
       size: { width: 4, height: 4, depthOrArrayLayers: 1 },
       usage: GPUTextureUsage.RENDER_ATTACHMENT,

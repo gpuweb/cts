@@ -187,7 +187,6 @@ export class CopyToTextureUtils extends TextureTestMixin(GPUTest) {
       copySize,
       texelCompareOptions
     );
-    this.trackForCleanup(dstTextureCopyView.texture);
   }
 }
 //# sourceMappingURL=copy_to_texture.js.map

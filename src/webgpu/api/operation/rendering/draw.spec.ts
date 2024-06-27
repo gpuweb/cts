@@ -61,7 +61,7 @@ class DrawTest extends TextureTestMixin(GPUTest) {
       1.0, 1.0,
     ];
 
-    const renderTarget = this.device.createTexture({
+    const renderTarget = this.createTextureTracked({
       size: renderTargetSize,
       usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
       format: 'rgba8unorm',
@@ -136,7 +136,7 @@ struct Output {
       },
     });
 
-    const resultBuffer = this.device.createBuffer({
+    const resultBuffer = this.createBufferTracked({
       size: Uint32Array.BYTES_PER_ELEMENT,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
     });
@@ -685,7 +685,7 @@ ${accumulateVariableAssignmentsInFragmentShader}
       },
     });
 
-    const resultBuffer = t.device.createBuffer({
+    const resultBuffer = t.createBufferTracked({
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
       size: vertexCount * instanceCount * vertexInputShaderLocations.length * 4,
     });
@@ -708,8 +708,8 @@ ${accumulateVariableAssignmentsInFragmentShader}
         {
           // Dummy render attachment - not used (WebGPU doesn't allow using a render pass with no
           // attachments)
-          view: t.device
-            .createTexture({
+          view: t
+            .createTextureTracked({
               usage: GPUTextureUsage.RENDER_ATTACHMENT,
               size: [1],
               format: 'rgba8unorm',

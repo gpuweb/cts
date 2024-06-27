@@ -36,7 +36,7 @@ new Uint8Array([0x00, 0xff, 0x00, 0xff])];
 class SamplerAnisotropicFilteringSlantedPlaneTest extends GPUTest {
   copyRenderTargetToBuffer(rt) {
     const byteLength = kRTSize * kBytesPerRow;
-    const buffer = this.device.createBuffer({
+    const buffer = this.createBufferTracked({
       size: byteLength,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
     });
@@ -133,7 +133,7 @@ class SamplerAnisotropicFilteringSlantedPlaneTest extends GPUTest {
       layout: this.pipeline.getBindGroupLayout(0)
     });
 
-    const colorAttachment = this.device.createTexture({
+    const colorAttachment = this.createTextureTracked({
       format: kColorAttachmentFormat,
       size: { width: kRTSize, height: kRTSize, depthOrArrayLayers: 1 },
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT
@@ -176,7 +176,7 @@ desc(
 fn(async (t) => {
   // init texture with only a top level mipmap
   const textureSize = 32;
-  const texture = t.device.createTexture({
+  const texture = t.createTextureTracked({
     mipLevelCount: 1,
     size: { width: textureSize, height: textureSize, depthOrArrayLayers: 1 },
     format: kTextureFormat,

@@ -40,7 +40,7 @@ fn((t) => {
       entryPoint: 'fmain'
     }
   });
-  const renderTarget = t.device.createTexture({
+  const renderTarget = t.createTextureTracked({
     size: [kSize, kSize],
     usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
     format: 'rgba8unorm'
@@ -92,12 +92,12 @@ fn((t) => {
     }
     `
   });
-  const renderTarget = t.device.createTexture({
+  const renderTarget = t.createTextureTracked({
     size: [kWidth, kHeight],
     usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
     format: 'rgba8unorm'
   });
-  const depthTarget = t.device.createTexture({
+  const depthTarget = t.createTextureTracked({
     size: [kWidth, kHeight],
     usage: GPUTextureUsage.RENDER_ATTACHMENT,
     format: 'depth24plus-stencil8'
@@ -194,7 +194,7 @@ fn((t) => {
       entryPoint: 'fmain'
     }
   });
-  const renderTarget = t.device.createTexture({
+  const renderTarget = t.createTextureTracked({
     size: [kSize, kSize],
     usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
     format: 'rgba8unorm'
@@ -212,7 +212,7 @@ fn((t) => {
   const pass = encoder.beginRenderPass(renderPassDescriptor);
   pass.setPipeline(pipeline);
   range(kSize * kSize, (i) => {
-    const buffer = t.device.createBuffer({
+    const buffer = t.createBufferTracked({
       size: 4,
       usage: GPUBufferUsage.UNIFORM,
       mappedAtCreation: true
@@ -265,7 +265,7 @@ fn((t) => {
       entryPoint: 'fmain'
     }
   });
-  const renderTarget = t.device.createTexture({
+  const renderTarget = t.createTextureTracked({
     size: [kSize, kSize],
     usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
     format: 'rgba8unorm'
@@ -326,7 +326,7 @@ fn((t) => {
       entryPoint: 'fmain'
     }
   });
-  const renderTarget = t.device.createTexture({
+  const renderTarget = t.createTextureTracked({
     size: [kTextureSize, kTextureSize],
     usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
     format: 'rgba8unorm'

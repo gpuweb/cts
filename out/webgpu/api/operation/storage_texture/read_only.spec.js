@@ -396,12 +396,11 @@ class F extends GPUTest {
             entries: bindGroupEntries
           });
 
-          const placeholderColorTexture = this.device.createTexture({
+          const placeholderColorTexture = this.createTextureTracked({
             size: [storageTexture.width, storageTexture.height, 1],
             usage: GPUTextureUsage.RENDER_ATTACHMENT,
             format: 'rgba8unorm'
           });
-          this.trackForCleanup(placeholderColorTexture);
 
           const renderPassEncoder = commandEncoder.beginRenderPass({
             colorAttachments: [
@@ -529,12 +528,11 @@ class F extends GPUTest {
             entries: bindGroupEntries
           });
 
-          const placeholderColorTexture = this.device.createTexture({
+          const placeholderColorTexture = this.createTextureTracked({
             size: [storageTexture.width, storageTexture.height, 1],
             usage: GPUTextureUsage.RENDER_ATTACHMENT,
             format: 'rgba8unorm'
           });
-          this.trackForCleanup(placeholderColorTexture);
 
           const renderPassEncoder = commandEncoder.beginRenderPass({
             colorAttachments: [
@@ -590,21 +588,19 @@ fn((t) => {
 
   const kWidth = 8;
   const height = dimension === '1d' ? 1 : 8;
-  const storageTexture = t.device.createTexture({
+  const storageTexture = t.createTextureTracked({
     format,
     dimension,
     size: [kWidth, height, depthOrArrayLayers],
     usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.STORAGE_BINDING
   });
-  t.trackForCleanup(storageTexture);
 
   const expectedData = t.InitTextureAndGetExpectedOutputBufferData(storageTexture, format);
 
-  const outputBuffer = t.device.createBuffer({
+  const outputBuffer = t.createBufferTracked({
     size: 4 * 4 * kWidth * height * depthOrArrayLayers,
     usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE
   });
-  t.trackForCleanup(outputBuffer);
 
   t.DoTransform(storageTexture, shaderStage, format, outputBuffer);
 

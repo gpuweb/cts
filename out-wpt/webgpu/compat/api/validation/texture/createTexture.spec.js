@@ -21,7 +21,7 @@ fn((t) => {
   t.expectGPUErrorInCompatibilityMode(
     'validation',
     () =>
-    t.device.createTexture({
+    t.createTextureTracked({
       size: [1, 1, 1],
       format: 'bgra8unorm-srgb',
       usage: GPUTextureUsage.TEXTURE_BINDING
@@ -38,7 +38,7 @@ fn((t) => {
   t.expectGPUErrorInCompatibilityMode(
     'validation',
     () =>
-    t.device.createTexture({
+    t.createTextureTracked({
       size: [1, 1, 1],
       format: 'bgra8unorm',
       viewFormats: ['bgra8unorm-srgb'],
@@ -69,14 +69,13 @@ fn((t) => {
   t.expectGPUErrorInCompatibilityMode(
     'validation',
     () => {
-      const texture = t.device.createTexture({
+      t.createTextureTracked({
         size: [1, 1, depthOrArrayLayers],
         format: 'rgba8unorm',
         usage: GPUTextureUsage.TEXTURE_BINDING,
         dimension,
         textureBindingViewDimension
       }); // MAINTENANCE_TODO: remove cast once textureBindingViewDimension is added to IDL
-      t.trackForCleanup(texture);
     },
     shouldError
   );
@@ -102,13 +101,12 @@ fn((t) => {
   t.expectGPUErrorInCompatibilityMode(
     'validation',
     () => {
-      const texture = t.device.createTexture({
+      t.createTextureTracked({
         size: [1, 1, depthOrArrayLayers],
         format: 'rgba8unorm',
         usage: GPUTextureUsage.TEXTURE_BINDING,
         textureBindingViewDimension
       }); // MAINTENANCE_TODO: remove cast once textureBindingViewDimension is added to IDL
-      t.trackForCleanup(texture);
     },
     shouldError
   );
@@ -149,13 +147,12 @@ fn((t) => {
     t.expectGPUErrorInCompatibilityMode(
       'validation',
       () => {
-        const texture = t.device.createTexture({
+        t.createTextureTracked({
           size: [info.blockWidth, info.blockHeight],
           format,
           viewFormats,
           usage: GPUTextureUsage.TEXTURE_BINDING
         });
-        t.trackForCleanup(texture);
       },
       true
     );
@@ -170,7 +167,7 @@ fn((t) => {
   t.expectGPUErrorInCompatibilityMode(
     'validation',
     () =>
-    t.device.createTexture({
+    t.createTextureTracked({
       size: [1, 1, 1],
       format,
       usage: GPUTextureUsage.STORAGE_BINDING

@@ -48,6 +48,7 @@ runRefTest(async t => {
     },
   });
 
+  // eslint-disable-next-line no-restricted-syntax
   const tex = device.createTexture({
     size: [patternSize, patternSize, 1],
     format: 'rgba8unorm',

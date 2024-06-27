@@ -27,7 +27,7 @@ undefined,
 
 const forceFallbackOptions = [undefined, false, true];
 
-async function testAdapter(adapter) {
+async function testAdapter(t, adapter) {
   assert(adapter !== null, 'Failed to get adapter.');
   const device = await adapter.requestDevice();
 
@@ -54,15 +54,19 @@ async function testAdapter(adapter) {
 
   const kNumElements = 64;
   const kBufferSize = kNumElements * 4;
-  const buffer = device.createBuffer({
-    size: kBufferSize,
-    usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
-  });
+  const buffer = t.trackForCleanup(
+    device.createBuffer({
+      size: kBufferSize,
+      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
+    })
+  );
 
-  const resultBuffer = device.createBuffer({
-    size: kBufferSize,
-    usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST
-  });
+  const resultBuffer = t.trackForCleanup(
+    device.createBuffer({
+      size: kBufferSize,
+      usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST
+    })
+  );
 
   const bindGroup = device.createBindGroup({
     layout: pipeline.getBindGroupLayout(0),
@@ -113,13 +117,13 @@ fn(async (t) => {
     return;
   }
 
-  await testAdapter(adapter);
+  await testAdapter(t, adapter);
 });
 
 g.test('requestAdapter_no_parameters').
 desc(`request adapter with no parameters`).
 fn(async (t) => {
   const adapter = await getGPU(t.rec).requestAdapter();
-  await testAdapter(adapter);
+  await testAdapter(t, adapter);
 });
 //# sourceMappingURL=requestAdapter.spec.js.map

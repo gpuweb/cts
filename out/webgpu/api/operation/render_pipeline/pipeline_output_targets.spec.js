@@ -79,7 +79,7 @@ fn((t) => {
   attachmentsFloatWriteValues;
 
   const renderTargets = range(attachmentCount, () =>
-  t.device.createTexture({
+  t.createTextureTracked({
     format,
     size: { width: 1, height: 1, depthOrArrayLayers: 1 },
     usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT
@@ -170,7 +170,7 @@ fn((t) => {
   // extra channels are discarded
   const values = [0, 1, 0, 1];
 
-  const renderTarget = t.device.createTexture({
+  const renderTarget = t.createTextureTracked({
     format,
     size: { width: 1, height: 1, depthOrArrayLayers: 1 },
     usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT
@@ -381,7 +381,7 @@ fn((t) => {
   const componentCount = output.length;
   const info = kTextureFormatInfo[format];
 
-  const renderTarget = t.device.createTexture({
+  const renderTarget = t.createTextureTracked({
     format,
     size: { width: 1, height: 1, depthOrArrayLayers: 1 },
     usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT

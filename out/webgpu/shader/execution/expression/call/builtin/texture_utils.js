@@ -444,7 +444,7 @@ sampler)
  * Checks the result of each call matches the expected result.
  */
 export async function checkCallResults(
-device,
+t,
 texture,
 textureType,
 sampler,
@@ -499,15 +499,10 @@ results)
         const gotSamplePoints = [
         'got:',
         ...(await identifySamplePoints(texture, async (texels) => {
-          const gpuTexture = createTextureFromTexelViews(device, [texels], texture.descriptor);
+          const gpuTexture = createTextureFromTexelViews(t, [texels], texture.descriptor);
           const result = (
-          await doTextureCalls(
-            device,
-            gpuTexture,
-            texture.viewDescriptor,
-            textureType,
-            sampler,
-            [call]
+          await doTextureCalls(t, gpuTexture, texture.viewDescriptor, textureType, sampler, [
+          call]
           ))[
           0];
           gpuTexture.destroy();
@@ -613,12 +608,11 @@ options)
   const { ddx = 1, ddy = 1, uvwStart = [0, 0, 0], offset } = options;
 
   const format = 'rgba32float';
-  const renderTarget = device.createTexture({
+  const renderTarget = t.createTextureTracked({
     format,
     size: [32, 32],
     usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT
   });
-  t.trackForCleanup(renderTarget);
 
   // Compute the amount we need to multiply the unitQuad by get the
   // derivatives we want.
@@ -1006,24 +1000,21 @@ format)
     const size = virtualMipSize(texture.dimension, texture, mipLevel);
 
     const uniformValues = new Uint32Array([mipLevel, 0, 0, 0]); // min size is 16 bytes
-    const uniformBuffer = device.createBuffer({
+    const uniformBuffer = t.createBufferTracked({
       size: uniformValues.byteLength,
       usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
     });
-    t.trackForCleanup(uniformBuffer);
     device.queue.writeBuffer(uniformBuffer, 0, uniformValues);
 
-    const storageBuffer = device.createBuffer({
+    const storageBuffer = t.createBufferTracked({
       size: size[0] * size[1] * size[2] * 4 * 4, // rgba32float
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
     });
-    t.trackForCleanup(storageBuffer);
 
-    const readBuffer = device.createBuffer({
+    const readBuffer = t.createBufferTracked({
       size: storageBuffer.size,
       usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST
     });
-    t.trackForCleanup(readBuffer);
     readBuffers.push({ size, readBuffer });
 
     const sampler = device.createSampler();
@@ -1089,8 +1080,7 @@ t,
 descriptor)
 {
   if (isCompressedTextureFormat(descriptor.format)) {
-    const texture = t.device.createTexture(descriptor);
-    t.trackForCleanup(texture);
+    const texture = t.createTextureTracked(descriptor);
 
     fillTextureWithRandomData(t.device, texture);
     const texels = await readTextureToTexelViews(
@@ -1102,7 +1092,7 @@ descriptor)
     return { texture, texels };
   } else {
     const texels = createRandomTexelViewMipmap(descriptor);
-    const texture = createTextureFromTexelViews(t.device, texels, descriptor);
+    const texture = createTextureFromTexelViews(t, texels, descriptor);
     return { texture, texels };
   }
 }
@@ -1943,7 +1933,7 @@ const s_deviceToPipelines = new WeakMap();
  * each have their own data type for coordinates.
  */
 export async function doTextureCalls(
-device,
+t,
 gpuTexture,
 viewDescriptor,
 textureType,
@@ -1976,14 +1966,14 @@ calls)
     data.push(...b.data);
   });
 
-  const dataBuffer = device.createBuffer({
+  const dataBuffer = t.createBufferTracked({
     size: data.length * 4,
     usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE
   });
-  device.queue.writeBuffer(dataBuffer, 0, new Uint32Array(data));
+  t.device.queue.writeBuffer(dataBuffer, 0, new Uint32Array(data));
 
   const rtWidth = 256;
-  const renderTarget = device.createTexture({
+  const renderTarget = t.createTextureTracked({
     format: 'rgba32float',
     size: { width: rtWidth, height: Math.ceil(calls.length / rtWidth) },
     usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT
@@ -2018,14 +2008,14 @@ ${body}
 }
 `;
 
-  const pipelines = s_deviceToPipelines.get(device) ?? new Map();
-  s_deviceToPipelines.set(device, pipelines);
+  const pipelines = s_deviceToPipelines.get(t.device) ?? new Map();
+  s_deviceToPipelines.set(t.device, pipelines);
 
   let pipeline = pipelines.get(code);
   if (!pipeline) {
-    const shaderModule = device.createShaderModule({ code });
+    const shaderModule = t.device.createShaderModule({ code });
 
-    pipeline = device.createRenderPipeline({
+    pipeline = t.device.createRenderPipeline({
       layout: 'auto',
       vertex: { module: shaderModule },
       fragment: {
@@ -2038,9 +2028,9 @@ ${body}
     pipelines.set(code, pipeline);
   }
 
-  const gpuSampler = device.createSampler(sampler);
+  const gpuSampler = t.device.createSampler(sampler);
 
-  const bindGroup = device.createBindGroup({
+  const bindGroup = t.device.createBindGroup({
     layout: pipeline.getBindGroupLayout(0),
     entries: [
     { binding: 0, resource: gpuTexture.createView(viewDescriptor) },
@@ -2050,11 +2040,11 @@ ${body}
   });
 
   const bytesPerRow = align(16 * renderTarget.width, 256);
-  const resultBuffer = device.createBuffer({
+  const resultBuffer = t.createBufferTracked({
     size: renderTarget.height * bytesPerRow,
     usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
   });
-  const encoder = device.createCommandEncoder();
+  const encoder = t.device.createCommandEncoder();
 
   const renderPass = encoder.beginRenderPass({
     colorAttachments: [
@@ -2075,7 +2065,7 @@ ${body}
     { buffer: resultBuffer, bytesPerRow },
     { width: renderTarget.width, height: renderTarget.height }
   );
-  device.queue.submit([encoder.finish()]);
+  t.device.queue.submit([encoder.finish()]);
 
   await resultBuffer.mapAsync(GPUMapMode.READ);
 

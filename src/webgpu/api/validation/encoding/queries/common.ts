@@ -16,8 +16,8 @@ export function beginRenderPassWithQuerySet(
   encoder: GPUCommandEncoder,
   querySet?: GPUQuerySet
 ): GPURenderPassEncoder {
-  const view = t.device
-    .createTexture({
+  const view = t
+    .createTextureTracked({
       format: 'rgba8unorm' as const,
       size: { width: 16, height: 16, depthOrArrayLayers: 1 },
       usage: GPUTextureUsage.RENDER_ATTACHMENT,

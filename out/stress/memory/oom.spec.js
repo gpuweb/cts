@@ -11,7 +11,7 @@ import { exhaustVramUntilUnder64MB } from '../../webgpu/util/memory.js';
 export const g = makeTestGroup(GPUTest);
 
 function createBufferWithMapState(
-device,
+t,
 size,
 mapState,
 mode,
@@ -19,7 +19,7 @@ mappedAtCreation)
 {
   const mappable = mapState === 'unmapped';
   if (!mappable && !mappedAtCreation) {
-    return device.createBuffer({
+    return t.createBufferTracked({
       size,
       usage: GPUBufferUsage.UNIFORM,
       mappedAtCreation
@@ -28,14 +28,14 @@ mappedAtCreation)
   let buffer;
   switch (mode) {
     case GPUMapMode.READ:
-      buffer = device.createBuffer({
+      buffer = t.createBufferTracked({
         size,
         usage: GPUBufferUsage.MAP_READ,
         mappedAtCreation
       });
       break;
     case GPUMapMode.WRITE:
-      buffer = device.createBuffer({
+      buffer = t.createBufferTracked({
         size,
         usage: GPUBufferUsage.MAP_WRITE,
         mappedAtCreation
@@ -54,7 +54,7 @@ mappedAtCreation)
 g.test('vram_oom').
 desc(`Tests that we can allocate buffers until we run out of VRAM.`).
 fn(async (t) => {
-  await exhaustVramUntilUnder64MB(t.device);
+  await exhaustVramUntilUnder64MB(t);
 });
 
 g.test('map_after_vram_oom').
@@ -100,9 +100,7 @@ fn(async (t) => {
       // this case, we don't do any validations on the OOM buffer.
       try {
         t.device.pushErrorScope('out-of-memory');
-        const buffer = t.trackForCleanup(
-          createBufferWithMapState(t.device, kSize, mapState, mode, mappedAtCreation)
-        );
+        const buffer = createBufferWithMapState(t, kSize, mapState, mode, mappedAtCreation);
         if (await t.device.popErrorScope()) {
           errorBuffer = buffer;
           break;
@@ -115,9 +113,7 @@ fn(async (t) => {
       }
     } else {
       t.device.pushErrorScope('out-of-memory');
-      const buffer = t.trackForCleanup(
-        createBufferWithMapState(t.device, kSize, mapState, mode, mappedAtCreation)
-      );
+      const buffer = createBufferWithMapState(t, kSize, mapState, mode, mappedAtCreation);
       if (await t.device.popErrorScope()) {
         errorBuffer = buffer;
         break;

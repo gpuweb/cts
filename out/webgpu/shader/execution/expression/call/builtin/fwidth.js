@@ -99,12 +99,12 @@ fn frag(info : CaseInfo) {
 
   // Create storage buffers to hold the inputs and outputs.
   const bufferSize = cases.length * 4 * valueStride;
-  const inputBuffer = t.device.createBuffer({
+  const inputBuffer = t.createBufferTracked({
     size: bufferSize,
     usage: GPUBufferUsage.STORAGE,
     mappedAtCreation: true
   });
-  const outputBuffer = t.device.createBuffer({
+  const outputBuffer = t.createBufferTracked({
     size: bufferSize,
     usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
   });
@@ -136,7 +136,7 @@ fn frag(info : CaseInfo) {
 
   // Create a texture to use as a color attachment.
   // We only need this for launching the desired number of fragment invocations.
-  const colorAttachment = t.device.createTexture({
+  const colorAttachment = t.createTextureTracked({
     size: { width: 2, height: 2 },
     format: 'rgba8unorm',
     usage: GPUTextureUsage.RENDER_ATTACHMENT

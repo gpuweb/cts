@@ -12,7 +12,7 @@ export const g = makeTestGroup(GPUTest);
 
 const kTestFunctions = {
   createBuffer: (t, label) => {
-    const buffer = t.device.createBuffer({ size: 16, usage: GPUBufferUsage.COPY_DST, label });
+    const buffer = t.createBufferTracked({ size: 16, usage: GPUBufferUsage.COPY_DST, label });
     t.expect(buffer.label === label);
     buffer.destroy();
     t.expect(buffer.label === label);
@@ -30,7 +30,7 @@ const kTestFunctions = {
   },
 
   createTexture: (t, label) => {
-    const texture = t.device.createTexture({
+    const texture = t.createTextureTracked({
       label,
       size: [1, 1, 1],
       format: 'rgba8unorm',
@@ -188,7 +188,7 @@ const kTestFunctions = {
   },
 
   beginRenderPass: (t, label) => {
-    const texture = t.device.createTexture({
+    const texture = t.createTextureTracked({
       label,
       size: [1, 1, 1],
       format: 'rgba8unorm',
@@ -230,7 +230,7 @@ const kTestFunctions = {
   },
 
   createView: (t, label) => {
-    const texture = t.device.createTexture({
+    const texture = t.createTextureTracked({
       size: [1, 1, 1],
       format: 'rgba8unorm',
       usage: GPUTextureUsage.RENDER_ATTACHMENT

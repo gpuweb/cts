@@ -294,14 +294,13 @@ fn((t) => {
 
   const texture_size = getTextureSize(num_texels, t.params.dim, 1);
   const mip_size = virtualMipSize(t.params.dim, texture_size, t.params.mip);
-  const texture = t.device.createTexture({
+  const texture = t.createTextureTracked({
     format: texel_format,
     dimension: t.params.dim,
     size: texture_size,
     mipLevelCount: t.params.mipCount,
     usage: GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.COPY_SRC
   });
-  t.trackForCleanup(texture);
 
   const oob_value = outOfBoundsValue(t.params.dim, t.params.coords);
   const wgx_size = 32;
@@ -415,14 +414,13 @@ fn((t) => {
   const texture_size = { width, height, depthOrArrayLayers: kArrayLevels };
   const view_size = { width, height, depthOrArrayLayers: t.params.arrayLevels };
 
-  const texture = t.device.createTexture({
+  const texture = t.createTextureTracked({
     format: texel_format,
     dimension: dim,
     size: texture_size,
     mipLevelCount: 1,
     usage: GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.COPY_SRC
   });
-  t.trackForCleanup(texture);
 
   const wgx_size = 32;
   const num_wgs_x = num_texels / wgx_size;

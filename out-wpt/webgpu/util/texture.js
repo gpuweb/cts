@@ -1,6 +1,7 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
-**/import { assert } from '../../common/util/util.js';import { getTextureCopyLayout } from './texture/layout.js';
+**/import { assert } from '../../common/util/util.js';
+import { getTextureCopyLayout } from './texture/layout.js';
 
 import { reifyExtent3D } from './unions.js';
 
@@ -9,7 +10,7 @@ import { reifyExtent3D } from './unions.js';
  * from `texelViews[i]`.
  */
 export function createTextureFromTexelViews(
-device,
+t,
 texelViews,
 desc)
 {
@@ -19,7 +20,7 @@ desc)
   const { width, height, depthOrArrayLayers } = reifyExtent3D(desc.size);
 
   // Create the texture and then initialize each mipmap level separately.
-  const texture = device.createTexture({
+  const texture = t.createTextureTracked({
     ...desc,
     format: texelViews[0].format,
     usage: desc.usage | GPUTextureUsage.COPY_DST,
@@ -27,7 +28,7 @@ desc)
   });
 
   // Copy the texel view into each mip level layer.
-  const commandEncoder = device.createCommandEncoder();
+  const commandEncoder = t.device.createCommandEncoder();
   const stagingBuffers = [];
   for (let mipLevel = 0; mipLevel < texelViews.length; mipLevel++) {
     const {
@@ -39,7 +40,7 @@ desc)
     });
 
     // Create a staging buffer to upload the texture mip level contents.
-    const stagingBuffer = device.createBuffer({
+    const stagingBuffer = t.createBufferTracked({
       mappedAtCreation: true,
       size: bytesPerRow * mipHeight * mipDepthOrArray,
       usage: GPUBufferUsage.COPY_SRC
@@ -62,21 +63,10 @@ desc)
       [mipWidth, mipHeight, mipDepthOrArray]
     );
   }
-  device.queue.submit([commandEncoder.finish()]);
+  t.device.queue.submit([commandEncoder.finish()]);
 
   // Cleanup the staging buffers.
   stagingBuffers.forEach((value) => value.destroy());
 
   return texture;
-}
-
-/**
- * Creates a 1 mip level texture with the contents of a TexelView.
- */
-export function createTextureFromTexelView(
-device,
-texelView,
-desc)
-{
-  return createTextureFromTexelViews(device, [texelView], desc);
 }

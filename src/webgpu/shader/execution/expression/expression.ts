@@ -456,7 +456,7 @@ async function submitBatch(
   // Construct a buffer to hold the results of the expression tests
   const outputStride = structStride([resultType], 'storage_rw');
   const outputBufferSize = align(cases.length * outputStride, 4);
-  const outputBuffer = t.device.createBuffer({
+  const outputBuffer = t.createBufferTracked({
     size: outputBufferSize,
     usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE,
   });

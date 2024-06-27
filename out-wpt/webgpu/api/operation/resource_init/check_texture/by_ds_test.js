@@ -120,7 +120,7 @@ subresourceRange) =>
       viewDescriptor.baseMipLevel
     );
 
-    const renderTexture = t.device.createTexture({
+    const renderTexture = t.createTextureTracked({
       size: [width, height, 1],
       format: 'r8unorm',
       usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
@@ -130,7 +130,7 @@ subresourceRange) =>
     let resolveTexture = undefined;
     let resolveTarget = undefined;
     if (params.sampleCount > 1) {
-      resolveTexture = t.device.createTexture({
+      resolveTexture = t.createTextureTracked({
         size: [width, height, 1],
         format: 'r8unorm',
         usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC

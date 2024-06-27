@@ -36,9 +36,9 @@ dynamicOffsets)
   assert(stage === GPUShaderStage.COMPUTE, 'Only know how to deal with compute for now');
 
   // Contains just zero (for now).
-  const constantsBuffer = t.device.createBuffer({ size: 4, usage: GPUBufferUsage.UNIFORM });
+  const constantsBuffer = t.createBufferTracked({ size: 4, usage: GPUBufferUsage.UNIFORM });
 
-  const resultBuffer = t.device.createBuffer({
+  const resultBuffer = t.createBufferTracked({
     size: 4,
     usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE
   });

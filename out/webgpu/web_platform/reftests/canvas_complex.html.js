@@ -50,6 +50,7 @@ targets)
       const bytesPerRow = align(bytesPerPixel * ctx.canvas.width, 256);
       const componentsPerPixel = 4;
 
+
       const buffer = t.device.createBuffer({
         mappedAtCreation: true,
         size: rows * bytesPerRow,
@@ -170,6 +171,7 @@ targets)
 
     function setupSrcTexture(imageBitmap) {
       const [srcWidth, srcHeight] = [imageBitmap.width, imageBitmap.height];
+
       const srcTexture = t.device.createTexture({
         size: [srcWidth, srcHeight, 1],
         format,
@@ -565,6 +567,7 @@ fn main(@builtin(position) fragcoord: vec4<f32>) -> @location(0) vec4<f32> {
         entries: [{ binding: 0, resource: ctx.getCurrentTexture().createView() }],
         layout: pipeline.getBindGroupLayout(0)
       });
+
 
       const outputTexture = t.device.createTexture({
         format,

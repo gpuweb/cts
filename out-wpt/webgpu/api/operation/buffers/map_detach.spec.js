@@ -52,11 +52,13 @@ fn(async (t) => {
     assert(adapter !== null);
     device = await adapter.requestDevice();
   }
-  const buffer = device.createBuffer({
-    size: 4,
-    usage,
-    mappedAtCreation
-  });
+  const buffer = t.trackForCleanup(
+    device.createBuffer({
+      size: 4,
+      usage,
+      mappedAtCreation
+    })
+  );
 
   if (mapMode !== undefined) {
     if (mappedAtCreation) {

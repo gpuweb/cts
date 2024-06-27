@@ -363,8 +363,8 @@ export class TextureZeroInitTest extends GPUTest {
     const rep = kTexelRepresentationInfo[format];
     const texelData = new Uint8Array(rep.pack(rep.encode(this.stateToTexelComponents[state])));
     const { buffer, bytesPerRow, rowsPerImage } = createTextureUploadBuffer(
+      this,
       texelData,
-      this.device,
       format,
       this.p.dimension,
       [largestWidth, largestHeight, largestDepth]
