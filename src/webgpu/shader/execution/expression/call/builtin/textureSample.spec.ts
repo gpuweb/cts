@@ -130,7 +130,6 @@ Parameters:
     }
   })
   .fn(async t => {
-    const device = t.device;
     const { format, sample_points, addressModeU, addressModeV, minFilter, offset } = t.params;
 
     // We want at least 4 blocks or something wide enough for 3 mip levels.
@@ -164,7 +163,7 @@ Parameters:
     };
     const viewDescriptor = {};
     const results = await doTextureCalls(
-      t.device,
+      t,
       texture,
       viewDescriptor,
       'texture_2d<f32>',
@@ -172,7 +171,7 @@ Parameters:
       calls
     );
     const res = await checkCallResults(
-      device,
+      t,
       { texels, descriptor, viewDescriptor },
       'texture_2d<f32>',
       sampler,
@@ -317,7 +316,6 @@ Parameters:
     }
   })
   .fn(async t => {
-    const device = t.device;
     const { format, viewDimension, sample_points, addressModeU, addressModeV, minFilter, offset } =
       t.params;
 
@@ -367,16 +365,9 @@ Parameters:
       dimension: viewDimension,
     };
     const textureType = getTextureTypeForTextureViewDimension(viewDimension);
-    const results = await doTextureCalls(
-      t.device,
-      texture,
-      viewDescriptor,
-      textureType,
-      sampler,
-      calls
-    );
+    const results = await doTextureCalls(t, texture, viewDescriptor, textureType, sampler, calls);
     const res = await checkCallResults(
-      device,
+      t,
       { texels, descriptor, viewDescriptor },
       textureType,
       sampler,

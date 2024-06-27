@@ -282,7 +282,7 @@ struct VSOutputs {
     vertexCount: number,
     instanceCount: number
   ) {
-    const testTexture = this.device.createTexture({
+    const testTexture = this.createTextureTracked({
       format: 'r32sint',
       size: [vertexCount, instanceCount],
       usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,

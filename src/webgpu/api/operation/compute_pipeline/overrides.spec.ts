@@ -13,7 +13,7 @@ class F extends GPUTest {
     constants: Record<string, GPUPipelineConstantValue>,
     code: string
   ) {
-    const dst = this.device.createBuffer({
+    const dst = this.createBufferTracked({
       size: expected.byteLength,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE,
     });
@@ -171,7 +171,7 @@ g.test('computed')
 
     const expected = new Uint32Array([2, 4, 8]);
 
-    const buffer = t.device.createBuffer({
+    const buffer = t.createBufferTracked({
       size: 3 * Uint32Array.BYTES_PER_ELEMENT,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE,
     });
@@ -311,11 +311,11 @@ g.test('shared_shader_module')
 
     const expects = [new Uint32Array([1]), new Uint32Array([2])];
     const buffers = [
-      t.device.createBuffer({
+      t.createBufferTracked({
         size: Uint32Array.BYTES_PER_ELEMENT,
         usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE,
       }),
-      t.device.createBuffer({
+      t.createBufferTracked({
         size: Uint32Array.BYTES_PER_ELEMENT,
         usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE,
       }),
@@ -430,19 +430,19 @@ g.test('multi_entry_points')
     ];
 
     const buffers = [
-      t.device.createBuffer({
+      t.createBufferTracked({
         size: Uint32Array.BYTES_PER_ELEMENT,
         usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE,
       }),
-      t.device.createBuffer({
+      t.createBufferTracked({
         size: Uint32Array.BYTES_PER_ELEMENT,
         usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE,
       }),
-      t.device.createBuffer({
+      t.createBufferTracked({
         size: Uint32Array.BYTES_PER_ELEMENT,
         usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE,
       }),
-      t.device.createBuffer({
+      t.createBufferTracked({
         size: Uint32Array.BYTES_PER_ELEMENT,
         usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE,
       }),
