@@ -43,6 +43,11 @@
             // This selector disallows any call to any method called "createQuerySet"
             // that is not directly inside a call to some method called "trackForCleanup".
             "selector": ":not(CallExpression[callee.property.name=\"trackForCleanup\"]) > CallExpression > MemberExpression > Identifier[name=\"createQuerySet\"]"
+          },
+          {
+            "message": "createBuffer must be immediately tracked using trackForCleanup (or use createBufferTracked).",
+            // Similar to above.
+            "selector": ":not(CallExpression[callee.property.name=\"trackForCleanup\"]) > CallExpression > MemberExpression > Identifier[name=\"createBuffer\"]"
           }
         ],
 
