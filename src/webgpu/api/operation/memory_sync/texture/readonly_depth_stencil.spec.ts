@@ -55,7 +55,6 @@ testing while the other one is used for sampling.
       format,
       usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
     });
-    t.trackForCleanup(ds);
 
     // Fill the texture along the X axis with stencil values 1, 2, 3 and along the Y axis depth
     // values 0.1, 0.2, 0.3. The depth value is written using @builtin(frag_depth) while the
@@ -223,14 +222,12 @@ testing while the other one is used for sampling.
       size: [1, 1],
       usage: GPUTextureUsage.TEXTURE_BINDING,
     });
-    t.trackForCleanup(fakeStencil);
     const fakeDepth = t.createTextureTracked({
       label: 'fakeDepth',
       format: 'r32float',
       size: [1, 1],
       usage: GPUTextureUsage.TEXTURE_BINDING,
     });
-    t.trackForCleanup(fakeDepth);
     const stencilView = stencilReadOnly
       ? ds.createView({ aspect: 'stencil-only' })
       : fakeStencil.createView();

@@ -66,7 +66,6 @@ fn atomicLoad(atomic_ptr: ptr<AS, atomic<T>, read_write>) -> T
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
       mappedAtCreation: true,
     });
-    t.trackForCleanup(inputBuffer);
     const data = new arrayType(inputBuffer.getMappedRange());
     data.forEach((_, i) => (data[i] = mapId.f(i, numInvocations)));
     inputBuffer.unmap();
@@ -75,7 +74,6 @@ fn atomicLoad(atomic_ptr: ptr<AS, atomic<T>, read_write>) -> T
       size: bufferNumElements * arrayType.BYTES_PER_ELEMENT,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
     });
-    t.trackForCleanup(outputBuffer);
 
     const bindGroup = t.device.createBindGroup({
       layout: pipeline.getBindGroupLayout(0),
@@ -166,7 +164,6 @@ fn atomicLoad(atomic_ptr: ptr<AS, atomic<T>, read_write>) -> T
       size: wgNumElements * dispatchSize * arrayType.BYTES_PER_ELEMENT,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
     });
-    t.trackForCleanup(outputBuffer);
 
     const bindGroup = t.device.createBindGroup({
       layout: pipeline.getBindGroupLayout(0),

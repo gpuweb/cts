@@ -13,7 +13,6 @@ class F extends ValidationTest {
       size: { width: 16, height: 16, depthOrArrayLayers: 1 },
       usage: GPUTextureUsage.RENDER_ATTACHMENT,
     });
-    this.trackForCleanup(attachmentTexture);
     return commandEncoder.beginRenderPass({
       colorAttachments: [
         {

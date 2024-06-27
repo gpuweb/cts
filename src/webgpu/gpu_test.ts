@@ -375,7 +375,6 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
       size,
       usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
     });
-    this.trackForCleanup(dst);
 
     const c = this.device.createCommandEncoder();
     c.copyBufferToBuffer(src, srcOffset, dst, 0, size);
@@ -619,7 +618,6 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
       size: bufferSize,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
     });
-    this.trackForCleanup(storageBuffer);
 
     // This buffer conveys the data we expect to see for a single value read. Since we read 32 bits at
     // a time, for values smaller than 32 bits we pad this expectation with repeated value data, or
@@ -632,7 +630,6 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
       usage: GPUBufferUsage.STORAGE,
       mappedAtCreation: true,
     });
-    this.trackForCleanup(expectedDataBuffer);
     const expectedData = new Uint32Array(expectedDataBuffer.getMappedRange());
     if (valueSize === 1) {
       const value = new Uint8Array(expectedValue)[0];
@@ -655,7 +652,6 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
       size: numRows * 4,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
     });
-    this.trackForCleanup(resultBuffer);
 
     const readsPerRow = Math.ceil(minBytesPerRow / expectedDataSize);
     const reducer = `
@@ -762,7 +758,6 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
       size: byteLength,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
-    this.trackForCleanup(buffer);
 
     const commandEncoder = this.device.createCommandEncoder();
     commandEncoder.copyTextureToBuffer(
@@ -804,7 +799,6 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
       size: byteLength,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
-    this.trackForCleanup(buffer);
 
     const commandEncoder = this.device.createCommandEncoder();
     commandEncoder.copyTextureToBuffer(
@@ -935,7 +929,6 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
       size: sampleCount * type.size * componentCount * width * height,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC,
     });
-    this.trackForCleanup(storageBuffer);
 
     const uniformBuffer = this.makeBufferWithContents(
       new Uint32Array([origin.x, origin.y, width, height]),
@@ -1645,7 +1638,6 @@ export function TextureTestMixin<F extends FixtureClass<GPUTest>>(
             format: 'rgba8unorm',
             usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
           });
-          this.trackForCleanup(attachment);
 
           const sampler = this.device.createSampler();
 
@@ -1656,7 +1648,6 @@ export function TextureTestMixin<F extends FixtureClass<GPUTest>>(
             size: 4,
             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
           });
-          this.trackForCleanup(uniformBuffer);
 
           for (let layer = 0; layer < numLayers; ++layer) {
             const viewDescriptor: GPUTextureViewDescriptor = {
@@ -1800,7 +1791,6 @@ export function TextureTestMixin<F extends FixtureClass<GPUTest>>(
         size: align(byteLength, 4), // this is necessary because we need to copy and map data from this buffer
         usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
       });
-      this.trackForCleanup(buffer);
 
       const mipSize = physicalMipSizeFromTexture(texture, mipLevel || 0);
       const encoder = this.device.createCommandEncoder();

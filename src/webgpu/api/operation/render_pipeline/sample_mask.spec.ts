@@ -535,7 +535,6 @@ textureLoad each sample index from the texture and write to a storage buffer to 
       size: 4,
       usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC,
     });
-    t.trackForCleanup(fragmentMaskUniformBuffer);
     t.device.queue.writeBuffer(
       fragmentMaskUniformBuffer,
       0,
@@ -651,7 +650,6 @@ color' <= color.
       size: alphaValues.byteLength,
       usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC,
     });
-    t.trackForCleanup(alphaValueUniformBuffer);
 
     const module = t.device.createShaderModule({ code: kSampleMaskTestShader });
     const pipeline = t.device.createRenderPipeline({

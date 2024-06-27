@@ -80,7 +80,6 @@ function drawFullScreen(
       GPUTextureUsage.TEXTURE_BINDING,
     format: 'r32uint',
   });
-  t.trackForCleanup(framebuffer);
 
   // Create a buffer to copy the framebuffer contents into.
   // Initialize with a sentinel value and load this buffer to detect unintended writes.

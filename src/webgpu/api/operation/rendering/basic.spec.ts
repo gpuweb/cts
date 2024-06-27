@@ -178,7 +178,6 @@ g.test('large_draw')
         usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST,
         mappedAtCreation: true,
       });
-      t.trackForCleanup(indexBuffer);
       const indexData = new Uint32Array(indexBuffer.getMappedRange());
       for (let i = 0; i < kMaxIndices; ++i) {
         indexData[i] = i;

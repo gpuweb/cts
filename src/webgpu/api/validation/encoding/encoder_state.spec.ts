@@ -40,7 +40,6 @@ class F extends ValidationTest {
       size: { width: 1, height: 1, depthOrArrayLayers: 1 },
       usage: GPUTextureUsage.RENDER_ATTACHMENT,
     });
-    this.trackForCleanup(texture);
     return texture.createView();
   }
 }

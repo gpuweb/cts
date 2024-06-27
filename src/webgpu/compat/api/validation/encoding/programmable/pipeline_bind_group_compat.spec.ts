@@ -250,7 +250,6 @@ function createResourcesForRenderPassTest(
     usage:
       textureType === 'storage' ? GPUTextureUsage.STORAGE_BINDING : GPUTextureUsage.TEXTURE_BINDING,
   });
-  t.trackForCleanup(texture);
 
   const module = getRenderShaderModule(t.device, textureType, bindConfig);
   const pipeline = t.device.createRenderPipeline({
@@ -281,7 +280,6 @@ function createResourcesForComputePassTest(
     usage:
       textureType === 'storage' ? GPUTextureUsage.STORAGE_BINDING : GPUTextureUsage.TEXTURE_BINDING,
   });
-  t.trackForCleanup(texture);
 
   const module = getComputeShaderModule(t.device, textureType, bindConfig);
   const pipeline = t.device.createComputePipeline({

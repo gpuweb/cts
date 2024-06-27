@@ -1086,7 +1086,6 @@ g.test('default_bind_group_layouts_never_match,render_pass')
           size: { width: 16, height: 16, depthOrArrayLayers: 1 },
           usage: GPUTextureUsage.RENDER_ATTACHMENT,
         });
-        t.trackForCleanup(attachmentTexture);
 
         const renderPass = encoder.beginRenderPass({
           colorAttachments: [

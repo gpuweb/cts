@@ -67,9 +67,7 @@ g.test('buffer_creation_from_reflection')
     const { descriptor } = t.params;
 
     const buffer = t.createBufferTracked(descriptor);
-    t.trackForCleanup(buffer);
     const buffer2 = t.createBufferTracked(buffer);
-    t.trackForCleanup(buffer2);
 
     const bufferAsObject = buffer as unknown as { [k: string]: unknown };
     const buffer2AsObject = buffer2 as unknown as { [k: string]: unknown };
@@ -196,11 +194,9 @@ g.test('texture_creation_from_reflection')
     const { descriptor } = t.params;
 
     const texture = t.createTextureTracked(descriptor);
-    t.trackForCleanup(texture);
     const textureWithSize = texture as TextureWithSize;
     textureWithSize.size = [texture.width, texture.height, texture.depthOrArrayLayers];
     const texture2 = t.createTextureTracked(textureWithSize);
-    t.trackForCleanup(texture2);
 
     const textureAsObject = texture as unknown as { [k: string]: unknown };
     const texture2AsObject = texture2 as unknown as { [k: string]: unknown };
@@ -271,9 +267,7 @@ g.test('query_set_creation_from_reflection')
     const { descriptor } = t.params;
 
     const querySet = t.createQuerySetTracked(descriptor);
-    t.trackForCleanup(querySet);
     const querySet2 = t.createQuerySetTracked(querySet);
-    t.trackForCleanup(querySet2);
 
     const querySetAsObject = querySet as unknown as { [k: string]: unknown };
     const querySet2AsObject = querySet2 as unknown as { [k: string]: unknown };

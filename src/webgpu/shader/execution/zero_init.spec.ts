@@ -465,12 +465,10 @@ g.test('compute,zero_init')
         new Uint32Array([...iterRange(wg_memory_limits / 4, _i => 0xdeadbeef)]),
         GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
       );
-      t.trackForCleanup(inputBuffer);
       const outputBuffer = t.createBufferTracked({
         size: wg_memory_limits,
         usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
       });
-      t.trackForCleanup(outputBuffer);
 
       const bg = t.device.createBindGroup({
         layout: fillPipeline.getBindGroupLayout(0),
@@ -513,13 +511,11 @@ g.test('compute,zero_init')
       size: 4,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
     });
-    t.trackForCleanup(resultBuffer);
 
     const zeroBuffer = t.createBufferTracked({
       size: 4,
       usage: GPUBufferUsage.UNIFORM,
     });
-    t.trackForCleanup(zeroBuffer);
 
     const bindGroup = t.device.createBindGroup({
       layout: pipeline.getBindGroupLayout(0),

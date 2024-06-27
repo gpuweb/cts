@@ -69,7 +69,6 @@ fn atomicExchange(atomic_ptr: ptr<AS, atomic<T>, read_write>, v: T) -> T
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
       mappedAtCreation: true,
     });
-    t.trackForCleanup(inputBuffer);
     const data = new arrayType(inputBuffer.getMappedRange());
     data.forEach((_, i) => (data[i] = i));
     inputBuffer.unmap();
@@ -78,7 +77,6 @@ fn atomicExchange(atomic_ptr: ptr<AS, atomic<T>, read_write>, v: T) -> T
       size: bufferNumElements * arrayType.BYTES_PER_ELEMENT,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
     });
-    t.trackForCleanup(outputBuffer);
 
     const bindGroup = t.device.createBindGroup({
       layout: pipeline.getBindGroupLayout(0),
@@ -180,13 +178,11 @@ fn atomicLoad(atomic_ptr: ptr<AS, atomic<T>, read_write>) -> T
       size: wgNumElements * dispatchSize * arrayType.BYTES_PER_ELEMENT,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
     });
-    t.trackForCleanup(outputBuffer);
 
     const wgCopyBuffer = t.createBufferTracked({
       size: wgNumElements * dispatchSize * arrayType.BYTES_PER_ELEMENT,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
     });
-    t.trackForCleanup(outputBuffer);
 
     const bindGroup = t.device.createBindGroup({
       layout: pipeline.getBindGroupLayout(0),
@@ -280,13 +276,11 @@ fn atomicExchange(atomic_ptr: ptr<AS, atomic<T>, read_write>, v: T) -> T
       size: 1 * arrayType.BYTES_PER_ELEMENT,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
     });
-    t.trackForCleanup(inputBuffer);
 
     const outputBuffer = t.createBufferTracked({
       size: bufferNumElements * arrayType.BYTES_PER_ELEMENT,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
     });
-    t.trackForCleanup(outputBuffer);
 
     const bindGroup = t.device.createBindGroup({
       layout: pipeline.getBindGroupLayout(0),
@@ -406,13 +400,11 @@ fn atomicLoad(atomic_ptr: ptr<AS, atomic<T>, read_write>) -> T
       size: numInvocations * dispatchSize * arrayType.BYTES_PER_ELEMENT,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
     });
-    t.trackForCleanup(outputBuffer);
 
     const wgCopyBuffer = t.createBufferTracked({
       size: dispatchSize * arrayType.BYTES_PER_ELEMENT,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
     });
-    t.trackForCleanup(outputBuffer);
 
     const bindGroup = t.device.createBindGroup({
       layout: pipeline.getBindGroupLayout(0),

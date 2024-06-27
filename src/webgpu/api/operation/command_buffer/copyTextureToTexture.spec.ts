@@ -99,7 +99,6 @@ class F extends TextureTestMixin(GPUTest) {
       mipLevelCount,
     };
     const srcTexture = this.createTextureTracked(srcTextureDesc);
-    this.trackForCleanup(srcTexture);
     const dstTextureDesc: GPUTextureDescriptor = {
       dimension,
       size: dstTextureSize,
@@ -108,7 +107,6 @@ class F extends TextureTestMixin(GPUTest) {
       mipLevelCount,
     };
     const dstTexture = this.createTextureTracked(dstTextureDesc);
-    this.trackForCleanup(dstTexture);
 
     // Fill the whole subresource of srcTexture at srcCopyLevel with initialSrcData.
     const initialSrcData = this.GetInitialDataPerMipLevel(
@@ -273,7 +271,6 @@ class F extends TextureTestMixin(GPUTest) {
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     };
     const dstBuffer = this.createBufferTracked(dstBufferDesc);
-    this.trackForCleanup(dstBuffer);
 
     {
       const encoder = this.device.createCommandEncoder();
@@ -439,7 +436,6 @@ class F extends TextureTestMixin(GPUTest) {
       size: outputBufferSize,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
-    this.trackForCleanup(outputBuffer);
     const encoder = this.device.createCommandEncoder();
     encoder.copyTextureToBuffer(
       {
@@ -1385,7 +1381,6 @@ g.test('copy_multisampled_color')
         GPUTextureUsage.RENDER_ATTACHMENT,
       sampleCount: kSampleCount,
     });
-    t.trackForCleanup(sourceTexture);
     const destinationTexture = t.createTextureTracked({
       format: kColorFormat,
       size: textureSize,
@@ -1395,7 +1390,6 @@ g.test('copy_multisampled_color')
         GPUTextureUsage.RENDER_ATTACHMENT,
       sampleCount: kSampleCount,
     });
-    t.trackForCleanup(destinationTexture);
 
     // Initialize sourceTexture with a draw call.
     const renderPipelineForInit = t.device.createRenderPipeline({
@@ -1523,7 +1517,6 @@ g.test('copy_multisampled_color')
       size: textureSize,
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
     });
-    t.trackForCleanup(expectedOutputTexture);
     const validationEncoder = t.device.createCommandEncoder();
     const renderPassForValidation = validationEncoder.beginRenderPass({
       colorAttachments: [
@@ -1573,14 +1566,12 @@ g.test('copy_multisampled_depth')
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
       sampleCount: kSampleCount,
     });
-    t.trackForCleanup(sourceTexture);
     const destinationTexture = t.createTextureTracked({
       format: kDepthFormat,
       size: textureSize,
       usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
       sampleCount: kSampleCount,
     });
-    t.trackForCleanup(destinationTexture);
 
     const vertexState: GPUVertexState = {
       module: t.device.createShaderModule({
@@ -1674,13 +1665,11 @@ g.test('copy_multisampled_depth')
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
       sampleCount: kSampleCount,
     });
-    t.trackForCleanup(multisampledColorTexture);
     const colorTextureAsResolveTarget = t.createTextureTracked({
       format: kColorFormat,
       size: textureSize,
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
     });
-    t.trackForCleanup(colorTextureAsResolveTarget);
 
     const encoderForVerify = t.device.createCommandEncoder();
     const renderPassForVerify = encoderForVerify.beginRenderPass({

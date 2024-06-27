@@ -179,7 +179,6 @@ function createTextureCopyForMapRead(
     usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
     size: byteLength,
   });
-  t.trackForCleanup(buffer);
 
   const cmd = t.device.createCommandEncoder();
   cmd.copyTextureToBuffer(source, { buffer, bytesPerRow, rowsPerImage }, copySize);

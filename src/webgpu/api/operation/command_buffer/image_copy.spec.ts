@@ -447,7 +447,6 @@ class ImageCopyTest extends TextureTestMixin(GPUTest) {
       mipLevelCount: actualTexture.mipLevelCount,
       usage: actualTexture.usage,
     });
-    this.trackForCleanup(expectedTexture);
 
     const mipLevel = mipLevelOrUndefined || 0;
     const fullMipLevelTextureCopyLayout = getTextureCopyLayout(
@@ -652,7 +651,6 @@ class ImageCopyTest extends TextureTestMixin(GPUTest) {
       mipLevelCount: mipLevel + 1,
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
     });
-    this.trackForCleanup(texture);
 
     const data = dataGenerator.generateView(dataSize);
 
@@ -751,7 +749,6 @@ class ImageCopyTest extends TextureTestMixin(GPUTest) {
       format,
       mipLevelCount: mipLevel + 1,
     });
-    this.trackForCleanup(srcTexture);
 
     const copySize = [textureSize[0] >> mipLevel, textureSize[1] >> mipLevel, textureSize[2]];
     const initialData = dataGenerator.generateView(
@@ -815,7 +812,6 @@ class ImageCopyTest extends TextureTestMixin(GPUTest) {
       format,
       mipLevelCount: mipLevel + 1,
     });
-    this.trackForCleanup(srcTexture);
 
     // Initialize srcTexture with queue.writeTexture()
     const copySize = [textureSize[0] >> mipLevel, textureSize[1] >> mipLevel, textureSize[2]];
@@ -844,7 +840,6 @@ class ImageCopyTest extends TextureTestMixin(GPUTest) {
       size: outputBufferSize,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
-    this.trackForCleanup(outputBuffer);
     const encoder = this.device.createCommandEncoder();
     encoder.copyTextureToBuffer(
       { texture: srcTexture, aspect: 'stencil-only', mipLevel },
@@ -1010,7 +1005,6 @@ class ImageCopyTest extends TextureTestMixin(GPUTest) {
       size: outputTextureSize,
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
     });
-    this.trackForCleanup(outputTexture);
 
     for (
       let stencilTextureLayer = 0;
@@ -1066,7 +1060,6 @@ class ImageCopyTest extends TextureTestMixin(GPUTest) {
         size: copyFromOutputTextureLayout.byteLength,
         usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
       });
-      this.trackForCleanup(outputStagingBuffer);
       encoder.copyTextureToBuffer(
         {
           texture: outputTexture,
@@ -1116,7 +1109,6 @@ class ImageCopyTest extends TextureTestMixin(GPUTest) {
       usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
       format: 'r32float',
     });
-    this.trackForCleanup(inputTexture);
     this.queue.writeTexture(
       { texture: inputTexture },
       initialData,
@@ -1236,7 +1228,6 @@ class ImageCopyTest extends TextureTestMixin(GPUTest) {
       size: 4,
       mappedAtCreation: true,
     });
-    this.trackForCleanup(buffer);
     new Uint32Array(buffer.getMappedRange()).set([z]);
     buffer.unmap();
     return {
@@ -1290,7 +1281,6 @@ class ImageCopyTest extends TextureTestMixin(GPUTest) {
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
       mipLevelCount: mipLevel + 1,
     });
-    this.trackForCleanup(depthTexture);
     this.initializeDepthAspectWithRendering(depthTexture, format, copySize, mipLevel, initialData);
 
     // Copy the depth aspect of the texture into the destination buffer.
@@ -1312,7 +1302,6 @@ class ImageCopyTest extends TextureTestMixin(GPUTest) {
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
       size: destinationBufferSize,
     });
-    this.trackForCleanup(destinationBuffer);
     const copyEncoder = this.device.createCommandEncoder();
     copyEncoder.copyTextureToBuffer(
       {

@@ -44,7 +44,6 @@ g.test('float32')
       size,
       usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC,
     });
-    t.trackForCleanup(texture);
     t.device.queue.writeTexture({ texture }, new Float32Array([data, data, data, data]), {}, size);
 
     const expColor = { R: 0.6, G: 0.6, B: 0.6, A: 0.6 };
@@ -81,7 +80,6 @@ g.test('norm')
       size,
       usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC,
     });
-    t.trackForCleanup(texture);
     t.device.queue.writeTexture({ texture }, new Int8Array(data), {}, size);
 
     let expTexelView;
@@ -128,7 +126,6 @@ g.test('snorm_min')
       size,
       usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC,
     });
-    t.trackForCleanup(texture);
     t.device.queue.writeTexture({ texture }, new Int8Array(data), {}, size);
 
     let expTexelView;

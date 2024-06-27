@@ -140,7 +140,6 @@ g.test('viewDimension_matches_textureBindingViewDimension')
       ...(dimension && { dimension }),
       ...(textureBindingViewDimension && { textureBindingViewDimension }),
     } as GPUTextureDescriptor); // MAINTENANCE_TODO: remove cast once textureBindingViewDimension is added to IDL
-    t.trackForCleanup(texture);
 
     const effectiveTextureBindingViewDimension = getEffectiveTextureBindingViewDimension(
       dimension,

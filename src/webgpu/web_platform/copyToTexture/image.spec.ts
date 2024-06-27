@@ -214,9 +214,6 @@ g.test('from_fully_transparent_image')
     t.expectSinglePixelComparisonsAreOkInTexture({ texture: dst }, [
       { coord: { x: kImageWidth * 0.3, y: kImageHeight * 0.3 }, exp: expectedPixels },
     ]);
-
-    // Track created texture.
-    t.trackForCleanup(dst);
   });
 
 g.test('copy_subrect_from_2D_Canvas')

@@ -29,14 +29,12 @@ g.test('compressed')
       format,
       usage: GPUTextureUsage.COPY_SRC,
     });
-    t.trackForCleanup(srcTexture);
 
     const dstTexture = t.createTextureTracked({
       size: [blockWidth, blockHeight, 1],
       format,
       usage: GPUTextureUsage.COPY_DST,
     });
-    t.trackForCleanup(dstTexture);
 
     const encoder = t.device.createCommandEncoder();
     encoder.copyTextureToTexture({ texture: srcTexture }, { texture: dstTexture }, [
@@ -72,7 +70,6 @@ g.test('multisample')
       sampleCount: 4,
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
     });
-    t.trackForCleanup(srcTexture);
 
     const dstTexture = t.createTextureTracked({
       size: [blockWidth, blockHeight, 1],
@@ -80,7 +77,6 @@ g.test('multisample')
       sampleCount: 4,
       usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
     });
-    t.trackForCleanup(dstTexture);
 
     const encoder = t.device.createCommandEncoder();
     encoder.copyTextureToTexture({ texture: srcTexture }, { texture: dstTexture }, [

@@ -151,7 +151,6 @@ g.test('inputs')
       size: totalInvocations * kOutputElementSize * 4,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
     });
-    t.trackForCleanup(outputBuffer);
 
     const bindGroup = t.device.createBindGroup({
       layout: pipeline.getBindGroupLayout(0),
@@ -173,7 +172,6 @@ g.test('inputs')
           usage: GPUBufferUsage.INDIRECT,
           mappedAtCreation: true,
         });
-        t.trackForCleanup(dispatchBuffer);
         const dispatchData = new Uint32Array(dispatchBuffer.getMappedRange());
         dispatchData[0] = t.params.numGroups.x;
         dispatchData[1] = t.params.numGroups.y;

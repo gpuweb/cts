@@ -401,7 +401,6 @@ class F extends GPUTest {
           usage: GPUTextureUsage.RENDER_ATTACHMENT,
           format: 'rgba8unorm',
         });
-        this.trackForCleanup(placeholderColorTexture);
 
         const renderPassEncoder = commandEncoder.beginRenderPass({
           colorAttachments: [
@@ -534,7 +533,6 @@ class F extends GPUTest {
           usage: GPUTextureUsage.RENDER_ATTACHMENT,
           format: 'rgba8unorm',
         });
-        this.trackForCleanup(placeholderColorTexture);
 
         const renderPassEncoder = commandEncoder.beginRenderPass({
           colorAttachments: [
@@ -596,7 +594,6 @@ g.test('basic')
       size: [kWidth, height, depthOrArrayLayers],
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.STORAGE_BINDING,
     });
-    t.trackForCleanup(storageTexture);
 
     const expectedData = t.InitTextureAndGetExpectedOutputBufferData(storageTexture, format);
 
@@ -604,7 +601,6 @@ g.test('basic')
       size: 4 * 4 * kWidth * height * depthOrArrayLayers,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE,
     });
-    t.trackForCleanup(outputBuffer);
 
     t.DoTransform(storageTexture, shaderStage, format, outputBuffer);
 

@@ -156,7 +156,6 @@ one of the values written.
       size: 1 * arrayType.BYTES_PER_ELEMENT,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
     });
-    t.trackForCleanup(outputBuffer);
 
     const bindGroup = t.device.createBindGroup({
       layout: pipeline.getBindGroupLayout(0),
@@ -261,7 +260,6 @@ one of the values written.
       size: dispatchSize * arrayType.BYTES_PER_ELEMENT,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
     });
-    t.trackForCleanup(outputBuffer);
 
     const bindGroup = t.device.createBindGroup({
       layout: pipeline.getBindGroupLayout(0),

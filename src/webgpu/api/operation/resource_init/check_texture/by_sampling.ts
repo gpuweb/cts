@@ -110,7 +110,6 @@ export const checkContentsBySampling: CheckContents = (
         size: byteLength,
         usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
       });
-      t.trackForCleanup(resultBuffer);
 
       const viewDescriptor: GPUTextureViewDescriptor = {
         ...(!t.isCompatibility && {

@@ -1081,7 +1081,6 @@ export async function createTextureWithRandomDataAndGetTexels(
 ) {
   if (isCompressedTextureFormat(descriptor.format)) {
     const texture = t.createTextureTracked(descriptor);
-    t.trackForCleanup(texture);
 
     fillTextureWithRandomData(t.device, texture);
     const texels = await readTextureToTexelViews(

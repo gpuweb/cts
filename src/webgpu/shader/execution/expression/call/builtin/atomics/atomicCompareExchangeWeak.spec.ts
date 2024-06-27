@@ -107,7 +107,6 @@ struct __atomic_compare_exchange_result<T> {
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
       mappedAtCreation: true,
     });
-    t.trackForCleanup(inputBuffer);
     const data = new arrayType(inputBuffer.getMappedRange());
     data.forEach((_, i) => (data[i] = i));
     inputBuffer.unmap();
@@ -116,13 +115,11 @@ struct __atomic_compare_exchange_result<T> {
       size: bufferNumElements * arrayType.BYTES_PER_ELEMENT,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
     });
-    t.trackForCleanup(outputBuffer);
 
     const exchangedBuffer = t.createBufferTracked({
       size: bufferNumElements * arrayType.BYTES_PER_ELEMENT,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
     });
-    t.trackForCleanup(exchangedBuffer);
 
     const bindGroup = t.device.createBindGroup({
       layout: pipeline.getBindGroupLayout(0),
@@ -256,19 +253,16 @@ struct __atomic_compare_exchange_result<T> {
       size: wgNumElements * dispatchSize * arrayType.BYTES_PER_ELEMENT,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
     });
-    t.trackForCleanup(outputBuffer);
 
     const wgCopyBuffer = t.createBufferTracked({
       size: wgNumElements * dispatchSize * arrayType.BYTES_PER_ELEMENT,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
     });
-    t.trackForCleanup(outputBuffer);
 
     const exchangedBuffer = t.createBufferTracked({
       size: wgNumElements * dispatchSize * arrayType.BYTES_PER_ELEMENT,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
     });
-    t.trackForCleanup(exchangedBuffer);
 
     const bindGroup = t.device.createBindGroup({
       layout: pipeline.getBindGroupLayout(0),
@@ -424,14 +418,12 @@ struct __atomic_compare_exchange_result<T> {
       data[0] = pingPongValues[0];
       dataBuffer.unmap();
     }
-    t.trackForCleanup(dataBuffer);
 
     const oldValuesBuffer = t.createBufferTracked({
       size: bufferNumElements * arrayType.BYTES_PER_ELEMENT,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
       mappedAtCreation: true,
     });
-    t.trackForCleanup(oldValuesBuffer);
     {
       const data = new arrayType(oldValuesBuffer.getMappedRange());
       data.fill(defaultValue);
@@ -443,7 +435,6 @@ struct __atomic_compare_exchange_result<T> {
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
       mappedAtCreation: true,
     });
-    t.trackForCleanup(exchangedBuffer);
     {
       const data = new arrayType(exchangedBuffer.getMappedRange());
       data.fill(defaultValue);
@@ -646,7 +637,6 @@ struct __atomic_compare_exchange_result<T> {
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
       mappedAtCreation: true,
     });
-    t.trackForCleanup(oldValuesBuffer);
     {
       const data = new arrayType(oldValuesBuffer.getMappedRange());
       data.fill(defaultValue);
@@ -658,7 +648,6 @@ struct __atomic_compare_exchange_result<T> {
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
       mappedAtCreation: true,
     });
-    t.trackForCleanup(exchangedBuffer);
     {
       const data = new arrayType(exchangedBuffer.getMappedRange());
       data.fill(defaultValue);

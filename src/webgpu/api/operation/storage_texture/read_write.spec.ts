@@ -332,7 +332,6 @@ g.test('basic')
       size: textureSize,
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.STORAGE_BINDING,
     });
-    t.trackForCleanup(storageTexture);
 
     const bytesPerBlock = kTextureFormatInfo[format].bytesPerBlock;
     const initialData = t.GetInitialData(storageTexture);
@@ -355,7 +354,6 @@ g.test('basic')
       size: expectedData.byteLength,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
-    t.trackForCleanup(readbackBuffer);
     const bytesPerRow = align(bytesPerBlock * kWidth, 256);
     commandEncoder.copyTextureToBuffer(
       {

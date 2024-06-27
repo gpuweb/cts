@@ -142,13 +142,11 @@ function copyRGBA8EncodedFloatTexturesToBufferIncludingMultisampledTextures(
     size: width * height * sampleCount * 4 * 4,
     usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
   });
-  t.trackForCleanup(copyBuffer);
 
   const buffer = t.createBufferTracked({
     size: copyBuffer.size,
     usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
   });
-  t.trackForCleanup(buffer);
 
   const pipeline = getCopyMultisamplePipelineForDevice(t.device, textures);
   const encoder = t.device.createCommandEncoder();
@@ -615,8 +613,8 @@ async function renderFragmentShaderInputsTo4TexturesAndReadbackValues(
     `,
   });
 
-  const textures = range(4, () => {
-    const texture = t.createTextureTracked({
+  const textures = range(4, () =>
+    t.createTextureTracked({
       size: [width, height],
       usage:
         GPUTextureUsage.RENDER_ATTACHMENT |
@@ -624,10 +622,8 @@ async function renderFragmentShaderInputsTo4TexturesAndReadbackValues(
         GPUTextureUsage.COPY_SRC,
       format: 'rgba8unorm',
       sampleCount,
-    });
-    t.trackForCleanup(texture);
-    return texture;
-  });
+    })
+  );
 
   const pipeline = t.device.createRenderPipeline({
     layout: 'auto',
@@ -654,7 +650,6 @@ async function renderFragmentShaderInputsTo4TexturesAndReadbackValues(
     size: 8,
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
   });
-  t.trackForCleanup(uniformBuffer);
   t.device.queue.writeBuffer(uniformBuffer, 0, new Float32Array([width, height]));
 
   const viewport = [0, 0, width, height, ...nearFar] as const;

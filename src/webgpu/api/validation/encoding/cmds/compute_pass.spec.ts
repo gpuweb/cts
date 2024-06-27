@@ -248,7 +248,6 @@ g.test('indirect_dispatch_buffer,usage')
       size: 16,
       usage: bufferUsage,
     });
-    t.trackForCleanup(buffer);
 
     const success = (GPUBufferUsage.INDIRECT & bufferUsage) !== 0;
 

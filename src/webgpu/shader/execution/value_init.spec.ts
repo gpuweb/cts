@@ -56,7 +56,6 @@ async function run(t: GPUTest, wgsl: string) {
     size: 4,
     usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
   });
-  t.trackForCleanup(resultBuffer);
 
   const zeroBuffer = t.createBufferTracked({
     size: 4,

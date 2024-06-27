@@ -35,7 +35,6 @@ fn main() {
       new Uint32Array([0, 0, 0, 0]),
       GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
     );
-    t.trackForCleanup(buffer);
 
     const bg = t.device.createBindGroup({
       layout: pipeline.getBindGroupLayout(0),

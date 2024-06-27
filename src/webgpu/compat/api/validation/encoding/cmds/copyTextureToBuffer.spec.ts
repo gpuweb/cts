@@ -27,7 +27,6 @@ g.test('compressed')
       format,
       usage: GPUTextureUsage.COPY_SRC,
     });
-    t.trackForCleanup(texture);
 
     const bytesPerRow = align(info.color.bytes, 256);
 
@@ -35,7 +34,6 @@ g.test('compressed')
       size: bytesPerRow,
       usage: GPUBufferUsage.COPY_DST,
     });
-    t.trackForCleanup(buffer);
 
     const encoder = t.device.createCommandEncoder();
     encoder.copyTextureToBuffer({ texture }, { buffer, bytesPerRow }, textureSize);

@@ -90,7 +90,6 @@ export function runStorageVariableTest({
     mappedAtCreation: true,
   });
   // Fill with initial value
-  t.trackForCleanup(outputBuffer);
   const data = new arrayType(outputBuffer.getMappedRange());
   data.fill(initValue);
   outputBuffer.unmap();

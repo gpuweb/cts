@@ -99,7 +99,6 @@ g.test('set_index_buffer_without_changing_buffer')
       size: t.kVertexAttributeSize * kVertexAttributesCount,
       mappedAtCreation: true,
     });
-    t.trackForCleanup(vertexBuffer);
     const vertexAttributes = vertexBuffer.getMappedRange();
     const kPositions = [-0.8, -0.4, 0.0, 0.4, 0.8, -0.4];
     const kColors = [
@@ -210,7 +209,6 @@ g.test('set_vertex_buffer_without_changing_buffer')
       size: t.kVertexAttributeSize * kVertexAttributesCount,
       mappedAtCreation: true,
     });
-    t.trackForCleanup(vertexBuffer);
     const vertexAttributes = vertexBuffer.getMappedRange();
     for (let i = 0; i < kPositions.length; ++i) {
       const baseOffset = t.kVertexAttributeSize * i;
@@ -308,7 +306,6 @@ g.test('change_pipeline_before_and_after_vertex_buffer')
       size: t.kVertexAttributeSize * kPositions.length,
       mappedAtCreation: true,
     });
-    t.trackForCleanup(vertexBuffer);
     // Note that kPositions[1], kColors[1], kPositions[5] and kColors[5] are not used.
     const vertexAttributes = vertexBuffer.getMappedRange();
     for (let i = 0; i < kPositions.length; ++i) {
@@ -567,7 +564,6 @@ g.test('set_index_buffer_before_non_indexed_draw')
       size: t.kVertexAttributeSize * kPositions.length,
       mappedAtCreation: true,
     });
-    t.trackForCleanup(vertexBuffer);
     const vertexAttributes = vertexBuffer.getMappedRange();
     for (let i = 0; i < kPositions.length; ++i) {
       const baseOffset = t.kVertexAttributeSize * i;

@@ -43,7 +43,6 @@ export class ImageCopyTest extends ValidationTest {
           size: dataSize,
           usage: GPUBufferUsage.COPY_SRC,
         });
-        this.trackForCleanup(buffer);
 
         const encoder = this.device.createCommandEncoder();
         encoder.copyBufferToTexture({ buffer, ...textureDataLayout }, textureCopyView, size);
@@ -71,7 +70,6 @@ export class ImageCopyTest extends ValidationTest {
           size: dataSize,
           usage: GPUBufferUsage.COPY_DST,
         });
-        this.trackForCleanup(buffer);
 
         const encoder = this.device.createCommandEncoder();
         encoder.copyTextureToBuffer(textureCopyView, { buffer, ...textureDataLayout }, size);

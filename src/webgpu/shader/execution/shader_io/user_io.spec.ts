@@ -134,18 +134,16 @@ function drawPassthrough(t: GPUTest, code: string) {
   const width = 256 / bytesPerComponent;
   const height = 2;
   const copyWidth = 4;
-  const outputTextures = range(3, i => {
-    const texture = t.createTextureTracked({
+  const outputTextures = range(3, i =>
+    t.createTextureTracked({
       size: [width, height],
       usage:
         GPUTextureUsage.COPY_SRC |
         GPUTextureUsage.RENDER_ATTACHMENT |
         GPUTextureUsage.TEXTURE_BINDING,
       format: formats[i],
-    });
-    t.trackForCleanup(texture);
-    return texture;
-  });
+    })
+  );
 
   let bufferSize = 1;
   for (const comp of components) {
@@ -156,7 +154,6 @@ function drawPassthrough(t: GPUTest, code: string) {
     size: bufferSize,
     usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
   });
-  t.trackForCleanup(outputBuffer);
 
   const encoder = t.device.createCommandEncoder();
   const pass = encoder.beginRenderPass({

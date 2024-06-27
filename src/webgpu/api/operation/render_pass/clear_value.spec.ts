@@ -166,7 +166,6 @@ g.test('stencil_clear_value')
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
       size: 4,
     });
-    t.trackForCleanup(destinationBuffer);
     encoder.copyTextureToBuffer(
       {
         texture: stencilTexture,
