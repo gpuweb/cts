@@ -311,6 +311,8 @@ class DeviceHolder implements DeviceProvider {
     if (!supportsFeature(adapter, descriptor)) {
       throw new FeaturesNotSupported('One or more features are not supported');
     }
+    // No trackForCleanup because we plan to reuse the device for the next test.
+    // eslint-disable-next-line no-restricted-syntax
     const device = await adapter.requestDevice(descriptor);
     assert(device !== null, 'requestDevice returned null');
 

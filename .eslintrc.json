@@ -35,6 +35,14 @@
           "warn",
           { "terms": ["todo", "fixme", "xxx"], "location": "anywhere" }
         ],
+        "no-restricted-syntax": [
+          "warn",
+          {
+            "message": "requestDevice must be immediately tracked using trackForCleanup.",
+            // Similar to above.
+            "selector": ":not(CallExpression[callee.property.name=\"trackForCleanup\"]) > CallExpression > MemberExpression > Identifier[name=\"requestDevice\"]"
+          }
+        ],
 
         "no-restricted-syntax": [
           "warn",

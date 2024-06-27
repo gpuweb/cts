@@ -139,12 +139,15 @@ export class Fixture<S extends SubcaseBatchState = SubcaseBatchState> {
    * Tracks an object to be cleaned up after the test finishes.
    *
    * Usually when creating buffers/textures/query sets, you can use the helpers in GPUTest instead.
-   *
-   * MAINTENANCE_TODO: Use this in more places. (Will be easier once .destroy() is allowed on
-   * invalid objects.)
    */
-  trackForCleanup<T extends DestroyableObject>(o: T): T {
-    this.objectsToCleanUp.push(o);
+  trackForCleanup<T extends DestroyableObject | Promise<DestroyableObject>>(o: T): T {
+    if (o instanceof Promise) {
+      this.eventualAsyncExpectation(async () => {
+        this.trackForCleanup(await o);
+      });
+    } else {
+      this.objectsToCleanUp.push(o);
+    }
     return o;
   }
 

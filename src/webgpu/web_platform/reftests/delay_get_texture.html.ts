@@ -15,6 +15,7 @@ void (async () => {
 
   const adapter = await navigator.gpu.requestAdapter();
   assert(adapter !== null);
+  // eslint-disable-next-line no-restricted-syntax
   const device = await adapter.requestDevice();
   assert(device !== null);
 
