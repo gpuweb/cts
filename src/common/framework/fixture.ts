@@ -14,6 +14,7 @@ export type TestParams = {
 
 type DestroyableObject =
   | { destroy(): void }
+  | { destroyAsync(): Promise<void> }
   | { close(): void }
   | { getExtension(extensionName: 'WEBGL_lose_context'): WEBGL_lose_context }
   | HTMLVideoElement;
@@ -125,6 +126,8 @@ export class Fixture<S extends SubcaseBatchState = SubcaseBatchState> {
         if (WEBGL_lose_context) WEBGL_lose_context.loseContext();
       } else if ('destroy' in o) {
         o.destroy();
+      } else if ('destroyAsync' in o) {
+        await o.destroyAsync();
       } else if ('close' in o) {
         o.close();
       } else {
@@ -142,8 +145,21 @@ export class Fixture<S extends SubcaseBatchState = SubcaseBatchState> {
    */
   trackForCleanup<T extends DestroyableObject | Promise<DestroyableObject>>(o: T): T {
     if (o instanceof Promise) {
-      this.eventualAsyncExpectation(async () => {
-        this.trackForCleanup(await o);
+      this.eventualAsyncExpectation(() =>
+        o.then(
+          o => this.trackForCleanup(o),
+          () => {}
+        )
+      );
+      return o;
+    }
+
+    if (o instanceof GPUDevice) {
+      this.objectsToCleanUp.push({
+        async destroyAsync() {
+          o.destroy();
+          await o.lost;
+        },
       });
     } else {
       this.objectsToCleanUp.push(o);
