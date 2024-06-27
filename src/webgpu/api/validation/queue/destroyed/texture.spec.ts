@@ -96,9 +96,7 @@ Tests that using a destroyed texture in copyBufferToTexture fails.
   .paramsSubcasesOnly(u => u.combine('destroyed', [false, true] as const))
   .fn(t => {
     const { destroyed } = t.params;
-    const buffer = t.trackForCleanup(
-      t.createBufferTracked({ size: 4, usage: GPUBufferUsage.COPY_SRC })
-    );
+    const buffer = t.createBufferTracked({ size: 4, usage: GPUBufferUsage.COPY_SRC });
     const texture = t.trackForCleanup(
       t.device.createTexture({
         size: [1, 1, 1],
@@ -137,9 +135,7 @@ Tests that using a destroyed texture in copyTextureToBuffer fails.
         usage: GPUTextureUsage.COPY_SRC,
       })
     );
-    const buffer = t.trackForCleanup(
-      t.createBufferTracked({ size: 4, usage: GPUBufferUsage.COPY_DST })
-    );
+    const buffer = t.createBufferTracked({ size: 4, usage: GPUBufferUsage.COPY_DST });
 
     const encoder = t.device.createCommandEncoder();
     encoder.copyTextureToBuffer({ texture }, { buffer }, [1, 1, 1]);

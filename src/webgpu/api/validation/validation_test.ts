@@ -57,7 +57,7 @@ export class ValidationTest extends GPUTest {
 
     switch (state) {
       case 'valid':
-        return this.trackForCleanup(this.createBufferTracked(descriptor));
+        return this.createBufferTracked(descriptor);
 
       case 'invalid': {
         // Make the buffer invalid because of an invalid combination of usages but keep the
@@ -106,16 +106,12 @@ export class ValidationTest extends GPUTest {
 
   /** Create an arbitrarily-sized GPUBuffer with the STORAGE usage. */
   getStorageBuffer(): GPUBuffer {
-    return this.trackForCleanup(
-      this.createBufferTracked({ size: 1024, usage: GPUBufferUsage.STORAGE })
-    );
+    return this.createBufferTracked({ size: 1024, usage: GPUBufferUsage.STORAGE });
   }
 
   /** Create an arbitrarily-sized GPUBuffer with the UNIFORM usage. */
   getUniformBuffer(): GPUBuffer {
-    return this.trackForCleanup(
-      this.createBufferTracked({ size: 1024, usage: GPUBufferUsage.UNIFORM })
-    );
+    return this.createBufferTracked({ size: 1024, usage: GPUBufferUsage.UNIFORM });
   }
 
   /** Return an invalid GPUBuffer. */

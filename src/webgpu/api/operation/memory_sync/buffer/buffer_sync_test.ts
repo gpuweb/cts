@@ -221,39 +221,35 @@ export class BufferSyncTest extends GPUTest {
         break;
     }
 
-    const dstBuffer = this.trackForCleanup(
-      this.createBufferTracked({
-        size: Uint32Array.BYTES_PER_ELEMENT,
-        usage:
-          GPUBufferUsage.COPY_SRC |
-          GPUBufferUsage.COPY_DST |
-          GPUBufferUsage.STORAGE |
-          GPUBufferUsage.VERTEX |
-          GPUBufferUsage.INDEX |
-          GPUBufferUsage.INDIRECT |
-          GPUBufferUsage.UNIFORM,
-      })
-    );
+    const dstBuffer = this.createBufferTracked({
+      size: Uint32Array.BYTES_PER_ELEMENT,
+      usage:
+        GPUBufferUsage.COPY_SRC |
+        GPUBufferUsage.COPY_DST |
+        GPUBufferUsage.STORAGE |
+        GPUBufferUsage.VERTEX |
+        GPUBufferUsage.INDEX |
+        GPUBufferUsage.INDIRECT |
+        GPUBufferUsage.UNIFORM,
+    });
 
     return { srcBuffer, dstBuffer };
   }
 
   // Create a buffer with 1 uint32 element, and initialize it to a specified value.
   async createBufferWithValue(initValue: number): Promise<GPUBuffer> {
-    const buffer = this.trackForCleanup(
-      this.createBufferTracked({
-        mappedAtCreation: true,
-        size: Uint32Array.BYTES_PER_ELEMENT,
-        usage:
-          GPUBufferUsage.COPY_SRC |
-          GPUBufferUsage.COPY_DST |
-          GPUBufferUsage.STORAGE |
-          GPUBufferUsage.VERTEX |
-          GPUBufferUsage.INDEX |
-          GPUBufferUsage.INDIRECT |
-          GPUBufferUsage.UNIFORM,
-      })
-    );
+    const buffer = this.createBufferTracked({
+      mappedAtCreation: true,
+      size: Uint32Array.BYTES_PER_ELEMENT,
+      usage:
+        GPUBufferUsage.COPY_SRC |
+        GPUBufferUsage.COPY_DST |
+        GPUBufferUsage.STORAGE |
+        GPUBufferUsage.VERTEX |
+        GPUBufferUsage.INDEX |
+        GPUBufferUsage.INDIRECT |
+        GPUBufferUsage.UNIFORM,
+    });
     new Uint32Array(buffer.getMappedRange()).fill(initValue);
     buffer.unmap();
     await this.queue.onSubmittedWorkDone();
@@ -262,20 +258,18 @@ export class BufferSyncTest extends GPUTest {
 
   // Create a buffer, and initialize it to the specified values.
   async createBufferWithValues(initValues: number[]): Promise<GPUBuffer> {
-    const buffer = this.trackForCleanup(
-      this.createBufferTracked({
-        mappedAtCreation: true,
-        size: Uint32Array.BYTES_PER_ELEMENT * initValues.length,
-        usage:
-          GPUBufferUsage.COPY_SRC |
-          GPUBufferUsage.COPY_DST |
-          GPUBufferUsage.STORAGE |
-          GPUBufferUsage.VERTEX |
-          GPUBufferUsage.INDEX |
-          GPUBufferUsage.INDIRECT |
-          GPUBufferUsage.UNIFORM,
-      })
-    );
+    const buffer = this.createBufferTracked({
+      mappedAtCreation: true,
+      size: Uint32Array.BYTES_PER_ELEMENT * initValues.length,
+      usage:
+        GPUBufferUsage.COPY_SRC |
+        GPUBufferUsage.COPY_DST |
+        GPUBufferUsage.STORAGE |
+        GPUBufferUsage.VERTEX |
+        GPUBufferUsage.INDEX |
+        GPUBufferUsage.INDIRECT |
+        GPUBufferUsage.UNIFORM,
+    });
     const bufferView = new Uint32Array(buffer.getMappedRange());
     bufferView.set(initValues);
     buffer.unmap();

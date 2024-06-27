@@ -253,9 +253,6 @@ class QueryStarterRenderBundle implements QueryStarter {
 }
 
 class OcclusionQueryTest extends GPUTest {
-  createBuffer(desc: GPUBufferDescriptor) {
-    return this.trackForCleanup(this.createBufferTracked(desc));
-  }
   createTexture(desc: GPUTextureDescriptor) {
     return this.trackForCleanup(this.device.createTexture(desc));
   }
@@ -291,12 +288,12 @@ class OcclusionQueryTest extends GPUTest {
 
     const queryResolveBufferOffset =
       bufferOffset === 'non-zero' ? kRequiredQueryBufferOffsetAlignment : 0;
-    const queryResolveBuffer = this.createBuffer({
+    const queryResolveBuffer = this.createBufferTracked({
       size: numQueries * 8 + queryResolveBufferOffset,
       usage: GPUBufferUsage.QUERY_RESOLVE | GPUBufferUsage.COPY_SRC,
     });
 
-    const readBuffer = this.createBuffer({
+    const readBuffer = this.createBufferTracked({
       size: numQueries * kBytesPerQuery,
       usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
     });
@@ -955,8 +952,8 @@ g.test('occlusion_query,multi_resolve')
       readBuffer,
     } = t.setup({ numQueries: kNumQueries });
 
-    const readBuffer2 = t.createBuffer(readBuffer);
-    const readBuffer3 = t.createBuffer(readBuffer);
+    const readBuffer2 = t.createBufferTracked(readBuffer);
+    const readBuffer3 = t.createBufferTracked(readBuffer);
 
     const renderSomething = (encoder: GPUCommandEncoder) => {
       const pass = encoder.beginRenderPass(renderPassDescriptor);
