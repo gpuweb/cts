@@ -150,10 +150,12 @@ g.test('bind_group,device_mismatch')
     const { encoderType, useU32Array, mismatched } = t.params;
     const sourceDevice = mismatched ? t.mismatchedDevice : t.device;
 
-    const buffer = sourceDevice.createBuffer({
-      size: 4,
-      usage: GPUBufferUsage.STORAGE,
-    });
+    const buffer = t.trackForCleanup(
+      sourceDevice.createBuffer({
+        size: 4,
+        usage: GPUBufferUsage.STORAGE,
+      })
+    );
 
     const layout = sourceDevice.createBindGroupLayout({
       entries: [

@@ -22,7 +22,6 @@ import {
   isRegularTextureFormat,
 } from '../../../format_info.js';
 import { GPUTest, TextureTestMixin } from '../../../gpu_test.js';
-import { makeBufferWithContents } from '../../../util/buffer.js';
 import { checkElementsEqual } from '../../../util/check_contents.js';
 import { align } from '../../../util/math.js';
 import { physicalMipSize } from '../../../util/texture/base.js';
@@ -545,8 +544,7 @@ class F extends TextureTestMixin(GPUTest) {
     for (let i = 1; i < totalCopyArrayLayers; ++i) {
       uniformBufferData[(kMinDynamicBufferOffsetAlignment / 4) * i] = i;
     }
-    const uniformBuffer = makeBufferWithContents(
-      this.device,
+    const uniformBuffer = this.makeBufferWithContents(
       uniformBufferData,
       GPUBufferUsage.COPY_DST | GPUBufferUsage.UNIFORM
     );

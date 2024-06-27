@@ -429,11 +429,12 @@ g.test('device_mismatch')
     const { copyType, bufMismatched, texMismatched } = t.params;
 
     const uploadBufferSize = 32;
-    const buffer = (bufMismatched ? t.mismatchedDevice : t.device).createBuffer({
-      size: uploadBufferSize,
-      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
-    });
-    t.trackForCleanup(buffer);
+    const buffer = t.trackForCleanup(
+      (bufMismatched ? t.mismatchedDevice : t.device).createBuffer({
+        size: uploadBufferSize,
+        usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
+      })
+    );
 
     const textureSize = { width: 1, height: 1, depthOrArrayLayers: 1 };
     const texture = (texMismatched ? t.mismatchedDevice : t.device).createTexture({

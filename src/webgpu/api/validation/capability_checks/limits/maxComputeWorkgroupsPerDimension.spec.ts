@@ -39,10 +39,12 @@ g.test('dispatchWorkgroups,at_over')
         const counts = [1, 1, 1];
         counts[axis] = testValue;
 
-        const buffer = device.createBuffer({
-          size: 16,
-          usage: GPUBufferUsage.STORAGE,
-        });
+        const buffer = t.trackForCleanup(
+          device.createBuffer({
+            size: 16,
+            usage: GPUBufferUsage.STORAGE,
+          })
+        );
 
         const module = device.createShaderModule({
           code: `

@@ -109,18 +109,20 @@ g.test('buffer,device_mismatch')
     const { srcMismatched, dstMismatched } = t.params;
 
     const srcBufferDevice = srcMismatched ? t.mismatchedDevice : t.device;
-    const srcBuffer = srcBufferDevice.createBuffer({
-      size: 16,
-      usage: GPUBufferUsage.COPY_SRC,
-    });
-    t.trackForCleanup(srcBuffer);
+    const srcBuffer = t.trackForCleanup(
+      srcBufferDevice.createBuffer({
+        size: 16,
+        usage: GPUBufferUsage.COPY_SRC,
+      })
+    );
 
     const dstBufferDevice = dstMismatched ? t.mismatchedDevice : t.device;
-    const dstBuffer = dstBufferDevice.createBuffer({
-      size: 16,
-      usage: GPUBufferUsage.COPY_DST,
-    });
-    t.trackForCleanup(dstBuffer);
+    const dstBuffer = t.trackForCleanup(
+      dstBufferDevice.createBuffer({
+        size: 16,
+        usage: GPUBufferUsage.COPY_DST,
+      })
+    );
 
     t.TestCopyBufferToBuffer({
       srcBuffer,

@@ -170,11 +170,12 @@ g.test('query_set_buffer,device_mismatch')
     );
 
     const bufferDevice = bufferMismatched ? t.mismatchedDevice : t.device;
-    const buffer = bufferDevice.createBuffer({
-      size: kQueryCount * 8,
-      usage: GPUBufferUsage.QUERY_RESOLVE,
-    });
-    t.trackForCleanup(buffer);
+    const buffer = t.trackForCleanup(
+      bufferDevice.createBuffer({
+        size: kQueryCount * 8,
+        usage: GPUBufferUsage.QUERY_RESOLVE,
+      })
+    );
 
     const encoder = t.createEncoder('non-pass');
     encoder.encoder.resolveQuerySet(querySet, 0, kQueryCount, buffer, 0);

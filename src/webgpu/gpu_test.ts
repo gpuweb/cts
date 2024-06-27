@@ -38,7 +38,6 @@ import {
   ColorTextureFormat,
   isTextureFormatUsableAsStorageFormat,
 } from './format_info.js';
-import { makeBufferWithContents } from './util/buffer.js';
 import { checkElementsEqual, checkElementsBetween } from './util/check_contents.js';
 import { CommandBufferMaker, EncoderType } from './util/command_buffer_maker.js';
 import { ScalarType } from './util/conversion.js';
@@ -59,7 +58,7 @@ import {
   TexelCompareOptions,
   textureContentIsOKByT2B,
 } from './util/texture/texture_ok.js';
-import { createTextureFromTexelView, createTextureFromTexelViews } from './util/texture.js';
+import { createTextureFromTexelViews } from './util/texture.js';
 import { reifyExtent3D, reifyOrigin3D } from './util/unions.js';
 
 const devicePool = new DevicePool();
@@ -1080,12 +1079,21 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
   }
 
   /**
-   * Create a GPUBuffer with the specified contents and usage.
+   * Creates a buffer with the contents of some TypedArray.
+   * The buffer size will always be aligned to 4 as we set mappedAtCreation === true when creating the
+   * buffer.
    *
    * MAINTENANCE_TODO: Several call sites would be simplified if this took ArrayBuffer as well.
    */
   makeBufferWithContents(dataArray: TypedArrayBufferView, usage: GPUBufferUsageFlags): GPUBuffer {
-    return this.trackForCleanup(makeBufferWithContents(this.device, dataArray, usage));
+    const buffer = this.createBufferTracked({
+      mappedAtCreation: true,
+      size: align(dataArray.byteLength, 4),
+      usage,
+    });
+    memcpy({ src: dataArray }, { dst: buffer.getMappedRange() });
+    buffer.unmap();
+    return buffer;
   }
 
   /**
@@ -1494,18 +1502,21 @@ export function TextureTestMixin<F extends FixtureClass<GPUTest>>(
     extends (Base as FixtureClassInterface<GPUTest>)
     implements TextureTestMixinType
   {
+    /**
+     * Creates a 1 mip level texture with the contents of a TexelView.
+     */
     createTextureFromTexelView(
       texelView: TexelView,
       desc: Omit<GPUTextureDescriptor, 'format'>
     ): GPUTexture {
-      return this.trackForCleanup(createTextureFromTexelView(this.device, texelView, desc));
+      return createTextureFromTexelViews(this, [texelView], desc);
     }
 
     createTextureFromTexelViewsMultipleMipmaps(
       texelViews: TexelView[],
       desc: Omit<GPUTextureDescriptor, 'format'>
     ): GPUTexture {
-      return this.trackForCleanup(createTextureFromTexelViews(this.device, texelViews, desc));
+      return createTextureFromTexelViews(this, texelViews, desc);
     }
 
     expectTexelViewComparisonIsOkInTexture(

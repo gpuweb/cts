@@ -40,11 +40,12 @@ g.test('index_buffer,device_mismatch')
     const { encoderType, mismatched } = t.params;
     const sourceDevice = mismatched ? t.mismatchedDevice : t.device;
 
-    const indexBuffer = sourceDevice.createBuffer({
-      size: 16,
-      usage: GPUBufferUsage.INDEX,
-    });
-    t.trackForCleanup(indexBuffer);
+    const indexBuffer = t.trackForCleanup(
+      sourceDevice.createBuffer({
+        size: 16,
+        usage: GPUBufferUsage.INDEX,
+      })
+    );
 
     const { encoder, validateFinish } = t.createEncoder(encoderType);
     encoder.setIndexBuffer(indexBuffer, 'uint32');

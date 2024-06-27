@@ -69,11 +69,12 @@ g.test('vertex_buffer,device_mismatch')
     const { encoderType, mismatched } = t.params;
     const sourceDevice = mismatched ? t.mismatchedDevice : t.device;
 
-    const vertexBuffer = sourceDevice.createBuffer({
-      size: 16,
-      usage: GPUBufferUsage.VERTEX,
-    });
-    t.trackForCleanup(vertexBuffer);
+    const vertexBuffer = t.trackForCleanup(
+      sourceDevice.createBuffer({
+        size: 16,
+        usage: GPUBufferUsage.VERTEX,
+      })
+    );
 
     const { encoder, validateFinish } = t.createEncoder(encoderType);
     encoder.setVertexBuffer(0, vertexBuffer);

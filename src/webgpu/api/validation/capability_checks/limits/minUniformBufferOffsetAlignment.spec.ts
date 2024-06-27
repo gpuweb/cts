@@ -126,10 +126,12 @@ g.test('setBindGroup,at_over')
       requestedLimit,
       testValue,
       async ({ device, testValue, shouldError }) => {
-        const buffer = device.createBuffer({
-          size: testValue * 2,
-          usage: GPUBufferUsage.UNIFORM,
-        });
+        const buffer = t.trackForCleanup(
+          device.createBuffer({
+            size: testValue * 2,
+            usage: GPUBufferUsage.UNIFORM,
+          })
+        );
 
         const layout = device.createBindGroupLayout({
           entries: [

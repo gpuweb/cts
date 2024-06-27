@@ -14,11 +14,12 @@ g.test('createBuffer,at_over')
       async ({ device, testValue, actualLimit, shouldError }) => {
         await t.testForValidationErrorWithPossibleOutOfMemoryError(
           () => {
-            const buffer = device.createBuffer({
-              usage: GPUBufferUsage.VERTEX,
-              size: testValue,
-            });
-            buffer.destroy();
+            t.trackForCleanup(
+              device.createBuffer({
+                usage: GPUBufferUsage.VERTEX,
+                size: testValue,
+              })
+            );
           },
           shouldError,
           `size: ${testValue}, limit: ${actualLimit}`

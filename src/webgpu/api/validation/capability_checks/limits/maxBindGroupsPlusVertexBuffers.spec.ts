@@ -232,11 +232,12 @@ g.test('draw,at_over')
           fragment: { module, targets: [{ format: 'rgba8unorm' }] },
         });
 
-        const vertexBuffer = device.createBuffer({
-          size: 16,
-          usage: GPUBufferUsage.VERTEX,
-        });
-        t.trackForCleanup(vertexBuffer);
+        const vertexBuffer = t.trackForCleanup(
+          device.createBuffer({
+            size: 16,
+            usage: GPUBufferUsage.VERTEX,
+          })
+        );
 
         await t.testGPURenderAndBindingCommandsMixin(
           encoderType,
@@ -261,17 +262,19 @@ g.test('draw,at_over')
 
             passEncoder.setPipeline(pipeline);
 
-            const indirectBuffer = device.createBuffer({
-              size: 20,
-              usage: GPUBufferUsage.INDIRECT,
-            });
-            t.trackForCleanup(indirectBuffer);
+            const indirectBuffer = t.trackForCleanup(
+              device.createBuffer({
+                size: 20,
+                usage: GPUBufferUsage.INDIRECT,
+              })
+            );
 
-            const indexBuffer = device.createBuffer({
-              size: 4,
-              usage: GPUBufferUsage.INDEX,
-            });
-            t.trackForCleanup(indexBuffer);
+            const indexBuffer = t.trackForCleanup(
+              device.createBuffer({
+                size: 4,
+                usage: GPUBufferUsage.INDEX,
+              })
+            );
 
             switch (drawType) {
               case 'draw':

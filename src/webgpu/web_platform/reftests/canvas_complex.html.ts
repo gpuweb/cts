@@ -50,6 +50,7 @@ export function run(
       const bytesPerRow = align(bytesPerPixel * ctx.canvas.width, 256);
       const componentsPerPixel = 4;
 
+      // eslint-disable-next-line no-restricted-syntax
       const buffer = t.device.createBuffer({
         mappedAtCreation: true,
         size: rows * bytesPerRow,

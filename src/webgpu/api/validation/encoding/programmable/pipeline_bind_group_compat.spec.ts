@@ -347,11 +347,10 @@ class F extends ValidationTest {
       explicitPipelineLayout
     );
 
-    const buffer = device.createBuffer({
+    const buffer = this.createBufferTracked({
       size: 16,
       usage: GPUBufferUsage.UNIFORM,
     });
-    this.trackForCleanup(buffer);
 
     let emptyBindGroupLayouts;
     let nonEmptyBindGroupLayouts;

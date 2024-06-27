@@ -60,7 +60,6 @@ import {
   isCompressedTextureFormat,
 } from '../../../format_info.js';
 import { GPUTest, TextureTestMixin } from '../../../gpu_test.js';
-import { makeBufferWithContents } from '../../../util/buffer.js';
 import { checkElementsEqual } from '../../../util/check_contents.js';
 import { align } from '../../../util/math.js';
 import { physicalMipSizeFromTexture } from '../../../util/texture/base.js';
@@ -775,11 +774,7 @@ class ImageCopyTest extends TextureTestMixin(GPUTest) {
         break;
       case 'CopyB2T':
         {
-          const stagingBuffer = makeBufferWithContents(
-            this.device,
-            initialData,
-            GPUBufferUsage.COPY_SRC
-          );
+          const stagingBuffer = this.makeBufferWithContents(initialData, GPUBufferUsage.COPY_SRC);
           const encoder = this.device.createCommandEncoder();
           encoder.copyBufferToTexture(
             { buffer: stagingBuffer, offset: initialDataOffset, bytesPerRow, rowsPerImage },
@@ -897,8 +892,7 @@ class ImageCopyTest extends TextureTestMixin(GPUTest) {
     for (let i = 1; i < stencilBitCount; ++i) {
       uniformBufferData[(kMinDynamicBufferOffsetAlignment / 4) * i] = i;
     }
-    const uniformBuffer = makeBufferWithContents(
-      this.device,
+    const uniformBuffer = this.makeBufferWithContents(
       uniformBufferData,
       GPUBufferUsage.COPY_DST | GPUBufferUsage.UNIFORM
     );
