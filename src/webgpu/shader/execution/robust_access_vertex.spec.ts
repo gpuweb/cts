@@ -487,7 +487,7 @@ class F extends TextureTestMixin(GPUTest) {
       buffers,
     });
 
-    const colorAttachment = this.device.createTexture({
+    const colorAttachment = this.createTextureTracked({
       format: 'rgba8unorm',
       size: { width: 2, height: 1, depthOrArrayLayers: 1 },
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,

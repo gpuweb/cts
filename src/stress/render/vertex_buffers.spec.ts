@@ -101,7 +101,7 @@ g.test('many')
         entryPoint: 'fmain',
       },
     });
-    const renderTarget = t.device.createTexture({
+    const renderTarget = t.createTextureTracked({
       size: [kSize, kSize],
       usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
       format: 'rgba8unorm',

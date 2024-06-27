@@ -136,7 +136,7 @@ fn frag(info : CaseInfo) {
 
   // Create a texture to use as a color attachment.
   // We only need this for launching the desired number of fragment invocations.
-  const colorAttachment = t.device.createTexture({
+  const colorAttachment = t.createTextureTracked({
     size: { width: 2, height: 2 },
     format: 'rgba8unorm',
     usage: GPUTextureUsage.RENDER_ATTACHMENT,

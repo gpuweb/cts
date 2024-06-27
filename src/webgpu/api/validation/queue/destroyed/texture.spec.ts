@@ -19,7 +19,7 @@ Tests that using a destroyed texture in writeTexture fails.
   .fn(t => {
     const { destroyed } = t.params;
     const texture = t.trackForCleanup(
-      t.device.createTexture({
+      t.createTextureTracked({
         size: [1, 1, 1],
         format: 'rgba8unorm',
         usage: GPUTextureUsage.COPY_DST,
@@ -46,14 +46,14 @@ Tests that using a destroyed texture in copyTextureToTexture fails.
   .paramsSubcasesOnly(u => u.combine('destroyed', ['none', 'src', 'dst', 'both'] as const))
   .fn(t => {
     const src = t.trackForCleanup(
-      t.device.createTexture({
+      t.createTextureTracked({
         size: [1, 1, 1],
         format: 'rgba8unorm',
         usage: GPUTextureUsage.COPY_SRC,
       })
     );
     const dst = t.trackForCleanup(
-      t.device.createTexture({
+      t.createTextureTracked({
         size: [1, 1, 1],
         format: 'rgba8unorm',
         usage: GPUTextureUsage.COPY_DST,
@@ -98,7 +98,7 @@ Tests that using a destroyed texture in copyBufferToTexture fails.
     const { destroyed } = t.params;
     const buffer = t.createBufferTracked({ size: 4, usage: GPUBufferUsage.COPY_SRC });
     const texture = t.trackForCleanup(
-      t.device.createTexture({
+      t.createTextureTracked({
         size: [1, 1, 1],
         format: 'rgba8unorm',
         usage: GPUTextureUsage.COPY_DST,
@@ -129,7 +129,7 @@ Tests that using a destroyed texture in copyTextureToBuffer fails.
   .fn(t => {
     const { destroyed } = t.params;
     const texture = t.trackForCleanup(
-      t.device.createTexture({
+      t.createTextureTracked({
         size: [1, 1, 1],
         format: 'rgba8unorm',
         usage: GPUTextureUsage.COPY_SRC,
@@ -167,7 +167,7 @@ Tests that using a destroyed texture referenced by a bindGroup set with setBindG
     const { destroyed, encoderType, bindingType } = t.params;
     const { device } = t;
     const texture = t.trackForCleanup(
-      t.device.createTexture({
+      t.createTextureTracked({
         size: [1, 1, 1],
         format: 'rgba8unorm',
         usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.STORAGE_BINDING,
@@ -224,7 +224,7 @@ Tests that using a destroyed texture referenced by a render pass fails
     const { device } = t;
 
     const colorAttachment = t.trackForCleanup(
-      t.device.createTexture({
+      t.createTextureTracked({
         size: [1, 1, 1],
         format: 'rgba8unorm',
         sampleCount: 4,
@@ -233,7 +233,7 @@ Tests that using a destroyed texture referenced by a render pass fails
     );
 
     const resolveAttachment = t.trackForCleanup(
-      t.device.createTexture({
+      t.createTextureTracked({
         size: [1, 1, 1],
         format: 'rgba8unorm',
         usage: GPUTextureUsage.RENDER_ATTACHMENT,
@@ -241,7 +241,7 @@ Tests that using a destroyed texture referenced by a render pass fails
     );
 
     const depthStencilAttachment = t.trackForCleanup(
-      t.device.createTexture({
+      t.createTextureTracked({
         size: [1, 1, 1],
         format: 'depth32float',
         sampleCount: 4,

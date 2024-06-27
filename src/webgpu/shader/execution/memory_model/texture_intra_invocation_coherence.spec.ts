@@ -257,7 +257,7 @@ fn main(@builtin(global_invocation_id) gid : vec3u) {
 
     // Texture
     const texture_size = getTextureSize(invocations * num_writes_per_invocation, t.params.dim);
-    const texture = t.device.createTexture({
+    const texture = t.createTextureTracked({
       format: t.params.format,
       dimension: t.params.dim === '2d-array' ? '2d' : (t.params.dim as GPUTextureDimension),
       size: texture_size,

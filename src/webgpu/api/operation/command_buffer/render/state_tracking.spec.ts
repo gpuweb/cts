@@ -131,7 +131,7 @@ g.test('set_index_buffer_without_changing_buffer')
     const renderPipeline = t.GetRenderPipelineForTest(t.kVertexAttributeSize);
 
     const outputTextureSize = [kPositions.length - 1, 1, 1];
-    const outputTexture = t.device.createTexture({
+    const outputTexture = t.createTextureTracked({
       format: 'rgba8unorm',
       size: outputTextureSize,
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
@@ -225,7 +225,7 @@ g.test('set_vertex_buffer_without_changing_buffer')
     const renderPipeline = t.GetRenderPipelineForTest(t.kVertexAttributeSize);
 
     const outputTextureSize = [kPositions.length, 1, 1];
-    const outputTexture = t.device.createTexture({
+    const outputTexture = t.createTextureTracked({
       format: 'rgba8unorm',
       size: outputTextureSize,
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
@@ -326,7 +326,7 @@ g.test('change_pipeline_before_and_after_vertex_buffer')
 
     const kPointsCount = kPositions.length - 1;
     const outputTextureSize = [kPointsCount, 1, 1];
-    const outputTexture = t.device.createTexture({
+    const outputTexture = t.createTextureTracked({
       format: 'rgba8unorm',
       size: outputTextureSize,
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
@@ -502,7 +502,7 @@ g.test('set_vertex_buffer_but_not_used_in_draw')
 
     const kPointsCount = 4;
     const outputTextureSize = [kPointsCount, 1, 1];
-    const outputTexture = t.device.createTexture({
+    const outputTexture = t.createTextureTracked({
       format: 'rgba8unorm',
       size: [kPointsCount, 1, 1],
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
@@ -585,7 +585,7 @@ g.test('set_index_buffer_before_non_indexed_draw')
 
     const kPointsCount = 4;
     const outputTextureSize = [kPointsCount, 1, 1];
-    const outputTexture = t.device.createTexture({
+    const outputTexture = t.createTextureTracked({
       format: 'rgba8unorm',
       size: [kPointsCount, 1, 1],
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,

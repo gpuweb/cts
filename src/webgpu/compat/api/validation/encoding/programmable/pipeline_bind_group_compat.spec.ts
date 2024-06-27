@@ -243,7 +243,7 @@ function createResourcesForRenderPassTest(
   textureType: TextureType,
   bindConfig: BindConfig
 ) {
-  const texture = t.device.createTexture({
+  const texture = t.createTextureTracked({
     size: [2, 1, 1],
     mipLevelCount: 2,
     format: 'rgba8unorm',
@@ -274,7 +274,7 @@ function createResourcesForComputePassTest(
   textureType: TextureType,
   bindConfig: BindConfig
 ) {
-  const texture = t.device.createTexture({
+  const texture = t.createTextureTracked({
     size: [2, 1, 1],
     mipLevelCount: 2,
     format: 'rgba8unorm',

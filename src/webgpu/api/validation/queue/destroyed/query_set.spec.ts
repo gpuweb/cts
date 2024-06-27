@@ -64,7 +64,7 @@ Tests that use a destroyed query set in timestamp query on {non-pass, compute, r
 
     {
       const texture = t.trackForCleanup(
-        t.device.createTexture({
+        t.createTextureTracked({
           size: [1, 1, 1],
           format: 'rgba8unorm',
           usage: GPUTextureUsage.RENDER_ATTACHMENT,

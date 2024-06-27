@@ -149,7 +149,7 @@ g.test('texture_binding')
 
     // Create an rgba8unorm output texture.
     const outputTexture = t.trackForCleanup(
-      t.device.createTexture({
+      t.createTextureTracked({
         format: 'rgba8unorm',
         size: [kTextureSize, kTextureSize],
         usage: GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.COPY_SRC,
@@ -222,7 +222,7 @@ in view format and match in base format.`
 
     // Create the renderTexture as |format|.
     const renderTexture = t.trackForCleanup(
-      t.device.createTexture({
+      t.createTextureTracked({
         format,
         size: [kTextureSize, kTextureSize],
         usage:
@@ -237,7 +237,7 @@ in view format and match in base format.`
       sampleCount === 1
         ? undefined
         : t.trackForCleanup(
-            t.device.createTexture({
+            t.createTextureTracked({
               format,
               size: [kTextureSize, kTextureSize],
               usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
@@ -296,7 +296,7 @@ in view format and match in base format.`
     // the contents.
     const singleSampleRenderTexture = resolveTexture
       ? t.trackForCleanup(
-          t.device.createTexture({
+          t.createTextureTracked({
             format,
             size: [kTextureSize, kTextureSize],
             usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,

@@ -135,7 +135,7 @@ function drawPassthrough(t: GPUTest, code: string) {
   const height = 2;
   const copyWidth = 4;
   const outputTextures = range(3, i => {
-    const texture = t.device.createTexture({
+    const texture = t.createTextureTracked({
       size: [width, height],
       usage:
         GPUTextureUsage.COPY_SRC |

@@ -908,7 +908,7 @@ g.test('empty_bind_group_layouts_requires_empty_bind_groups,render_pass')
 
     const encoder = t.device.createCommandEncoder();
 
-    const attachmentTexture = t.device.createTexture({
+    const attachmentTexture = t.createTextureTracked({
       format: 'rgba8unorm',
       size: { width: 16, height: 16, depthOrArrayLayers: 1 },
       usage: GPUTextureUsage.RENDER_ATTACHMENT,
@@ -1081,7 +1081,7 @@ g.test('default_bind_group_layouts_never_match,render_pass')
         );
       },
       doCommandFn: ({ t, encoder, pipeline, emptyBindGroups, nonEmptyBindGroups }) => {
-        const attachmentTexture = t.device.createTexture({
+        const attachmentTexture = t.createTextureTracked({
           format: 'rgba8unorm',
           size: { width: 16, height: 16, depthOrArrayLayers: 1 },
           usage: GPUTextureUsage.RENDER_ATTACHMENT,

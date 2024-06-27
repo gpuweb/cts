@@ -20,7 +20,7 @@ export function createTextureFromTexelViews(
   const { width, height, depthOrArrayLayers } = reifyExtent3D(desc.size);
 
   // Create the texture and then initialize each mipmap level separately.
-  const texture = t.device.createTexture({
+  const texture = t.createTextureTracked({
     ...desc,
     format: texelViews[0].format,
     usage: desc.usage | GPUTextureUsage.COPY_DST,

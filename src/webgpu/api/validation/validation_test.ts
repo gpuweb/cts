@@ -31,11 +31,11 @@ export class ValidationTest extends GPUTest {
 
     switch (state) {
       case 'valid':
-        return this.trackForCleanup(this.device.createTexture(descriptor));
+        return this.trackForCleanup(this.createTextureTracked(descriptor));
       case 'invalid':
         return this.getErrorTexture();
       case 'destroyed': {
-        const texture = this.device.createTexture(descriptor);
+        const texture = this.createTextureTracked(descriptor);
         texture.destroy();
         return texture;
       }
@@ -138,7 +138,7 @@ export class ValidationTest extends GPUTest {
         ? GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT
         : GPUTextureUsage.TEXTURE_BINDING;
     return this.trackForCleanup(
-      this.device.createTexture({
+      this.createTextureTracked({
         size: { width: 16, height: 16, depthOrArrayLayers: 1 },
         format: 'rgba8unorm',
         usage,
@@ -150,7 +150,7 @@ export class ValidationTest extends GPUTest {
   /** Return an arbitrarily-configured GPUTexture with the `STORAGE_BINDING` usage. */
   getStorageTexture(format: GPUTextureFormat): GPUTexture {
     return this.trackForCleanup(
-      this.device.createTexture({
+      this.createTextureTracked({
         size: { width: 16, height: 16, depthOrArrayLayers: 1 },
         format,
         usage: GPUTextureUsage.STORAGE_BINDING,
@@ -161,7 +161,7 @@ export class ValidationTest extends GPUTest {
   /** Return an arbitrarily-configured GPUTexture with the `RENDER_ATTACHMENT` usage. */
   getRenderTexture(sampleCount: number = 1): GPUTexture {
     return this.trackForCleanup(
-      this.device.createTexture({
+      this.createTextureTracked({
         size: { width: 16, height: 16, depthOrArrayLayers: 1 },
         format: 'rgba8unorm',
         usage: GPUTextureUsage.RENDER_ATTACHMENT,
@@ -173,7 +173,7 @@ export class ValidationTest extends GPUTest {
   /** Return an invalid GPUTexture. */
   getErrorTexture(): GPUTexture {
     this.device.pushErrorScope('validation');
-    const texture = this.device.createTexture({
+    const texture = this.createTextureTracked({
       size: { width: 0, height: 0, depthOrArrayLayers: 0 },
       format: 'rgba8unorm',
       usage: GPUTextureUsage.TEXTURE_BINDING,

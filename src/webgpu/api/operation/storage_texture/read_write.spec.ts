@@ -327,7 +327,7 @@ g.test('basic')
     const kWidth = t.isCompatibility ? 8 : 16;
     const height = textureDimension === '1d' ? 1 : 8;
     const textureSize = [kWidth, height, depthOrArrayLayers] as const;
-    const storageTexture = t.device.createTexture({
+    const storageTexture = t.createTextureTracked({
       format,
       dimension: textureDimension,
       size: textureSize,

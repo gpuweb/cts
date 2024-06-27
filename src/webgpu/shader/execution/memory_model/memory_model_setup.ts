@@ -305,7 +305,7 @@ export class MemoryModelTester {
       const height = numTexels / width;
       const textureSize: GPUExtent3D = { width, height };
       const textureLocations: TextureWithSource = {
-        deviceTex: this.test.device.createTexture({
+        deviceTex: this.test.createTextureTracked({
           format: 'r32uint',
           dimension: '2d',
           size: textureSize,

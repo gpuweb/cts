@@ -133,7 +133,7 @@ function getPipelineDescriptor(
 function createTextures(t: LimitTestsImpl, targets: GPUColorTargetState[]) {
   return targets.map(({ format }) =>
     t.trackForCleanup(
-      t.device.createTexture({
+      t.createTextureTracked({
         size: [1, 1],
         format,
         usage: GPUTextureUsage.RENDER_ATTACHMENT,

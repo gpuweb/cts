@@ -204,7 +204,7 @@ have unexpected values then get drawn to the color buffer, which is later checke
       fragment: { module, entryPoint: 'fcheck', targets: [{ format: 'r8unorm' }] },
     });
 
-    const dsTexture = t.device.createTexture({
+    const dsTexture = t.createTextureTracked({
       format,
       size: [kNumTestPoints],
       usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
@@ -217,10 +217,10 @@ have unexpected values then get drawn to the color buffer, which is later checke
       size: [kNumTestPoints],
       usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
     };
-    const checkTexture = t.device.createTexture(checkTextureDesc);
+    const checkTexture = t.createTextureTracked(checkTextureDesc);
     const checkTextureView = checkTexture.createView();
     const checkTextureMSView = multisampled
-      ? t.device.createTexture({ ...checkTextureDesc, sampleCount: 4 }).createView()
+      ? t.createTextureTracked({ ...checkTextureDesc, sampleCount: 4 }).createView()
       : undefined;
 
     const dsActual =
@@ -453,7 +453,7 @@ to be empty.`
       fragment: { module, entryPoint: 'ftest', targets: [{ format: 'r8unorm' }] },
     });
 
-    const dsTexture = t.device.createTexture({
+    const dsTexture = t.createTextureTracked({
       format,
       size: [kNumDepthValues],
       usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
@@ -466,10 +466,10 @@ to be empty.`
       size: [kNumDepthValues],
       usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
     };
-    const testTexture = t.device.createTexture(testTextureDesc);
+    const testTexture = t.createTextureTracked(testTextureDesc);
     const testTextureView = testTexture.createView();
     const testTextureMSView = multisampled
-      ? t.device.createTexture({ ...testTextureDesc, sampleCount: 4 }).createView()
+      ? t.createTextureTracked({ ...testTextureDesc, sampleCount: 4 }).createView()
       : undefined;
 
     const resultBuffer = t.createBufferTracked({

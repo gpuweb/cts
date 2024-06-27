@@ -113,7 +113,7 @@ export class ImageCopyTest extends ValidationTest {
       height: align(Math.max(1, size.height + origin.y), info.blockHeight),
       depthOrArrayLayers: Math.max(1, size.depthOrArrayLayers + origin.z),
     };
-    return this.device.createTexture({
+    return this.createTextureTracked({
       size: alignedSize,
       dimension,
       format,

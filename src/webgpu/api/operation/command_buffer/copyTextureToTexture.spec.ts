@@ -98,7 +98,7 @@ class F extends TextureTestMixin(GPUTest) {
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
       mipLevelCount,
     };
-    const srcTexture = this.device.createTexture(srcTextureDesc);
+    const srcTexture = this.createTextureTracked(srcTextureDesc);
     this.trackForCleanup(srcTexture);
     const dstTextureDesc: GPUTextureDescriptor = {
       dimension,
@@ -107,7 +107,7 @@ class F extends TextureTestMixin(GPUTest) {
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | extraTextureUsageFlags,
       mipLevelCount,
     };
-    const dstTexture = this.device.createTexture(dstTextureDesc);
+    const dstTexture = this.createTextureTracked(dstTextureDesc);
     this.trackForCleanup(dstTexture);
 
     // Fill the whole subresource of srcTexture at srcCopyLevel with initialSrcData.
@@ -214,7 +214,7 @@ class F extends TextureTestMixin(GPUTest) {
       // compare by rendering. We need the expected texture to match
       // the dstTexture so we'll create a texture where we supply
       // all of the data in JavaScript.
-      const expectedTexture = this.device.createTexture({
+      const expectedTexture = this.createTextureTracked({
         size: [dstTexture.width, dstTexture.height, dstTexture.depthOrArrayLayers],
         mipLevelCount: dstTexture.mipLevelCount,
         format: dstTexture.format,
@@ -625,7 +625,7 @@ class F extends TextureTestMixin(GPUTest) {
     const bindGroup = this.GetBindGroupForT2TCopyWithDepthTests(bindGroupLayout, copySize[2]);
 
     const outputColorTexture = this.trackForCleanup(
-      this.device.createTexture({
+      this.createTextureTracked({
         format: 'rgba8unorm',
         size: copySize,
         usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
@@ -1286,7 +1286,7 @@ g.test('copy_depth_stencil')
       srcTextureSize.depthOrArrayLayers - Math.max(srcCopyBaseArrayLayer, dstCopyBaseArrayLayer),
     ];
     const sourceTexture = t.trackForCleanup(
-      t.device.createTexture({
+      t.createTextureTracked({
         format,
         size: srcTextureSize,
         usage:
@@ -1295,7 +1295,7 @@ g.test('copy_depth_stencil')
       })
     );
     const destinationTexture = t.trackForCleanup(
-      t.device.createTexture({
+      t.createTextureTracked({
         format,
         size: [
           copySize[0] << dstCopyLevel,
@@ -1382,7 +1382,7 @@ g.test('copy_multisampled_color')
     const kColorFormat = 'rgba8unorm';
     const kSampleCount = 4;
 
-    const sourceTexture = t.device.createTexture({
+    const sourceTexture = t.createTextureTracked({
       format: kColorFormat,
       size: textureSize,
       usage:
@@ -1392,7 +1392,7 @@ g.test('copy_multisampled_color')
       sampleCount: kSampleCount,
     });
     t.trackForCleanup(sourceTexture);
-    const destinationTexture = t.device.createTexture({
+    const destinationTexture = t.createTextureTracked({
       format: kColorFormat,
       size: textureSize,
       usage:
@@ -1524,7 +1524,7 @@ g.test('copy_multisampled_color')
         },
       ],
     });
-    const expectedOutputTexture = t.device.createTexture({
+    const expectedOutputTexture = t.createTextureTracked({
       format: kColorFormat,
       size: textureSize,
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
@@ -1573,14 +1573,14 @@ g.test('copy_multisampled_depth')
     const kDepthFormat = 'depth24plus';
     const kSampleCount = 4;
 
-    const sourceTexture = t.device.createTexture({
+    const sourceTexture = t.createTextureTracked({
       format: kDepthFormat,
       size: textureSize,
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
       sampleCount: kSampleCount,
     });
     t.trackForCleanup(sourceTexture);
-    const destinationTexture = t.device.createTexture({
+    const destinationTexture = t.createTextureTracked({
       format: kDepthFormat,
       size: textureSize,
       usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
@@ -1674,14 +1674,14 @@ g.test('copy_multisampled_depth')
         count: kSampleCount,
       },
     });
-    const multisampledColorTexture = t.device.createTexture({
+    const multisampledColorTexture = t.createTextureTracked({
       format: kColorFormat,
       size: textureSize,
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
       sampleCount: kSampleCount,
     });
     t.trackForCleanup(multisampledColorTexture);
-    const colorTextureAsResolveTarget = t.device.createTexture({
+    const colorTextureAsResolveTarget = t.createTextureTracked({
       format: kColorFormat,
       size: textureSize,
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,

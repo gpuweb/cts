@@ -439,7 +439,7 @@ class ImageCopyTest extends TextureTestMixin(GPUTest) {
       actualTexture.height,
       actualTexture.depthOrArrayLayers,
     ] as const;
-    const expectedTexture = this.device.createTexture({
+    const expectedTexture = this.createTextureTracked({
       label: 'expectedTexture',
       size,
       dimension: actualTexture.dimension,
@@ -645,7 +645,7 @@ class ImageCopyTest extends TextureTestMixin(GPUTest) {
     checkMethod: CheckMethod;
     changeBeforePass?: ChangeBeforePass;
   }): void {
-    const texture = this.device.createTexture({
+    const texture = this.createTextureTracked({
       size: textureSize as [number, number, number],
       format,
       dimension,
@@ -744,7 +744,7 @@ class ImageCopyTest extends TextureTestMixin(GPUTest) {
     initialDataOffset: number,
     mipLevel: number
   ): void {
-    const srcTexture = this.device.createTexture({
+    const srcTexture = this.createTextureTracked({
       size: textureSize,
       usage:
         GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
@@ -808,7 +808,7 @@ class ImageCopyTest extends TextureTestMixin(GPUTest) {
     offset: number,
     mipLevel: number
   ): void {
-    const srcTexture = this.device.createTexture({
+    const srcTexture = this.createTextureTracked({
       size: textureSize,
       usage:
         GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
@@ -1005,7 +1005,7 @@ class ImageCopyTest extends TextureTestMixin(GPUTest) {
       copyFromOutputTextureLayout.mipSize[1],
       1,
     ];
-    const outputTexture = this.device.createTexture({
+    const outputTexture = this.createTextureTracked({
       format: 'r8unorm',
       size: outputTextureSize,
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
@@ -1111,7 +1111,7 @@ class ImageCopyTest extends TextureTestMixin(GPUTest) {
   ): void {
     assert(!!kTextureFormatInfo[depthFormat].depth);
 
-    const inputTexture = this.device.createTexture({
+    const inputTexture = this.createTextureTracked({
       size: copySize,
       usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
       format: 'r32float',
@@ -1284,7 +1284,7 @@ class ImageCopyTest extends TextureTestMixin(GPUTest) {
     }
 
     // Initialize the depth aspect of the source texture
-    const depthTexture = this.device.createTexture({
+    const depthTexture = this.createTextureTracked({
       format,
       size: [copySize[0] << mipLevel, copySize[1] << mipLevel, copySize[2]] as const,
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,

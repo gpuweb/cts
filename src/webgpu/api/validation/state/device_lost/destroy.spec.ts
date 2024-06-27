@@ -173,7 +173,7 @@ Tests creating 2d uncompressed textures on destroyed device. Tests valid combina
     const { awaitLost, format, usageType, usageCopy } = t.params;
     const { blockWidth, blockHeight } = kTextureFormatInfo[format];
     await t.executeAfterDestroy(() => {
-      t.device.createTexture({
+      t.createTextureTracked({
         size: { width: blockWidth, height: blockHeight },
         usage: kTextureUsageTypeInfo[usageType] | kTextureUsageCopyInfo[usageCopy],
         format,
@@ -212,7 +212,7 @@ Tests creating 2d compressed textures on destroyed device. Tests valid combinati
     const { awaitLost, format, usageType, usageCopy } = t.params;
     const { blockWidth, blockHeight } = kTextureFormatInfo[format];
     await t.executeAfterDestroy(() => {
-      t.device.createTexture({
+      t.createTextureTracked({
         size: { width: blockWidth, height: blockHeight },
         usage: kTextureUsageTypeInfo[usageType] | kTextureUsageCopyInfo[usageCopy],
         format,
@@ -249,7 +249,7 @@ Tests creating texture views on 2d uncompressed textures from destroyed device. 
   .fn(async t => {
     const { awaitLost, format, usageType, usageCopy } = t.params;
     const { blockWidth, blockHeight } = kTextureFormatInfo[format];
-    const texture = t.device.createTexture({
+    const texture = t.createTextureTracked({
       size: { width: blockWidth, height: blockHeight },
       usage: kTextureUsageTypeInfo[usageType] | kTextureUsageCopyInfo[usageCopy],
       format,
@@ -289,7 +289,7 @@ Tests creating texture views on 2d compressed textures from destroyed device. Te
   .fn(async t => {
     const { awaitLost, format, usageType, usageCopy } = t.params;
     const { blockWidth, blockHeight } = kTextureFormatInfo[format];
-    const texture = t.device.createTexture({
+    const texture = t.createTextureTracked({
       size: { width: blockWidth, height: blockHeight },
       usage: kTextureUsageTypeInfo[usageType] | kTextureUsageCopyInfo[usageCopy],
       format,
@@ -760,7 +760,7 @@ Tests copyBufferToTexture command on destroyed device.
       }),
     };
     const dst = {
-      texture: t.device.createTexture({
+      texture: t.createTextureTracked({
         size: { width: blockWidth, height: blockHeight },
         usage: GPUTextureUsage.COPY_DST,
         format,
@@ -791,7 +791,7 @@ Tests copyTextureToBuffer command on destroyed device.
       blockHeight,
     } = kTextureFormatInfo[format];
     const src = {
-      texture: t.device.createTexture({
+      texture: t.createTextureTracked({
         size: { width: blockWidth, height: blockHeight },
         usage: GPUTextureUsage.COPY_SRC,
         format,
@@ -824,14 +824,14 @@ Tests copyTextureToTexture command on destroyed device.
     const format = 'rgba32uint';
     const { blockWidth, blockHeight } = kTextureFormatInfo[format];
     const src = {
-      texture: t.device.createTexture({
+      texture: t.createTextureTracked({
         size: { width: blockWidth, height: blockHeight },
         usage: GPUTextureUsage.COPY_SRC,
         format,
       }),
     };
     const dst = {
-      texture: t.device.createTexture({
+      texture: t.createTextureTracked({
         size: { width: blockWidth, height: blockHeight },
         usage: GPUBufferUsage.COPY_DST,
         format,
@@ -1050,7 +1050,7 @@ Tests writeTexture on queue on destroyed device with uncompressed formats.
       color: { bytes: bytesPerBlock },
     } = kTextureFormatInfo[format];
     const data = new Uint8Array(bytesPerBlock);
-    const texture = t.device.createTexture({
+    const texture = t.createTextureTracked({
       size: { width: blockWidth, height: blockHeight },
       usage: GPUTextureUsage.COPY_DST,
       format,
@@ -1089,7 +1089,7 @@ Tests writeTexture on queue on destroyed device with compressed formats.
       color: { bytes: bytesPerBlock },
     } = kTextureFormatInfo[format];
     const data = new Uint8Array(bytesPerBlock);
-    const texture = t.device.createTexture({
+    const texture = t.createTextureTracked({
       size: { width: blockWidth, height: blockHeight },
       usage: GPUTextureUsage.COPY_DST,
       format,
@@ -1120,7 +1120,7 @@ Tests copyExternalImageToTexture from canvas on queue on destroyed device.
   .fn(async t => {
     const { canvasType, contextType, awaitLost } = t.params;
     const canvas = createCanvas(t, canvasType, 1, 1);
-    const texture = t.device.createTexture({
+    const texture = t.createTextureTracked({
       size: { width: 1, height: 1 },
       format: 'bgra8unorm',
       usage: GPUTextureUsage.COPY_DST,
@@ -1156,7 +1156,7 @@ Tests copyExternalImageToTexture from canvas on queue on destroyed device.
     }
     const imageBitmap = await createImageBitmap(new ImageData(new Uint8ClampedArray(4), 1, 1));
 
-    const texture = t.device.createTexture({
+    const texture = t.createTextureTracked({
       size: { width: 1, height: 1 },
       format: 'bgra8unorm',
       usage: GPUTextureUsage.COPY_DST,

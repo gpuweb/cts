@@ -282,7 +282,7 @@ export class BufferSyncTest extends GPUTest {
     // This is not hot in profiles; optimize if this gets used more heavily.
     const data = new Uint32Array(1).fill(initValue);
     const texture = this.trackForCleanup(
-      this.device.createTexture({
+      this.createTextureTracked({
         size: { width: 1, height: 1, depthOrArrayLayers: 1 },
         format: 'r32uint',
         usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
@@ -374,7 +374,7 @@ export class BufferSyncTest extends GPUTest {
 
   beginSimpleRenderPass(encoder: GPUCommandEncoder): GPURenderPassEncoder {
     const view = this.trackForCleanup(
-      this.device.createTexture({
+      this.createTextureTracked({
         size: { width: 1, height: 1, depthOrArrayLayers: 1 },
         format: 'rgba8unorm',
         usage: GPUTextureUsage.RENDER_ATTACHMENT,
@@ -801,7 +801,7 @@ export class BufferSyncTest extends GPUTest {
   // Read and Write texture via BufferToTexture copy.
   encodeReadByB2TCopy(encoder: GPUCommandEncoder, srcBuffer: GPUBuffer, dstBuffer: GPUBuffer) {
     const tmpTexture = this.trackForCleanup(
-      this.device.createTexture({
+      this.createTextureTracked({
         size: { width: 1, height: 1, depthOrArrayLayers: 1 },
         format: 'r32uint',
         usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,

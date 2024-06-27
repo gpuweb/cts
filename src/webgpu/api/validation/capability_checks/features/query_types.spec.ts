@@ -100,7 +100,7 @@ g.test('timestamp')
       const encoder = t.createEncoder('non-pass');
       const view = t
         .trackForCleanup(
-          t.device.createTexture({
+          t.createTextureTracked({
             size: [16, 16, 1],
             format: 'rgba8unorm',
             usage: GPUTextureUsage.RENDER_ATTACHMENT,

@@ -61,7 +61,7 @@ class DrawTest extends TextureTestMixin(GPUTest) {
       1.0, 1.0,
     ];
 
-    const renderTarget = this.device.createTexture({
+    const renderTarget = this.createTextureTracked({
       size: renderTargetSize,
       usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
       format: 'rgba8unorm',

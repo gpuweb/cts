@@ -53,7 +53,7 @@ g.test('uninitialized_texture_is_zero')
       t.params.readMethod
     );
 
-    const texture = t.device.createTexture({
+    const texture = t.createTextureTracked({
       size: [t.textureWidth, t.textureHeight, t.textureDepthOrArrayLayers],
       format: t.params.format,
       dimension: t.params.dimension,

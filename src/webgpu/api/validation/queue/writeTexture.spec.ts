@@ -43,7 +43,7 @@ g.test('usages')
   ])
   .fn(t => {
     const { usage } = t.params;
-    const texture = t.device.createTexture({
+    const texture = t.createTextureTracked({
       size: { width: 16, height: 16 },
       usage,
       format: 'rgba8unorm' as const,
@@ -67,7 +67,7 @@ g.test('sample_count')
   .params(u => u.combine('sampleCount', [1, 4]))
   .fn(t => {
     const { sampleCount } = t.params;
-    const texture = t.device.createTexture({
+    const texture = t.createTextureTracked({
       size: { width: 16, height: 16 },
       sampleCount,
       format: 'bgra8unorm',

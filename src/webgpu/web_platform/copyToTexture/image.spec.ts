@@ -101,7 +101,7 @@ g.test('from_image')
 
     const image = await decodeImageFromCanvas(imageCanvas);
 
-    const dst = t.device.createTexture({
+    const dst = t.createTextureTracked({
       size: { width, height },
       format: dstColorFormat,
       usage:
@@ -186,7 +186,7 @@ g.test('from_fully_transparent_image')
       'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAEUlEQVR42mP8nzaTAQQYYQwALssD/5ca+r8AAAAASUVORK5CYII=';
     await raceWithRejectOnTimeout(image.decode(), 5000, 'decode image timeout');
 
-    const dst = t.device.createTexture({
+    const dst = t.createTextureTracked({
       size: { width: kImageWidth, height: kImageHeight },
       format: kColorFormat,
       usage:
@@ -299,7 +299,7 @@ g.test('copy_subrect_from_2D_Canvas')
 
     const image = await decodeImageFromCanvas(imageCanvas);
 
-    const dst = t.device.createTexture({
+    const dst = t.createTextureTracked({
       size: dstSize,
       format: kColorFormat,
       usage:

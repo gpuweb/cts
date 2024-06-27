@@ -39,7 +39,7 @@ g.test('float32')
     const { format, data, opts, _ok } = t.params;
 
     const size = [1, 1];
-    const texture = t.device.createTexture({
+    const texture = t.createTextureTracked({
       format,
       size,
       usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC,
@@ -76,7 +76,7 @@ g.test('norm')
     const { mode, format, _maxValue, data, _ok } = t.params;
 
     const size = [2, 1];
-    const texture = t.device.createTexture({
+    const texture = t.createTextureTracked({
       format,
       size,
       usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC,
@@ -123,7 +123,7 @@ g.test('snorm_min')
     const data = [-_maxValue, -_maxValue - 1];
 
     const size = [2, 1];
-    const texture = t.device.createTexture({
+    const texture = t.createTextureTracked({
       format,
       size,
       usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC,

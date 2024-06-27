@@ -1081,7 +1081,7 @@ export async function createTextureWithRandomDataAndGetTexels(
   descriptor: GPUTextureDescriptor
 ) {
   if (isCompressedTextureFormat(descriptor.format)) {
-    const texture = t.device.createTexture(descriptor);
+    const texture = t.createTextureTracked(descriptor);
     t.trackForCleanup(texture);
 
     fillTextureWithRandomData(t.device, texture);
@@ -1975,7 +1975,7 @@ export async function doTextureCalls<T extends Dimensionality>(
   t.device.queue.writeBuffer(dataBuffer, 0, new Uint32Array(data));
 
   const rtWidth = 256;
-  const renderTarget = t.device.createTexture({
+  const renderTarget = t.createTextureTracked({
     format: 'rgba32float',
     size: { width: rtWidth, height: Math.ceil(calls.length / rtWidth) },
     usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,

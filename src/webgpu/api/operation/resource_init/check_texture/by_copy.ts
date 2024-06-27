@@ -42,7 +42,7 @@ export const checkContentsByTextureCopy: CheckContents = (
       level
     );
 
-    const dst = t.device.createTexture({
+    const dst = t.createTextureTracked({
       dimension: params.dimension,
       size: [width, height, depth],
       format: params.format,

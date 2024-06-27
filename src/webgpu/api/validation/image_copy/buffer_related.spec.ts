@@ -42,7 +42,7 @@ Test that the buffer must be valid and not destroyed.
     const submit = state !== 'invalid';
     const success = state === 'valid';
 
-    const texture = t.device.createTexture({
+    const texture = t.createTextureTracked({
       size: { width: 2, height: 2, depthOrArrayLayers: 1 },
       format: 'rgba8unorm',
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
@@ -76,7 +76,7 @@ g.test('buffer,device_mismatch')
       })
     );
 
-    const texture = t.device.createTexture({
+    const texture = t.createTextureTracked({
       size: { width: 2, height: 2, depthOrArrayLayers: 1 },
       format: 'rgba8unorm',
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
@@ -127,7 +127,7 @@ TODO update such that it tests
         ? (usage & GPUBufferUsage.COPY_SRC) !== 0
         : (usage & GPUBufferUsage.COPY_DST) !== 0;
 
-    const texture = t.device.createTexture({
+    const texture = t.createTextureTracked({
       size: { width: 2, height: 2, depthOrArrayLayers: 1 },
       format: 'rgba8unorm',
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
@@ -208,7 +208,7 @@ Test that bytesPerRow must be a multiple of 256 for CopyB2T and CopyT2B if it is
     if (bytesPerRow !== undefined && bytesPerRow > 0 && bytesPerRow % 256 === 0) success = true;
 
     const size = [info.blockWidth, _textureHeightInBlocks * info.blockHeight, 1];
-    const texture = t.device.createTexture({
+    const texture = t.createTextureTracked({
       size,
       dimension,
       format,

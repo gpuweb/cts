@@ -88,7 +88,7 @@ class DepthBiasTest extends TextureTestMixin(GPUTest) {
     }
 
     const renderTarget = this.trackForCleanup(
-      this.device.createTexture({
+      this.createTextureTracked({
         format: renderTargetFormat,
         size: { width: 1, height: 1, depthOrArrayLayers: 1 },
         usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
@@ -96,7 +96,7 @@ class DepthBiasTest extends TextureTestMixin(GPUTest) {
     );
 
     const depthTexture = this.trackForCleanup(
-      this.device.createTexture({
+      this.createTextureTracked({
         size: { width: 1, height: 1, depthOrArrayLayers: 1 },
         format: depthFormat,
         sampleCount: 1,

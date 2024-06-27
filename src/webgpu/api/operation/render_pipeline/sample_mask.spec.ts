@@ -331,7 +331,7 @@ class F extends TextureTestMixin(GPUTest) {
     const renderTargetTextures = [];
     const resolveTargetTextures: (GPUTexture | null)[] = [];
     for (let i = 0; i < colorTargetsCount; i++) {
-      const renderTargetTexture = this.device.createTexture({
+      const renderTargetTexture = this.createTextureTracked({
         format,
         size: {
           width: kRenderTargetSize,
@@ -347,7 +347,7 @@ class F extends TextureTestMixin(GPUTest) {
       const resolveTargetTexture =
         sampleCount === 1
           ? null
-          : this.device.createTexture({
+          : this.createTextureTracked({
               format,
               size: {
                 width: kRenderTargetSize,
@@ -361,7 +361,7 @@ class F extends TextureTestMixin(GPUTest) {
       resolveTargetTextures.push(resolveTargetTexture);
     }
 
-    const depthStencilTexture = this.device.createTexture({
+    const depthStencilTexture = this.createTextureTracked({
       size: {
         width: kRenderTargetSize,
         height: kRenderTargetSize,

@@ -22,7 +22,7 @@ g.test('compressed')
     const info = kTextureFormatInfo[format];
 
     const textureSize = [info.blockWidth, info.blockHeight, 1];
-    const texture = t.device.createTexture({
+    const texture = t.createTextureTracked({
       size: textureSize,
       format,
       usage: GPUTextureUsage.COPY_SRC,

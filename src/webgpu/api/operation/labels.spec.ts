@@ -30,7 +30,7 @@ const kTestFunctions: { [name: string]: TestFunction } = {
   },
 
   createTexture: (t: GPUTest, label: string) => {
-    const texture = t.device.createTexture({
+    const texture = t.createTextureTracked({
       label,
       size: [1, 1, 1],
       format: 'rgba8unorm',
@@ -188,7 +188,7 @@ const kTestFunctions: { [name: string]: TestFunction } = {
   },
 
   beginRenderPass: (t: GPUTest, label: string) => {
-    const texture = t.device.createTexture({
+    const texture = t.createTextureTracked({
       label,
       size: [1, 1, 1],
       format: 'rgba8unorm',
@@ -230,7 +230,7 @@ const kTestFunctions: { [name: string]: TestFunction } = {
   },
 
   createView: (t: GPUTest, label: string) => {
-    const texture = t.device.createTexture({
+    const texture = t.createTextureTracked({
       size: [1, 1, 1],
       format: 'rgba8unorm',
       usage: GPUTextureUsage.RENDER_ATTACHMENT,

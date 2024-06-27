@@ -63,7 +63,7 @@ export class BufferResourceUsageTest extends ValidationTest {
   }
 
   beginSimpleRenderPass(encoder: GPUCommandEncoder) {
-    const colorTexture = this.device.createTexture({
+    const colorTexture = this.createTextureTracked({
       format: 'rgba8unorm',
       usage: GPUTextureUsage.RENDER_ATTACHMENT,
       size: [16, 16, 1],

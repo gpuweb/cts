@@ -71,7 +71,7 @@ function drawFullScreen(
   });
 
   const bytesPerWord = 4;
-  const framebuffer = t.device.createTexture({
+  const framebuffer = t.createTextureTracked({
     size: [kWidth, kHeight],
     usage:
       GPUTextureUsage.COPY_SRC |

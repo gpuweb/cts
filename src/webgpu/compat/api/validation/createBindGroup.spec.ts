@@ -133,7 +133,7 @@ g.test('viewDimension_matches_textureBindingViewDimension')
   .fn(t => {
     const { dimension, textureBindingViewDimension, viewDimension, depthOrArrayLayers } = t.params;
 
-    const texture = t.device.createTexture({
+    const texture = t.createTextureTracked({
       size: [1, 1, depthOrArrayLayers],
       format: 'rgba8unorm',
       usage: GPUTextureUsage.TEXTURE_BINDING,

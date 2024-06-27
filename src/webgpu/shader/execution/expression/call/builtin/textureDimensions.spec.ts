@@ -327,7 +327,7 @@ Parameters:
   .fn(t => {
     t.skipIfTextureViewDimensionNotSupported(t.params.dimensions);
     const values = testValues(t.params);
-    const texture = t.device.createTexture({
+    const texture = t.createTextureTracked({
       size: values.size,
       dimension: textureDimensionsForViewDimensions(t.params.dimensions),
       ...(t.isCompatibility && { textureBindingViewDimension: t.params.dimensions }),
@@ -407,7 +407,7 @@ Parameters:
   .fn(t => {
     t.skipIfTextureViewDimensionNotSupported(t.params.dimensions);
     const values = testValues(t.params);
-    const texture = t.device.createTexture({
+    const texture = t.createTextureTracked({
       size: values.size,
       dimension: textureDimensionsForViewDimensions(t.params.dimensions),
       ...(t.isCompatibility && { textureBindingViewDimension: t.params.dimensions }),
@@ -483,7 +483,7 @@ Parameters:
   })
   .fn(t => {
     const values = testValues(t.params);
-    const texture = t.device.createTexture({
+    const texture = t.createTextureTracked({
       size: values.size,
       dimension: textureDimensionsForViewDimensions(t.params.dimensions),
       usage: GPUTextureUsage.STORAGE_BINDING,

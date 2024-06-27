@@ -164,7 +164,7 @@ g.test('texture_reflection_attributes')
     }
 
     t.expectValidationError(() => {
-      const texture = t.device.createTexture(descriptor);
+      const texture = t.createTextureTracked(descriptor);
 
       t.expect(texture.width === width);
       t.expect(texture.height === height);
@@ -195,11 +195,11 @@ g.test('texture_creation_from_reflection')
   .fn(t => {
     const { descriptor } = t.params;
 
-    const texture = t.device.createTexture(descriptor);
+    const texture = t.createTextureTracked(descriptor);
     t.trackForCleanup(texture);
     const textureWithSize = texture as TextureWithSize;
     textureWithSize.size = [texture.width, texture.height, texture.depthOrArrayLayers];
-    const texture2 = t.device.createTexture(textureWithSize);
+    const texture2 = t.createTextureTracked(textureWithSize);
     t.trackForCleanup(texture2);
 
     const textureAsObject = texture as unknown as { [k: string]: unknown };
@@ -217,14 +217,14 @@ g.test('texture_creation_from_reflection')
 
     // MAINTENANCE_TODO: Check this if it is made possible by a spec change.
     //
-    //     texture3 = t.device.createTexture({
+    //     texture3 = t.createTextureTracked({
     //       ...texture,
     //       size: [texture.width, texture.height, texture.depthOrArrayLayers],
     //     });
     //
     // and this
     //
-    //     texture3 = t.device.createTexture({
+    //     texture3 = t.createTextureTracked({
     //       size: [texture.width, texture.height, texture.depthOrArrayLayers],
     //       ...texture,
     //     });

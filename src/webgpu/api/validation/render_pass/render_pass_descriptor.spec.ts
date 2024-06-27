@@ -40,7 +40,7 @@ class F extends ValidationTest {
       usage = GPUTextureUsage.RENDER_ATTACHMENT,
     } = options;
 
-    return this.device.createTexture({
+    return this.createTextureTracked({
       size: { width, height, depthOrArrayLayers: arrayLayerCount },
       format,
       dimension,
@@ -1056,7 +1056,7 @@ g.test('depth_stencil_attachment,loadOp_storeOp_match_depthReadOnly_stencilReadO
     } = t.params;
 
     const depthAttachment = t.trackForCleanup(
-      t.device.createTexture({
+      t.createTextureTracked({
         format,
         size: { width: 1, height: 1, depthOrArrayLayers: 1 },
         usage: GPUTextureUsage.RENDER_ATTACHMENT,

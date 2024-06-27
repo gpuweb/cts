@@ -35,7 +35,7 @@ class F extends ValidationTest {
   }
 
   createAttachmentTextureView(): GPUTextureView {
-    const texture = this.device.createTexture({
+    const texture = this.createTextureTracked({
       format: 'rgba8unorm',
       size: { width: 1, height: 1, depthOrArrayLayers: 1 },
       usage: GPUTextureUsage.RENDER_ATTACHMENT,

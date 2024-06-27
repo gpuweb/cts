@@ -15,7 +15,7 @@ g.test('clear').fn(t => {
     usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
   });
 
-  const colorAttachment = t.device.createTexture({
+  const colorAttachment = t.createTextureTracked({
     format: 'rgba8unorm',
     size: { width: 1, height: 1, depthOrArrayLayers: 1 },
     usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
@@ -50,7 +50,7 @@ g.test('fullscreen_quad').fn(t => {
     usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
   });
 
-  const colorAttachment = t.device.createTexture({
+  const colorAttachment = t.createTextureTracked({
     format: 'rgba8unorm',
     size: { width: 1, height: 1, depthOrArrayLayers: 1 },
     usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
@@ -186,7 +186,7 @@ g.test('large_draw')
       indexBuffer.unmap();
     }
 
-    const colorAttachment = t.device.createTexture({
+    const colorAttachment = t.createTextureTracked({
       format: 'rgba8unorm',
       size: { width: 3, height: 3, depthOrArrayLayers: 1 },
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,

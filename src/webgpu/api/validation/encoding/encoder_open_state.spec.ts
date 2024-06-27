@@ -180,12 +180,12 @@ g.test('non_pass_commands')
 
     const textureSize = { width: 1, height: 1 };
     const textureFormat = 'rgba8unorm';
-    const srcTexture = t.device.createTexture({
+    const srcTexture = t.createTextureTracked({
       size: textureSize,
       format: textureFormat,
       usage: GPUTextureUsage.COPY_SRC,
     });
-    const dstTexture = t.device.createTexture({
+    const dstTexture = t.createTextureTracked({
       size: textureSize,
       format: textureFormat,
       usage: GPUTextureUsage.COPY_DST,

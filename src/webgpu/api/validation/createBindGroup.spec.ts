@@ -187,7 +187,7 @@ g.test('texture_binding_must_have_correct_usage')
       usage: appliedUsage,
       sampleCount: info.resource === 'sampledTexMS' ? 4 : 1,
     };
-    const resource = t.device.createTexture(descriptor).createView();
+    const resource = t.createTextureTracked(descriptor).createView();
 
     const shouldError = (usage & info.usage) === 0;
     t.expectValidationError(() => {
@@ -241,7 +241,7 @@ g.test('texture_must_have_correct_component_type')
       entries: [
         {
           binding: 0,
-          resource: t.device.createTexture(goodDescriptor).createView(),
+          resource: t.createTextureTracked(goodDescriptor).createView(),
         },
       ],
       layout: bindGroupLayout,
@@ -266,7 +266,7 @@ g.test('texture_must_have_correct_component_type')
 
       t.expectValidationError(() => {
         t.device.createBindGroup({
-          entries: [{ binding: 0, resource: t.device.createTexture(badDescriptor).createView() }],
+          entries: [{ binding: 0, resource: t.createTextureTracked(badDescriptor).createView() }],
           layout: bindGroupLayout,
         });
       });
@@ -322,7 +322,7 @@ g.test('texture_must_have_correct_dimension')
       depthOrArrayLayers = 1;
     }
 
-    const texture = t.device.createTexture({
+    const texture = t.createTextureTracked({
       size: { width: 16, height, depthOrArrayLayers },
       format: 'rgba8unorm' as const,
       usage,
@@ -380,7 +380,7 @@ g.test('multisampled_validation')
       ],
     });
 
-    const texture = t.device.createTexture({
+    const texture = t.createTextureTracked({
       size: { width: 16, height: 16, depthOrArrayLayers: 1 },
       format: 'rgba8unorm' as const,
       usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT,
@@ -742,7 +742,7 @@ g.test('storage_texture,usage')
       ],
     });
 
-    const texture = t.device.createTexture({
+    const texture = t.createTextureTracked({
       size: { width: 16, height: 16, depthOrArrayLayers: 1 },
       format: 'rgba8unorm' as const,
       usage,
@@ -786,7 +786,7 @@ g.test('storage_texture,mip_level_count')
     });
 
     const MIP_LEVEL_COUNT = 4;
-    const texture = t.device.createTexture({
+    const texture = t.createTextureTracked({
       size: { width: 16, height: 16, depthOrArrayLayers: 1 },
       format: 'rgba8unorm' as const,
       usage: GPUTextureUsage.STORAGE_BINDING,
@@ -832,7 +832,7 @@ g.test('storage_texture,format')
       ],
     });
 
-    const texture = t.device.createTexture({
+    const texture = t.createTextureTracked({
       size: { width: 16, height: 16, depthOrArrayLayers: 1 },
       format: resourceFormat,
       usage: GPUTextureUsage.STORAGE_BINDING,

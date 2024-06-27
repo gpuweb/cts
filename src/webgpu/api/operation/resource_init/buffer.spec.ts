@@ -56,7 +56,7 @@ class F extends GPUTest {
         entryPoint: 'main',
       },
     });
-    const outputTexture = this.device.createTexture({
+    const outputTexture = this.createTextureTracked({
       format: 'rgba8unorm',
       size: [1, 1, 1],
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.STORAGE_BINDING,
@@ -356,7 +356,7 @@ CopyBufferToTexture(), the contents of the GPUBuffer have already been initializ
     const textureSize: [number, number, number] = [8, 8, 1];
     const dstTextureFormat = 'rgba8unorm';
 
-    const dstTexture = t.device.createTexture({
+    const dstTexture = t.createTextureTracked({
       size: textureSize,
       format: dstTextureFormat,
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
@@ -438,7 +438,7 @@ remaining part of it will be initialized to 0.`
     const srcTextureFormat = 'r8uint';
     const textureSize = [32, 16, arrayLayerCount] as const;
 
-    const srcTexture = t.device.createTexture({
+    const srcTexture = t.createTextureTracked({
       format: srcTextureFormat,
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
       size: textureSize,
@@ -650,7 +650,7 @@ g.test('vertex_buffer')
     });
     t.trackForCleanup(vertexBuffer);
 
-    const outputTexture = t.device.createTexture({
+    const outputTexture = t.createTextureTracked({
       format: 'rgba8unorm',
       size: [1, 1, 1],
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
@@ -717,7 +717,7 @@ GPUBuffer, all the contents in that GPUBuffer have been initialized to 0.`
     });
     t.trackForCleanup(indexBuffer);
 
-    const outputTexture = t.device.createTexture({
+    const outputTexture = t.createTextureTracked({
       format: 'rgba8unorm',
       size: [1, 1, 1],
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
@@ -784,7 +784,7 @@ have been initialized to 0.`
     });
     t.trackForCleanup(indirectBuffer);
 
-    const outputTexture = t.device.createTexture({
+    const outputTexture = t.createTextureTracked({
       format: 'rgba8unorm',
       size: [1, 1, 1],
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
@@ -860,7 +860,7 @@ g.test('indirect_buffer_for_dispatch_indirect')
     });
     t.trackForCleanup(indirectBuffer);
 
-    const outputTexture = t.device.createTexture({
+    const outputTexture = t.createTextureTracked({
       format: 'rgba8unorm',
       size: [1, 1, 1],
       usage:

@@ -125,7 +125,7 @@ The texture must have the appropriate COPY_SRC/COPY_DST usage.
     const { usage0, usage1, method, size, dimension } = t.params;
 
     const usage = usage0 | usage1;
-    const texture = t.device.createTexture({
+    const texture = t.createTextureTracked({
       size,
       dimension,
       format: 'rgba8unorm',
@@ -164,7 +164,7 @@ Note: we don't test 1D, 2D array and 3D textures because multisample is not supp
   .fn(t => {
     const { sampleCount, method } = t.params;
 
-    const texture = t.device.createTexture({
+    const texture = t.createTextureTracked({
       size: { width: 4, height: 4, depthOrArrayLayers: 1 },
       sampleCount,
       format: 'rgba8unorm',
@@ -211,7 +211,7 @@ Test that the mipLevel of the copy must be in range of the texture.
   .fn(t => {
     const { mipLevelCount, mipLevel, method, size, dimension } = t.params;
 
-    const texture = t.device.createTexture({
+    const texture = t.createTextureTracked({
       size,
       dimension,
       mipLevelCount,
@@ -287,7 +287,7 @@ Test the copy must be a full subresource if the texture's format is depth/stenci
       size.height = 1;
     }
 
-    const texture = t.device.createTexture({
+    const texture = t.createTextureTracked({
       size,
       dimension,
       format,
@@ -510,7 +510,7 @@ Test that the max corner of the copy rectangle (origin+copySize) must be inside 
       }
     }
 
-    const texture = t.device.createTexture({
+    const texture = t.createTextureTracked({
       size: textureSize,
       dimension,
       mipLevelCount: dimension === '1d' ? 1 : 3,

@@ -30,7 +30,7 @@ g.test('b2t2b').fn(t => {
     usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
   });
 
-  const mid = t.device.createTexture({
+  const mid = t.createTextureTracked({
     size: { width: 1, height: 1, depthOrArrayLayers: 1 },
     format: 'rgba8uint',
     usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
@@ -73,8 +73,8 @@ g.test('b2t2t2b').fn(t => {
     format: 'rgba8uint',
     usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
   };
-  const mid1 = t.device.createTexture(midDesc);
-  const mid2 = t.device.createTexture(midDesc);
+  const mid1 = t.createTextureTracked(midDesc);
+  const mid2 = t.createTextureTracked(midDesc);
 
   const encoder = t.device.createCommandEncoder();
   encoder.copyBufferToTexture(

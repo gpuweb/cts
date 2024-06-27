@@ -92,7 +92,7 @@ fn frag_main() -> @location(0) vec4f {
 
     const [width, height] = [8, 8] as const;
     const format = 'rgba8unorm' as const;
-    const texture = t.device.createTexture({
+    const texture = t.createTextureTracked({
       size: { width, height },
       usage:
         GPUTextureUsage.RENDER_ATTACHMENT |

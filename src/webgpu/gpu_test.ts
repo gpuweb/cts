@@ -1168,7 +1168,7 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
       case 'render pass': {
         const makeAttachmentView = (format: GPUTextureFormat) =>
           this.trackForCleanup(
-            this.device.createTexture({
+            this.createTextureTracked({
               size: [16, 16, 1],
               format,
               usage: GPUTextureUsage.RENDER_ATTACHMENT,
@@ -1641,7 +1641,7 @@ export function TextureTestMixin<F extends FixtureClass<GPUTest>>(
       const readbackPromisesPerTexturePerLayer = [actualTexture, expectedTexture].map(
         (texture, ndx) => {
           const attachmentSize = virtualMipSize('2d', [texture.width, texture.height, 1], mipLevel);
-          const attachment = this.device.createTexture({
+          const attachment = this.createTextureTracked({
             label: `readback${ndx}`,
             size: attachmentSize,
             format: 'rgba8unorm',

@@ -616,7 +616,7 @@ async function renderFragmentShaderInputsTo4TexturesAndReadbackValues(
   });
 
   const textures = range(4, () => {
-    const texture = t.device.createTexture({
+    const texture = t.createTextureTracked({
       size: [width, height],
       usage:
         GPUTextureUsage.RENDER_ATTACHMENT |

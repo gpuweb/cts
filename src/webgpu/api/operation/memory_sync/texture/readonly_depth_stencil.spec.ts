@@ -49,7 +49,7 @@ testing while the other one is used for sampling.
     const hasStencil = formatInfo.stencil !== undefined;
 
     // The 3x3 depth stencil texture used for the tests.
-    const ds = t.device.createTexture({
+    const ds = t.createTextureTracked({
       label: 'testTexture',
       size: [3, 3],
       format,
@@ -217,14 +217,14 @@ testing while the other one is used for sampling.
     });
 
     // Make fake stencil or depth textures to put in the bindgroup if the aspect is not readonly.
-    const fakeStencil = t.device.createTexture({
+    const fakeStencil = t.createTextureTracked({
       label: 'fakeStencil',
       format: 'r32uint',
       size: [1, 1],
       usage: GPUTextureUsage.TEXTURE_BINDING,
     });
     t.trackForCleanup(fakeStencil);
-    const fakeDepth = t.device.createTexture({
+    const fakeDepth = t.createTextureTracked({
       label: 'fakeDepth',
       format: 'r32float',
       size: [1, 1],
@@ -301,7 +301,7 @@ testing while the other one is used for sampling.
       ],
     });
 
-    const resultTexture = t.device.createTexture({
+    const resultTexture = t.createTextureTracked({
       label: 'resultTexture',
       format: 'r32uint',
       usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,

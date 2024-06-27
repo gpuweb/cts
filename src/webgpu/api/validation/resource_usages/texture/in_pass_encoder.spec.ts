@@ -50,7 +50,7 @@ class TextureUsageTracking extends ValidationTest {
       usage = GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
     } = options;
 
-    return this.device.createTexture({
+    return this.createTextureTracked({
       size: { width, height, depthOrArrayLayers: arrayLayerCount },
       mipLevelCount,
       sampleCount,

@@ -396,7 +396,7 @@ class F extends GPUTest {
           entries: bindGroupEntries,
         });
 
-        const placeholderColorTexture = this.device.createTexture({
+        const placeholderColorTexture = this.createTextureTracked({
           size: [storageTexture.width, storageTexture.height, 1],
           usage: GPUTextureUsage.RENDER_ATTACHMENT,
           format: 'rgba8unorm',
@@ -529,7 +529,7 @@ class F extends GPUTest {
           entries: bindGroupEntries,
         });
 
-        const placeholderColorTexture = this.device.createTexture({
+        const placeholderColorTexture = this.createTextureTracked({
           size: [storageTexture.width, storageTexture.height, 1],
           usage: GPUTextureUsage.RENDER_ATTACHMENT,
           format: 'rgba8unorm',
@@ -590,7 +590,7 @@ g.test('basic')
 
     const kWidth = 8;
     const height = dimension === '1d' ? 1 : 8;
-    const storageTexture = t.device.createTexture({
+    const storageTexture = t.createTextureTracked({
       format,
       dimension,
       size: [kWidth, height, depthOrArrayLayers],

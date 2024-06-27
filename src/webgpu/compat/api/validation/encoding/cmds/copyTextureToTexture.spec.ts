@@ -24,14 +24,14 @@ g.test('compressed')
 
     const { blockWidth, blockHeight } = kTextureFormatInfo[format];
 
-    const srcTexture = t.device.createTexture({
+    const srcTexture = t.createTextureTracked({
       size: [blockWidth, blockHeight, 1],
       format,
       usage: GPUTextureUsage.COPY_SRC,
     });
     t.trackForCleanup(srcTexture);
 
-    const dstTexture = t.device.createTexture({
+    const dstTexture = t.createTextureTracked({
       size: [blockWidth, blockHeight, 1],
       format,
       usage: GPUTextureUsage.COPY_DST,
@@ -66,7 +66,7 @@ g.test('multisample')
 
     t.skipIfTextureFormatNotSupported(format as GPUTextureFormat);
 
-    const srcTexture = t.device.createTexture({
+    const srcTexture = t.createTextureTracked({
       size: [blockWidth, blockHeight, 1],
       format,
       sampleCount: 4,
@@ -74,7 +74,7 @@ g.test('multisample')
     });
     t.trackForCleanup(srcTexture);
 
-    const dstTexture = t.device.createTexture({
+    const dstTexture = t.createTextureTracked({
       size: [blockWidth, blockHeight, 1],
       format,
       sampleCount: 4,

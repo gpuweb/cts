@@ -167,7 +167,7 @@ g.test('shared_between_stages')
     });
 
     // Draw a red triangle.
-    const renderTarget = t.device.createTexture({
+    const renderTarget = t.createTextureTracked({
       size,
       usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
       format: 'rgba8unorm',
@@ -292,7 +292,7 @@ g.test('shared_with_non_entry_point_function')
       new Float32Array([1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0]),
       GPUBufferUsage.VERTEX
     );
-    const renderTarget = t.device.createTexture({
+    const renderTarget = t.createTextureTracked({
       size: [31, 31],
       usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
       format: 'rgba8unorm',

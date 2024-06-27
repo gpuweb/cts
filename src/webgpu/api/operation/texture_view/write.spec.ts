@@ -137,7 +137,7 @@ function writeTextureAndGetExpectedTexelView(
         // so that we have the same number of fragments and texels.
         const kPlaceholderTextureFormat = 'rgba8unorm';
         const placeholderTexture = t.trackForCleanup(
-          t.device.createTexture({
+          t.createTextureTracked({
             format: kPlaceholderTextureFormat,
             size: [kTextureSize, kTextureSize],
             usage: GPUTextureUsage.RENDER_ATTACHMENT,
@@ -211,7 +211,7 @@ function writeTextureAndGetExpectedTexelView(
             ? view
             : t
                 .trackForCleanup(
-                  t.device.createTexture({
+                  t.createTextureTracked({
                     format,
                     size: [kTextureSize, kTextureSize],
                     usage: GPUTextureUsage.RENDER_ATTACHMENT,
@@ -345,7 +345,7 @@ TODO: Test rgb10a2uint when TexelRepresentation.numericRange is made per-compone
         : GPUTextureUsage.RENDER_ATTACHMENT);
 
     const texture = t.trackForCleanup(
-      t.device.createTexture({
+      t.createTextureTracked({
         format,
         usage,
         size: [kTextureSize, kTextureSize],

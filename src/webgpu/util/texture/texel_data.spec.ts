@@ -36,7 +36,7 @@ async function doTest(
 
   const rep = kTexelRepresentationInfo[format];
   const texelData = rep.pack(componentData);
-  const texture = t.device.createTexture({
+  const texture = t.createTextureTracked({
     format,
     size: [1, 1, 1],
     usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,

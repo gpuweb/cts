@@ -78,7 +78,7 @@ g.test('depth_stencil_format,copy_usage_and_aspect')
     const { format, aspect } = t.params;
 
     const textureSize = { width: 1, height: 1, depthOrArrayLayers: 1 };
-    const texture = t.device.createTexture({
+    const texture = t.createTextureTracked({
       size: textureSize,
       format,
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
@@ -142,7 +142,7 @@ g.test('depth_stencil_format,copy_buffer_size')
   .fn(t => {
     const { format, aspect, copyType, copySize } = t.params;
 
-    const texture = t.device.createTexture({
+    const texture = t.createTextureTracked({
       size: copySize,
       format,
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
@@ -251,7 +251,7 @@ g.test('depth_stencil_format,copy_buffer_offset')
 
     const textureSize = { width: 4, height: 4, depthOrArrayLayers: 1 };
 
-    const texture = t.device.createTexture({
+    const texture = t.createTextureTracked({
       size: textureSize,
       format,
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
@@ -329,7 +329,7 @@ g.test('sample_count')
     if (sampleCount > 1) {
       usage |= GPUTextureUsage.RENDER_ATTACHMENT;
     }
-    const texture = t.device.createTexture({
+    const texture = t.createTextureTracked({
       size: { width: 16, height: 16 },
       sampleCount,
       format: 'bgra8unorm',
@@ -383,7 +383,7 @@ g.test('texture_buffer_usages')
   .fn(t => {
     const { copyType, textureUsage, _textureUsageValid, bufferUsage, _bufferUsageValid } = t.params;
 
-    const texture = t.device.createTexture({
+    const texture = t.createTextureTracked({
       size: { width: 16, height: 16 },
       format: 'rgba8unorm',
       usage: textureUsage,

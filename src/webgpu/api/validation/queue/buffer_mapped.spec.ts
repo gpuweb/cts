@@ -146,7 +146,7 @@ g.test('copyBufferToTexture')
   .fn(async t => {
     const size = { width: 1, height: 1 };
 
-    const texture = t.device.createTexture({
+    const texture = t.createTextureTracked({
       size,
       format: 'rgba8unorm',
       usage: GPUTextureUsage.COPY_DST,
@@ -169,7 +169,7 @@ g.test('copyTextureToBuffer')
   .fn(async t => {
     const size = { width: 1, height: 1 };
 
-    const texture = t.device.createTexture({
+    const texture = t.createTextureTracked({
       size,
       format: 'rgba8unorm',
       usage: GPUTextureUsage.COPY_SRC,
