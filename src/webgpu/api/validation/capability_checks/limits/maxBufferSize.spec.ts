@@ -11,15 +11,13 @@ g.test('createBuffer,at_over')
     await t.testDeviceWithRequestedMaximumLimits(
       limitTest,
       testValueName,
-      async ({ device, testValue, actualLimit, shouldError }) => {
+      async ({ testValue, actualLimit, shouldError }) => {
         await t.testForValidationErrorWithPossibleOutOfMemoryError(
           () => {
-            t.trackForCleanup(
-              device.createBuffer({
-                usage: GPUBufferUsage.VERTEX,
-                size: testValue,
-              })
-            );
+            t.createBufferTracked({
+              usage: GPUBufferUsage.VERTEX,
+              size: testValue,
+            });
           },
           shouldError,
           `size: ${testValue}, limit: ${actualLimit}`

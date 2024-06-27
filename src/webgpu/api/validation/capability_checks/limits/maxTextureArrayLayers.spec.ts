@@ -11,15 +11,13 @@ g.test('createTexture,at_over')
     await t.testDeviceWithRequestedMaximumLimits(
       limitTest,
       testValueName,
-      async ({ device, testValue, shouldError }) => {
+      async ({ testValue, shouldError }) => {
         await t.testForValidationErrorWithPossibleOutOfMemoryError(() => {
-          const texture = t.trackForCleanup(
-            device.createTexture({
-              size: [1, 1, testValue],
-              format: 'rgba8unorm',
-              usage: GPUTextureUsage.TEXTURE_BINDING,
-            })
-          );
+          const texture = t.createTextureTracked({
+            size: [1, 1, testValue],
+            format: 'rgba8unorm',
+            usage: GPUTextureUsage.TEXTURE_BINDING,
+          });
           if (!shouldError) {
             texture.destroy();
           }

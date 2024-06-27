@@ -14,20 +14,18 @@ g.test('createTexture,at_over')
     await t.testDeviceWithRequestedMaximumLimits(
       limitTest,
       testValueName,
-      async ({ device, shouldError, testValue, actualLimit }) => {
+      async ({ shouldError, testValue, actualLimit }) => {
         for (let dimensionIndex = 0; dimensionIndex < 2; ++dimensionIndex) {
           const size = [1, 1, 1];
           size[dimensionIndex] = testValue;
 
           await t.testForValidationErrorWithPossibleOutOfMemoryError(
             () => {
-              const texture = t.trackForCleanup(
-                device.createTexture({
-                  size,
-                  format: 'rgba8unorm',
-                  usage: GPUTextureUsage.TEXTURE_BINDING,
-                })
-              );
+              const texture = t.createTextureTracked({
+                size,
+                format: 'rgba8unorm',
+                usage: GPUTextureUsage.TEXTURE_BINDING,
+              });
 
               // MAINTENANCE_TODO: Remove this 'if' once the bug in chrome is fixed
               // This 'if' is only here because of a bug in Chrome

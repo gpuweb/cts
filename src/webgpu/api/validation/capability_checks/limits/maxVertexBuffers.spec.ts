@@ -55,15 +55,13 @@ g.test('setVertexBuffer,at_over')
     await t.testDeviceWithRequestedMaximumLimits(
       limitTest,
       testValueName,
-      async ({ device, testValue, shouldError, actualLimit }) => {
+      async ({ testValue, shouldError, actualLimit }) => {
         const lastIndex = testValue - 1;
 
-        const buffer = t.trackForCleanup(
-          device.createBuffer({
-            size: 16,
-            usage: GPUBufferUsage.VERTEX,
-          })
-        );
+        const buffer = t.createBufferTracked({
+          size: 16,
+          usage: GPUBufferUsage.VERTEX,
+        });
 
         await t.testGPURenderAndBindingCommandsMixin(
           encoderType,
