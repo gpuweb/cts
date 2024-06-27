@@ -48,6 +48,11 @@
             "message": "createBuffer must be immediately tracked using trackForCleanup (or use createBufferTracked).",
             // Similar to above.
             "selector": ":not(CallExpression[callee.property.name=\"trackForCleanup\"]) > CallExpression > MemberExpression > Identifier[name=\"createBuffer\"]"
+          },
+          {
+            "message": "createTexture must be immediately tracked using trackForCleanup (or use createTextureTracked).",
+            // Similar to above.
+            "selector": ":not(CallExpression[callee.property.name=\"trackForCleanup\"]) > CallExpression > MemberExpression > Identifier[name=\"createTexture\"]"
           }
         ],
 
