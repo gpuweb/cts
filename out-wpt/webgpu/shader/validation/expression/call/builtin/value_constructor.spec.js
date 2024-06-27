@@ -725,3 +725,77 @@ fn((t) => {
     }`;
   t.expectCompileResult(t.params.use, code);
 });
+
+g.test('partial_eval').
+desc('Tests that mixed runtime and early eval expressions catch errors').
+params((u) =>
+u.
+combine('eleTy', ['i32', 'u32']).
+combine('compTy', ['array', 'vec2', 'vec3', 'vec4', 'S']).
+combine('stage', ['constant', 'runtime']).
+beginSubcases().
+expandWithParams((t) => {
+  const cases = [];
+  switch (t.compTy) {
+    case 'array':
+      cases.push({ numEles: 2, index: 0 });
+      cases.push({ numEles: 2, index: 1 });
+      cases.push({ numEles: 3, index: 0 });
+      cases.push({ numEles: 3, index: 1 });
+      cases.push({ numEles: 3, index: 2 });
+      break;
+    case 'vec2':
+      cases.push({ numEles: 2, index: 0 });
+      cases.push({ numEles: 2, index: 1 });
+      break;
+    case 'vec3':
+      cases.push({ numEles: 3, index: 0 });
+      cases.push({ numEles: 3, index: 1 });
+      cases.push({ numEles: 3, index: 2 });
+      break;
+    case 'vec4':
+      cases.push({ numEles: 4, index: 0 });
+      cases.push({ numEles: 4, index: 1 });
+      cases.push({ numEles: 4, index: 2 });
+      cases.push({ numEles: 4, index: 3 });
+      break;
+    case 'S':
+      cases.push({ numEles: 2, index: 0 });
+      cases.push({ numEles: 2, index: 1 });
+      break;
+  }
+  return cases;
+})
+).
+fn((t) => {
+  const eleTy = Type['abstract-int'];
+  const value = t.params.eleTy === 'i32' ? 0xfffffffff : -1;
+  let compParams = '';
+  for (let i = 0; i < t.params.numEles; i++) {
+    if (t.params.index === i) {
+      switch (t.params.stage) {
+        case 'constant':
+          compParams += `${eleTy.create(value).wgsl()}, `;
+          break;
+        case 'runtime':
+          compParams += `v, `;
+          break;
+      }
+    } else {
+      compParams += `v, `;
+    }
+  }
+  const wgsl = `
+struct S {
+  x : ${t.params.eleTy},
+  y : ${t.params.eleTy},
+}
+
+fn foo() {
+  var v : ${t.params.eleTy};
+  let tmp = ${t.params.compTy}(${compParams});
+}`;
+
+  const shader_error = t.params.stage === 'constant';
+  t.expectCompileResult(!shader_error, wgsl);
+});
