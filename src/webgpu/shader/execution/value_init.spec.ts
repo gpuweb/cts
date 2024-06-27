@@ -57,12 +57,6 @@ async function run(t: GPUTest, wgsl: string) {
     usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
   });
 
-  const zeroBuffer = t.createBufferTracked({
-    size: 4,
-    usage: GPUBufferUsage.UNIFORM,
-  });
-  t.trackForCleanup(zeroBuffer);
-
   const bindGroup = t.device.createBindGroup({
     layout: pipeline.getBindGroupLayout(0),
     entries: [
