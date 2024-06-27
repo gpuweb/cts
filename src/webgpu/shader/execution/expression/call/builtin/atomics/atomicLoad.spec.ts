@@ -61,7 +61,7 @@ fn atomicLoad(atomic_ptr: ptr<AS, atomic<T>, read_write>) -> T
     const arrayType = typedArrayCtor(scalarType);
 
     // Create input buffer with values [map_id(0)..map_id(n)]
-    const inputBuffer = t.device.createBuffer({
+    const inputBuffer = t.createBufferTracked({
       size: bufferNumElements * arrayType.BYTES_PER_ELEMENT,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
       mappedAtCreation: true,
@@ -71,7 +71,7 @@ fn atomicLoad(atomic_ptr: ptr<AS, atomic<T>, read_write>) -> T
     data.forEach((_, i) => (data[i] = mapId.f(i, numInvocations)));
     inputBuffer.unmap();
 
-    const outputBuffer = t.device.createBuffer({
+    const outputBuffer = t.createBufferTracked({
       size: bufferNumElements * arrayType.BYTES_PER_ELEMENT,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
     });
@@ -162,7 +162,7 @@ fn atomicLoad(atomic_ptr: ptr<AS, atomic<T>, read_write>) -> T
 
     const arrayType = typedArrayCtor(scalarType);
 
-    const outputBuffer = t.device.createBuffer({
+    const outputBuffer = t.createBufferTracked({
       size: wgNumElements * dispatchSize * arrayType.BYTES_PER_ELEMENT,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
     });

@@ -85,7 +85,7 @@ g.test('depth_stencil_format,copy_usage_and_aspect')
     });
 
     const uploadBufferSize = 32;
-    const buffer = t.device.createBuffer({
+    const buffer = t.createBufferTracked({
       size: uploadBufferSize,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
@@ -159,11 +159,11 @@ g.test('depth_stencil_format,copy_buffer_size')
       align(texelAspectSize * copySize.width, kBufferCopyAlignment);
     assert(minimumBufferSize > kBufferCopyAlignment);
 
-    const bigEnoughBuffer = t.device.createBuffer({
+    const bigEnoughBuffer = t.createBufferTracked({
       size: minimumBufferSize,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
-    const smallerBuffer = t.device.createBuffer({
+    const smallerBuffer = t.createBufferTracked({
       size: minimumBufferSize - kBufferCopyAlignment,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
@@ -268,7 +268,7 @@ g.test('depth_stencil_format,copy_buffer_offset')
       align(texelAspectSize * textureSize.width, kBufferCopyAlignment);
     assert(minimumBufferSize > kBufferCopyAlignment);
 
-    const buffer = t.device.createBuffer({
+    const buffer = t.createBufferTracked({
       size: align(minimumBufferSize + offset, kBufferCopyAlignment),
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
@@ -337,7 +337,7 @@ g.test('sample_count')
     });
 
     const uploadBufferSize = 32;
-    const buffer = t.device.createBuffer({
+    const buffer = t.createBufferTracked({
       size: uploadBufferSize,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
@@ -390,7 +390,7 @@ g.test('texture_buffer_usages')
     });
 
     const uploadBufferSize = 32;
-    const buffer = t.device.createBuffer({
+    const buffer = t.createBufferTracked({
       size: uploadBufferSize,
       usage: bufferUsage,
     });

@@ -531,7 +531,7 @@ textureLoad each sample index from the texture and write to a storage buffer to 
   .fn(t => {
     const { sampleCount, rasterizationMask, sampleMask, fragmentShaderOutputMask } = t.params;
 
-    const fragmentMaskUniformBuffer = t.device.createBuffer({
+    const fragmentMaskUniformBuffer = t.createBufferTracked({
       size: 4,
       usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC,
     });
@@ -647,7 +647,7 @@ color' <= color.
     const sampleMask = 0xffffffff;
 
     const alphaValues = new Float32Array(4); // [alpha0, alpha1, 0, 0]
-    const alphaValueUniformBuffer = t.device.createBuffer({
+    const alphaValueUniformBuffer = t.createBufferTracked({
       size: alphaValues.byteLength,
       usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC,
     });

@@ -34,7 +34,7 @@ g.test('single')
 
     const src = t.makeBufferWithContents(srcData, GPUBufferUsage.COPY_SRC);
 
-    const dst = t.device.createBuffer({
+    const dst = t.createBufferTracked({
       size: dstBufferSize,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
@@ -92,7 +92,7 @@ g.test('copy_order')
 
     const src = t.makeBufferWithContents(srcData, GPUBufferUsage.COPY_SRC);
 
-    const dst = t.device.createBuffer({
+    const dst = t.createBufferTracked({
       size: srcData.length * 4,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });

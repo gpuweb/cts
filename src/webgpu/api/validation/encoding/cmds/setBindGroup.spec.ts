@@ -247,12 +247,12 @@ g.test('dynamic_offsets_match_expectations_in_pass_encoder')
       ],
     });
 
-    const uniformBuffer = t.device.createBuffer({
+    const uniformBuffer = t.createBufferTracked({
       size: 2 * kMinDynamicBufferOffsetAlignment + 8,
       usage: GPUBufferUsage.UNIFORM,
     });
 
-    const storageBuffer = t.device.createBuffer({
+    const storageBuffer = t.createBufferTracked({
       size: 2 * kMinDynamicBufferOffsetAlignment + 8,
       usage: GPUBufferUsage.STORAGE,
     });
@@ -419,7 +419,7 @@ g.test('buffer_dynamic_offsets')
     const usage = type === 'uniform' ? GPUBufferUsage.UNIFORM : GPUBufferUsage.STORAGE;
     const isValid = dynamicOffset % minAlignment === 0;
 
-    const buffer = t.device.createBuffer({
+    const buffer = t.createBufferTracked({
       size: 3 * kMinDynamicBufferOffsetAlignment,
       usage,
     });

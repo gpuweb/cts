@@ -73,14 +73,14 @@ const kCompatTestParams = kUnitCaseParamsBuilder
 
 class F extends ValidationTest {
   getIndexBuffer(): GPUBuffer {
-    return this.device.createBuffer({
+    return this.createBufferTracked({
       size: 8 * Uint32Array.BYTES_PER_ELEMENT,
       usage: GPUBufferUsage.INDEX,
     });
   }
 
   getIndirectBuffer(indirectParams: Array<number>): GPUBuffer {
-    const buffer = this.device.createBuffer({
+    const buffer = this.createBufferTracked({
       mappedAtCreation: true,
       size: indirectParams.length * Uint32Array.BYTES_PER_ELEMENT,
       usage: GPUBufferUsage.INDIRECT | GPUBufferUsage.COPY_DST,

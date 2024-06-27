@@ -57,13 +57,13 @@ export class ValidationTest extends GPUTest {
 
     switch (state) {
       case 'valid':
-        return this.trackForCleanup(this.device.createBuffer(descriptor));
+        return this.trackForCleanup(this.createBufferTracked(descriptor));
 
       case 'invalid': {
         // Make the buffer invalid because of an invalid combination of usages but keep the
         // descriptor passed as much as possible (for mappedAtCreation and friends).
         this.device.pushErrorScope('validation');
-        const buffer = this.device.createBuffer({
+        const buffer = this.createBufferTracked({
           ...descriptor,
           usage: descriptor.usage | GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_SRC,
         });
@@ -71,7 +71,7 @@ export class ValidationTest extends GPUTest {
         return buffer;
       }
       case 'destroyed': {
-        const buffer = this.device.createBuffer(descriptor);
+        const buffer = this.createBufferTracked(descriptor);
         buffer.destroy();
         return buffer;
       }
@@ -107,14 +107,14 @@ export class ValidationTest extends GPUTest {
   /** Create an arbitrarily-sized GPUBuffer with the STORAGE usage. */
   getStorageBuffer(): GPUBuffer {
     return this.trackForCleanup(
-      this.device.createBuffer({ size: 1024, usage: GPUBufferUsage.STORAGE })
+      this.createBufferTracked({ size: 1024, usage: GPUBufferUsage.STORAGE })
     );
   }
 
   /** Create an arbitrarily-sized GPUBuffer with the UNIFORM usage. */
   getUniformBuffer(): GPUBuffer {
     return this.trackForCleanup(
-      this.device.createBuffer({ size: 1024, usage: GPUBufferUsage.UNIFORM })
+      this.createBufferTracked({ size: 1024, usage: GPUBufferUsage.UNIFORM })
     );
   }
 

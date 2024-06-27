@@ -135,7 +135,7 @@ Tests creating buffers on destroyed device. Tests valid combinations of:
   .fn(async t => {
     const { awaitLost, usageType, usageCopy, mappedAtCreation } = t.params;
     await t.executeAfterDestroy(() => {
-      t.device.createBuffer({
+      t.createBufferTracked({
         size: 16,
         usage: kBufferUsageInfo[usageType] | kBufferUsageCopyInfo[usageCopy],
         mappedAtCreation,
@@ -722,11 +722,11 @@ Tests copyBufferToBuffer command with various uncompressed formats on destroyed 
   .fn(async t => {
     const { stage, awaitLost } = t.params;
     const kBufferSize = 16;
-    const src = t.device.createBuffer({
+    const src = t.createBufferTracked({
       size: kBufferSize,
       usage: GPUBufferUsage.COPY_SRC,
     });
-    const dst = t.device.createBuffer({
+    const dst = t.createBufferTracked({
       size: kBufferSize,
       usage: GPUBufferUsage.COPY_DST,
     });
@@ -754,7 +754,7 @@ Tests copyBufferToTexture command on destroyed device.
       blockHeight,
     } = kTextureFormatInfo[format];
     const src = {
-      buffer: t.device.createBuffer({
+      buffer: t.createBufferTracked({
         size: bytesPerBlock,
         usage: GPUBufferUsage.COPY_SRC,
       }),
@@ -798,7 +798,7 @@ Tests copyTextureToBuffer command on destroyed device.
       }),
     };
     const dst = {
-      buffer: t.device.createBuffer({
+      buffer: t.createBufferTracked({
         size: bytesPerBlock,
         usage: GPUBufferUsage.COPY_DST,
       }),
@@ -856,7 +856,7 @@ Tests encoding and finishing a clearBuffer command on destroyed device.
   .fn(async t => {
     const { stage, awaitLost } = t.params;
     const kBufferSize = 16;
-    const buffer = t.device.createBuffer({
+    const buffer = t.createBufferTracked({
       size: kBufferSize,
       usage: GPUBufferUsage.COPY_SRC,
     });
@@ -1022,7 +1022,7 @@ Tests writeBuffer on queue on destroyed device.
   .params(u => u.combine('numElements', [4, 8, 16]).combine('awaitLost', [true, false]))
   .fn(async t => {
     const { numElements, awaitLost } = t.params;
-    const buffer = t.device.createBuffer({
+    const buffer = t.createBufferTracked({
       size: numElements,
       usage: GPUBufferUsage.COPY_DST,
     });

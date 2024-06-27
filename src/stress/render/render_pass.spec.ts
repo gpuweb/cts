@@ -212,7 +212,7 @@ buffer.`
     const pass = encoder.beginRenderPass(renderPassDescriptor);
     pass.setPipeline(pipeline);
     range(kSize * kSize, i => {
-      const buffer = t.device.createBuffer({
+      const buffer = t.createBufferTracked({
         size: 4,
         usage: GPUBufferUsage.UNIFORM,
         mappedAtCreation: true,

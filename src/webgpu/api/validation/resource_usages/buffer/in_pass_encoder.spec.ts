@@ -694,7 +694,7 @@ have tests covered (https://github.com/gpuweb/cts/issues/2232)
           renderPassEncoder.drawIndirect(buffer, offset);
           break;
         case 'indexedIndirect': {
-          const indexBuffer = t.device.createBuffer({
+          const indexBuffer = t.createBufferTracked({
             size: 4,
             usage: GPUBufferUsage.INDEX,
           });

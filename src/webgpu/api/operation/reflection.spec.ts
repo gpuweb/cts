@@ -44,7 +44,7 @@ g.test('buffer_reflection_attributes')
     const { descriptor } = t.params;
 
     t.expectValidationError(() => {
-      const buffer = t.device.createBuffer(descriptor);
+      const buffer = t.createBufferTracked(descriptor);
 
       t.expect(buffer.size === descriptor.size);
       t.expect(buffer.usage === descriptor.usage);
@@ -66,9 +66,9 @@ g.test('buffer_creation_from_reflection')
   .fn(t => {
     const { descriptor } = t.params;
 
-    const buffer = t.device.createBuffer(descriptor);
+    const buffer = t.createBufferTracked(descriptor);
     t.trackForCleanup(buffer);
-    const buffer2 = t.device.createBuffer(buffer);
+    const buffer2 = t.createBufferTracked(buffer);
     t.trackForCleanup(buffer2);
 
     const bufferAsObject = buffer as unknown as { [k: string]: unknown };

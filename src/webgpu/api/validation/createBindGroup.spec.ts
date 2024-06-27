@@ -438,7 +438,7 @@ g.test('buffer_offset_and_size_for_bind_groups_match')
       entries: [{ binding: 0, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'storage' } }],
     });
 
-    const buffer = t.device.createBuffer({
+    const buffer = t.createBufferTracked({
       size: 1024,
       usage: GPUBufferUsage.STORAGE,
     });
@@ -491,7 +491,7 @@ g.test('minBindingSize')
       ],
     });
 
-    const storageBuffer = t.device.createBuffer({
+    const storageBuffer = t.createBufferTracked({
       size,
       usage: GPUBufferUsage.STORAGE,
     });
@@ -885,7 +885,7 @@ g.test('buffer,usage')
       ],
     });
 
-    const buffer = t.device.createBuffer({
+    const buffer = t.createBufferTracked({
       size: 4,
       usage,
     });
@@ -945,7 +945,7 @@ g.test('buffer,resource_offset')
     const usage = type === 'uniform' ? GPUBufferUsage.UNIFORM : GPUBufferUsage.STORAGE;
     const isValid = offset % minAlignment === 0;
 
-    const buffer = t.device.createBuffer({
+    const buffer = t.createBufferTracked({
       size: 1024,
       usage,
     });
@@ -1004,7 +1004,7 @@ g.test('buffer,resource_binding_size')
     const isValid = bindingSize <= maxBindingSize;
 
     // MAINTENANCE_TODO: Allocating the max size seems likely to fail. Refactor test.
-    const buffer = t.device.createBuffer({
+    const buffer = t.createBufferTracked({
       size: maxBindingSize,
       usage,
     });
@@ -1061,7 +1061,7 @@ g.test('buffer,effective_buffer_binding_size')
       isValid = effectiveBindingSize % 4 === 0;
     }
 
-    const buffer = t.device.createBuffer({
+    const buffer = t.createBufferTracked({
       size: bufferSize,
       usage,
     });

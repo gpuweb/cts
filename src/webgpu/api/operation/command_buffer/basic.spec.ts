@@ -17,7 +17,7 @@ g.test('empty').fn(t => {
 g.test('b2t2b').fn(t => {
   const data = new Uint32Array([0x01020304]);
 
-  const src = t.device.createBuffer({
+  const src = t.createBufferTracked({
     mappedAtCreation: true,
     size: 4,
     usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
@@ -25,7 +25,7 @@ g.test('b2t2b').fn(t => {
   memcpy({ src: data }, { dst: src.getMappedRange() });
   src.unmap();
 
-  const dst = t.device.createBuffer({
+  const dst = t.createBufferTracked({
     size: 4,
     usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
   });
@@ -55,7 +55,7 @@ g.test('b2t2b').fn(t => {
 g.test('b2t2t2b').fn(t => {
   const data = new Uint32Array([0x01020304]);
 
-  const src = t.device.createBuffer({
+  const src = t.createBufferTracked({
     mappedAtCreation: true,
     size: 4,
     usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
@@ -63,7 +63,7 @@ g.test('b2t2t2b').fn(t => {
   memcpy({ src: data }, { dst: src.getMappedRange() });
   src.unmap();
 
-  const dst = t.device.createBuffer({
+  const dst = t.createBufferTracked({
     size: 4,
     usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
   });

@@ -98,7 +98,7 @@ Tests that use a destroyed query set in resolveQuerySet.
   .fn(t => {
     const querySet = t.createQuerySetWithState(t.params.querySetState);
 
-    const buffer = t.device.createBuffer({ size: 8, usage: GPUBufferUsage.QUERY_RESOLVE });
+    const buffer = t.createBufferTracked({ size: 8, usage: GPUBufferUsage.QUERY_RESOLVE });
 
     const encoder = t.createEncoder('non-pass');
     encoder.encoder.resolveQuerySet(querySet, 0, 1, buffer, 0);

@@ -94,7 +94,7 @@ function drawFullScreen(
   // (0,1) = u32
   const dataSize = 2 * kWidth * kHeight * bytesPerWord;
   const dataBufferSize = dataSize + bytesPerWord;
-  const dataBuffer = t.device.createBuffer({
+  const dataBuffer = t.createBufferTracked({
     size: dataBufferSize,
     usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE,
   });

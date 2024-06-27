@@ -102,7 +102,7 @@ struct __atomic_compare_exchange_result<T> {
     const arrayType = typedArrayCtor(scalarType);
 
     // Create input buffer with values [0..n]
-    const inputBuffer = t.device.createBuffer({
+    const inputBuffer = t.createBufferTracked({
       size: bufferNumElements * arrayType.BYTES_PER_ELEMENT,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
       mappedAtCreation: true,
@@ -112,13 +112,13 @@ struct __atomic_compare_exchange_result<T> {
     data.forEach((_, i) => (data[i] = i));
     inputBuffer.unmap();
 
-    const outputBuffer = t.device.createBuffer({
+    const outputBuffer = t.createBufferTracked({
       size: bufferNumElements * arrayType.BYTES_PER_ELEMENT,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
     });
     t.trackForCleanup(outputBuffer);
 
-    const exchangedBuffer = t.device.createBuffer({
+    const exchangedBuffer = t.createBufferTracked({
       size: bufferNumElements * arrayType.BYTES_PER_ELEMENT,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
     });
@@ -252,19 +252,19 @@ struct __atomic_compare_exchange_result<T> {
 
     const arrayType = typedArrayCtor(scalarType);
 
-    const outputBuffer = t.device.createBuffer({
+    const outputBuffer = t.createBufferTracked({
       size: wgNumElements * dispatchSize * arrayType.BYTES_PER_ELEMENT,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
     });
     t.trackForCleanup(outputBuffer);
 
-    const wgCopyBuffer = t.device.createBuffer({
+    const wgCopyBuffer = t.createBufferTracked({
       size: wgNumElements * dispatchSize * arrayType.BYTES_PER_ELEMENT,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
     });
     t.trackForCleanup(outputBuffer);
 
-    const exchangedBuffer = t.device.createBuffer({
+    const exchangedBuffer = t.createBufferTracked({
       size: wgNumElements * dispatchSize * arrayType.BYTES_PER_ELEMENT,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
     });
@@ -414,7 +414,7 @@ struct __atomic_compare_exchange_result<T> {
     const defaultValue = 99999999;
 
     // Create single-value data buffer initialized to the first ping-pong value
-    const dataBuffer = t.device.createBuffer({
+    const dataBuffer = t.createBufferTracked({
       size: 1 * arrayType.BYTES_PER_ELEMENT,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
       mappedAtCreation: true,
@@ -426,7 +426,7 @@ struct __atomic_compare_exchange_result<T> {
     }
     t.trackForCleanup(dataBuffer);
 
-    const oldValuesBuffer = t.device.createBuffer({
+    const oldValuesBuffer = t.createBufferTracked({
       size: bufferNumElements * arrayType.BYTES_PER_ELEMENT,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
       mappedAtCreation: true,
@@ -438,7 +438,7 @@ struct __atomic_compare_exchange_result<T> {
       oldValuesBuffer.unmap();
     }
 
-    const exchangedBuffer = t.device.createBuffer({
+    const exchangedBuffer = t.createBufferTracked({
       size: bufferNumElements * arrayType.BYTES_PER_ELEMENT,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
       mappedAtCreation: true,
@@ -641,7 +641,7 @@ struct __atomic_compare_exchange_result<T> {
     const arrayType = typedArrayCtor(scalarType);
     const defaultValue = 99999999;
 
-    const oldValuesBuffer = t.device.createBuffer({
+    const oldValuesBuffer = t.createBufferTracked({
       size: bufferNumElements * arrayType.BYTES_PER_ELEMENT,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
       mappedAtCreation: true,
@@ -653,7 +653,7 @@ struct __atomic_compare_exchange_result<T> {
       oldValuesBuffer.unmap();
     }
 
-    const exchangedBuffer = t.device.createBuffer({
+    const exchangedBuffer = t.createBufferTracked({
       size: bufferNumElements * arrayType.BYTES_PER_ELEMENT,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
       mappedAtCreation: true,

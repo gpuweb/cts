@@ -169,11 +169,11 @@ g.test('non_pass_commands')
   .fn(t => {
     const { command, finishBeforeCommand } = t.params;
 
-    const srcBuffer = t.device.createBuffer({
+    const srcBuffer = t.createBufferTracked({
       size: 16,
       usage: GPUBufferUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
     });
-    const dstBuffer = t.device.createBuffer({
+    const dstBuffer = t.createBufferTracked({
       size: 16,
       usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.QUERY_RESOLVE,
     });
@@ -305,7 +305,7 @@ g.test('render_pass_commands')
     const encoder = t.device.createCommandEncoder();
     const renderPass = beginRenderPassWithQuerySet(t, encoder, querySet);
 
-    const buffer = t.device.createBuffer({
+    const buffer = t.createBufferTracked({
       size: 12,
       usage: GPUBufferUsage.INDIRECT | GPUBufferUsage.VERTEX,
     });
@@ -436,7 +436,7 @@ g.test('render_bundle_commands')
   .fn(t => {
     const { command, finishBeforeCommand } = t.params;
 
-    const buffer = t.device.createBuffer({
+    const buffer = t.createBufferTracked({
       size: 12,
       usage: GPUBufferUsage.INDIRECT | GPUBufferUsage.VERTEX,
     });
@@ -537,7 +537,7 @@ g.test('compute_pass_commands')
     const encoder = t.device.createCommandEncoder();
     const computePass = encoder.beginComputePass();
 
-    const indirectBuffer = t.device.createBuffer({
+    const indirectBuffer = t.createBufferTracked({
       size: 12,
       usage: GPUBufferUsage.INDIRECT,
     });

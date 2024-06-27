@@ -1381,7 +1381,7 @@ g.test('scope,dispatch')
         break;
       case 'indirect':
         {
-          const indirectBuffer = t.device.createBuffer({ size: 4, usage: GPUBufferUsage.INDIRECT });
+          const indirectBuffer = t.createBufferTracked({ size: 4, usage: GPUBufferUsage.INDIRECT });
           pass.dispatchWorkgroupsIndirect(indirectBuffer, 0);
         }
         break;

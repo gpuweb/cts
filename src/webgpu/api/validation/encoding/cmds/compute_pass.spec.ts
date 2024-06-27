@@ -31,7 +31,7 @@ class F extends ValidationTest {
     }
 
     this.device.pushErrorScope('validation');
-    const buffer = this.device.createBuffer(descriptor);
+    const buffer = this.createBufferTracked(descriptor);
     void this.device.popErrorScope();
 
     if (state === 'valid') {
@@ -243,7 +243,7 @@ g.test('indirect_dispatch_buffer,usage')
     const layout = t.device.createPipelineLayout({ bindGroupLayouts: [] });
     const pipeline = t.createNoOpComputePipeline(layout);
 
-    const buffer = t.device.createBuffer({
+    const buffer = t.createBufferTracked({
       size: 16,
       usage: bufferUsage,
     });

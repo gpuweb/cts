@@ -175,7 +175,7 @@ function createTextureCopyForMapRead(
     aspect: source.aspect,
   });
 
-  const buffer = t.device.createBuffer({
+  const buffer = t.createBufferTracked({
     usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
     size: byteLength,
   });

@@ -58,7 +58,7 @@ Tests that resolve query set with invalid firstQuery and queryCount:
     const { firstQuery, queryCount } = t.params;
 
     const querySet = t.createQuerySetTracked({ type: 'occlusion', count: kQueryCount });
-    const destination = t.device.createBuffer({
+    const destination = t.createBufferTracked({
       size: kQueryCount * 8,
       usage: GPUBufferUsage.QUERY_RESOLVE,
     });
@@ -84,7 +84,7 @@ Tests that resolve query set with invalid destinationBuffer:
   )
   .fn(t => {
     const querySet = t.createQuerySetTracked({ type: 'occlusion', count: kQueryCount });
-    const destination = t.device.createBuffer({
+    const destination = t.createBufferTracked({
       size: kQueryCount * 8,
       usage: t.params.bufferUsage,
     });
@@ -105,7 +105,7 @@ Tests that resolve query set with invalid destinationOffset:
   .fn(t => {
     const { destinationOffset } = t.params;
     const querySet = t.createQuerySetTracked({ type: 'occlusion', count: kQueryCount });
-    const destination = t.device.createBuffer({
+    const destination = t.createBufferTracked({
       size: 512,
       usage: GPUBufferUsage.QUERY_RESOLVE,
     });
@@ -134,7 +134,7 @@ Tests that resolve query set with the size oob:
   .fn(t => {
     const { queryCount, bufferSize, destinationOffset, _success } = t.params;
     const querySet = t.createQuerySetTracked({ type: 'occlusion', count: queryCount });
-    const destination = t.device.createBuffer({
+    const destination = t.createBufferTracked({
       size: bufferSize,
       usage: GPUBufferUsage.QUERY_RESOLVE,
     });

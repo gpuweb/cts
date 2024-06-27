@@ -99,12 +99,12 @@ fn frag(info : CaseInfo) {
 
   // Create storage buffers to hold the inputs and outputs.
   const bufferSize = cases.length * 4 * valueStride;
-  const inputBuffer = t.device.createBuffer({
+  const inputBuffer = t.createBufferTracked({
     size: bufferSize,
     usage: GPUBufferUsage.STORAGE,
     mappedAtCreation: true,
   });
-  const outputBuffer = t.device.createBuffer({
+  const outputBuffer = t.createBufferTracked({
     size: bufferSize,
     usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
   });

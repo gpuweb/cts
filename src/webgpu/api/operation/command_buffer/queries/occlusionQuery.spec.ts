@@ -254,7 +254,7 @@ class QueryStarterRenderBundle implements QueryStarter {
 
 class OcclusionQueryTest extends GPUTest {
   createBuffer(desc: GPUBufferDescriptor) {
-    return this.trackForCleanup(this.device.createBuffer(desc));
+    return this.trackForCleanup(this.createBufferTracked(desc));
   }
   createTexture(desc: GPUTextureDescriptor) {
     return this.trackForCleanup(this.device.createTexture(desc));

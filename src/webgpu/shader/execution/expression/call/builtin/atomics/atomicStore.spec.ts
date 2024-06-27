@@ -152,7 +152,7 @@ one of the values written.
     const arrayType = typedArrayCtor(scalarType);
 
     // Output buffer has only 1 element
-    const outputBuffer = t.device.createBuffer({
+    const outputBuffer = t.createBufferTracked({
       size: 1 * arrayType.BYTES_PER_ELEMENT,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
     });
@@ -257,7 +257,7 @@ one of the values written.
 
     const arrayType = typedArrayCtor(scalarType);
 
-    const outputBuffer = t.device.createBuffer({
+    const outputBuffer = t.createBufferTracked({
       size: dispatchSize * arrayType.BYTES_PER_ELEMENT,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
     });

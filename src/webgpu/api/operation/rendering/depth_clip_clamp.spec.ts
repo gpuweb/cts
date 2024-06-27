@@ -225,24 +225,24 @@ have unexpected values then get drawn to the color buffer, which is later checke
 
     const dsActual =
       !multisampled && info.depth.bytes
-        ? t.device.createBuffer({
+        ? t.createBufferTracked({
             size: kNumTestPoints * info.depth.bytes,
             usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
           })
         : undefined;
     const dsExpected =
       !multisampled && info.depth.bytes
-        ? t.device.createBuffer({
+        ? t.createBufferTracked({
             size: kNumTestPoints * info.depth.bytes,
             usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
           })
         : undefined;
-    const checkBuffer = t.device.createBuffer({
+    const checkBuffer = t.createBufferTracked({
       size: kNumTestPoints,
       usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
     });
 
-    const fragInputZFailedBuffer = t.device.createBuffer({
+    const fragInputZFailedBuffer = t.createBufferTracked({
       size: 4 * kNumTestPoints,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
     });
@@ -472,7 +472,7 @@ to be empty.`
       ? t.device.createTexture({ ...testTextureDesc, sampleCount: 4 }).createView()
       : undefined;
 
-    const resultBuffer = t.device.createBuffer({
+    const resultBuffer = t.createBufferTracked({
       size: kNumDepthValues,
       usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
     });

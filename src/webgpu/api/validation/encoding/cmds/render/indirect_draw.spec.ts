@@ -13,7 +13,7 @@ const kIndirectDrawTestParams = kRenderEncodeTypeParams.combine('indexed', [true
 
 class F extends ValidationTest {
   makeIndexBuffer(): GPUBuffer {
-    return this.device.createBuffer({
+    return this.createBufferTracked({
       size: 16,
       usage: GPUBufferUsage.INDEX,
     });
@@ -96,7 +96,7 @@ Tests indirect buffer must have 'Indirect' usage.
   )
   .fn(t => {
     const { encoderType, indexed, usage } = t.params;
-    const indirectBuffer = t.device.createBuffer({
+    const indirectBuffer = t.createBufferTracked({
       size: 256,
       usage,
     });
@@ -123,7 +123,7 @@ Tests indirect offset must be a multiple of 4.
   .fn(t => {
     const { encoderType, indexed, indirectOffset } = t.params;
     const pipeline = t.createNoOpRenderPipeline();
-    const indirectBuffer = t.device.createBuffer({
+    const indirectBuffer = t.createBufferTracked({
       size: 256,
       usage: GPUBufferUsage.INDIRECT,
     });
@@ -183,7 +183,7 @@ Tests indirect draw calls with various indirect offsets and buffer sizes.
   .fn(t => {
     const { encoderType, indexed, indirectOffset, bufferSize, _valid } = t.params;
     const pipeline = t.createNoOpRenderPipeline();
-    const indirectBuffer = t.device.createBuffer({
+    const indirectBuffer = t.createBufferTracked({
       size: bufferSize,
       usage: GPUBufferUsage.INDIRECT,
     });

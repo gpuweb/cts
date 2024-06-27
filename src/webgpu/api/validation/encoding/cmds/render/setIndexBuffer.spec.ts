@@ -66,7 +66,7 @@ Tests index buffer must have 'Index' usage.
   )
   .fn(t => {
     const { encoderType, usage } = t.params;
-    const indexBuffer = t.device.createBuffer({
+    const indexBuffer = t.createBufferTracked({
       size: 16,
       usage,
     });
@@ -91,7 +91,7 @@ Tests offset must be a multiple of index format’s byte size.
   )
   .fn(t => {
     const { encoderType, indexFormat, offset } = t.params;
-    const indexBuffer = t.device.createBuffer({
+    const indexBuffer = t.createBufferTracked({
       size: 16,
       usage: GPUBufferUsage.INDEX,
     });
@@ -113,7 +113,7 @@ Tests offset and size cannot be larger than index buffer size.
   .paramsSubcasesOnly(buildBufferOffsetAndSizeOOBTestParams(4, 256))
   .fn(t => {
     const { encoderType, offset, size, _valid } = t.params;
-    const indexBuffer = t.device.createBuffer({
+    const indexBuffer = t.createBufferTracked({
       size: 256,
       usage: GPUBufferUsage.INDEX,
     });

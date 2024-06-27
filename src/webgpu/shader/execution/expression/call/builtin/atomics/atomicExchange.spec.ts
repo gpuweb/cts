@@ -64,7 +64,7 @@ fn atomicExchange(atomic_ptr: ptr<AS, atomic<T>, read_write>, v: T) -> T
     const arrayType = typedArrayCtor(scalarType);
 
     // Create input buffer with values [0..n]
-    const inputBuffer = t.device.createBuffer({
+    const inputBuffer = t.createBufferTracked({
       size: bufferNumElements * arrayType.BYTES_PER_ELEMENT,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
       mappedAtCreation: true,
@@ -74,7 +74,7 @@ fn atomicExchange(atomic_ptr: ptr<AS, atomic<T>, read_write>, v: T) -> T
     data.forEach((_, i) => (data[i] = i));
     inputBuffer.unmap();
 
-    const outputBuffer = t.device.createBuffer({
+    const outputBuffer = t.createBufferTracked({
       size: bufferNumElements * arrayType.BYTES_PER_ELEMENT,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
     });
@@ -176,13 +176,13 @@ fn atomicLoad(atomic_ptr: ptr<AS, atomic<T>, read_write>) -> T
 
     const arrayType = typedArrayCtor(scalarType);
 
-    const outputBuffer = t.device.createBuffer({
+    const outputBuffer = t.createBufferTracked({
       size: wgNumElements * dispatchSize * arrayType.BYTES_PER_ELEMENT,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
     });
     t.trackForCleanup(outputBuffer);
 
-    const wgCopyBuffer = t.device.createBuffer({
+    const wgCopyBuffer = t.createBufferTracked({
       size: wgNumElements * dispatchSize * arrayType.BYTES_PER_ELEMENT,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
     });
@@ -276,13 +276,13 @@ fn atomicExchange(atomic_ptr: ptr<AS, atomic<T>, read_write>, v: T) -> T
     const arrayType = typedArrayCtor(scalarType);
 
     // Create input buffer of size 1 with initial value 0
-    const inputBuffer = t.device.createBuffer({
+    const inputBuffer = t.createBufferTracked({
       size: 1 * arrayType.BYTES_PER_ELEMENT,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
     });
     t.trackForCleanup(inputBuffer);
 
-    const outputBuffer = t.device.createBuffer({
+    const outputBuffer = t.createBufferTracked({
       size: bufferNumElements * arrayType.BYTES_PER_ELEMENT,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
     });
@@ -402,13 +402,13 @@ fn atomicLoad(atomic_ptr: ptr<AS, atomic<T>, read_write>) -> T
 
     const arrayType = typedArrayCtor(scalarType);
 
-    const outputBuffer = t.device.createBuffer({
+    const outputBuffer = t.createBufferTracked({
       size: numInvocations * dispatchSize * arrayType.BYTES_PER_ELEMENT,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
     });
     t.trackForCleanup(outputBuffer);
 
-    const wgCopyBuffer = t.device.createBuffer({
+    const wgCopyBuffer = t.createBufferTracked({
       size: dispatchSize * arrayType.BYTES_PER_ELEMENT,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
     });

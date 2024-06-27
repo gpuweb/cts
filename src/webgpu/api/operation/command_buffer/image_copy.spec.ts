@@ -845,7 +845,7 @@ class ImageCopyTest extends TextureTestMixin(GPUTest) {
         }),
       kBufferSizeAlignment
     );
-    const outputBuffer = this.device.createBuffer({
+    const outputBuffer = this.createBufferTracked({
       size: outputBufferSize,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
@@ -1068,7 +1068,7 @@ class ImageCopyTest extends TextureTestMixin(GPUTest) {
 
       // Check outputTexture by copying the content of outputTexture into outputStagingBuffer and
       // checking all the data in outputStagingBuffer.
-      const outputStagingBuffer = this.device.createBuffer({
+      const outputStagingBuffer = this.createBufferTracked({
         size: copyFromOutputTextureLayout.byteLength,
         usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
       });
@@ -1237,7 +1237,7 @@ class ImageCopyTest extends TextureTestMixin(GPUTest) {
   }
 
   createUniformBufferAndBindGroupEntryForBaseArrayLayer(z: number) {
-    const buffer = this.device.createBuffer({
+    const buffer = this.createBufferTracked({
       usage: GPUBufferUsage.UNIFORM,
       size: 4,
       mappedAtCreation: true,
@@ -1314,7 +1314,7 @@ class ImageCopyTest extends TextureTestMixin(GPUTest) {
         dataPaddingInBytes,
       kBufferSizeAlignment
     );
-    const destinationBuffer = this.device.createBuffer({
+    const destinationBuffer = this.createBufferTracked({
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
       size: destinationBufferSize,
     });

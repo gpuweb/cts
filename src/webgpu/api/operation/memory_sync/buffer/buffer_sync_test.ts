@@ -222,7 +222,7 @@ export class BufferSyncTest extends GPUTest {
     }
 
     const dstBuffer = this.trackForCleanup(
-      this.device.createBuffer({
+      this.createBufferTracked({
         size: Uint32Array.BYTES_PER_ELEMENT,
         usage:
           GPUBufferUsage.COPY_SRC |
@@ -241,7 +241,7 @@ export class BufferSyncTest extends GPUTest {
   // Create a buffer with 1 uint32 element, and initialize it to a specified value.
   async createBufferWithValue(initValue: number): Promise<GPUBuffer> {
     const buffer = this.trackForCleanup(
-      this.device.createBuffer({
+      this.createBufferTracked({
         mappedAtCreation: true,
         size: Uint32Array.BYTES_PER_ELEMENT,
         usage:
@@ -263,7 +263,7 @@ export class BufferSyncTest extends GPUTest {
   // Create a buffer, and initialize it to the specified values.
   async createBufferWithValues(initValues: number[]): Promise<GPUBuffer> {
     const buffer = this.trackForCleanup(
-      this.device.createBuffer({
+      this.createBufferTracked({
         mappedAtCreation: true,
         size: Uint32Array.BYTES_PER_ELEMENT * initValues.length,
         usage:

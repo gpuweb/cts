@@ -176,7 +176,7 @@ the buffer, the remaining part of that buffer will be initialized to 0.`
     const bufferSize = 32;
     const appliedOffset = offset >= 0 ? offset : bufferSize + offset;
 
-    const buffer = t.device.createBuffer({
+    const buffer = t.createBufferTracked({
       size: bufferSize,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
@@ -205,7 +205,7 @@ have already been initialized to 0.`
 
     const bufferSize = 32;
     const bufferUsage = t.GetBufferUsageFromMapMode(mapMode);
-    const buffer = t.device.createBuffer({
+    const buffer = t.createBufferTracked({
       size: bufferSize,
       usage: bufferUsage,
     });
@@ -235,7 +235,7 @@ already been initialized to 0.`
     const appliedOffset = offset >= 0 ? offset : bufferSize + offset;
 
     const bufferUsage = t.GetBufferUsageFromMapMode(mapMode);
-    const buffer = t.device.createBuffer({
+    const buffer = t.createBufferTracked({
       size: bufferSize,
       usage: bufferUsage,
     });
@@ -269,7 +269,7 @@ array buffer of getMappedRange() and the GPUBuffer itself have all been initiali
     const { bufferUsage } = t.params;
 
     const bufferSize = 32;
-    const buffer = t.device.createBuffer({
+    const buffer = t.createBufferTracked({
       mappedAtCreation: true,
       size: bufferSize,
       usage: bufferUsage,
@@ -303,7 +303,7 @@ array buffer of getMappedRange() and the GPUBuffer itself have all been initiali
     const bufferSize = 32;
     const appliedOffset = offset >= 0 ? offset : bufferSize + offset;
 
-    const buffer = t.device.createBuffer({
+    const buffer = t.createBufferTracked({
       mappedAtCreation: true,
       size: bufferSize,
       usage: bufferUsage,
@@ -334,7 +334,7 @@ CopyBufferToBuffer(), the contents of the GPUBuffer have already been initialize
   .fn(t => {
     const bufferSize = 32;
     const bufferUsage = GPUBufferUsage.COPY_SRC;
-    const buffer = t.device.createBuffer({
+    const buffer = t.createBufferTracked({
       size: bufferSize,
       usage: bufferUsage,
     });
@@ -365,7 +365,7 @@ CopyBufferToTexture(), the contents of the GPUBuffer have already been initializ
     const layout = getTextureCopyLayout(dstTextureFormat, '2d', textureSize);
     const srcBufferSize = layout.byteLength + bufferOffset;
     const srcBufferUsage = GPUBufferUsage.COPY_SRC;
-    const srcBuffer = t.device.createBuffer({
+    const srcBuffer = t.createBufferTracked({
       size: srcBufferSize,
       usage: srcBufferUsage,
     });
@@ -402,7 +402,7 @@ remaining part of it will be initialized to 0.`
     const { bufferOffset } = t.params;
     const bufferSize = bufferOffset + 8;
     const bufferUsage = GPUBufferUsage.COPY_SRC | GPUBufferUsage.QUERY_RESOLVE;
-    const dstBuffer = t.device.createBuffer({
+    const dstBuffer = t.createBufferTracked({
       size: bufferSize,
       usage: bufferUsage,
     });
@@ -454,7 +454,7 @@ remaining part of it will be initialized to 0.`
     });
 
     const dstBufferSize = layout.byteLength + Math.abs(bufferOffset);
-    const dstBuffer = t.device.createBuffer({
+    const dstBuffer = t.createBufferTracked({
       size: dstBufferSize,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
@@ -513,7 +513,7 @@ g.test('uniform_buffer')
     const { bufferOffset } = t.params;
 
     const boundBufferSize = 16;
-    const buffer = t.device.createBuffer({
+    const buffer = t.createBufferTracked({
       size: bufferOffset + boundBufferSize,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.UNIFORM,
     });
@@ -549,7 +549,7 @@ g.test('readonly_storage_buffer')
   .fn(t => {
     const { bufferOffset } = t.params;
     const boundBufferSize = 16;
-    const buffer = t.device.createBuffer({
+    const buffer = t.createBufferTracked({
       size: bufferOffset + boundBufferSize,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE,
     });
@@ -585,7 +585,7 @@ g.test('storage_buffer')
   .fn(t => {
     const { bufferOffset } = t.params;
     const boundBufferSize = 16;
-    const buffer = t.device.createBuffer({
+    const buffer = t.createBufferTracked({
       size: bufferOffset + boundBufferSize,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE,
     });
@@ -644,7 +644,7 @@ g.test('vertex_buffer')
     );
 
     const bufferSize = 16 + bufferOffset;
-    const vertexBuffer = t.device.createBuffer({
+    const vertexBuffer = t.createBufferTracked({
       size: bufferSize,
       usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_SRC,
     });
@@ -711,7 +711,7 @@ GPUBuffer, all the contents in that GPUBuffer have been initialized to 0.`
 
     // The size of GPUBuffer must be at least 4.
     const bufferSize = 4 + bufferOffset;
-    const indexBuffer = t.device.createBuffer({
+    const indexBuffer = t.createBufferTracked({
       size: bufferSize,
       usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_SRC,
     });
@@ -778,7 +778,7 @@ have been initialized to 0.`
     const kDrawIndexedIndirectParametersSize = 20;
     const bufferSize =
       Math.max(kDrawIndirectParametersSize, kDrawIndexedIndirectParametersSize) + bufferOffset;
-    const indirectBuffer = t.device.createBuffer({
+    const indirectBuffer = t.createBufferTracked({
       size: bufferSize,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.INDIRECT,
     });
@@ -808,7 +808,7 @@ have been initialized to 0.`
 
     let indexBuffer = undefined;
     if (test_indexed_draw) {
-      indexBuffer = t.device.createBuffer({
+      indexBuffer = t.createBufferTracked({
         size: 4,
         usage: GPUBufferUsage.INDEX,
       });
@@ -854,7 +854,7 @@ g.test('indirect_buffer_for_dispatch_indirect')
 
     const kDispatchIndirectParametersSize = 12;
     const bufferSize = kDispatchIndirectParametersSize + bufferOffset;
-    const indirectBuffer = t.device.createBuffer({
+    const indirectBuffer = t.createBufferTracked({
       size: bufferSize,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.INDIRECT,
     });

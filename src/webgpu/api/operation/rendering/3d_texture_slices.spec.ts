@@ -107,7 +107,7 @@ g.test('one_color_attachment,mip_levels')
 
     const { bufferSize } = t.getBufferSizeAndOffset(kSize, kSize, 1);
 
-    const buffer = t.device.createBuffer({
+    const buffer = t.createBufferTracked({
       size: bufferSize,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
@@ -254,7 +254,7 @@ g.test('multiple_color_attachments,same_mip_level')
     }
 
     const { bufferSize, bufferOffset } = t.getBufferSizeAndOffset(kSize, kSize, attachmentCount);
-    const buffer = t.device.createBuffer({
+    const buffer = t.createBufferTracked({
       size: bufferSize,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
@@ -345,7 +345,7 @@ g.test('multiple_color_attachments,same_slice_with_diff_mip_levels')
       kBaseSize,
       attachmentCount
     );
-    const buffer = t.device.createBuffer({
+    const buffer = t.createBufferTracked({
       size: bufferSize,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });

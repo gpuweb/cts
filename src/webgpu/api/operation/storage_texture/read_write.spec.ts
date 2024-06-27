@@ -352,7 +352,7 @@ g.test('basic')
     t.RecordCommandsToTransform(t.device, shaderStage, commandEncoder, storageTexture);
 
     const expectedData = t.GetExpectedData(shaderStage, storageTexture, initialData);
-    const readbackBuffer = t.device.createBuffer({
+    const readbackBuffer = t.createBufferTracked({
       size: expectedData.byteLength,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });

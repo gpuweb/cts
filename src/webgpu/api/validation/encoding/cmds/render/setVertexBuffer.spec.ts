@@ -95,7 +95,7 @@ Tests vertex buffer must have 'Vertex' usage.
   )
   .fn(t => {
     const { encoderType, usage } = t.params;
-    const vertexBuffer = t.device.createBuffer({
+    const vertexBuffer = t.createBufferTracked({
       size: 16,
       usage,
     });
@@ -114,7 +114,7 @@ Tests offset must be a multiple of 4.
   .paramsSubcasesOnly(kRenderEncodeTypeParams.combine('offset', [0, 2, 4] as const))
   .fn(t => {
     const { encoderType, offset } = t.params;
-    const vertexBuffer = t.device.createBuffer({
+    const vertexBuffer = t.createBufferTracked({
       size: 16,
       usage: GPUBufferUsage.VERTEX,
     });
@@ -133,7 +133,7 @@ Tests offset and size cannot be larger than vertex buffer size.
   .paramsSubcasesOnly(buildBufferOffsetAndSizeOOBTestParams(4, 256))
   .fn(t => {
     const { encoderType, offset, size, _valid } = t.params;
-    const vertexBuffer = t.device.createBuffer({
+    const vertexBuffer = t.createBufferTracked({
       size: 256,
       usage: GPUBufferUsage.VERTEX,
     });

@@ -36,7 +36,7 @@ const checkerColors = [
 class SamplerAnisotropicFilteringSlantedPlaneTest extends GPUTest {
   copyRenderTargetToBuffer(rt: GPUTexture): GPUBuffer {
     const byteLength = kRTSize * kBytesPerRow;
-    const buffer = this.device.createBuffer({
+    const buffer = this.createBufferTracked({
       size: byteLength,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });

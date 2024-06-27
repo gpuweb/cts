@@ -136,7 +136,7 @@ struct Output {
       },
     });
 
-    const resultBuffer = this.device.createBuffer({
+    const resultBuffer = this.createBufferTracked({
       size: Uint32Array.BYTES_PER_ELEMENT,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
     });
@@ -685,7 +685,7 @@ ${accumulateVariableAssignmentsInFragmentShader}
       },
     });
 
-    const resultBuffer = t.device.createBuffer({
+    const resultBuffer = t.createBufferTracked({
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
       size: vertexCount * instanceCount * vertexInputShaderLocations.length * 4,
     });

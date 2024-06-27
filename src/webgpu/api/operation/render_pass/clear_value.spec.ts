@@ -162,7 +162,7 @@ g.test('stencil_clear_value')
     renderPassEncoder.draw(6);
     renderPassEncoder.end();
 
-    const destinationBuffer = t.device.createBuffer({
+    const destinationBuffer = t.createBufferTracked({
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
       size: 4,
     });

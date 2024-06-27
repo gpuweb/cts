@@ -94,7 +94,7 @@ g.test('set_index_buffer_without_changing_buffer')
     // Initialize the vertex buffer with required vertex attributes (position: f32, color: f32x4)
     // Note that the maximum index in the test is 0x10000.
     const kVertexAttributesCount = 0x10000 + 1;
-    const vertexBuffer = t.device.createBuffer({
+    const vertexBuffer = t.createBufferTracked({
       usage: GPUBufferUsage.VERTEX,
       size: t.kVertexAttributeSize * kVertexAttributesCount,
       mappedAtCreation: true,
@@ -205,7 +205,7 @@ g.test('set_vertex_buffer_without_changing_buffer')
 
     // Initialize the vertex buffer with required vertex attributes (position: f32, color: f32x4)
     const kVertexAttributesCount = 8;
-    const vertexBuffer = t.device.createBuffer({
+    const vertexBuffer = t.createBufferTracked({
       usage: GPUBufferUsage.VERTEX,
       size: t.kVertexAttributeSize * kVertexAttributesCount,
       mappedAtCreation: true,
@@ -303,7 +303,7 @@ g.test('change_pipeline_before_and_after_vertex_buffer')
     ];
 
     // Initialize the vertex buffer with required vertex attributes (position: f32, color: f32x4)
-    const vertexBuffer = t.device.createBuffer({
+    const vertexBuffer = t.createBufferTracked({
       usage: GPUBufferUsage.VERTEX,
       size: t.kVertexAttributeSize * kPositions.length,
       mappedAtCreation: true,
@@ -562,7 +562,7 @@ g.test('set_index_buffer_before_non_indexed_draw')
     ];
 
     // Initialize the vertex buffer with required vertex attributes (position: f32, color: f32x4)
-    const vertexBuffer = t.device.createBuffer({
+    const vertexBuffer = t.createBufferTracked({
       usage: GPUBufferUsage.VERTEX,
       size: t.kVertexAttributeSize * kPositions.length,
       mappedAtCreation: true,

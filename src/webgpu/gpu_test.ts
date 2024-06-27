@@ -372,7 +372,7 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
     assert(srcOffset % 4 === 0);
     assert(size % 4 === 0);
 
-    const dst = this.device.createBuffer({
+    const dst = this.createBufferTracked({
       size,
       usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
     });
@@ -616,7 +616,7 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
     }
 
     // Copy into a buffer suitable for STORAGE usage.
-    const storageBuffer = this.device.createBuffer({
+    const storageBuffer = this.createBufferTracked({
       size: bufferSize,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
     });
@@ -628,7 +628,7 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
     // than 32 bits, we assume they're a multiple of 32 bits and expect to read exact matches of
     // `expectedValue` as-is.
     const expectedDataSize = Math.max(4, valueSize);
-    const expectedDataBuffer = this.device.createBuffer({
+    const expectedDataBuffer = this.createBufferTracked({
       size: expectedDataSize,
       usage: GPUBufferUsage.STORAGE,
       mappedAtCreation: true,
@@ -652,7 +652,7 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
 
     // The output buffer has one 32-bit entry per buffer row. An entry's value will be 1 if every
     // read from the corresponding row matches the expected data derived above, or 0 otherwise.
-    const resultBuffer = this.device.createBuffer({
+    const resultBuffer = this.createBufferTracked({
       size: numRows * 4,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
     });
@@ -759,7 +759,7 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
     const rep = kTexelRepresentationInfo[format as EncodableTextureFormat];
     const expectedTexelData = rep.pack(rep.encode(exp));
 
-    const buffer = this.device.createBuffer({
+    const buffer = this.createBufferTracked({
       size: byteLength,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
@@ -801,7 +801,7 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
       [1, 1],
       layout
     );
-    const buffer = this.device.createBuffer({
+    const buffer = this.createBufferTracked({
       size: byteLength,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
@@ -932,7 +932,7 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
       },
     });
 
-    const storageBuffer = this.device.createBuffer({
+    const storageBuffer = this.createBufferTracked({
       size: sampleCount * type.size * componentCount * width * height,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC,
     });
@@ -1643,7 +1643,7 @@ export function TextureTestMixin<F extends FixtureClass<GPUTest>>(
           const numLayers = texture.depthOrArrayLayers;
           const readbackPromisesPerLayer = [];
 
-          const uniformBuffer = this.device.createBuffer({
+          const uniformBuffer = this.createBufferTracked({
             size: 4,
             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
           });
@@ -1787,7 +1787,7 @@ export function TextureTestMixin<F extends FixtureClass<GPUTest>>(
       }
     ): GPUBuffer {
       const { byteLength, bytesPerRow, rowsPerImage } = resultDataLayout;
-      const buffer = this.device.createBuffer({
+      const buffer = this.createBufferTracked({
         size: align(byteLength, 4), // this is necessary because we need to copy and map data from this buffer
         usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
       });

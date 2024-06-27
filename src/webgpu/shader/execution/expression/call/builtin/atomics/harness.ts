@@ -84,7 +84,7 @@ export function runStorageVariableTest({
     },
   });
 
-  const outputBuffer = t.device.createBuffer({
+  const outputBuffer = t.createBufferTracked({
     size: bufferNumElements * arrayType.BYTES_PER_ELEMENT,
     usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
     mappedAtCreation: true,
@@ -184,7 +184,7 @@ export function runWorkgroupVariableTest({
     },
   });
 
-  const outputBuffer = t.device.createBuffer({
+  const outputBuffer = t.createBufferTracked({
     size: wgNumElements * dispatchSize * arrayType.BYTES_PER_ELEMENT,
     usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
   });

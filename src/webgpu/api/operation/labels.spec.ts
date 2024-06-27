@@ -12,7 +12,7 @@ export const g = makeTestGroup(GPUTest);
 type TestFunction = (t: GPUTest, label: string) => Promise<void> | void;
 const kTestFunctions: { [name: string]: TestFunction } = {
   createBuffer: (t: GPUTest, label: string) => {
-    const buffer = t.device.createBuffer({ size: 16, usage: GPUBufferUsage.COPY_DST, label });
+    const buffer = t.createBufferTracked({ size: 16, usage: GPUBufferUsage.COPY_DST, label });
     t.expect(buffer.label === label);
     buffer.destroy();
     t.expect(buffer.label === label);

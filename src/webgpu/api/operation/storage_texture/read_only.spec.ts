@@ -600,7 +600,7 @@ g.test('basic')
 
     const expectedData = t.InitTextureAndGetExpectedOutputBufferData(storageTexture, format);
 
-    const outputBuffer = t.device.createBuffer({
+    const outputBuffer = t.createBufferTracked({
       size: 4 * 4 * kWidth * height * depthOrArrayLayers,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE,
     });

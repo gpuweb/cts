@@ -60,7 +60,7 @@ g.test('ranges')
     function runTest(arrayType: TypedArrayBufferViewConstructor, testBuffer: boolean) {
       const elementSize = arrayType.BYTES_PER_ELEMENT;
       const bufferSize = 16 * elementSize;
-      const buffer = t.device.createBuffer({
+      const buffer = t.createBufferTracked({
         size: bufferSize,
         usage: GPUBufferUsage.COPY_DST,
       });
@@ -168,7 +168,7 @@ g.test('usages')
   ])
   .fn(t => {
     const { usage, _valid } = t.params;
-    const buffer = t.device.createBuffer({ size: 16, usage });
+    const buffer = t.createBufferTracked({ size: 16, usage });
     const data = new Uint8Array(16);
 
     t.expectValidationError(() => {

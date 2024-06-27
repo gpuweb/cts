@@ -31,7 +31,7 @@ g.test('compressed')
 
     const bytesPerRow = align(info.color.bytes, 256);
 
-    const buffer = t.device.createBuffer({
+    const buffer = t.createBufferTracked({
       size: bytesPerRow,
       usage: GPUBufferUsage.COPY_DST,
     });

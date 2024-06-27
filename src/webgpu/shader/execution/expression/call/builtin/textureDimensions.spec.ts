@@ -245,7 +245,7 @@ output = ${
     compute: { module },
     layout: 'auto',
   });
-  const outputBuffer = t.device.createBuffer({
+  const outputBuffer = t.createBufferTracked({
     size: 32,
     usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE,
   });

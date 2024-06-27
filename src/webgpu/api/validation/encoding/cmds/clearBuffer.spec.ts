@@ -89,7 +89,7 @@ g.test('default_args')
   .fn(t => {
     const { offset, size } = t.params;
 
-    const buffer = t.device.createBuffer({
+    const buffer = t.createBufferTracked({
       size: 16,
       usage: GPUBufferUsage.COPY_DST,
     });
@@ -111,7 +111,7 @@ g.test('buffer_usage')
   .fn(t => {
     const { usage } = t.params;
 
-    const buffer = t.device.createBuffer({
+    const buffer = t.createBufferTracked({
       size: 16,
       usage,
     });
@@ -146,7 +146,7 @@ g.test('size_alignment')
   .fn(t => {
     const { size, _isSuccess: isSuccess } = t.params;
 
-    const buffer = t.device.createBuffer({
+    const buffer = t.createBufferTracked({
       size: 16,
       usage: GPUBufferUsage.COPY_DST,
     });
@@ -180,7 +180,7 @@ g.test('offset_alignment')
   .fn(t => {
     const { offset, _isSuccess: isSuccess } = t.params;
 
-    const buffer = t.device.createBuffer({
+    const buffer = t.createBufferTracked({
       size: 16,
       usage: GPUBufferUsage.COPY_DST,
     });
@@ -204,7 +204,7 @@ g.test('overflow')
   .fn(t => {
     const { offset, size } = t.params;
 
-    const buffer = t.device.createBuffer({
+    const buffer = t.createBufferTracked({
       size: 16,
       usage: GPUBufferUsage.COPY_DST,
     });
@@ -232,7 +232,7 @@ g.test('out_of_bounds')
   .fn(t => {
     const { offset, size, _isSuccess = false } = t.params;
 
-    const buffer = t.device.createBuffer({
+    const buffer = t.createBufferTracked({
       size: 32,
       usage: GPUBufferUsage.COPY_DST,
     });

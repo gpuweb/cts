@@ -152,7 +152,7 @@ function drawPassthrough(t: GPUTest, code: string) {
     bufferSize *= comp;
   }
   bufferSize *= outputTextures.length * bytesPerComponent * copyWidth;
-  const outputBuffer = t.device.createBuffer({
+  const outputBuffer = t.createBufferTracked({
     size: bufferSize,
     usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
   });

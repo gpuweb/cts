@@ -116,7 +116,7 @@ TODO update such that it tests
   .fn(t => {
     const { method, usage } = t.params;
 
-    const buffer = t.device.createBuffer({
+    const buffer = t.createBufferTracked({
       size: 16,
       usage,
     });
@@ -193,7 +193,7 @@ Test that bytesPerRow must be a multiple of 256 for CopyB2T and CopyT2B if it is
 
     const info = kTextureFormatInfo[format];
 
-    const buffer = t.device.createBuffer({
+    const buffer = t.createBufferTracked({
       size: 512 * 8 * 16,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });

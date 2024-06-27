@@ -102,7 +102,7 @@ fn frag_main() -> @location(0) vec4f {
     });
 
     // We'll copy one pixel only.
-    const dst = t.device.createBuffer({
+    const dst = t.createBufferTracked({
       size: 4,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });

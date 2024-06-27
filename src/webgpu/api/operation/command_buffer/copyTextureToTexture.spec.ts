@@ -273,7 +273,7 @@ class F extends TextureTestMixin(GPUTest) {
       size: dstBufferSize,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     };
-    const dstBuffer = this.device.createBuffer(dstBufferDesc);
+    const dstBuffer = this.createBufferTracked(dstBufferDesc);
     this.trackForCleanup(dstBuffer);
 
     {
@@ -436,7 +436,7 @@ class F extends TextureTestMixin(GPUTest) {
       }),
       kBufferSizeAlignment
     );
-    const outputBuffer = this.device.createBuffer({
+    const outputBuffer = this.createBufferTracked({
       size: outputBufferSize,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });

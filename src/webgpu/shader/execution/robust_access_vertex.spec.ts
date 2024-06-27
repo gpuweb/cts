@@ -210,7 +210,7 @@ class DrawCall {
       size -= 1; // Shave off one byte from the buffer size.
       length -= 1; // And one whole element from the writeBuffer.
     }
-    const buffer = this.test.device.createBuffer({
+    const buffer = this.test.createBufferTracked({
       size,
       usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST, // Ensure that buffer can be used by writeBuffer
     });

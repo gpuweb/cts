@@ -58,7 +58,7 @@ g.test('shared_with_buffer')
 
     // Allocate a buffer to hold the output structure.
     const bufferNumElements = 32;
-    const outputBuffer = t.device.createBuffer({
+    const outputBuffer = t.createBufferTracked({
       size: bufferNumElements * Uint32Array.BYTES_PER_ELEMENT,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
     });

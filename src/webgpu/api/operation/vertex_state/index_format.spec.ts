@@ -125,7 +125,7 @@ class IndexFormatTest extends GPUTest {
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
     });
 
-    const result = this.device.createBuffer({
+    const result = this.createBufferTracked({
       size: byteLength,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
@@ -239,7 +239,7 @@ g.test('index_format,change_pipeline_after_setIndexBuffer')
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
     });
 
-    const result = t.device.createBuffer({
+    const result = t.createBufferTracked({
       size: byteLength,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
@@ -296,7 +296,7 @@ g.test('index_format,setIndexBuffer_before_setPipeline')
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
     });
 
-    const result = t.device.createBuffer({
+    const result = t.createBufferTracked({
       size: byteLength,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
@@ -356,7 +356,7 @@ g.test('index_format,setIndexBuffer_different_formats')
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
     });
 
-    const result = t.device.createBuffer({
+    const result = t.createBufferTracked({
       size: byteLength,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });

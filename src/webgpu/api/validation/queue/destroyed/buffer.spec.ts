@@ -18,7 +18,7 @@ Tests that using a destroyed buffer in writeBuffer fails.
   .fn(t => {
     const { destroyed } = t.params;
     const buffer = t.trackForCleanup(
-      t.device.createBuffer({
+      t.createBufferTracked({
         size: 4,
         usage: GPUBufferUsage.COPY_DST,
       })
@@ -41,10 +41,10 @@ Tests that using a destroyed buffer in copyBufferToBuffer fails.
   .paramsSubcasesOnly(u => u.combine('destroyed', ['none', 'src', 'dst', 'both'] as const))
   .fn(t => {
     const src = t.trackForCleanup(
-      t.device.createBuffer({ size: 4, usage: GPUBufferUsage.COPY_SRC })
+      t.createBufferTracked({ size: 4, usage: GPUBufferUsage.COPY_SRC })
     );
     const dst = t.trackForCleanup(
-      t.device.createBuffer({ size: 4, usage: GPUBufferUsage.COPY_DST })
+      t.createBufferTracked({ size: 4, usage: GPUBufferUsage.COPY_DST })
     );
 
     const encoder = t.device.createCommandEncoder();
@@ -84,7 +84,7 @@ Tests that using a destroyed buffer in copyBufferToTexture fails.
   .fn(t => {
     const { destroyed } = t.params;
     const buffer = t.trackForCleanup(
-      t.device.createBuffer({ size: 4, usage: GPUBufferUsage.COPY_SRC })
+      t.createBufferTracked({ size: 4, usage: GPUBufferUsage.COPY_SRC })
     );
     const texture = t.trackForCleanup(
       t.device.createTexture({
@@ -125,7 +125,7 @@ Tests that using a destroyed buffer in copyTextureToBuffer fails.
       })
     );
     const buffer = t.trackForCleanup(
-      t.device.createBuffer({ size: 4, usage: GPUBufferUsage.COPY_DST })
+      t.createBufferTracked({ size: 4, usage: GPUBufferUsage.COPY_DST })
     );
 
     const encoder = t.device.createCommandEncoder();
@@ -157,7 +157,7 @@ Tests that using a destroyed buffer referenced by a bindGroup set with setBindGr
     const { destroyed, encoderType } = t.params;
     const { device } = t;
     const buffer = t.trackForCleanup(
-      t.device.createBuffer({
+      t.createBufferTracked({
         size: 4,
         usage: GPUBufferUsage.UNIFORM,
       })
@@ -206,7 +206,7 @@ Tests that using a destroyed buffer referenced in a render pass fails
   .fn(t => {
     const { destroyed, encoderType } = t.params;
     const vertexBuffer = t.trackForCleanup(
-      t.device.createBuffer({
+      t.createBufferTracked({
         size: 4,
         usage: GPUBufferUsage.VERTEX,
       })
@@ -240,7 +240,7 @@ Tests that using a destroyed buffer referenced in a render pass fails
   .fn(t => {
     const { destroyed, encoderType } = t.params;
     const indexBuffer = t.trackForCleanup(
-      t.device.createBuffer({
+      t.createBufferTracked({
         size: 4,
         usage: GPUBufferUsage.INDEX,
       })
@@ -274,7 +274,7 @@ Tests that using a destroyed buffer referenced via resolveQuerySet fails
       count: 1,
     });
     const querySetBuffer = t.trackForCleanup(
-      t.device.createBuffer({
+      t.createBufferTracked({
         size: 8,
         usage: GPUBufferUsage.QUERY_RESOLVE,
       })

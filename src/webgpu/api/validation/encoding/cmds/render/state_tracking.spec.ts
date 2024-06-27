@@ -8,7 +8,7 @@ import { ValidationTest } from '../../../validation_test.js';
 
 class F extends ValidationTest {
   getVertexBuffer(): GPUBuffer {
-    return this.device.createBuffer({
+    return this.createBufferTracked({
       size: 256,
       usage: GPUBufferUsage.VERTEX,
     });

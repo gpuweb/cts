@@ -10,7 +10,7 @@ import { checkElementsEqual } from '../../../util/check_contents.js';
 export const g = makeTestGroup(GPUTest);
 
 g.test('clear').fn(t => {
-  const dst = t.device.createBuffer({
+  const dst = t.createBufferTracked({
     size: 4,
     usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
   });
@@ -45,7 +45,7 @@ g.test('clear').fn(t => {
 });
 
 g.test('fullscreen_quad').fn(t => {
-  const dst = t.device.createBuffer({
+  const dst = t.createBufferTracked({
     size: 4,
     usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
   });
@@ -146,17 +146,17 @@ g.test('large_draw')
     const { indexed, indirect } = t.params;
 
     const kBytesPerRow = 256;
-    const dst = t.device.createBuffer({
+    const dst = t.createBufferTracked({
       size: 3 * kBytesPerRow,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
 
-    const paramsBuffer = t.device.createBuffer({
+    const paramsBuffer = t.createBufferTracked({
       size: 8,
       usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
     });
 
-    const indirectBuffer = t.device.createBuffer({
+    const indirectBuffer = t.createBufferTracked({
       size: 20,
       usage: GPUBufferUsage.INDIRECT | GPUBufferUsage.COPY_DST,
     });
@@ -173,7 +173,7 @@ g.test('large_draw')
     let indexBuffer: null | GPUBuffer = null;
     if (indexed) {
       const kMaxIndices = 16 * 1024 * 1024;
-      indexBuffer = t.device.createBuffer({
+      indexBuffer = t.createBufferTracked({
         size: kMaxIndices * Uint32Array.BYTES_PER_ELEMENT,
         usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST,
         mappedAtCreation: true,
