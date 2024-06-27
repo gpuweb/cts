@@ -31,7 +31,7 @@ export class ValidationTest extends GPUTest {
 
     switch (state) {
       case 'valid':
-        return this.trackForCleanup(this.createTextureTracked(descriptor));
+        return this.createTextureTracked(descriptor);
       case 'invalid':
         return this.getErrorTexture();
       case 'destroyed': {
@@ -137,37 +137,31 @@ export class ValidationTest extends GPUTest {
       sampleCount > 1
         ? GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT
         : GPUTextureUsage.TEXTURE_BINDING;
-    return this.trackForCleanup(
-      this.createTextureTracked({
-        size: { width: 16, height: 16, depthOrArrayLayers: 1 },
-        format: 'rgba8unorm',
-        usage,
-        sampleCount,
-      })
-    );
+    return this.createTextureTracked({
+      size: { width: 16, height: 16, depthOrArrayLayers: 1 },
+      format: 'rgba8unorm',
+      usage,
+      sampleCount,
+    });
   }
 
   /** Return an arbitrarily-configured GPUTexture with the `STORAGE_BINDING` usage. */
   getStorageTexture(format: GPUTextureFormat): GPUTexture {
-    return this.trackForCleanup(
-      this.createTextureTracked({
-        size: { width: 16, height: 16, depthOrArrayLayers: 1 },
-        format,
-        usage: GPUTextureUsage.STORAGE_BINDING,
-      })
-    );
+    return this.createTextureTracked({
+      size: { width: 16, height: 16, depthOrArrayLayers: 1 },
+      format,
+      usage: GPUTextureUsage.STORAGE_BINDING,
+    });
   }
 
   /** Return an arbitrarily-configured GPUTexture with the `RENDER_ATTACHMENT` usage. */
   getRenderTexture(sampleCount: number = 1): GPUTexture {
-    return this.trackForCleanup(
-      this.createTextureTracked({
-        size: { width: 16, height: 16, depthOrArrayLayers: 1 },
-        format: 'rgba8unorm',
-        usage: GPUTextureUsage.RENDER_ATTACHMENT,
-        sampleCount,
-      })
-    );
+    return this.createTextureTracked({
+      size: { width: 16, height: 16, depthOrArrayLayers: 1 },
+      format: 'rgba8unorm',
+      usage: GPUTextureUsage.RENDER_ATTACHMENT,
+      sampleCount,
+    });
   }
 
   /** Return an invalid GPUTexture. */

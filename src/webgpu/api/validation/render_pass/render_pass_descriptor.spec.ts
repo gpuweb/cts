@@ -1055,13 +1055,11 @@ g.test('depth_stencil_attachment,loadOp_storeOp_match_depthReadOnly_stencilReadO
       stencilStoreOp,
     } = t.params;
 
-    const depthAttachment = t.trackForCleanup(
-      t.createTextureTracked({
-        format,
-        size: { width: 1, height: 1, depthOrArrayLayers: 1 },
-        usage: GPUTextureUsage.RENDER_ATTACHMENT,
-      })
-    );
+    const depthAttachment = t.createTextureTracked({
+      format,
+      size: { width: 1, height: 1, depthOrArrayLayers: 1 },
+      usage: GPUTextureUsage.RENDER_ATTACHMENT,
+    });
     const depthAttachmentView = depthAttachment.createView();
 
     const encoder = t.device.createCommandEncoder();

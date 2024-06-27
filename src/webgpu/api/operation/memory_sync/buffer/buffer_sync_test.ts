@@ -281,13 +281,11 @@ export class BufferSyncTest extends GPUTest {
   async createTextureWithValue(initValue: number): Promise<GPUTexture> {
     // This is not hot in profiles; optimize if this gets used more heavily.
     const data = new Uint32Array(1).fill(initValue);
-    const texture = this.trackForCleanup(
-      this.createTextureTracked({
-        size: { width: 1, height: 1, depthOrArrayLayers: 1 },
-        format: 'r32uint',
-        usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
-      })
-    );
+    const texture = this.createTextureTracked({
+      size: { width: 1, height: 1, depthOrArrayLayers: 1 },
+      format: 'r32uint',
+      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
+    });
     this.device.queue.writeTexture(
       { texture, mipLevel: 0, origin: { x: 0, y: 0, z: 0 } },
       data,
@@ -373,13 +371,11 @@ export class BufferSyncTest extends GPUTest {
   }
 
   beginSimpleRenderPass(encoder: GPUCommandEncoder): GPURenderPassEncoder {
-    const view = this.trackForCleanup(
-      this.createTextureTracked({
-        size: { width: 1, height: 1, depthOrArrayLayers: 1 },
-        format: 'rgba8unorm',
-        usage: GPUTextureUsage.RENDER_ATTACHMENT,
-      })
-    ).createView();
+    const view = this.createTextureTracked({
+      size: { width: 1, height: 1, depthOrArrayLayers: 1 },
+      format: 'rgba8unorm',
+      usage: GPUTextureUsage.RENDER_ATTACHMENT,
+    }).createView();
     return encoder.beginRenderPass({
       colorAttachments: [
         {
@@ -800,13 +796,11 @@ export class BufferSyncTest extends GPUTest {
 
   // Read and Write texture via BufferToTexture copy.
   encodeReadByB2TCopy(encoder: GPUCommandEncoder, srcBuffer: GPUBuffer, dstBuffer: GPUBuffer) {
-    const tmpTexture = this.trackForCleanup(
-      this.createTextureTracked({
-        size: { width: 1, height: 1, depthOrArrayLayers: 1 },
-        format: 'r32uint',
-        usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
-      })
-    );
+    const tmpTexture = this.createTextureTracked({
+      size: { width: 1, height: 1, depthOrArrayLayers: 1 },
+      format: 'r32uint',
+      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
+    });
 
     // The b2t copy is just encoded into command encoder, it doesn't write immediately.
     encoder.copyBufferToTexture(

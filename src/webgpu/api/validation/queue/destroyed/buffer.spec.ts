@@ -78,13 +78,11 @@ Tests that using a destroyed buffer in copyBufferToTexture fails.
   .fn(t => {
     const { destroyed } = t.params;
     const buffer = t.createBufferTracked({ size: 4, usage: GPUBufferUsage.COPY_SRC });
-    const texture = t.trackForCleanup(
-      t.createTextureTracked({
-        size: [1, 1, 1],
-        format: 'rgba8unorm',
-        usage: GPUTextureUsage.COPY_DST,
-      })
-    );
+    const texture = t.createTextureTracked({
+      size: [1, 1, 1],
+      format: 'rgba8unorm',
+      usage: GPUTextureUsage.COPY_DST,
+    });
 
     const encoder = t.device.createCommandEncoder();
     encoder.copyBufferToTexture({ buffer }, { texture }, [1, 1, 1]);
@@ -109,13 +107,11 @@ Tests that using a destroyed buffer in copyTextureToBuffer fails.
   .paramsSubcasesOnly(u => u.combine('destroyed', [false, true] as const))
   .fn(t => {
     const { destroyed } = t.params;
-    const texture = t.trackForCleanup(
-      t.createTextureTracked({
-        size: [1, 1, 1],
-        format: 'rgba8unorm',
-        usage: GPUTextureUsage.COPY_SRC,
-      })
-    );
+    const texture = t.createTextureTracked({
+      size: [1, 1, 1],
+      format: 'rgba8unorm',
+      usage: GPUTextureUsage.COPY_SRC,
+    });
     const buffer = t.createBufferTracked({ size: 4, usage: GPUBufferUsage.COPY_DST });
 
     const encoder = t.device.createCommandEncoder();

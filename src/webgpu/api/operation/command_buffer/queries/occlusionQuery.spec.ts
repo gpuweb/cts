@@ -253,9 +253,6 @@ class QueryStarterRenderBundle implements QueryStarter {
 }
 
 class OcclusionQueryTest extends GPUTest {
-  createTexture(desc: GPUTextureDescriptor) {
-    return this.trackForCleanup(this.createTextureTracked(desc));
-  }
   createVertexBuffer(data: TypedArrayBufferView) {
     return this.makeBufferWithContents(data, GPUBufferUsage.VERTEX);
   }
@@ -300,14 +297,14 @@ class OcclusionQueryTest extends GPUTest {
 
     const vertexBuffer = this.createSingleTriangleVertexBuffer(0);
 
-    const renderTargetTexture = this.createTexture({
+    const renderTargetTexture = this.createTextureTracked({
       format: 'rgba8unorm',
       size: kTextureSize,
       usage: GPUTextureUsage.RENDER_ATTACHMENT,
     });
 
     const multisampleRenderTarget = sampleCount
-      ? this.createTexture({
+      ? this.createTextureTracked({
           size: kTextureSize,
           format: 'rgba8unorm',
           usage: GPUTextureUsage.RENDER_ATTACHMENT,
@@ -316,7 +313,7 @@ class OcclusionQueryTest extends GPUTest {
       : null;
 
     const depthStencilTexture = depthStencilFormat
-      ? this.createTexture({
+      ? this.createTextureTracked({
           format: depthStencilFormat,
           size: kTextureSize,
           usage: GPUTextureUsage.RENDER_ATTACHMENT,

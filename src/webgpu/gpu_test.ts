@@ -1167,14 +1167,12 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
       }
       case 'render pass': {
         const makeAttachmentView = (format: GPUTextureFormat) =>
-          this.trackForCleanup(
-            this.createTextureTracked({
-              size: [16, 16, 1],
-              format,
-              usage: GPUTextureUsage.RENDER_ATTACHMENT,
-              sampleCount: fullAttachmentInfo.sampleCount,
-            })
-          ).createView();
+          this.createTextureTracked({
+            size: [16, 16, 1],
+            format,
+            usage: GPUTextureUsage.RENDER_ATTACHMENT,
+            sampleCount: fullAttachmentInfo.sampleCount,
+          }).createView();
 
         let depthStencilAttachment: GPURenderPassDepthStencilAttachment | undefined = undefined;
         if (fullAttachmentInfo.depthStencilFormat !== undefined) {
