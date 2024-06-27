@@ -52,11 +52,14 @@ g.test('while_mapped')
       assert(adapter !== null);
       device = await adapter.requestDevice();
     }
-    const buffer = t.createBufferTracked({
-      size: 4,
-      usage,
-      mappedAtCreation,
-    });
+    const buffer = t.trackForCleanup(
+      device.createBuffer({
+        size: 4,
+        usage,
+        mappedAtCreation,
+      })
+    );
+
     if (mapMode !== undefined) {
       if (mappedAtCreation) {
         buffer.unmap();
