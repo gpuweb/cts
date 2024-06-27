@@ -94,12 +94,13 @@ g.test('texture,device_mismatch')
     const { mismatched } = t.params;
     const sourceDevice = mismatched ? t.mismatchedDevice : t.device;
 
-    const texture = sourceDevice.createTexture({
-      size: { width: 16, height: 16 },
-      format: 'bgra8unorm',
-      usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
-    });
-    t.trackForCleanup(texture);
+    const texture = t.trackForCleanup(
+      sourceDevice.createTexture({
+        size: { width: 16, height: 16 },
+        format: 'bgra8unorm',
+        usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
+      })
+    );
 
     const data = new Uint8Array(16);
     const size = [1, 1];

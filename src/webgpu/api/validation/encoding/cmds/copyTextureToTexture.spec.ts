@@ -128,20 +128,22 @@ g.test('texture,device_mismatch')
     const format = 'rgba8unorm';
 
     const srcTextureDevice = srcMismatched ? t.mismatchedDevice : t.device;
-    const srcTexture = srcTextureDevice.createTexture({
-      size,
-      format,
-      usage: GPUTextureUsage.COPY_SRC,
-    });
-    t.trackForCleanup(srcTexture);
+    const srcTexture = t.trackForCleanup(
+      srcTextureDevice.createTexture({
+        size,
+        format,
+        usage: GPUTextureUsage.COPY_SRC,
+      })
+    );
 
     const dstTextureDevice = dstMismatched ? t.mismatchedDevice : t.device;
-    const dstTexture = dstTextureDevice.createTexture({
-      size,
-      format,
-      usage: GPUTextureUsage.COPY_DST,
-    });
-    t.trackForCleanup(dstTexture);
+    const dstTexture = t.trackForCleanup(
+      dstTextureDevice.createTexture({
+        size,
+        format,
+        usage: GPUTextureUsage.COPY_DST,
+      })
+    );
 
     t.TestCopyTextureToTexture(
       { texture: srcTexture },

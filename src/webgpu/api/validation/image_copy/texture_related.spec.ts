@@ -77,11 +77,13 @@ g.test('texture,device_mismatch')
     const { method, mismatched } = t.params;
     const sourceDevice = mismatched ? t.mismatchedDevice : t.device;
 
-    const texture = sourceDevice.createTexture({
-      size: { width: 4, height: 4, depthOrArrayLayers: 1 },
-      format: 'rgba8unorm',
-      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
-    });
+    const texture = t.trackForCleanup(
+      sourceDevice.createTexture({
+        size: { width: 4, height: 4, depthOrArrayLayers: 1 },
+        format: 'rgba8unorm',
+        usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
+      })
+    );
 
     t.testRun(
       { texture },

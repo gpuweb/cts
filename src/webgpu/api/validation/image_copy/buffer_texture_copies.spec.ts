@@ -437,12 +437,13 @@ g.test('device_mismatch')
     );
 
     const textureSize = { width: 1, height: 1, depthOrArrayLayers: 1 };
-    const texture = (texMismatched ? t.mismatchedDevice : t.device).createTexture({
-      size: textureSize,
-      format: 'rgba8unorm',
-      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
-    });
-    t.trackForCleanup(texture);
+    const texture = t.trackForCleanup(
+      (texMismatched ? t.mismatchedDevice : t.device).createTexture({
+        size: textureSize,
+        format: 'rgba8unorm',
+        usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
+      })
+    );
 
     const isValid = !bufMismatched && !texMismatched;
 

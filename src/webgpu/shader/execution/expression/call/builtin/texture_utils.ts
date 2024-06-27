@@ -608,12 +608,11 @@ export function drawTexture(
   const { ddx = 1, ddy = 1, uvwStart = [0, 0, 0], offset } = options;
 
   const format = 'rgba32float';
-  const renderTarget = device.createTexture({
+  const renderTarget = t.createTextureTracked({
     format,
     size: [32, 32],
     usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
   });
-  t.trackForCleanup(renderTarget);
 
   // Compute the amount we need to multiply the unitQuad by get the
   // derivatives we want.

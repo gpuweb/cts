@@ -388,6 +388,7 @@ g.test('onscreenCanvas,uploadToWebGL')
       return;
     }
 
+    // eslint-disable-next-line no-restricted-syntax
     const texture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, texture);
     switch (upload) {

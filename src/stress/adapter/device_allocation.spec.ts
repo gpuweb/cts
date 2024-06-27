@@ -167,11 +167,13 @@ async function createDeviceAndRenderCommands(t: Fixture, adapter: GPUAdapter) {
         layout: pipeline.getBindGroupLayout(0),
         entries: [{ binding: 0, resource: { buffer } }],
       });
-      const texture = device.createTexture({
-        size: [kSize, kSize],
-        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
-        format: 'rgba8unorm',
-      });
+      const texture = t.trackForCleanup(
+        device.createTexture({
+          size: [kSize, kSize],
+          usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
+          format: 'rgba8unorm',
+        })
+      );
 
       const encoder = device.createCommandEncoder();
       const pass = encoder.beginRenderPass({

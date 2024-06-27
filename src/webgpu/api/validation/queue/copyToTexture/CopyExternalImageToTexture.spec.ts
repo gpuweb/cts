@@ -549,11 +549,13 @@ g.test('destination_texture,device_mismatch')
     const sourceDevice = mismatched ? t.mismatchedDevice : t.device;
     const copySize = { width: 1, height: 1, depthOrArrayLayers: 1 };
 
-    const texture = sourceDevice.createTexture({
-      size: copySize,
-      format: 'rgba8unorm',
-      usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
-    });
+    const texture = t.trackForCleanup(
+      sourceDevice.createTexture({
+        size: copySize,
+        format: 'rgba8unorm',
+        usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
+      })
+    );
 
     const imageBitmap = await t.createImageBitmap(t.getImageData(1, 1));
 

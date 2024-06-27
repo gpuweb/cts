@@ -208,12 +208,11 @@ class F extends GPUTest {
           ],
         });
 
-        const placeholderColorTexture = device.createTexture({
+        const placeholderColorTexture = this.createTextureTracked({
           size: [rwTexture.width, rwTexture.height, 1],
           usage: GPUTextureUsage.RENDER_ATTACHMENT,
           format: 'rgba8unorm',
         });
-        this.trackForCleanup(placeholderColorTexture);
 
         const renderPassEncoder = commandEncoder.beginRenderPass({
           colorAttachments: [

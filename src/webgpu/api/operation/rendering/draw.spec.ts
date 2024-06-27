@@ -708,8 +708,8 @@ ${accumulateVariableAssignmentsInFragmentShader}
         {
           // Dummy render attachment - not used (WebGPU doesn't allow using a render pass with no
           // attachments)
-          view: t.device
-            .createTexture({
+          view: t
+            .createTextureTracked({
               usage: GPUTextureUsage.RENDER_ATTACHMENT,
               size: [1],
               format: 'rgba8unorm',
