@@ -50,7 +50,7 @@ WPT disallows console.log and doesn't support logs on passing tests, so this doe
         defaultRequestAdapterOptions: getDefaultRequestAdapterOptions(),
         adapter: {
           isFallbackAdapter: t.adapter.isFallbackAdapter,
-          isCompatibilityMode: isCompatibilityMode,
+          isCompatibilityMode,
           info: adapterInfo,
           features: Array.from(t.adapter.features),
           limits: t.adapter.limits,
