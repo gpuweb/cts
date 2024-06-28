@@ -482,7 +482,7 @@ g.test('always_returns_device')
           'must not be compatibility mode'
         );
       }
-      const device = await adapter.requestDevice();
+      const device = await t.trackForCleanup(adapter.requestDevice());
       t.expect(device instanceof GPUDevice, 'requestDevice must return a device or throw');
       device.destroy();
     }
