@@ -38,21 +38,30 @@ WPT disallows console.log and doesn't support logs on passing tests, so this doe
 fn(async (t) => {
   // MAINTENANCE_TODO: Remove requestAdapterInfo when info is implemented.
   const adapterInfo = t.adapter.info || (await t.adapter.requestAdapterInfo());
+  const isCompatibilityMode = t.adapter.
+  isCompatibilityMode;
 
   const info = JSON.stringify(
     {
+      userAgent: navigator.userAgent,
       globalScope: Object.getPrototypeOf(globalThis).constructor.name,
       globalTestConfig,
       baseResourcePath: getResourcePath(''),
       defaultRequestAdapterOptions: getDefaultRequestAdapterOptions(),
-      adapterInfo,
-      userAgent: navigator.userAgent
+      adapter: {
+        isFallbackAdapter: t.adapter.isFallbackAdapter,
+        isCompatibilityMode,
+        info: adapterInfo,
+        features: Array.from(t.adapter.features),
+        limits: t.adapter.limits
+      }
     },
     // Flatten objects with prototype chains into plain objects, using `for..in`. (Otherwise,
     // properties from the prototype chain will be ignored and things will print as `{}`.)
     (_key, value) => {
       if (value === undefined || value === null) return null;
       if (typeof value !== 'object') return value;
+      if (value instanceof Array) return value;
 
       const valueObj = value;
       return Object.fromEntries(
