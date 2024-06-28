@@ -182,6 +182,12 @@ export class Fixture {
     return o;
   }
 
+  /** Call requestDevice() and track the device for cleanup. */
+  requestDeviceTracked(adapter, desc = undefined) {
+
+    return this.trackForCleanup(adapter.requestDevice(desc));
+  }
+
   /** Log a debug message. */
   debug(msg) {
     this.rec.debug(new Error(msg));

@@ -22,7 +22,7 @@ const kTestFunctions = {
     const gpu = getGPU(t.rec);
     const adapter = await gpu.requestAdapter();
     t.expect(!!adapter);
-    const device = await t.trackForCleanup(adapter.requestDevice({ label }));
+    const device = await t.requestDeviceTracked(adapter, { label });
     t.expect(!!device);
     t.expect(device.label === label);
     device.destroy();

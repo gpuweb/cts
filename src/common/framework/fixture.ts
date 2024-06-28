@@ -182,6 +182,12 @@ export class Fixture<S extends SubcaseBatchState = SubcaseBatchState> {
     return o;
   }
 
+  /** Call requestDevice() and track the device for cleanup. */
+  requestDeviceTracked(adapter: GPUAdapter, desc: GPUDeviceDescriptor | undefined = undefined) {
+    // eslint-disable-next-line no-restricted-syntax
+    return this.trackForCleanup(adapter.requestDevice(desc));
+  }
+
   /** Log a debug message. */
   debug(msg: string): void {
     this.rec.debug(new Error(msg));
