@@ -50,7 +50,7 @@ g.test('while_mapped')
     if (deviceDestroy) {
       const adapter = await getGPU(t.rec).requestAdapter();
       assert(adapter !== null);
-      device = await adapter.requestDevice();
+      device = await t.trackForCleanup(adapter.requestDevice());
     }
     const buffer = t.trackForCleanup(
       device.createBuffer({

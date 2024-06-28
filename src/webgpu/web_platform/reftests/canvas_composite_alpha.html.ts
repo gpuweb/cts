@@ -128,7 +128,6 @@ return fragColor;
           renderTarget = ctx.getCurrentTexture();
           break;
         case 'copy':
-          // eslint-disable-next-line no-restricted-syntax
           renderTarget = t.device.createTexture({
             size: [ctx.canvas.width, ctx.canvas.height],
             format,
