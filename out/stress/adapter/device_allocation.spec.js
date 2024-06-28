@@ -42,7 +42,7 @@ async function createDeviceAndComputeCommands(t, adapter) {
   const kBufferSize = kNumBufferElements * 4;
   const kBufferData = new Uint32Array([...iterRange(kNumBufferElements, (x) => x)]);
 
-  const device = await adapter.requestDevice();
+  const device = await t.trackForCleanup(adapter.requestDevice());
   const commands = [];
 
   for (let pipelineIndex = 0; pipelineIndex < kNumPipelines; ++pipelineIndex) {
@@ -108,7 +108,7 @@ async function createDeviceAndRenderCommands(t, adapter) {
   const kSize = 128;
   const kBufferData = new Uint32Array([...iterRange(kSize * kSize, (x) => x)]);
 
-  const device = await adapter.requestDevice();
+  const device = await t.trackForCleanup(adapter.requestDevice());
   const commands = [];
 
   for (let pipelineIndex = 0; pipelineIndex < kNumPipelines; ++pipelineIndex) {
@@ -207,7 +207,7 @@ async function createDeviceAndBuffers(t, adapter) {
   const kMemoryBlockSize = 512 * 1024 * 1024;
   const kMemoryBlockData = new Uint8Array(kMemoryBlockSize);
 
-  const device = await adapter.requestDevice();
+  const device = await t.trackForCleanup(adapter.requestDevice());
   const buffers = [];
   for (let memory = 0; memory < kTotalMemorySize; memory += kMemoryBlockSize) {
     const buffer = t.trackForCleanup(
@@ -237,7 +237,7 @@ fn(async (t) => {
 
   const devices = [];
   for (let i = 0; i < kNumDevices; ++i) {
-    const device = await adapter.requestDevice();
+    const device = await t.trackForCleanup(adapter.requestDevice());
     devices.push(device);
   }
 });
@@ -290,6 +290,8 @@ fn(async (t) => {
   const kNumDevices = 10_000;
   for (let i = 1; i <= kNumDevices; ++i) {
     await (async () => {
+      // No trackForCleanup because it would prevent the GPUDevice from being GCed.
+
       t.expect((await adapter.requestDevice()) !== null, 'unexpected null device');
     })();
     if (i % 10 === 0) {

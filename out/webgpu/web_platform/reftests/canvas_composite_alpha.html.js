@@ -128,7 +128,6 @@ return fragColor;
           renderTarget = ctx.getCurrentTexture();
           break;
         case 'copy':
-
           renderTarget = t.device.createTexture({
             size: [ctx.canvas.width, ctx.canvas.height],
             format,

@@ -29,7 +29,7 @@ const forceFallbackOptions = [undefined, false, true];
 
 async function testAdapter(t, adapter) {
   assert(adapter !== null, 'Failed to get adapter.');
-  const device = await adapter.requestDevice();
+  const device = await t.trackForCleanup(adapter.requestDevice());
 
   assert(device !== null, 'Failed to get device.');
 

@@ -48,7 +48,6 @@ runRefTest(async (t) => {
     }
   });
 
-
   const tex = device.createTexture({
     size: [patternSize, patternSize, 1],
     format: 'rgba8unorm',

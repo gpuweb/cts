@@ -21,8 +21,8 @@ export class ErrorTest extends Fixture {
 
     // We need to max out the adapter limits related to texture dimensions to more reliably cause an
     // OOM error when asked for it, so set that on the device now.
-    const device = this.trackForCleanup(
-      await adapter.requestDevice({
+    const device = await this.trackForCleanup(
+      adapter.requestDevice({
         requiredLimits: {
           maxTextureDimension2D: adapter.limits.maxTextureDimension2D,
           maxTextureArrayLayers: adapter.limits.maxTextureArrayLayers

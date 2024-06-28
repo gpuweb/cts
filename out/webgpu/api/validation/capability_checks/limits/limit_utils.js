@@ -355,12 +355,14 @@ export class LimitTestsImpl extends GPUTestBase {
   requiredFeatures)
   {
     if (shouldReject) {
-      this.shouldReject('OperationError', adapter.requestDevice({ requiredLimits }), {
-        allowMissingStack: true
-      });
+      this.shouldReject(
+        'OperationError',
+        this.trackForCleanup(adapter.requestDevice({ requiredLimits })),
+        { allowMissingStack: true }
+      );
       return undefined;
     } else {
-      return await adapter.requestDevice({ requiredLimits, requiredFeatures });
+      return this.trackForCleanup(adapter.requestDevice({ requiredLimits, requiredFeatures }));
     }
   }
 

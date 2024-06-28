@@ -9,6 +9,7 @@ async function basicTest() {
   const adapter = await getGPU(null).requestAdapter();
   assert(adapter !== null, 'Failed to get adapter.');
 
+
   const device = await adapter.requestDevice();
   assert(device !== null, 'Failed to get device.');
 
