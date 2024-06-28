@@ -50,7 +50,6 @@ export function run(
       const bytesPerRow = align(bytesPerPixel * ctx.canvas.width, 256);
       const componentsPerPixel = 4;
 
-      // eslint-disable-next-line no-restricted-syntax
       const buffer = t.device.createBuffer({
         mappedAtCreation: true,
         size: rows * bytesPerRow,
@@ -171,7 +170,6 @@ export function run(
 
     function setupSrcTexture(imageBitmap: ImageBitmap): GPUTexture {
       const [srcWidth, srcHeight] = [imageBitmap.width, imageBitmap.height];
-      // eslint-disable-next-line no-restricted-syntax
       const srcTexture = t.device.createTexture({
         size: [srcWidth, srcHeight, 1],
         format,
@@ -568,7 +566,6 @@ fn main(@builtin(position) fragcoord: vec4<f32>) -> @location(0) vec4<f32> {
         layout: pipeline.getBindGroupLayout(0),
       });
 
-      // eslint-disable-next-line no-restricted-syntax
       const outputTexture = t.device.createTexture({
         format,
         size: [ctx.canvas.width, ctx.canvas.height, 1],
