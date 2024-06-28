@@ -21,6 +21,7 @@ is evaluated per-fragment or per-sample. With @interpolate(, sample) or usage of
 import { ErrorWithExtra, assert, range, unreachable } from '../../../../common/util/util.js';
 
 import { GPUTest } from '../../../gpu_test.js';
+import { getProvokingVertexForFlatInterpolationEitherSampling } from '../../../inter_stage.js';
 import { getMultisampleFragmentOffsets } from '../../../multisample_info.js';
 import { dotProduct, subtractVectors } from '../../../util/math.js';
 import { TexelView } from '../../../util/texture/texel_view.js';
@@ -424,11 +425,17 @@ function computeFragmentPosition({
 /**
  * Creates a function that will compute the interpolation of an inter-stage variable.
  */
-function createInterStageInterpolationFn(
+async function createInterStageInterpolationFn(
+t,
 interStagePoints,
 type,
 sampling)
 {
+  const provokingVertex =
+  type === 'flat' && sampling === 'either' ?
+  await getProvokingVertexForFlatInterpolationEitherSampling(t) :
+  'first';
+
   return function ({
     baseVertexIndex,
     fragmentBarycentricCoords,
@@ -437,7 +444,9 @@ sampling)
   }) {
     const triangleInterStagePoints = interStagePoints.slice(baseVertexIndex, baseVertexIndex + 3);
     const barycentricCoords =
-    sampling === 'center' ? fragmentBarycentricCoords : sampleBarycentricCoords;
+    sampling === 'center' || sampling === undefined ?
+    fragmentBarycentricCoords :
+    sampleBarycentricCoords;
     switch (type) {
       case 'perspective':
         return triangleInterStagePoints[0].map((_, colNum) =>
@@ -454,7 +463,7 @@ sampling)
         );
         break;
       case 'flat':
-        return triangleInterStagePoints[0];
+        return triangleInterStagePoints[provokingVertex === 'first' ? 0 : 2];
         break;
       default:
         unreachable();
@@ -467,12 +476,13 @@ sampling)
  * and then return [1, 0, 0, 0] if all interpolated values are between 0.0 and 1.0 inclusive
  * or [-1, 0, 0, 0] otherwise.
  */
-function createInterStageInterpolationBetween0And1TestFn(
+async function createInterStageInterpolationBetween0And1TestFn(
+t,
 interStagePoints,
 type,
 sampling)
 {
-  const interpolateFn = createInterStageInterpolationFn(interStagePoints, type, sampling);
+  const interpolateFn = await createInterStageInterpolationFn(t, interStagePoints, type, sampling);
   return function (fragData) {
     const interpolatedValues = interpolateFn(fragData);
     const allTrue = interpolatedValues.reduce((all, v) => all && v >= 0 && v <= 1, true);
@@ -828,8 +838,6 @@ g.test('inputs,interStage').
 desc(
   `
     Test fragment shader inter-stage variable values except for centroid interpolation.
-
-    * TODO: Test @interpolation(flat, either)
   `
 ).
 params((u) =>
@@ -837,11 +845,15 @@ u //
 .combine('nearFar', [[0, 1], [0.25, 0.75]]).
 combine('sampleCount', [1, 4]).
 combine('interpolation', [
+{ type: 'perspective' },
 { type: 'perspective', sampling: 'center' },
 { type: 'perspective', sampling: 'sample' },
+{ type: 'linear' },
 { type: 'linear', sampling: 'center' },
 { type: 'linear', sampling: 'sample' },
-{ type: 'flat', sampling: 'first' }]
+{ type: 'flat' },
+{ type: 'flat', sampling: 'first' },
+{ type: 'flat', sampling: 'either' }]
 )
 ).
 beforeAllSubcases((t) => {
@@ -890,7 +902,7 @@ fn(async (t) => {
     nearFar,
     sampleCount,
     clipSpacePoints,
-    interpolateFn: createInterStageInterpolationFn(interStagePoints, type, sampling)
+    interpolateFn: await createInterStageInterpolationFn(t, interStagePoints, type, sampling)
   });
 
   t.expectOK(
@@ -1024,7 +1036,8 @@ fn(async (t) => {
     nearFar,
     sampleCount,
     clipSpacePoints,
-    interpolateFn: createInterStageInterpolationBetween0And1TestFn(
+    interpolateFn: await createInterStageInterpolationBetween0And1TestFn(
+      t,
       interStagePoints,
       type,
       sampling
