@@ -339,7 +339,6 @@ g.test('interpolation_sampling_names')
 
 const kInterpolationFlatCases = ['first', 'either'] as const;
 
-
 g.test('interpolation_flat_names')
   .desc('Tests interpolation type names do not use name resolution')
   .params(u =>
