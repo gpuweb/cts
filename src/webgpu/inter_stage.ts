@@ -7,7 +7,7 @@ export type FlatSampling = 'first' | 'last';
 const s_deviceToEitherSamplingIndex = new WeakMap<GPUDevice, FlatSampling>();
 
 /**
- * Returns whether the device uses the first first or last vertex for the
+ * Returns whether the device uses the first or last vertex for the
  * provoking vertex when using @interpolate(flat, either)
  */
 export async function getProvokingVertexForFlatInterpolationEitherSampling(
