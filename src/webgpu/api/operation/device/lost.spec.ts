@@ -45,7 +45,7 @@ g.test('not_lost_on_gc')
     const { lost } = await (async () => {
       const adapter = await getGPU(t.rec).requestAdapter();
       assert(adapter !== null);
-      const device = await t.trackForCleanup(adapter.requestDevice());
+      const device = await t.requestDeviceTracked(adapter);
       return { lost: device.lost };
     })();
     await assertNotSettledWithinTime(lost, t.kDeviceLostTimeoutMS, 'device was unexpectedly lost');
@@ -58,7 +58,7 @@ g.test('lost_on_destroy')
   .fn(async t => {
     const adapter = await getGPU(t.rec).requestAdapter();
     assert(adapter !== null);
-    const device: GPUDevice = await t.trackForCleanup(adapter.requestDevice());
+    const device: GPUDevice = await t.requestDeviceTracked(adapter);
     t.expectDeviceDestroyed(device);
     device.destroy();
   });
@@ -68,7 +68,7 @@ g.test('same_object')
   .fn(async t => {
     const adapter = await getGPU(t.rec).requestAdapter();
     assert(adapter !== null);
-    const device: GPUDevice = await t.trackForCleanup(adapter.requestDevice());
+    const device: GPUDevice = await t.requestDeviceTracked(adapter);
 
     // The promises should be the same promise object.
     const lostPromise1 = device.lost;

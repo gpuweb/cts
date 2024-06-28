@@ -39,7 +39,7 @@ g.test('default')
     const gpu = getGPU(t.rec);
     const adapter = await gpu.requestAdapter();
     assert(adapter !== null);
-    const device = await t.trackForCleanup(adapter.requestDevice(...args));
+    const device = await t.requestDeviceTracked(adapter, ...args);
     assert(device !== null);
 
     // Default device should have no features.
@@ -71,7 +71,7 @@ g.test('invalid')
 
     {
       // Request a device and destroy it immediately afterwards.
-      const device = await t.trackForCleanup(adapter.requestDevice());
+      const device = await t.requestDeviceTracked(adapter);
       assert(device !== null);
       device.destroy();
       const lostInfo = await device.lost;
@@ -81,7 +81,7 @@ g.test('invalid')
     // The adapter should now be invalid since a device was lost. Requesting another device should
     // return an already lost device.
     const kTimeoutMS = 1000;
-    const device = await t.trackForCleanup(adapter.requestDevice());
+    const device = await t.requestDeviceTracked(adapter);
     const lost = await raceWithRejectOnTimeout(device.lost, kTimeoutMS, 'device was not lost');
     t.expect(lost.reason === 'unknown');
   });
@@ -117,16 +117,16 @@ g.test('stale')
         if (awaitInitialError) {
           await assertReject(
             'TypeError',
-            t.trackForCleanup(
-              adapter.requestDevice({ requiredFeatures: ['unknown-feature' as GPUFeatureName] })
-            )
+            t.requestDeviceTracked(adapter, {
+              requiredFeatures: ['unknown-feature' as GPUFeatureName],
+            })
           );
         } else {
           t.shouldReject(
             'TypeError',
-            t.trackForCleanup(
-              adapter.requestDevice({ requiredFeatures: ['unknown-feature' as GPUFeatureName] })
-            )
+            t.requestDeviceTracked(adapter, {
+              requiredFeatures: ['unknown-feature' as GPUFeatureName],
+            })
           );
         }
         break;
@@ -135,23 +135,23 @@ g.test('stale')
         if (awaitInitialError) {
           await assertReject(
             'OperationError',
-            t.trackForCleanup(
-              adapter.requestDevice({ requiredLimits: { minUniformBufferOffsetAlignment: 255 } })
-            )
+            t.requestDeviceTracked(adapter, {
+              requiredLimits: { minUniformBufferOffsetAlignment: 255 },
+            })
           );
         } else {
           t.shouldReject(
             'OperationError',
-            t.trackForCleanup(
-              adapter.requestDevice({ requiredLimits: { minUniformBufferOffsetAlignment: 255 } })
-            )
+            t.requestDeviceTracked(adapter, {
+              requiredLimits: { minUniformBufferOffsetAlignment: 255 },
+            })
           );
         }
         break;
     }
 
     let device: GPUDevice | undefined = undefined;
-    const promise = t.trackForCleanup(adapter.requestDevice());
+    const promise = t.requestDeviceTracked(adapter);
     if (awaitSuccess) {
       device = await promise;
       assert(device !== null);
@@ -165,7 +165,7 @@ g.test('stale')
     }
 
     const kTimeoutMS = 1000;
-    const lostDevice = await t.trackForCleanup(adapter.requestDevice());
+    const lostDevice = await t.requestDeviceTracked(adapter);
     const lost = await raceWithRejectOnTimeout(
       lostDevice.lost,
       kTimeoutMS,
@@ -192,9 +192,7 @@ g.test('features,unknown')
 
     t.shouldReject(
       'TypeError',
-      t.trackForCleanup(
-        adapter.requestDevice({ requiredFeatures: ['unknown-feature' as GPUFeatureName] })
-      )
+      t.requestDeviceTracked(adapter, { requiredFeatures: ['unknown-feature' as GPUFeatureName] })
     );
   });
 
@@ -213,7 +211,7 @@ g.test('features,known')
     const adapter = await gpu.requestAdapter();
     assert(adapter !== null);
 
-    const promise = t.trackForCleanup(adapter.requestDevice({ requiredFeatures: [feature] }));
+    const promise = t.requestDeviceTracked(adapter, { requiredFeatures: [feature] });
     if (adapter.features.has(feature)) {
       const device = await promise;
       t.expect(device.features.has(feature), 'Device should include the required feature');
@@ -235,7 +233,7 @@ g.test('limits,unknown')
 
     const requiredLimits: Record<string, number> = { unknownLimitName: 9000 };
 
-    t.shouldReject('OperationError', t.trackForCleanup(adapter.requestDevice({ requiredLimits })));
+    t.shouldReject('OperationError', t.requestDeviceTracked(adapter, { requiredLimits }));
   });
 
 g.test('limits,supported')
@@ -266,9 +264,7 @@ g.test('limits,supported')
         break;
     }
 
-    const device = await t.trackForCleanup(
-      adapter.requestDevice({ requiredLimits: { [limit]: value } })
-    );
+    const device = await t.requestDeviceTracked(adapter, { requiredLimits: { [limit]: value } });
     assert(device !== null);
     t.expect(
       device.limits[limit] === value,
@@ -317,7 +313,7 @@ g.test('limit,better_than_supported')
       [limit]: clamp(value, { min: 0, max: limitInfo[limit].maximumValue }),
     };
 
-    t.shouldReject('OperationError', t.trackForCleanup(adapter.requestDevice({ requiredLimits })));
+    t.shouldReject('OperationError', t.requestDeviceTracked(adapter, { requiredLimits }));
   });
 
 g.test('limit,out_of_range')
@@ -372,7 +368,7 @@ g.test('limit,out_of_range')
         ? 'OperationError'
         : false;
 
-    const devicePromise = t.trackForCleanup(adapter.requestDevice({ requiredLimits }));
+    const devicePromise = t.requestDeviceTracked(adapter, { requiredLimits });
     if (errorName) {
       t.shouldReject(errorName, devicePromise);
     } else {
@@ -431,7 +427,7 @@ g.test('limit,worse_than_default')
         break;
     }
 
-    const devicePromise = t.trackForCleanup(adapter.requestDevice({ requiredLimits }));
+    const devicePromise = t.requestDeviceTracked(adapter, { requiredLimits });
     if (success) {
       const device = await devicePromise;
       assert(device !== null);
@@ -482,7 +478,7 @@ g.test('always_returns_device')
           'must not be compatibility mode'
         );
       }
-      const device = await t.trackForCleanup(adapter.requestDevice());
+      const device = await t.requestDeviceTracked(adapter);
       t.expect(device instanceof GPUDevice, 'requestDevice must return a device or throw');
       device.destroy();
     }

@@ -55,9 +55,9 @@
             "selector": ":not(CallExpression[callee.property.name=\"trackForCleanup\"]) > CallExpression > MemberExpression > Identifier[name=\"createTexture\"]"
           },
           {
-            "message": "requestDevice must be immediately tracked using trackForCleanup.",
-            // Similar to above.
-            "selector": ":not(CallExpression[callee.property.name=\"trackForCleanup\"]) > CallExpression > MemberExpression > Identifier[name=\"requestDevice\"]"
+            "message": "Use requestDeviceTracked() instead of requestDevice().",
+            // We don't seem to need direct calls to requestDevice() at all so we can just disallow all of them.
+            "selector": "CallExpression > MemberExpression > Identifier[name=\"requestDevice\"]"
           }
         ],
 
