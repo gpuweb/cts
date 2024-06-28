@@ -42,7 +42,7 @@ async function createDeviceAndComputeCommands(t: Fixture, adapter: GPUAdapter) {
   const kBufferSize = kNumBufferElements * 4;
   const kBufferData = new Uint32Array([...iterRange(kNumBufferElements, x => x)]);
 
-  const device: GPUDevice = await t.trackForCleanup(adapter.requestDevice());
+  const device: GPUDevice = await t.requestDeviceTracked(adapter);
   const commands = [];
 
   for (let pipelineIndex = 0; pipelineIndex < kNumPipelines; ++pipelineIndex) {
@@ -108,7 +108,7 @@ async function createDeviceAndRenderCommands(t: Fixture, adapter: GPUAdapter) {
   const kSize = 128;
   const kBufferData = new Uint32Array([...iterRange(kSize * kSize, x => x)]);
 
-  const device: GPUDevice = await t.trackForCleanup(adapter.requestDevice());
+  const device: GPUDevice = await t.requestDeviceTracked(adapter);
   const commands = [];
 
   for (let pipelineIndex = 0; pipelineIndex < kNumPipelines; ++pipelineIndex) {
@@ -207,7 +207,7 @@ async function createDeviceAndBuffers(t: Fixture, adapter: GPUAdapter) {
   const kMemoryBlockSize = 512 * 1024 * 1024;
   const kMemoryBlockData = new Uint8Array(kMemoryBlockSize);
 
-  const device: GPUDevice = await t.trackForCleanup(adapter.requestDevice());
+  const device: GPUDevice = await t.requestDeviceTracked(adapter);
   const buffers = [];
   for (let memory = 0; memory < kTotalMemorySize; memory += kMemoryBlockSize) {
     const buffer = t.trackForCleanup(
@@ -237,7 +237,7 @@ g.test('coexisting')
 
     const devices = [];
     for (let i = 0; i < kNumDevices; ++i) {
-      const device = await t.trackForCleanup(adapter.requestDevice());
+      const device = await t.requestDeviceTracked(adapter);
       devices.push(device);
     }
   });
