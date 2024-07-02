@@ -866,6 +866,17 @@ ${body}
       //////////////////////////////////////////////////////////////////////////
       // Runtime eval
       //////////////////////////////////////////////////////////////////////////
+      let operation = '';
+      if (inputSource === 'storage_rw') {
+        operation = `
+        outputs[i].value = ${storageType(resultType)}(inputs[i].lhs);
+        outputs[i].value ${op} ${storageType(resultType)}(inputs[i].rhs);`;
+      } else {
+        operation = `
+        var ret = ${lhsType}(inputs[i].lhs);
+        ret ${op} ${rhsType}(inputs[i].rhs);
+        outputs[i].value = ${storageType(resultType)}(ret);`;
+      }
       return `
 ${wgslHeader(parameterTypes, resultType)}
 ${wgslOutputs(resultType, cases.length)}
@@ -879,9 +890,7 @@ ${wgslInputVar(inputSource, cases.length)}
 @compute @workgroup_size(1)
 fn main() {
   for (var i = 0; i < ${cases.length}; i++) {
-    var ret = ${lhsType}(inputs[i].lhs);
-    ret ${op} ${rhsType}(inputs[i].rhs);
-    outputs[i].value = ${storageType(resultType)}(ret);
+    ${operation}
   }
 }
 `;
