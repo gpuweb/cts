@@ -241,3 +241,79 @@ struct FragOut {
 }`;
     t.expectCompileResult(kSyntaxValidationTests[t.params.attr].pass, code);
   });
+
+const kStageIOValidationTests = {
+  vertex_input: {
+    shader: `
+    struct BlendSrcStruct {
+      @location(0) @blend_src(0) color : vec4f,
+      @location(0) @blend_src(1) blend : vec4f,
+    }
+    @vertex fn main(vertexInput : BlendSrcStruct) -> @builtin(position) vec4f {
+      return vertexInput.color + vertexInput.blend;
+    }
+    `,
+    pass: false,
+  },
+  vertex_output: {
+    shader: `
+    struct BlendSrcStruct {
+      @location(0) @blend_src(0) color : vec4f,
+      @location(0) @blend_src(1) blend : vec4f,
+      @builtin(position) myPosition: vec4f,
+    }
+    @vertex fn main() -> BlendSrcStruct {
+      var vertexOutput : BlendSrcStruct;
+      vertexOutput.myPosition = vec4f(0.0, 0.0, 0.0, 1.0);
+      return vertexOutput;
+    }
+    `,
+    pass: false,
+  },
+  fragment_input: {
+    shader: `
+    struct BlendSrcStruct {
+      @location(0) @blend_src(0) color : vec4f,
+      @location(0) @blend_src(1) blend : vec4f,
+    }
+    @fragment fn main(fragmentInput : BlendSrcStruct) -> @location(0) vec4f {
+      return fragmentInput.color + fragmentInput.blend;
+    }
+    `,
+    pass: false,
+  },
+  fragment_output: {
+    shader: `
+    struct BlendSrcStruct {
+      @location(0) @blend_src(0) color : vec4f,
+      @location(0) @blend_src(1) blend : vec4f,
+    }
+    @fragment fn main() -> BlendSrcStruct {
+      var fragmentOutput : BlendSrcStruct;
+      fragmentOutput.color = vec4f(0.0, 1.0, 0.0, 1.0);
+      fragmentOutput.blend = fragmentOutput.color;
+      return fragmentOutput;
+    }
+    `,
+    pass: true,
+  },
+};
+
+g.test('blend_src_stage_input_output')
+  .desc(
+    `Test that the struct with blend_src cannot be used in the input of the fragment stage, the
+  input of the vertex stage, or the output of the vertex stage. blend_src can be used as a part of
+  the output of the fragment stage.`
+  )
+  .params(u => u.combine('attr', keysOf(kStageIOValidationTests)))
+  .beforeAllSubcases(t =>
+    t.selectDeviceOrSkipTestCase({ requiredFeatures: ['dual-source-blending'] })
+  )
+  .fn(t => {
+    const code = `
+enable dual_source_blending;
+
+${kStageIOValidationTests[t.params.attr].shader}
+`;
+    t.expectCompileResult(kStageIOValidationTests[t.params.attr].pass, code);
+  });
