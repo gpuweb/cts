@@ -336,3 +336,25 @@ fn((t) => {
 
   t.expectCompileResult(true, code);
 });
+
+const kInterpolationFlatCases = ['first', 'either'];
+
+g.test('interpolation_flat_names').
+desc('Tests interpolation type names do not use name resolution').
+params((u) =>
+u.
+combine('case', kInterpolationFlatCases).
+beginSubcases().
+combine('decl', ['override', 'const', 'var<private>'])
+).
+fn((t) => {
+  const code = `
+    ${t.params.decl} ${t.params.case} : u32 = 0;
+    @fragment fn main(@location(0) @interpolate(flat, ${t.params.case}) x : u32) { }
+    fn use_var() -> u32 {
+      return ${t.params.case};
+    }
+    `;
+
+  t.expectCompileResult(true, code);
+});
