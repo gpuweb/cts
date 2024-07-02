@@ -3,6 +3,7 @@
 **/export const description = `
 Validation tests for the dual_source_blending extension
 `;import { makeTestGroup } from '../../../../common/framework/test_group.js';
+import { keysOf } from '../../../../common/util/data_tables.js';
 import { ShaderValidationTest } from '../shader_validation_test.js';
 
 export const g = makeTestGroup(ShaderValidationTest);
@@ -40,5 +41,204 @@ fn((t) => {
         }
     `
   );
+});
+
+const kSyntaxValidationTests = {
+  zero: {
+    src: `@blend_src(0)`,
+    add_blend_src_0: false,
+    add_blend_src_1: true,
+    pass: true
+  },
+  one: {
+    src: `@blend_src(1)`,
+    add_blend_src_0: true,
+    add_blend_src_1: false,
+    pass: true
+  },
+  invalid: {
+    src: `@blend_src(2)`,
+    add_blend_src_0: true,
+    add_blend_src_1: true,
+    pass: false
+  },
+  extra_comma: {
+    src: `@blend_src(1,)`,
+    add_blend_src_0: true,
+    add_blend_src_1: false,
+    pass: true
+  },
+  i32: {
+    src: `@blend_src(1i)`,
+    add_blend_src_0: true,
+    add_blend_src_1: false,
+    pass: true
+  },
+  u32: {
+    src: `@blend_src(1u)`,
+    add_blend_src_0: true,
+    add_blend_src_1: false,
+    pass: true
+  },
+  hex: {
+    src: `@blend_src(0x1)`,
+    add_blend_src_0: true,
+    add_blend_src_1: false,
+    pass: true
+  },
+  valid_const_expr: {
+    src: `@blend_src(a + b)`,
+    add_blend_src_0: true,
+    add_blend_src_1: false,
+    pass: true
+  },
+  invalid_const_expr: {
+    src: `@blend_src(b + c)`,
+    add_blend_src_0: true,
+    add_blend_src_1: true,
+    pass: false
+  },
+  max: {
+    src: `@blend_src(2147483647)`,
+    add_blend_src_0: true,
+    add_blend_src_1: true,
+    pass: false
+  },
+  newline: {
+    src: '@\nblend_src(1)',
+    add_blend_src_0: true,
+    add_blend_src_1: false,
+    pass: true
+  },
+  comment: {
+    src: `@/* comment */blend_src(1)`,
+    add_blend_src_0: true,
+    add_blend_src_1: false,
+    pass: true
+  },
+  misspelling: {
+    src: `@mblend_src(1)`,
+    add_blend_src_0: true,
+    add_blend_src_1: true,
+    pass: false
+  },
+  no_parens: {
+    src: `@blend_src`,
+    add_blend_src_0: true,
+    add_blend_src_1: true,
+    pass: false
+  },
+  no_parens_no_blend_src_0: {
+    src: `@blend_src`,
+    add_blend_src_0: false,
+    add_blend_src_1: true,
+    pass: false
+  },
+  empty_params: {
+    src: `@blend_src()`,
+    add_blend_src_0: true,
+    add_blend_src_1: true,
+    pass: false
+  },
+  empty_params_no_blend_src_0: {
+    src: `@blend_src()`,
+    add_blend_src_0: false,
+    add_blend_src_1: true,
+    pass: false
+  },
+  missing_left_paren: {
+    src: `@blend_src 1)`,
+    add_blend_src_0: true,
+    add_blend_src_1: false,
+    pass: false
+  },
+  missing_right_paren: {
+    src: `@blend_src(1`,
+    add_blend_src_0: true,
+    add_blend_src_1: false,
+    pass: false
+  },
+  extra_params: {
+    src: `@blend_src(1, 2)`,
+    add_blend_src_0: true,
+    add_blend_src_1: true,
+    pass: false
+  },
+  f32: {
+    src: `@blend_src(1f)`,
+    add_blend_src_0: true,
+    add_blend_src_1: false,
+    pass: false
+  },
+  f32_literal: {
+    src: `@blend_src(1.0)`,
+    add_blend_src_0: true,
+    add_blend_src_1: false,
+    pass: false
+  },
+  negative: {
+    src: `@blend_src(-1)`,
+    add_blend_src_0: true,
+    add_blend_src_1: true,
+    pass: false
+  },
+  override_expr: {
+    src: `@blend_src(z + y)`,
+    add_blend_src_0: true,
+    add_blend_src_1: false,
+    pass: false
+  },
+  vec: {
+    src: `@blend_src(vec2(1,1))`,
+    add_blend_src_0: true,
+    add_blend_src_1: true,
+    pass: false
+  },
+  duplicate: {
+    src: `@blend_src(1) @blend_src(1)`,
+    add_blend_src_0: true,
+    add_blend_src_1: false,
+    pass: false
+  }
+};
+
+g.test('blend_src_syntax_validation').
+desc(`Syntax validation tests of blend_src.`).
+params((u) => u.combine('attr', keysOf(kSyntaxValidationTests))).
+beforeAllSubcases((t) =>
+t.selectDeviceOrSkipTestCase({ requiredFeatures: ['dual-source-blending'] })
+).
+fn((t) => {
+  const code = `
+enable dual_source_blending;
+
+const a = 0;
+const b = 1;
+const c = 1;
+override z = 0;
+override y = 1;
+
+struct FragOut {
+  @location(0) ${kSyntaxValidationTests[t.params.attr].src} blend : vec4f,
+  ${
+  kSyntaxValidationTests[t.params.attr].add_blend_src_0 ?
+  '@location(0) @blend_src(0) color0 : vec4f,' :
+  ''
+  }
+  ${
+  kSyntaxValidationTests[t.params.attr].add_blend_src_1 ?
+  '@location(0) @blend_src(1) color1 : vec4f,' :
+  ''
+  }
+}
+
+@fragment fn main() -> FragOut {
+  var output : FragOut;
+  output.blend = vec4f(1.0, 0.0, 0.0, 1.0);
+  ${kSyntaxValidationTests[t.params.attr].add_blend_src_0 ? 'output.color0 = output.blend;' : ''}
+  ${kSyntaxValidationTests[t.params.attr].add_blend_src_1 ? 'output.color1 = output.blend;' : ''}
+  return output;
+}`;
+  t.expectCompileResult(kSyntaxValidationTests[t.params.attr].pass, code);
 });
 //# sourceMappingURL=dual_source_blending.spec.js.map
