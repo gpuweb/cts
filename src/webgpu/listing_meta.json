@@ -1911,6 +1911,7 @@
   "webgpu:shader,validation,decl,context_dependent_resolution:diagnostic_rule_names:*": { "subcaseMS": 6.860 },
   "webgpu:shader,validation,decl,context_dependent_resolution:diagnostic_severity_names:*": { "subcaseMS": 6.252 },
   "webgpu:shader,validation,decl,context_dependent_resolution:enable_names:*": { "subcaseMS": 2.226 },
+  "webgpu:shader,validation,decl,context_dependent_resolution:interpolation_flat_names:*": { "subcaseMS": 4.425 },
   "webgpu:shader,validation,decl,context_dependent_resolution:interpolation_sampling_names:*": { "subcaseMS": 4.971 },
   "webgpu:shader,validation,decl,context_dependent_resolution:interpolation_type_names:*": { "subcaseMS": 4.687 },
   "webgpu:shader,validation,decl,context_dependent_resolution:language_names:*": { "subcaseMS": 4.920 },
