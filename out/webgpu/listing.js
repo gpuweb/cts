@@ -5034,6 +5034,14 @@ export const listing = [
       "shader",
       "validation",
       "expression",
+      "early_evaluation"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
       "matrix",
       "add_sub"
     ]
