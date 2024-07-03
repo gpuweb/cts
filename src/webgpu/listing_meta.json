@@ -242,7 +242,7 @@
   "webgpu:api,validation,buffer,destroy:while_mapped:*": { "subcaseMS": 1.150 },
   "webgpu:api,validation,buffer,mapping:gc_behavior,mapAsync:*": { "subcaseMS": 32.200 },
   "webgpu:api,validation,buffer,mapping:gc_behavior,mappedAtCreation:*": { "subcaseMS": 76.200 },
-  "webgpu:api,validation,buffer,mapping:getMappedRange,disjoinRanges_many:*": { "subcaseMS": 73.700 },
+  "webgpu:api,validation,buffer,mapping:getMappedRange,disjointRanges_many:*": { "subcaseMS": 73.700 },
   "webgpu:api,validation,buffer,mapping:getMappedRange,disjointRanges:*": { "subcaseMS": 2.257 },
   "webgpu:api,validation,buffer,mapping:getMappedRange,offsetAndSizeAlignment,mapped:*": { "subcaseMS": 3.119 },
   "webgpu:api,validation,buffer,mapping:getMappedRange,offsetAndSizeAlignment,mappedAtCreation:*": { "subcaseMS": 5.611 },
