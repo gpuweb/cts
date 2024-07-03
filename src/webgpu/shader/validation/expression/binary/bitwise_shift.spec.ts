@@ -204,6 +204,15 @@ const kLeftShiftCases = [
   { lhs: `1`, rhs: `-1`, pass: false },
   { lhs: `1i`, rhs: `-1`, pass: false },
   { lhs: `1u`, rhs: `-1`, pass: false },
+
+  // Signed overflow (sign change) for abstract
+  { lhs: `1`, rhs: `63`, pass: false },
+  { lhs: `2`, rhs: `62`, pass: false },
+  {
+    lhs: `${0b0100000000000000000000000000000000000000000000000000000000000000}`,
+    rhs: `1u`,
+    pass: false,
+  },
 ];
 
 g.test('shift_left_concrete')
