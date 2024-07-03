@@ -204,6 +204,15 @@ const kLeftShiftCases = [
   { lhs: `1`, rhs: `-1`, pass: false },
   { lhs: `1i`, rhs: `-1`, pass: false },
   { lhs: `1u`, rhs: `-1`, pass: false },
+
+  // Signed overflow (sign change) for abstract
+  { lhs: `1`, rhs: `63`, pass: false },
+  { lhs: `2`, rhs: `62`, pass: false },
+  {
+    lhs: `${0b0100000000000000000000000000000000000000000000000000000000000000}`,
+    rhs: `1u`,
+    pass: false,
+  },
 ];
 
 g.test('shift_left_concrete')
@@ -266,6 +275,26 @@ fn main() {
 }
     `;
     t.expectCompileResult(t.params.case.pass, code);
+  });
+
+g.test('shift_left_abstract')
+  .desc('Validates that the result when the LHS is abstract is also abstract')
+  .fn(t => {
+    const wgsl = `
+    const lhs = 0xfffff0000; // too large for 32 bits
+    const res = lhs << 4u;
+    const_assert res == 0xfffff00000;`;
+    t.expectCompileResult(true, wgsl);
+  });
+
+g.test('shift_right_abstract')
+  .desc('Validates that the result when the LHS is abstract is also abstract')
+  .fn(t => {
+    const wgsl = `
+    const lhs = 0xfffff0000; // too large for 32 bits
+    const res = lhs >> 1u;
+    const_assert res == 0x7ffff8000;`;
+    t.expectCompileResult(true, wgsl);
   });
 
 g.test('partial_eval_errors')
