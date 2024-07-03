@@ -268,6 +268,26 @@ fn main() {
   t.expectCompileResult(t.params.case.pass, code);
 });
 
+g.test('shift_left_abstract').
+desc('Validates that the result when the LHS is abstract is also abstract').
+fn((t) => {
+  const wgsl = `
+    const lhs = 0xfffff0000; // too large for 32 bits
+    const res = lhs << 4u;
+    const_assert res == 0xfffff00000;`;
+  t.expectCompileResult(true, wgsl);
+});
+
+g.test('shift_right_abstract').
+desc('Validates that the result when the LHS is abstract is also abstract').
+fn((t) => {
+  const wgsl = `
+    const lhs = 0xfffff0000; // too large for 32 bits
+    const res = lhs >> 1u;
+    const_assert res == 0x7ffff8000;`;
+  t.expectCompileResult(true, wgsl);
+});
+
 g.test('partial_eval_errors').
 desc('Tests partial evaluation errors for left shift').
 params((u) =>
