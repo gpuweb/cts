@@ -319,12 +319,32 @@ ${kStageIOValidationTests[t.params.attr].shader}
   });
 
 const kUsageValidationTests = {
-  global_variable: {
-    code: `var @blend_src(0) color : vec4f;`,
+  const: {
+    code: `@blend_src(0) const color = 1.2;`,
     pass: false,
     use_default_main_function: true,
   },
-  local_variable: {
+  override: {
+    code: `@blend_src(0) @id(0) override color : vec4f;`,
+    pass: false,
+    use_default_main_function: true,
+  },
+  let: {
+    code: `
+    @fragment fn main() -> vec4f {
+      let @blend_src(0) color = vec4f();
+      return color;
+    }
+    `,
+    pass: false,
+    use_default_main_function: false,
+  },
+  var_private: {
+    code: `@blend_src(0) var<private> color : vec4f;`,
+    pass: false,
+    use_default_main_function: true,
+  },
+  var_function: {
     code: `
     @fragment fn main() -> vec4f {
       var @blend_src(0) color : vec4f;
