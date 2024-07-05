@@ -306,6 +306,87 @@ fn main(@builtin(global_invocation_id) gid : vec3u) {
     t.expectGPUBufferValuesEqual(buffer, expected);
   });
 
+g.test('bgra8unorm_swizzle')
+  .desc('Test bgra8unorm swizzling')
+  .beforeAllSubcases(t => {
+    t.selectDeviceOrSkipTestCase('bgra8unorm-storage');
+  })
+  .fn(t => {
+    const values = [
+      { r: -1.1, g: 0.6, b: 0.4, a: 1 },
+      { r: 1.1, g: 0.6, b: 0.4, a: 1 },
+      { r: 0.4, g: -1.1, b: 0.6, a: 1 },
+      { r: 0.4, g: 1.1, b: 0.6, a: 1 },
+      { r: 0.6, g: 0.4, b: -1.1, a: 1 },
+      { r: 0.6, g: 0.4, b: 1.1, a: 1 },
+      { r: 0.2, g: 0.4, b: 0.6, a: 1 },
+      { r: -0.2, g: -0.4, b: -0.6, a: 1 },
+    ];
+    let wgsl = `
+@group(0) @binding(0) var tex : texture_storage_1d<bgra8unorm, write>;
+
+const values = array(`;
+    for (const v of values) {
+      wgsl += `vec4(${v.r},${v.g},${v.b},${v.a}),\n`;
+    }
+    wgsl += `);
+
+@compute @workgroup_size(${values.length})
+fn main(@builtin(global_invocation_id) gid : vec3u) {
+  let value = values[gid.x];
+  textureStore(tex, gid.x, value);
+}`;
+
+    const numTexels = values.length;
+    const textureSize: GPUExtent3D = { width: numTexels, height: 1, depthOrArrayLayers: 1 };
+    const texture = t.createTextureTracked({
+      format: 'bgra8unorm',
+      dimension: '1d',
+      size: textureSize,
+      mipLevelCount: 1,
+      usage: GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.COPY_SRC,
+    });
+
+    const pipeline = t.device.createComputePipeline({
+      layout: 'auto',
+      compute: {
+        module: t.device.createShaderModule({
+          code: wgsl,
+        }),
+        entryPoint: 'main',
+      },
+    });
+    const bg = t.device.createBindGroup({
+      layout: pipeline.getBindGroupLayout(0),
+      entries: [
+        {
+          binding: 0,
+          resource: texture.createView({
+            format: 'bgra8unorm',
+            dimension: '1d',
+          }),
+        },
+      ],
+    });
+
+    const encoder = t.device.createCommandEncoder();
+    const pass = encoder.beginComputePass();
+    pass.setPipeline(pipeline);
+    pass.setBindGroup(0, bg);
+    pass.dispatchWorkgroups(1, 1, 1);
+    pass.end();
+    t.queue.submit([encoder.finish()]);
+
+    const buffer = t.copyWholeTextureToNewBufferSimple(texture, 0);
+    const expected = new Uint32Array([
+      ...iterRange(numTexels, x => {
+        const { r, g, b, a } = values[x];
+        return pack4x8unorm(b, g, r, a);
+      }),
+    ]);
+    t.expectGPUBufferValuesEqual(buffer, expected);
+  });
+
 // Texture width for dimensions >1D.
 // Sized such that mip level 2 will be at least 256 bytes/row.
 const kWidth = 256;
