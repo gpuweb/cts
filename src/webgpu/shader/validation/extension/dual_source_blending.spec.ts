@@ -325,7 +325,7 @@ const kUsageValidationTests = {
     use_default_main_function: true,
   },
   override: {
-    code: `@blend_src(0) @id(0) override color : vec4f;`,
+    code: `@blend_src(0) @id(0) override color : f32;`,
     pass: false,
     use_default_main_function: true,
   },
@@ -382,7 +382,7 @@ const kUsageValidationTests = {
   },
   entrypoint_input_non_struct: {
     code: `
-    @fragment fn main(@location(0) @blend_src(0) color : vec4f) -> vec4f {
+    @fragment fn main(@location(0) @blend_src(0) color : vec4f) -> @location(0) vec4f {
       return color;
     }
     `,
