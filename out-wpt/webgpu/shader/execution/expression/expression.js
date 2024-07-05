@@ -870,7 +870,7 @@ ${body}
       if (inputSource === 'storage_rw') {
         operation = `
         outputs[i].value = ${storageType(resultType)}(inputs[i].lhs);
-        outputs[i].value ${op} ${storageType(resultType)}(inputs[i].rhs);`;
+        outputs[i].value ${op} ${rhsType}(inputs[i].rhs);`;
       } else {
         operation = `
         var ret = ${lhsType}(inputs[i].lhs);
