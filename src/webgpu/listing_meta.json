@@ -1600,6 +1600,7 @@
   "webgpu:shader,execution,expression,call,builtin,textureStore:store_2d_coords:*": { "subcaseMS": 28.809 },
   "webgpu:shader,execution,expression,call,builtin,textureStore:store_3d_coords:*": { "subcaseMS": 37.206 },
   "webgpu:shader,execution,expression,call,builtin,textureStore:store_array_2d_coords:*": { "subcaseMS": 98.804 },
+  "webgpu:shader,execution,expression,call,builtin,textureStore:texel_formats:*": { "subcaseMS": 86.179 },
   "webgpu:shader,execution,expression,call,builtin,transpose:abstract_float:*": { "subcaseMS": 64537.678 },
   "webgpu:shader,execution,expression,call,builtin,transpose:f16:*": { "subcaseMS": 33.311 },
   "webgpu:shader,execution,expression,call,builtin,transpose:f32:*": { "subcaseMS": 75.887 },
