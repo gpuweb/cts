@@ -170,8 +170,9 @@ g.test('texel_formats')
   .beforeAllSubcases(t => {
     if (t.params.format === 'bgra8unorm') {
       t.selectDeviceOrSkipTestCase('bgra8unorm-storage');
+    } else {
+      t.skipIfTextureFormatNotUsableAsStorageTexture(t.params.format as GPUTextureFormat);
     }
-    t.skipIfTextureFormatNotUsableAsStorageTexture(t.params.format as GPUTextureFormat);
   })
   .fn(t => {
     const { format, _shaderType } = t.params;
