@@ -28,7 +28,7 @@ const kAttributeCases = {
   // diagnostic is a keyword
   group: `@group(0) @binding(0) var s : sampler;`,
   id: `@id(1) override x : i32;`,
-  interpolate: `@fragment fn main(@location(0) @interpolate(flat) x : i32) { }`,
+  interpolate: `@fragment fn main(@location(0) @interpolate(flat, either) x : i32) { }`,
   invariant: `@fragment fn main(@builtin(position) @invariant pos : vec4f) { }`,
   location: `@fragment fn main(@location(0) x : f32) { }`,
   must_use: `@must_use fn foo() -> u32 { return 0; }`,
@@ -102,6 +102,17 @@ combine('case', keysOf(kBuiltinCases)).
 beginSubcases().
 combine('decl', ['override', 'const', 'var<private>'])
 ).
+beforeAllSubcases((t) => {
+  const wgsl = kBuiltinCases[t.params.case];
+  t.skipIf(
+    t.isCompatibility && wgsl.includes('sample_mask'),
+    'sample_mask is not supported in compatibility mode'
+  );
+  t.skipIf(
+    t.isCompatibility && wgsl.includes('sample_index'),
+    'sample_index is not supported in compatibility mode'
+  );
+}).
 fn((t) => {
   const code = `
     ${t.params.decl} ${t.params.case} : u32 = 0;
@@ -325,6 +336,12 @@ combine('case', kInterpolationSamplingCases).
 beginSubcases().
 combine('decl', ['override', 'const', 'var<private>'])
 ).
+beforeAllSubcases((t) => {
+  t.skipIf(
+    t.isCompatibility && t.params.case === 'sample',
+    'compatibility mode does not support sample sampling'
+  );
+}).
 fn((t) => {
   const code = `
     ${t.params.decl} ${t.params.case} : u32 = 0;
@@ -347,6 +364,12 @@ combine('case', kInterpolationFlatCases).
 beginSubcases().
 combine('decl', ['override', 'const', 'var<private>'])
 ).
+beforeAllSubcases((t) => {
+  t.skipIf(
+    t.isCompatibility && t.params.case === 'first',
+    'compatibility mode does not support first sampling'
+  );
+}).
 fn((t) => {
   const code = `
     ${t.params.decl} ${t.params.case} : u32 = 0;
