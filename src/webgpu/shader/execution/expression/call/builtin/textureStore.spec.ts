@@ -177,6 +177,28 @@ g.test('texel_formats')
   .fn(t => {
     const { format, _shaderType } = t.params;
     const values = inputArray(format);
+
+    let numChannels = 4;
+    switch (format) {
+      case 'r32uint':
+      case 'r32sint':
+      case 'r32float':
+        numChannels = 1;
+        break;
+      case 'rg32uint':
+      case 'rg32sint':
+      case 'rg32float':
+        numChannels = 2;
+        break;
+      default:
+        break;
+    }
+
+    let zeroVal = ``;
+    if (numChannels > 1) {
+      zeroVal = `val[idx % ${numChannels}] = 0;`;
+    }
+
     let wgsl = `
 const range = array(`;
     for (const v of values) {
@@ -194,7 +216,8 @@ fn main(@builtin(global_invocation_id) gid : vec3u) {
   let idx = gid.x;
   let scalarVal = range[idx];
   let vecVal = vec4(scalarVal);
-  let val = vec4<${_shaderType}>(vecVal);
+  var val = vec4<${_shaderType}>(vecVal);
+  ${zeroVal}
   textureStore(tex, gid.x, val);
 }
 `;
@@ -258,43 +281,95 @@ fn main(@builtin(global_invocation_id) gid : vec3u) {
         break;
     }
 
+    let zeroChannel = 0;
     const buffer = t.copyWholeTextureToNewBufferSimple(texture, 0);
     const uintsPerTexel = bytesPerTexel / 4;
     const expected = new Uint32Array([
       ...iterRange(numTexels * uintsPerTexel, x => {
         const idx = Math.floor(x / uintsPerTexel);
+        const channel = idx % numChannels;
+        zeroChannel = zeroChannel % numChannels;
         const shaderVal = values[idx];
         switch (format) {
-          case 'rgba8unorm':
-          case 'bgra8unorm':
-            return pack4x8unorm(shaderVal, shaderVal, shaderVal, shaderVal);
-          case 'rgba8snorm':
-            return pack4x8snorm(shaderVal, shaderVal, shaderVal, shaderVal);
+          case 'rgba8unorm': {
+            const vals = [shaderVal, shaderVal, shaderVal, shaderVal];
+            vals[zeroChannel++] = 0;
+            return pack4x8unorm(vals[0], vals[1], vals[2], vals[3]);
+          }
+          case 'bgra8unorm': {
+            const vals = [shaderVal, shaderVal, shaderVal, shaderVal];
+            vals[zeroChannel++] = 0;
+            return pack4x8unorm(vals[2], vals[1], vals[0], vals[3]);
+          }
+          case 'rgba8snorm': {
+            const vals = [shaderVal, shaderVal, shaderVal, shaderVal];
+            vals[zeroChannel++] = 0;
+            return pack4x8snorm(vals[0], vals[1], vals[2], vals[3]);
+          }
           case 'r32uint':
+          case 'r32sint':
+            return shaderVal;
           case 'rg32uint':
           case 'rgba32uint':
-          case 'r32sint':
           case 'rg32sint':
-          case 'rgba32sint':
-            return shaderVal;
+          case 'rgba32sint': {
+            const maskedVal = channel === zeroChannel++ ? 0 : shaderVal;
+            return maskedVal;
+          }
           case 'rgba8uint':
-          case 'rgba8sint':
+          case 'rgba8sint': {
+            const vals = [shaderVal, shaderVal, shaderVal, shaderVal];
+            vals[zeroChannel++] = 0;
             return (
-              ((shaderVal & 0xff) << 24) |
-              ((shaderVal & 0xff) << 16) |
-              ((shaderVal & 0xff) << 8) |
-              (shaderVal & 0xff)
+              ((vals[3] & 0xff) << 24) |
+              ((vals[2] & 0xff) << 16) |
+              ((vals[1] & 0xff) << 8) |
+              (vals[0] & 0xff)
             );
+          }
           case 'rgba16uint':
-          case 'rgba16sint':
-            return ((shaderVal & 0xffff) << 16) | (shaderVal & 0xffff);
-          case 'r32float':
-          case 'rg32float':
-          case 'rgba32float':
+          case 'rgba16sint': {
+            // 4 channels split over 2 uint32s.
+            // Determine if this pair has the zero channel.
+            const vals = [shaderVal, shaderVal];
+            const lowChannels = (x & 0x1) === 0;
+            if (lowChannels) {
+              if (zeroChannel < 2) {
+                vals[zeroChannel] = 0;
+              }
+            } else {
+              if (zeroChannel >= 2) {
+                vals[zeroChannel - 2] = 0;
+              }
+              zeroChannel++;
+            }
+            return ((vals[1] & 0xffff) << 16) | (vals[0] & 0xffff);
+          }
+          case 'r32float': {
             return numberToFloatBits(shaderVal, kFloat32Format);
+          }
+          case 'rg32float':
+          case 'rgba32float': {
+            const maskedVal = channel === zeroChannel++ ? 0 : shaderVal;
+            return numberToFloatBits(maskedVal, kFloat32Format);
+          }
           case 'rgba16float': {
+            // 4 channels split over 2 uint32s.
+            // Determine if this pair has the zero channel.
             const bits = numberToFloatBits(shaderVal, kFloat16Format);
-            return ((bits & 0xffff) << 16) | (bits & 0xffff);
+            const vals = [bits, bits];
+            const lowChannels = (x & 0x1) === 0;
+            if (lowChannels) {
+              if (zeroChannel < 2) {
+                vals[zeroChannel] = 0;
+              }
+            } else {
+              if (zeroChannel >= 2) {
+                vals[zeroChannel - 2] = 0;
+              }
+              zeroChannel++;
+            }
+            return ((vals[1] & 0xffff) << 16) | (vals[0] & 0xffff);
           }
           default:
             unreachable(`unhandled format ${format}`);
