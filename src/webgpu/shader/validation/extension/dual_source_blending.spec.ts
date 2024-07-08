@@ -317,3 +317,307 @@ ${kStageIOValidationTests[t.params.attr].shader}
 `;
     t.expectCompileResult(kStageIOValidationTests[t.params.attr].pass, code);
   });
+
+const kUsageValidationTests = {
+  const: {
+    code: `@blend_src(0) const color = 1.2;`,
+    pass: false,
+    use_default_main_function: true,
+  },
+  override: {
+    code: `@blend_src(0) @id(0) override color : f32;`,
+    pass: false,
+    use_default_main_function: true,
+  },
+  let: {
+    code: `
+    @fragment fn main() -> vec4f {
+      let @blend_src(0) color = vec4f();
+      return color;
+    }
+    `,
+    pass: false,
+    use_default_main_function: false,
+  },
+  var_private: {
+    code: `@blend_src(0) var<private> color : vec4f;`,
+    pass: false,
+    use_default_main_function: true,
+  },
+  var_function: {
+    code: `
+    @fragment fn main() -> vec4f {
+      var @blend_src(0) color : vec4f;
+      color = vec4f();
+      return color;
+    }
+    `,
+    pass: false,
+    use_default_main_function: false,
+  },
+  function_declaration: {
+    code: `
+    @blend_src(0) fn fun() {}
+    `,
+    pass: false,
+    use_default_main_function: true,
+  },
+  non_entrypoint_function_input_non_struct: {
+    code: `
+    fn fun(@blend_src(0) color : vec4f) -> vec4f {
+      return color;
+    }
+    `,
+    pass: false,
+    use_default_main_function: true,
+  },
+  non_entrypoint_function_output_non_struct: {
+    code: `
+    fn fun() -> @blend_src(0) vec4f {
+      return vec4f();
+    }
+    `,
+    pass: false,
+    use_default_main_function: true,
+  },
+  entrypoint_input_non_struct: {
+    code: `
+    @fragment fn main(@location(0) @blend_src(0) color : vec4f) -> @location(0) vec4f {
+      return color;
+    }
+    `,
+    pass: false,
+    use_default_main_function: false,
+  },
+  entrypoint_output_non_struct: {
+    code: `
+    @fragment fn main() -> @location(0) @blend_src(0) vec4f {
+      return vec4f();
+    }
+    `,
+    pass: false,
+    use_default_main_function: false,
+  },
+  struct_member_only_blend_src_0: {
+    code: `
+    struct BlendSrcStruct {
+      @location(0) @blend_src(0) color : vec4f,
+    }
+    `,
+    pass: false,
+    use_default_main_function: true,
+  },
+  struct_member_only_blend_src_1: {
+    code: `
+    struct BlendSrcStruct {
+      @location(0) @blend_src(1) blend : vec4f,
+    }
+    `,
+    pass: false,
+    use_default_main_function: true,
+  },
+  struct_member_no_location_blend_src_0: {
+    code: `
+    struct BlendSrcStruct {
+      @blend_src(0) color : vec4f,
+      @location(0) @blend_src(1) blend : vec4f,
+    }
+    `,
+    pass: false,
+    use_default_main_function: true,
+  },
+  struct_member_no_location_blend_src_1: {
+    code: `
+    struct BlendSrcStruct {
+      @location(0) @blend_src(0) color : vec4f,
+      @blend_src(1) blend : vec4f,
+    }
+    `,
+    pass: false,
+    use_default_main_function: true,
+  },
+  struct_member_duplicate_blend_src_0: {
+    code: `
+    struct BlendSrcStruct {
+      @location(0) @blend_src(0) color : vec4f,
+      @location(0) @blend_src(0) blend : vec4f,
+    }
+    `,
+    pass: false,
+    use_default_main_function: true,
+  },
+  struct_member_duplicate_blend_src_1: {
+    code: `
+    struct BlendSrcStruct {
+      @location(0) @blend_src(1) color : vec4f,
+      @location(0) @blend_src(1) blend : vec4f,
+    }
+    `,
+    pass: false,
+    use_default_main_function: true,
+  },
+  struct_member_has_non_zero_location_blend_src_0: {
+    code: `
+    struct BlendSrcStruct {
+      @location(0) @blend_src(0) color1 : vec4f,
+      @location(1) @blend_src(0) color2 : vec4f,
+      @location(0) @blend_src(1) blend : vec4f,
+    }
+    `,
+    pass: false,
+    use_default_main_function: true,
+  },
+  struct_member_has_non_zero_location_blend_src_1: {
+    code: `
+    struct BlendSrcStruct {
+      @location(0) @blend_src(0) color : vec4f,
+      @location(0) @blend_src(1) blend1 : vec4f,
+      @location(1) @blend_src(1) blend2 : vec4f,
+    }
+    `,
+    pass: false,
+    use_default_main_function: true,
+  },
+  struct_member_non_zero_location_blend_src_0_blend_src_1: {
+    code: `
+    struct BlendSrcStruct {
+      @location(1) @blend_src(0) color : vec4f,
+      @location(1) @blend_src(1) blend : vec4f,
+    }
+    `,
+    pass: false,
+    use_default_main_function: true,
+  },
+  struct_member_has_non_zero_location_no_blend_src: {
+    code: `
+    struct BlendSrcStruct {
+      @location(0) @blend_src(0) color : vec4f,
+      @location(0) @blend_src(1) blend : vec4f,
+      @location(1) color2 : vec4f,
+    }
+    `,
+    pass: false,
+    use_default_main_function: true,
+  },
+  struct_member_no_location_no_blend_src: {
+    code: `
+    struct BlendSrcStruct {
+      @location(0) @blend_src(0) color : vec4f,
+      @location(0) @blend_src(1) blend : vec4f,
+      depth : f32,
+    }
+    `,
+    pass: true,
+    use_default_main_function: true,
+  },
+  struct_member_blend_src_and_builtin: {
+    code: `
+    struct BlendSrcStruct {
+      @location(0) @blend_src(0) color : vec4f,
+      @location(0) @blend_src(1) blend : vec4f,
+      @builtin(frag_depth) depth : f32,
+    }
+    `,
+    pass: true,
+    use_default_main_function: true,
+  },
+  struct_member_location_0_blend_src_0_blend_src_1: {
+    code: `
+    struct BlendSrcStruct {
+      @location(0) @blend_src(0) color : vec4f,
+      @location(0) @blend_src(1) blend : vec4f,
+    }
+    `,
+    pass: true,
+    use_default_main_function: true,
+  },
+};
+
+g.test('blend_src_usage')
+  .desc(
+    `Test that blend_src can only be used on a member of a structure, and must be used together with
+    the location attribute. In addition, if blend_src is used on a member of a structure, there must
+    be exactly 2 members that have location attribute in the structure: one is @location(0)
+    @blend_src(0) and another is @location(0) @blend_src(1).`
+  )
+  .params(u => u.combine('attr', keysOf(kUsageValidationTests)))
+  .beforeAllSubcases(t =>
+    t.selectDeviceOrSkipTestCase({ requiredFeatures: ['dual-source-blending'] })
+  )
+  .fn(t => {
+    const code = `
+enable dual_source_blending;
+
+${kUsageValidationTests[t.params.attr].code}
+
+${
+  kUsageValidationTests[t.params.attr].use_default_main_function
+    ? `@fragment fn main() -> @location(0) vec4f {
+  return vec4f();
+}`
+    : ''
+}
+`;
+    t.expectCompileResult(kUsageValidationTests[t.params.attr].pass, code);
+  });
+
+const kValidLocationTypes = [
+  'f16',
+  'f32',
+  'i32',
+  'u32',
+  'vec2h',
+  'vec2f',
+  'vec2i',
+  'vec2u',
+  'vec3h',
+  'vec3f',
+  'vec3i',
+  'vec3u',
+  'vec4h',
+  'vec4f',
+  'vec4i',
+  'vec4u',
+] as const;
+
+const kF16TypesSet = new Set(['f16', 'vec2h', 'vec3h', 'vec4h']);
+
+g.test('blend_src_same_type')
+  .desc(`Test that the struct member with @blend_src(0) and @blend_src(1) must have same type.`)
+  .params(u =>
+    u.combine('blendSrc0Type', kValidLocationTypes).combine('blendSrc1Type', kValidLocationTypes)
+  )
+  .beforeAllSubcases(t => {
+    const requiredFeatures: GPUFeatureName[] = ['dual-source-blending'];
+    const needF16Extension =
+      kF16TypesSet.has(t.params.blendSrc0Type) || kF16TypesSet.has(t.params.blendSrc1Type);
+    if (needF16Extension) {
+      requiredFeatures.push('shader-f16');
+    }
+    t.selectDeviceOrSkipTestCase({ requiredFeatures });
+  })
+  .fn(t => {
+    const { blendSrc0Type, blendSrc1Type } = t.params;
+
+    const needF16Extension = kF16TypesSet.has(blendSrc0Type) || kF16TypesSet.has(blendSrc1Type);
+    const code = `
+enable dual_source_blending;
+
+${needF16Extension ? 'enable f16;' : ''}
+
+struct BlendSrcOutput {
+  @location(0) @blend_src(0) color : ${blendSrc0Type},
+  @location(0) @blend_src(1) blend : ${blendSrc1Type},
+}
+
+@fragment fn main() -> BlendSrcOutput {
+  var output : BlendSrcOutput;
+  output.color = ${blendSrc0Type}();
+  output.blend = ${blendSrc1Type}();
+  return output;
+}
+`;
+
+    const success = blendSrc0Type === blendSrc1Type;
+    t.expectCompileResult(success, code);
+  });
