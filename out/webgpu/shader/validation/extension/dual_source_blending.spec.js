@@ -560,4 +560,65 @@ ${
 `;
   t.expectCompileResult(kUsageValidationTests[t.params.attr].pass, code);
 });
+
+const kValidLocationTypes = [
+'f16',
+'f32',
+'i32',
+'u32',
+'vec2h',
+'vec2f',
+'vec2i',
+'vec2u',
+'vec3h',
+'vec3f',
+'vec3i',
+'vec3u',
+'vec4h',
+'vec4f',
+'vec4i',
+'vec4u'];
+
+
+const kF16TypesSet = new Set(['f16', 'vec2h', 'vec3h', 'vec4h']);
+
+g.test('blend_src_same_type').
+desc(`Test that the struct member with @blend_src(0) and @blend_src(1) must have same type.`).
+params((u) =>
+u.combine('blendSrc0Type', kValidLocationTypes).combine('blendSrc1Type', kValidLocationTypes)
+).
+beforeAllSubcases((t) => {
+  const requiredFeatures = ['dual-source-blending'];
+  const needF16Extension =
+  kF16TypesSet.has(t.params.blendSrc0Type) || kF16TypesSet.has(t.params.blendSrc1Type);
+  if (needF16Extension) {
+    requiredFeatures.push('shader-f16');
+  }
+  t.selectDeviceOrSkipTestCase({ requiredFeatures });
+}).
+fn((t) => {
+  const { blendSrc0Type, blendSrc1Type } = t.params;
+
+  const needF16Extension = kF16TypesSet.has(blendSrc0Type) || kF16TypesSet.has(blendSrc1Type);
+  const code = `
+enable dual_source_blending;
+
+${needF16Extension ? 'enable f16;' : ''}
+
+struct BlendSrcOutput {
+  @location(0) @blend_src(0) color : ${blendSrc0Type},
+  @location(0) @blend_src(1) blend : ${blendSrc1Type},
+}
+
+@fragment fn main() -> BlendSrcOutput {
+  var output : BlendSrcOutput;
+  output.color = ${blendSrc0Type}();
+  output.blend = ${blendSrc1Type}();
+  return output;
+}
+`;
+
+  const success = blendSrc0Type === blendSrc1Type;
+  t.expectCompileResult(success, code);
+});
 //# sourceMappingURL=dual_source_blending.spec.js.map
