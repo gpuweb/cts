@@ -195,7 +195,7 @@ export const TexelFormats = [
 { format: 'rg32uint', _shaderType: 'u32' },
 { format: 'rg32sint', _shaderType: 'i32' },
 { format: 'rg32float', _shaderType: 'f32' },
-{ format: 'rgba32uint', _shaderType: 'i32' },
+{ format: 'rgba32uint', _shaderType: 'u32' },
 { format: 'rgba32sint', _shaderType: 'i32' },
 { format: 'rgba32float', _shaderType: 'f32' }];
 
