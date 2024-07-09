@@ -102,6 +102,12 @@ g.test('builtin_value_names')
       .beginSubcases()
       .combine('decl', ['override', 'const', 'var<private>'] as const)
   )
+  .beforeAllSubcases(t => {
+    t.skipIf(
+      t.isCompatibility && ['sample_index', 'sample_mask_input', 'sample_mask_output'].includes(t.params.case),
+      'compatibility mode does not support sample_index or sample_mask'
+    );
+  })
   .fn(t => {
     const code = `
     ${t.params.decl} ${t.params.case} : u32 = 0;
