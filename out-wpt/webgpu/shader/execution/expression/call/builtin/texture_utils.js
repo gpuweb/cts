@@ -6,7 +6,7 @@
   kEncodableTextureFormats,
   kTextureFormatInfo } from
 '../../../../../format_info.js';
-
+import { GPUTest } from '../../../../../gpu_test.js';
 import { float32ToUint32 } from '../../../../../util/conversion.js';
 import {
   align,
@@ -30,6 +30,61 @@ import {
 import { TexelView } from '../../../../../util/texture/texel_view.js';
 import { createTextureFromTexelViews } from '../../../../../util/texture.js';
 import { reifyExtent3D } from '../../../../../util/unions.js';
+
+
+
+export const kSampleTypeInfo = {
+  f32: {
+    format: 'rgba8unorm'
+  },
+  i32: {
+    format: 'rgba32sint'
+  },
+  u32: {
+    format: 'rgba32uint'
+  }
+};
+
+/**
+ * Used for textureDimension, textureNumLevels, textureNumLayers
+ */
+export class WGSLTextureQueryTest extends GPUTest {
+  executeAndExpectResult(code, view, expected) {
+    const { device } = this;
+    const module = device.createShaderModule({ code });
+    const pipeline = device.createComputePipeline({
+      layout: 'auto',
+      compute: {
+        module
+      }
+    });
+
+    const resultBuffer = this.createBufferTracked({
+      size: 16,
+      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
+    });
+
+    const bindGroup = device.createBindGroup({
+      layout: pipeline.getBindGroupLayout(0),
+      entries: [
+      { binding: 0, resource: view },
+      { binding: 1, resource: { buffer: resultBuffer } }]
+
+    });
+
+    const encoder = device.createCommandEncoder();
+    const pass = encoder.beginComputePass();
+    pass.setPipeline(pipeline);
+    pass.setBindGroup(0, bindGroup);
+    pass.dispatchWorkgroups(1);
+    pass.end();
+    device.queue.submit([encoder.finish()]);
+
+    const e = new Uint32Array(4);
+    e.set(expected);
+    this.expectGPUBufferValuesEqual(resultBuffer, e);
+  }
+}
 
 function getLimitValue(v) {
   switch (v) {
