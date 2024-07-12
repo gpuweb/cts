@@ -38,10 +38,10 @@ export const kSampleTypeInfo = {
     format: 'rgba8unorm'
   },
   i32: {
-    format: 'rgba32sint'
+    format: 'rgba8sint'
   },
   u32: {
-    format: 'rgba32uint'
+    format: 'rgba8uint'
   }
 };
 
