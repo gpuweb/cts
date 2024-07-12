@@ -314,10 +314,20 @@ combine('case', kInterpolationTypeCases).
 beginSubcases().
 combine('decl', ['override', 'const', 'var<private>'])
 ).
+beforeAllSubcases((t) => {
+  t.skipIf(
+    t.isCompatibility && t.params.case === 'linear',
+    'compatibility mode does not support linear interpolation type'
+  );
+}).
 fn((t) => {
+  const attr =
+  t.isCompatibility && t.params.case === 'flat' ?
+  `@interpolate(flat, either)` :
+  `@interpolate(${t.params.case})`;
   const code = `
     ${t.params.decl} ${t.params.case} : u32 = 0;
-    @fragment fn main(@location(0) @interpolate(${t.params.case}) x : f32) { }
+    @fragment fn main(@location(0) ${attr} x : f32) { }
     fn use_var() -> u32 {
       return ${t.params.case};
     }
