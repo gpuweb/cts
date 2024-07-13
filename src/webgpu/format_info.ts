@@ -1773,6 +1773,18 @@ export function isCompressedTextureFormat(format: GPUTextureFormat) {
   return format in kCompressedTextureFormatInfo;
 }
 
+export function isDepthTextureFormat(format: GPUTextureFormat) {
+  return !!kTextureFormatInfo[format].depth;
+}
+
+export function isStencilTextureFormat(format: GPUTextureFormat) {
+  return !!kTextureFormatInfo[format].stencil;
+}
+
+export function isDepthOrStencilTextureFormat(format: GPUTextureFormat) {
+  return isDepthTextureFormat(format) || isStencilTextureFormat(format);
+}
+
 export const kCompatModeUnsupportedStorageTextureFormats: readonly GPUTextureFormat[] = [
   'rg32float',
   'rg32sint',
@@ -1794,6 +1806,13 @@ export function isTextureFormatUsableAsStorageFormat(
 
 export function isRegularTextureFormat(format: GPUTextureFormat) {
   return format in kRegularTextureFormatInfo;
+}
+
+/**
+ * Returns true of format is both compressed and a float format, for example 'bc6h-rgb-ufloat'.
+ */
+export function isCompressedFloatTextureFormat(format: GPUTextureFormat) {
+  return isCompressedTextureFormat(format) && format.includes('float');
 }
 
 export const kFeaturesForFormats = getFeaturesForFormats(kAllTextureFormats);
