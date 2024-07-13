@@ -22,6 +22,7 @@ import { makeTestGroup } from '../../../../../../common/framework/test_group.js'
 import { unreachable, iterRange } from '../../../../../../common/util/util.js';
 import {
   isCompressedFloatTextureFormat,
+  isDepthTextureFormat,
   kCompressedTextureFormats,
   kEncodableTextureFormats,
 } from '../../../../../format_info.js';
@@ -57,7 +58,7 @@ import {
 const kTestableColorFormats = [...kEncodableTextureFormats, ...kCompressedTextureFormats] as const;
 
 function filterOutDepthAndCompressedFloatTextureFormats({ format }: { format: GPUTextureFormat }) {
-  return !format.startsWith('depth') && !isCompressedFloatTextureFormat(format);
+  return !isDepthTextureFormat(format) && !isCompressedFloatTextureFormat(format);
 }
 
 function filterOutU32WithNegativeValues(t: {

@@ -1774,11 +1774,11 @@ export function isCompressedTextureFormat(format: GPUTextureFormat) {
 }
 
 export function isDepthTextureFormat(format: GPUTextureFormat) {
-  return format.includes('depth');
+  return !!kTextureFormatInfo[format].depth;
 }
 
 export function isStencilTextureFormat(format: GPUTextureFormat) {
-  return format.includes('stencil');
+  return !!kTextureFormatInfo[format].stencil;
 }
 
 export function isDepthOrStencilTextureFormat(format: GPUTextureFormat) {
