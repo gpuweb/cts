@@ -413,7 +413,7 @@ export async function run(
     };
     const checkBatch = await submitBatch(t, shaderBuilder, shaderBuilderParams, pipelineCache);
     checkBatch();
-    void (await t.queue.onSubmittedWorkDone());
+    await t.queue.onSubmittedWorkDone();
   };
 
   const pendingBatches = [];
