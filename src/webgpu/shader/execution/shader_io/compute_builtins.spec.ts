@@ -1,6 +1,7 @@
 export const description = `Test compute shader builtin variables`;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
+import { iterRange } from '../../../../common/util/util.js';
 import { GPUTest } from '../../../gpu_test.js';
 
 export const g = makeTestGroup(GPUTest);
@@ -253,4 +254,398 @@ g.test('inputs')
       type: Uint32Array,
       typedLength: outputBuffer.size / 4,
     });
+  });
+
+/**
+ * @returns The population count of input.
+ */
+function popcount(input: number): number {
+  let n = input;
+  n = n - ((n >> 1) & 0x55555555);
+  n = (n & 0x33333333) + ((n >> 2) & 0x33333333);
+  return (((n + (n >> 4)) & 0xf0f0f0f) * 0x1010101) >> 24;
+}
+
+function ErrorMsg(msg: string, got: number, expected: number): string {
+  return `${msg}:\n-      got: ${got}\n- expected: ${expected}`;
+}
+
+/**
+ * Checks that the subgroup size and ballot buffers are consistent.
+ *
+ * This function assumes subgroups will be filled as much as possible with
+ * up to 1 partial subgroup at the end of each workgroup.
+ *
+ * @param data The subgroup_size buffer
+ * @param compare The ballot buffer
+ * @param min The minimum subgroup size allowed
+ * @param max The maximum subgroup size allowed
+ * @param invocations The number of invocations in a workgroup
+ */
+function checkSubgroupSizeConsistency(
+  data: Uint32Array,
+  compare: Uint32Array,
+  min: number,
+  max: number,
+  invocations: number
+): Error | undefined {
+  const subgroupSize = data[0];
+  if (popcount(subgroupSize) !== 1) {
+    return new Error(`Subgroup size '${subgroupSize}' is not a power of two`);
+  }
+  if (subgroupSize < min) {
+    return new Error(`Subgroup size '${subgroupSize}' is less than minimum '${min}'`);
+  }
+  if (max < subgroupSize) {
+    return new Error(`Subgroup size '${subgroupSize}' is greater than maximum '${max}'`);
+  }
+
+  // Check that remaining invocations record a consistent subgroup size.
+  for (let i = 1; i < data.length; i++) {
+    if (data[i] !== subgroupSize) {
+      return new Error(
+        ErrorMsg(`Invocation ${i}: subgroup size inconsistency`, data[i], subgroupSize)
+      );
+    }
+  }
+
+  // Assumes workgroups are divided such that there is a single partial subgroup if any.
+  const partialSize = invocations % subgroupSize;
+  let fullSize = 0;
+  if (subgroupSize <= invocations) {
+    fullSize = Math.floor(invocations / subgroupSize) * subgroupSize;
+  }
+  let fullCount = 0;
+  let partialCount = 0;
+  for (let i = 0; i < compare.length; i++) {
+    if (i % invocations === 0) {
+      if (i !== 0) {
+        // Check intermediate workgroup counts.
+        if (fullCount !== fullSize) {
+          return new Error(ErrorMsg(`Unexpected number of full invocations`, fullCount, fullSize));
+        }
+        if (partialCount !== partialSize) {
+          return new Error(
+            ErrorMsg(`Unexpected number of partial invocations`, partialCount, partialSize)
+          );
+        }
+      }
+
+      // Reset for new workgroup.
+      fullCount = 0;
+      partialCount = 0;
+    }
+
+    if (compare[i] === subgroupSize) {
+      fullCount++;
+    } else {
+      partialCount++;
+
+      // Check that all partial invocations are consistent.
+      if (compare[i] !== partialSize) {
+        return new Error(ErrorMsg(`Partial subgroup size incorrect`, compare[i], partialSize));
+      }
+    }
+  }
+
+  // Check final workgroup counts.
+  if (fullCount !== fullSize) {
+    return new Error(ErrorMsg(`Unexpected number of full invocations`, fullCount, fullSize));
+  }
+  if (partialCount !== partialSize) {
+    return new Error(
+      ErrorMsg(`Unexpected number of partial invocations`, partialCount, partialSize)
+    );
+  }
+
+  return undefined;
+}
+
+const kWGSizes = [
+  [1, 1, 1],
+  [4, 1, 1],
+  [8, 1, 1],
+  [16, 1, 1],
+  [32, 1, 1],
+  [64, 1, 1],
+  [128, 1, 1],
+  [256, 1, 1],
+  [1, 4, 1],
+  [1, 8, 1],
+  [1, 16, 1],
+  [1, 32, 1],
+  [1, 64, 1],
+  [1, 128, 1],
+  [1, 256, 1],
+  [1, 1, 4],
+  [1, 1, 8],
+  [1, 1, 16],
+  [1, 1, 32],
+  [1, 1, 64],
+  [3, 3, 3],
+  [4, 4, 4],
+  [16, 16, 1],
+  [16, 1, 16],
+  [1, 16, 16],
+  [15, 3, 3],
+  [3, 15, 3],
+  [3, 3, 15],
+] as const;
+
+g.test('subgroup_size')
+  .desc('Tests subgroup_size values')
+  .params(u =>
+    u
+      .combine('sizes', kWGSizes)
+      .beginSubcases()
+      .combine('numWGs', [1, 2] as const)
+  )
+  .beforeAllSubcases(t => {
+    t.selectDeviceOrSkipTestCase('subgroups' as GPUFeatureName);
+  })
+  .fn(async t => {
+    // Replace these with the limits when they are wired up.
+    const minSize = 4;
+    const maxSize = 128;
+
+    const wgThreads = t.params.sizes[0] * t.params.sizes[1] * t.params.sizes[2];
+    const wgsl = `
+enable subgroups;
+
+const stride = ${wgThreads};
+
+@group(0) @binding(0)
+var<storage, read_write> output : array<u32>;
+
+@group(0) @binding(1)
+var<storage, read_write> compare : array<u32>;
+
+@compute @workgroup_size(${t.params.sizes[0]}, ${t.params.sizes[1]}, ${t.params.sizes[2]})
+fn main(@builtin(subgroup_size) size : u32,
+        @builtin(workgroup_id) wgid : vec3u,
+        @builtin(local_invocation_index) lid : u32) {
+  output[lid + wgid.x * stride] = size;
+  let ballot = countOneBits(subgroupBallot());
+  let ballotSize = ballot[0] + ballot[1] + ballot[2] + ballot[3];
+  compare[lid + wgid.x * stride] = ballotSize;
+}`;
+
+    const numInvocations = wgThreads * t.params.numWGs;
+    const sizesBuffer = t.makeBufferWithContents(
+      new Uint32Array([...iterRange(numInvocations, x => 0)]),
+      GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
+    );
+    t.trackForCleanup(sizesBuffer);
+    const compareBuffer = t.makeBufferWithContents(
+      new Uint32Array([...iterRange(numInvocations, x => 0)]),
+      GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
+    );
+    t.trackForCleanup(compareBuffer);
+
+    const pipeline = t.device.createComputePipeline({
+      layout: 'auto',
+      compute: {
+        module: t.device.createShaderModule({
+          code: wgsl,
+        }),
+        entryPoint: 'main',
+      },
+    });
+    const bg = t.device.createBindGroup({
+      layout: pipeline.getBindGroupLayout(0),
+      entries: [
+        {
+          binding: 0,
+          resource: {
+            buffer: sizesBuffer,
+          },
+        },
+        {
+          binding: 1,
+          resource: {
+            buffer: compareBuffer,
+          },
+        },
+      ],
+    });
+
+    const encoder = t.device.createCommandEncoder();
+    const pass = encoder.beginComputePass();
+    pass.setPipeline(pipeline);
+    pass.setBindGroup(0, bg);
+    pass.dispatchWorkgroups(t.params.numWGs, 1, 1);
+    pass.end();
+    t.queue.submit([encoder.finish()]);
+
+    const sizesReadback = await t.readGPUBufferRangeTyped(sizesBuffer, {
+      srcByteOffset: 0,
+      type: Uint32Array,
+      typedLength: numInvocations,
+      method: 'copy',
+    });
+    const sizesData: Uint32Array = sizesReadback.data;
+
+    const compareReadback = await t.readGPUBufferRangeTyped(compareBuffer, {
+      srcByteOffset: 0,
+      type: Uint32Array,
+      typedLength: numInvocations,
+      method: 'copy',
+    });
+    const compareData: Uint32Array = compareReadback.data;
+
+    t.expectOK(checkSubgroupSizeConsistency(sizesData, compareData, minSize, maxSize, wgThreads));
+  });
+
+/**
+ * Checks that subgroup_invocation_id values are consistent.
+ *
+ * For each workgroup checks the following:
+ * 1. No id is greater subgroup size
+ * 2. Subgroups are packed such that the number of subgroups with a given id is:
+ *  - number of full subgroups
+ *  - plus 1 if the id is included in the single partial subgroup
+ *
+ * @param data The subgroup_invocation_id buffer
+ * @param subgroupSize The subgroup size
+ * @param wgSize Number of invocations per workgroup
+ * @param numWGs Number of workgroups
+ */
+function checkSubgroupInvocationIdConsistency(
+  data: Uint32Array,
+  subgroupSize: number,
+  wgSize: number,
+  numWGs: number
+): Error | undefined {
+  const partialSize = wgSize % subgroupSize;
+  const numFullSubgroups = Math.floor(wgSize / subgroupSize);
+
+  for (let wg = 0; wg < numWGs; wg++) {
+    const ids = [...iterRange(subgroupSize, x => 0)];
+    for (let i = 0; i < wgSize; i++) {
+      const idx = i + wg * wgSize;
+      const id = data[idx];
+      if (subgroupSize <= data[idx]) {
+        return new Error(`Subgroup invocation id '${id}' exceeded subgroup size '${subgroupSize}'`);
+      }
+      ids[id]++;
+    }
+    for (let i = 0; i < ids.length; i++) {
+      let expect = numFullSubgroups;
+      if (i < partialSize) {
+        expect++;
+      }
+      if (ids[i] !== expect) {
+        return new Error(
+          ErrorMsg(`Workgroup ${wg}: subgroup_invocation_id ${i} inconsistent`, ids[i], expect)
+        );
+      }
+    }
+  }
+
+  return undefined;
+}
+
+g.test('subgroup_invocation_id')
+  .desc(
+    'Tests subgroup_invocation_id values. No mapping between local_invocation_index and subgroup_invocation_id can be relied upon.'
+  )
+  .params(u =>
+    u
+      .combine('sizes', kWGSizes)
+      .beginSubcases()
+      .combine('numWGs', [1, 2] as const)
+  )
+  .beforeAllSubcases(t => {
+    t.selectDeviceOrSkipTestCase('subgroups' as GPUFeatureName);
+  })
+  .fn(async t => {
+    const wgThreads = t.params.sizes[0] * t.params.sizes[1] * t.params.sizes[2];
+    const wgsl = `
+enable subgroups;
+
+const stride = ${wgThreads};
+
+@group(0) @binding(0)
+var<storage, read_write> output : array<u32>;
+
+@group(0) @binding(1)
+var<storage, read_write> sizes : array<u32>;
+
+@compute @workgroup_size(${t.params.sizes[0]}, ${t.params.sizes[1]}, ${t.params.sizes[2]})
+fn main(@builtin(subgroup_size) size : u32,
+        @builtin(subgroup_invocation_id) id : u32,
+        @builtin(workgroup_id) wgid : vec3u,
+        @builtin(local_invocation_index) lid : u32) {
+  output[lid + stride * wgid.x] = id;
+  if (lid == 0) {
+    sizes[0] = size;
+  }
+}`;
+
+    const numInvocations = wgThreads * t.params.numWGs;
+    const outputBuffer = t.makeBufferWithContents(
+      new Uint32Array([...iterRange(numInvocations, x => 0)]),
+      GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
+    );
+    t.trackForCleanup(outputBuffer);
+    const sizeBuffer = t.makeBufferWithContents(
+      new Uint32Array([0]),
+      GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
+    );
+    t.trackForCleanup(sizeBuffer);
+
+    const pipeline = t.device.createComputePipeline({
+      layout: 'auto',
+      compute: {
+        module: t.device.createShaderModule({
+          code: wgsl,
+        }),
+        entryPoint: 'main',
+      },
+    });
+    const bg = t.device.createBindGroup({
+      layout: pipeline.getBindGroupLayout(0),
+      entries: [
+        {
+          binding: 0,
+          resource: {
+            buffer: outputBuffer,
+          },
+        },
+        {
+          binding: 1,
+          resource: {
+            buffer: sizeBuffer,
+          },
+        },
+      ],
+    });
+
+    const encoder = t.device.createCommandEncoder();
+    const pass = encoder.beginComputePass();
+    pass.setPipeline(pipeline);
+    pass.setBindGroup(0, bg);
+    pass.dispatchWorkgroups(t.params.numWGs, 1, 1);
+    pass.end();
+    t.queue.submit([encoder.finish()]);
+
+    const sizeReadback = await t.readGPUBufferRangeTyped(sizeBuffer, {
+      srcByteOffset: 0,
+      type: Uint32Array,
+      typedLength: 1,
+      method: 'copy',
+    });
+    const sizeData: Uint32Array = sizeReadback.data;
+
+    const outputReadback = await t.readGPUBufferRangeTyped(outputBuffer, {
+      srcByteOffset: 0,
+      type: Uint32Array,
+      typedLength: numInvocations,
+      method: 'copy',
+    });
+    const outputData: Uint32Array = outputReadback.data;
+
+    t.expectOK(
+      checkSubgroupInvocationIdConsistency(outputData, sizeData[0], wgThreads, t.params.numWGs)
+    );
   });
