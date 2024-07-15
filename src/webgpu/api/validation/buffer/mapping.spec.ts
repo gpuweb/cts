@@ -943,7 +943,7 @@ g.test('getMappedRange,disjointRanges')
     t.testGetMappedRangeCall(success, buffer, offset2, size2);
   });
 
-g.test('getMappedRange,disjoinRanges_many')
+g.test('getMappedRange,disjointRanges_many')
   .desc('Test getting a lot of small ranges, and that the disjoint check checks them all.')
   .fn(async t => {
     const kStride = 256;
