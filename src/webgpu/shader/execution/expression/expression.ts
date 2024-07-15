@@ -413,7 +413,7 @@ export async function run(
     };
     const checkBatch = await submitBatch(t, shaderBuilder, shaderBuilderParams, pipelineCache);
     checkBatch();
-    void t.queue.onSubmittedWorkDone().finally(batchFinishedCallback);
+    await t.queue.onSubmittedWorkDone();
   };
 
   const pendingBatches = [];
@@ -430,7 +430,7 @@ export async function run(
     }
     batchesInFlight += 1;
 
-    pendingBatches.push(processBatch(batchCases));
+    pendingBatches.push(processBatch(batchCases).finally(batchFinishedCallback));
   }
 
   await Promise.all(pendingBatches);
