@@ -15,6 +15,7 @@ import {
   kConcreteNumericScalarsAndVectors,
   Type,
   VectorType,
+  elementTypeOf,
 } from '../../../../../util/conversion.js';
 
 export const g = makeTestGroup(GPUTest);
@@ -78,7 +79,7 @@ g.test('data_types')
     const type = kDataTypes[t.params.type];
     let enables = 'enable subgroups;\n';
     if (type.requiresF16()) {
-      enables += 'enable f16;\nenable subgroups-f16;\n';
+      enables += 'enable f16;\nenable subgroups_f16;\n';
     }
 
     // Compatibility mode has lower workgroup limits.
@@ -121,7 +122,8 @@ var<storage, read_write> output : array<atomic<u32>>;
 fn main(@builtin(local_invocation_index) lid : u32,
         @builtin(subgroup_invocation_id) id : u32,
         @builtin(subgroup_size) subgroupSize : u32) {
-  let v = ${type.toString()}(id);
+  let scalar = ${elementTypeOf(type).toString()}(id);
+  let v = ${type.toString()}(scalar);
   let b = ${outputType.toString()}(subgroupBroadcast(v, ${t.params.id}));
   ${updates}
   if (lid == 0) {
@@ -310,3 +312,6 @@ fn main(@builtin(subgroup_invocation_id) id : u32,
     expect.fill(values[t.params.inputId]);
     t.expectGPUBufferValuesEqual(outputBuffer, new Uint32Array(expect));
   });
+
+g.test('dynamically_uniform_id')
+  .unimplemented()
