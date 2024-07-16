@@ -408,7 +408,20 @@ g.test('subgroup_size')
     const minSize = 4;
     const maxSize = 128;
 
+    // Compatibility mode has lower workgroup limits.
     const wgThreads = t.params.sizes[0] * t.params.sizes[1] * t.params.sizes[2];
+    const {
+      maxComputeInvocationsPerWorkgroup,
+      maxComputeWorkgroupSizeX,
+      maxComputeWorkgroupSizeY,
+    } = t.device.limits;
+    t.skipIf(
+      maxComputeInvocationsPerWorkgroup < wgThreads ||
+        maxComputeWorkgroupSizeX < t.params.sizes[0] ||
+        maxComputeWorkgroupSizeY < t.params.sizes[1],
+      'Workgroup size too large'
+    );
+
     const wgsl = `
 enable subgroups;
 
@@ -500,7 +513,7 @@ fn main(@builtin(subgroup_size) size : u32,
  * Checks that subgroup_invocation_id values are consistent.
  *
  * For each workgroup checks the following:
- * 1. No id is greater subgroup size
+ * 1. No id is greater than subgroup size
  * 2. Subgroups are packed such that the number of subgroups with a given id is:
  *  - number of full subgroups
  *  - plus 1 if the id is included in the single partial subgroup
@@ -560,6 +573,20 @@ g.test('subgroup_invocation_id')
   })
   .fn(async t => {
     const wgThreads = t.params.sizes[0] * t.params.sizes[1] * t.params.sizes[2];
+
+    // Compatibility mode has lower workgroup limits.
+    const {
+      maxComputeInvocationsPerWorkgroup,
+      maxComputeWorkgroupSizeX,
+      maxComputeWorkgroupSizeY,
+    } = t.device.limits;
+    t.skipIf(
+      maxComputeInvocationsPerWorkgroup < wgThreads ||
+        maxComputeWorkgroupSizeX < t.params.sizes[0] ||
+        maxComputeWorkgroupSizeY < t.params.sizes[1],
+      'Workgroup size too large'
+    );
+
     const wgsl = `
 enable subgroups;
 
