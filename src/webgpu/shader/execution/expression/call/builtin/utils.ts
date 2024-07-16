@@ -67,6 +67,27 @@ export function isLevelSpecNegative(levelSpec: LevelSpec) {
   return levelSpec === -1;
 }
 
+export type LayerSpec = -1 | 0 | 'numLayers-1' | 'numLayers';
+
+export function getLayerFromLayerSpec(arrayLayerCount: number, layerSpec: LayerSpec): number {
+  switch (layerSpec) {
+    case -1:
+      return -1;
+    case 0:
+      return 0;
+    case 'numLayers':
+      return arrayLayerCount;
+    case 'numLayers-1':
+      return arrayLayerCount - 1;
+    default:
+      unreachable();
+  }
+}
+
+export function isLayerSpecNegative(layerSpec: LayerSpec) {
+  return layerSpec === -1;
+}
+
 function getCoordForSize(size: [number, number, number], boundary: Boundary) {
   const coord = size.map(v => Math.floor(v / 2));
   switch (boundary) {
