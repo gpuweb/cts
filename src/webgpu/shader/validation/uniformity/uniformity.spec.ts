@@ -263,6 +263,14 @@ const kFragmentBuiltinValues = [
     builtin: `sample_mask`,
     type: `u32`,
   },
+  {
+    builtin: `subgroup_invocation_id`,
+    type: `u32`,
+  },
+  {
+    builtin: `subgroup_size`,
+    type: `u32`,
+  },
 ];
 
 g.test('fragment_builtin_values')
@@ -337,6 +345,16 @@ const kComputeBuiltinValues = [
   {
     builtin: `num_workgroups`,
     type: `vec3<u32>`,
+    uniform: true,
+  },
+  {
+    builtin: `subgroup_invocation_id`,
+    type: `u32`,
+    uniform: false,
+  },
+  {
+    builtin: `subgroup_size`,
+    type: `u32`,
     uniform: true,
   },
 ];

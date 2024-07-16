@@ -313,5 +313,4 @@ fn main(@builtin(subgroup_invocation_id) id : u32,
     t.expectGPUBufferValuesEqual(outputBuffer, new Uint32Array(expect));
   });
 
-g.test('dynamically_uniform_id')
-  .unimplemented()
+g.test('dynamically_uniform_id').unimplemented();

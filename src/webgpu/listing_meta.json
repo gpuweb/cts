@@ -1523,6 +1523,7 @@
   "webgpu:shader,execution,expression,call,builtin,step:f32:*": { "subcaseMS": 291.363 },
   "webgpu:shader,execution,expression,call,builtin,storageBarrier:barrier:*": { "subcaseMS": 0.801 },
   "webgpu:shader,execution,expression,call,builtin,storageBarrier:stage:*": { "subcaseMS": 2.402 },
+  "webgpu:shader,execution,expression,call,builtin,subgroupBallot:split:*": { "subcaseMS": 38.740 },
   "webgpu:shader,execution,expression,call,builtin,subgroupBroadcast:data_types:*": { "subcaseMS": 252.374 },
   "webgpu:shader,execution,expression,call,builtin,subgroupBroadcast:workgroup_uniform_load:*": { "subcaseMS": 109.832 },
   "webgpu:shader,execution,expression,call,builtin,tan:abstract_float:*": { "subcaseMS": 17043.428 },
