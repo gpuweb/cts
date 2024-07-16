@@ -4,7 +4,7 @@ This test dedicatedly tests validation of GPUDepthStencilState of createRenderPi
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { unreachable } from '../../../../common/util/util.js';
-import { kCompareFunctions, kStencilOperations } from '../../../capability_info.js';
+import { kCompareFunctions, kPrimitiveTopology, kStencilOperations } from '../../../capability_info.js';
 import {
   kAllTextureFormats,
   kTextureFormatInfo,
@@ -203,6 +203,37 @@ g.test('depth_write,frag_depth')
 
     const hasDepth = format ? !!kTextureFormatInfo[format].depth : false;
     t.doCreateRenderPipelineTest(isAsync, hasDepth, descriptor);
+  });
+
+g.test('depth_bias')
+  .desc(
+    `Depth bias parameters are only valid with triangle topologies.`
+  )
+  .params(u =>
+    u
+      .combine('isAsync', [false, true])
+      .combine('topology', kPrimitiveTopology)
+      .beginSubcases()
+      .combine('depthBias', [undefined, 0, 1])
+      .combine('depthBiasSlopeScale', [undefined, 0, 1])
+      .combine('depthBiasClamp', [undefined, 0, 1])
+  )
+  .fn(t => {
+    const { isAsync, topology, depthBias, depthBiasSlopeScale, depthBiasClamp } = t.params;
+
+    const isTriangleTopology = topology == 'triangle-list' || topology == 'triangle-strip';
+    const hasDepthBias = !!depthBias || !!depthBiasSlopeScale || !!depthBiasClamp;
+
+    const descriptor = t.getDescriptor({
+      primitive: { topology },
+      depthStencil: {
+        format: 'depth24plus',
+        depthWriteEnabled: true,
+        depthCompare: 'less-equal',
+        depthBias, depthBiasSlopeScale, depthBiasClamp
+      },
+    });
+    t.doCreateRenderPipelineTest(isAsync, !hasDepthBias || isTriangleTopology, descriptor);
   });
 
 g.test('stencil_test')
