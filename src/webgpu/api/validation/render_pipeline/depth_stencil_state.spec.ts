@@ -216,15 +216,19 @@ g.test('depth_bias')
       .combine('isAsync', [false, true])
       .combine('topology', kPrimitiveTopology)
       .beginSubcases()
-      .combine('depthBias', [undefined, 0, 1])
-      .combine('depthBiasSlopeScale', [undefined, 0, 1])
-      .combine('depthBiasClamp', [undefined, 0, 1])
+      .combineWithParams([
+        {},
+        ...u.combine('depthBias', [-1, 0, 1]),
+        ...u.combine('depthBiasSlopeScale', [-1, 0, 1]),
+        ...u.combine('depthBiasClamp', [-1, 0, 1]),
+      ])
   )
   .fn(t => {
     const { isAsync, topology, depthBias, depthBiasSlopeScale, depthBiasClamp } = t.params;
 
     const isTriangleTopology = topology === 'triangle-list' || topology === 'triangle-strip';
     const hasDepthBias = !!depthBias || !!depthBiasSlopeScale || !!depthBiasClamp;
+    const shouldSucceed = !hasDepthBias || isTriangleTopology;
 
     const descriptor = t.getDescriptor({
       primitive: { topology },
@@ -237,7 +241,7 @@ g.test('depth_bias')
         depthBiasClamp,
       },
     });
-    t.doCreateRenderPipelineTest(isAsync, !hasDepthBias || isTriangleTopology, descriptor);
+    t.doCreateRenderPipelineTest(isAsync, shouldSucceed, descriptor);
   });
 
 g.test('stencil_test')
