@@ -218,9 +218,15 @@ g.test('depth_bias')
       .beginSubcases()
       .combineWithParams([
         {},
-        ...u.combine('depthBias', [-1, 0, 1]),
-        ...u.combine('depthBiasSlopeScale', [-1, 0, 1]),
-        ...u.combine('depthBiasClamp', [-1, 0, 1]),
+        { depthBias: -1 },
+        { depthBias: 0 },
+        { depthBias: 1 },
+        { depthBiasSlopeScale: -1 },
+        { depthBiasSlopeScale: 0 },
+        { depthBiasSlopeScale: 1 },
+        { depthBiasClamp: -1 },
+        { depthBiasClamp: 0 },
+        { depthBiasClamp: 1 },
       ])
   )
   .fn(t => {
