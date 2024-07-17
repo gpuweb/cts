@@ -258,6 +258,8 @@ g.test('inputs')
 
 /**
  * @returns The population count of input.
+ *
+ * @param input Treated as an unsigned 32-bit integer
  */
 function popcount(input: number): number {
   let n = input;
@@ -310,10 +312,10 @@ function checkSubgroupSizeConsistency(
   }
 
   // Assumes workgroups are divided such that there is a single partial subgroup if any.
-  const partialSize = invocations % subgroupSize;
-  let fullSize = 0;
+  const partialExpected = invocations % subgroupSize;
+  let fullExpected = 0;
   if (subgroupSize <= invocations) {
-    fullSize = Math.floor(invocations / subgroupSize) * subgroupSize;
+    fullExpected = Math.floor(invocations / subgroupSize) * subgroupSize;
   }
   let fullCount = 0;
   let partialCount = 0;
@@ -321,12 +323,14 @@ function checkSubgroupSizeConsistency(
     if (i % invocations === 0) {
       if (i !== 0) {
         // Check intermediate workgroup counts.
-        if (fullCount !== fullSize) {
-          return new Error(ErrorMsg(`Unexpected number of full invocations`, fullCount, fullSize));
-        }
-        if (partialCount !== partialSize) {
+        if (fullCount !== fullExpected) {
           return new Error(
-            ErrorMsg(`Unexpected number of partial invocations`, partialCount, partialSize)
+            ErrorMsg(`Unexpected number of full invocations`, fullCount, fullExpected)
+          );
+        }
+        if (partialCount !== partialExpected) {
+          return new Error(
+            ErrorMsg(`Unexpected number of partial invocations`, partialCount, partialExpected)
           );
         }
       }
@@ -342,19 +346,19 @@ function checkSubgroupSizeConsistency(
       partialCount++;
 
       // Check that all partial invocations are consistent.
-      if (compare[i] !== partialSize) {
-        return new Error(ErrorMsg(`Partial subgroup size incorrect`, compare[i], partialSize));
+      if (compare[i] !== partialExpected) {
+        return new Error(ErrorMsg(`Partial subgroup size incorrect`, compare[i], partialExpected));
       }
     }
   }
 
   // Check final workgroup counts.
-  if (fullCount !== fullSize) {
-    return new Error(ErrorMsg(`Unexpected number of full invocations`, fullCount, fullSize));
+  if (fullCount !== fullExpected) {
+    return new Error(ErrorMsg(`Unexpected number of full invocations`, fullCount, fullExpected));
   }
-  if (partialCount !== partialSize) {
+  if (partialCount !== partialExpected) {
     return new Error(
-      ErrorMsg(`Unexpected number of partial invocations`, partialCount, partialSize)
+      ErrorMsg(`Unexpected number of partial invocations`, partialCount, partialExpected)
     );
   }
 
@@ -414,11 +418,13 @@ g.test('subgroup_size')
       maxComputeInvocationsPerWorkgroup,
       maxComputeWorkgroupSizeX,
       maxComputeWorkgroupSizeY,
+      maxComputeWorkgroupSizeZ,
     } = t.device.limits;
     t.skipIf(
       maxComputeInvocationsPerWorkgroup < wgThreads ||
         maxComputeWorkgroupSizeX < t.params.sizes[0] ||
-        maxComputeWorkgroupSizeY < t.params.sizes[1],
+        maxComputeWorkgroupSizeY < t.params.sizes[1] ||
+        maxComputeWorkgroupSizeZ < t.params.sizes[2],
       'Workgroup size too large'
     );
 
@@ -514,7 +520,7 @@ fn main(@builtin(subgroup_size) size : u32,
  *
  * For each workgroup checks the following:
  * 1. No id is greater than subgroup size
- * 2. Subgroups are packed such that the number of subgroups with a given id is:
+ * 2. Subgroups are packed such that the number of subgroups with an invocation having a given id is:
  *  - number of full subgroups
  *  - plus 1 if the id is included in the single partial subgroup
  *
@@ -579,11 +585,13 @@ g.test('subgroup_invocation_id')
       maxComputeInvocationsPerWorkgroup,
       maxComputeWorkgroupSizeX,
       maxComputeWorkgroupSizeY,
+      maxComputeWorkgroupSizeZ,
     } = t.device.limits;
     t.skipIf(
       maxComputeInvocationsPerWorkgroup < wgThreads ||
         maxComputeWorkgroupSizeX < t.params.sizes[0] ||
-        maxComputeWorkgroupSizeY < t.params.sizes[1],
+        maxComputeWorkgroupSizeY < t.params.sizes[1] ||
+        maxComputeWorkgroupSizeZ < t.params.sizes[2],
       'Workgroup size too large'
     );
 
@@ -605,7 +613,7 @@ fn main(@builtin(subgroup_size) size : u32,
         @builtin(local_invocation_index) lid : u32) {
   output[lid + stride * wgid.x] = id;
   if (lid == 0) {
-    sizes[0] = size;
+    sizes[wgid.x] = size;
   }
 }`;
 
@@ -616,7 +624,7 @@ fn main(@builtin(subgroup_size) size : u32,
     );
     t.trackForCleanup(outputBuffer);
     const sizeBuffer = t.makeBufferWithContents(
-      new Uint32Array([0]),
+      new Uint32Array([...iterRange(t.params.numWGs, x => 0)]),
       GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
     );
     t.trackForCleanup(sizeBuffer);

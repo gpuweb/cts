@@ -16,6 +16,7 @@ import { GPUTest } from '../../../../../gpu_test.js';
 
 export const g = makeTestGroup(GPUTest);
 
+// 128 is the maximum possible subgroup size.
 const kInvocations = 128;
 
 function getMask(size: number): bigint {
@@ -103,7 +104,7 @@ function checkBallots(
   return undefined;
 }
 
-g.test('split')
+g.test('compute,split')
   .desc('Tests ballot in a split subgroup')
   .params(u => u.combine('case', keysOf(kCases)))
   .beforeAllSubcases(t => {
@@ -200,3 +201,9 @@ fn main(@builtin(subgroup_size) subgroupSize : u32,
 
     t.expectOK(checkBallots(output, subgroupSize, testcase.filter, testcase.expect));
   });
+
+g.test('fragment,split').unimplemented();
+
+g.test('predicate')
+  .desc('Tests the predicate parameter with different const-ness and uniformity')
+  .unimplemented();

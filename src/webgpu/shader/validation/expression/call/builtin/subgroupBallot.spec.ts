@@ -102,7 +102,7 @@ g.test('return_type')
 ${enables}
 @compute @workgroup_size(1)
 fn main() {
-  let res : ${type.toString()} = subgroupBallot(${Type.bool.create(0).wgsl()});
+  let res : ${type.toString()} = subgroupBallot(true);
 }`;
 
     t.expectCompileResult(type === Type.vec4u, wgsl);
@@ -139,8 +139,7 @@ fn main() -> @builtin(position) vec4f {
   return vec4f();
 }`;
 
-    const entry =
-      t.params.stage === 'compute' ? compute : t.params.stage === 'fragment' ? fragment : vertex;
+    const entry = { compute, fragment, vertex }[t.params.stage];
     const wgsl = `
 enable subgroups;
 fn foo() {

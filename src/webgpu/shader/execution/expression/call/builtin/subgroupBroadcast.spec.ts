@@ -88,11 +88,13 @@ g.test('data_types')
       maxComputeInvocationsPerWorkgroup,
       maxComputeWorkgroupSizeX,
       maxComputeWorkgroupSizeY,
+      maxComputeWorkgroupSizeZ,
     } = t.device.limits;
     t.skipIf(
       maxComputeInvocationsPerWorkgroup < wgThreads ||
         maxComputeWorkgroupSizeX < t.params.wgSize[0] ||
-        maxComputeWorkgroupSizeY < t.params.wgSize[1],
+        maxComputeWorkgroupSizeY < t.params.wgSize[1] ||
+        maxComputeWorkgroupSizeZ < t.params.wgSize[2],
       'Workgroup size too large'
     );
 
@@ -109,6 +111,7 @@ g.test('data_types')
       }
     }
 
+    // This test should be expanded to cover large input values for each type instead of just conversions to u32.
     const wgsl = `
 ${enables}
 
@@ -226,11 +229,13 @@ g.test('workgroup_uniform_load')
       maxComputeInvocationsPerWorkgroup,
       maxComputeWorkgroupSizeX,
       maxComputeWorkgroupSizeY,
+      maxComputeWorkgroupSizeZ,
     } = t.device.limits;
     t.skipIf(
       maxComputeInvocationsPerWorkgroup < wgThreads ||
         maxComputeWorkgroupSizeX < t.params.wgSize[0] ||
-        maxComputeWorkgroupSizeY < t.params.wgSize[1],
+        maxComputeWorkgroupSizeY < t.params.wgSize[1] ||
+        maxComputeWorkgroupSizeZ < t.params.wgSize[2],
       'Workgroup size too large'
     );
 

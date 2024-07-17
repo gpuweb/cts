@@ -16,6 +16,27 @@ export const g = makeTestGroup(ShaderValidationTest);
 
 const kArgumentTypes = objectsToRecord(kAllScalarsAndVectors);
 
+g.test('early_eval')
+  .desc('Ensures the builtin is not able to be compile time evaluated')
+  .unimplemented();
+
+g.test('must_use')
+  .desc('Tests that the builtin has the @must_use attribute')
+  .params(u => u.combine('must_use', [true, false] as const))
+  .beforeAllSubcases(t => {
+    t.selectDeviceOrSkipTestCase('subgroups' as GPUFeatureName);
+  })
+  .fn(t => {
+    const wgsl = `
+enable subgroups;
+@compute @workgroup_size(16)
+fn main() {
+  ${t.params.must_use ? '_ = ' : ''}subgroupBroadcast(0, 0);
+}`;
+
+    t.expectCompileResult(t.params.must_use, wgsl);
+  });
+
 g.test('data_type')
   .desc('Validates data parameter type')
   .params(u => u.combine('type', keysOf(kArgumentTypes)))
@@ -106,7 +127,7 @@ fn main() {
   _ = subgroupBroadcast(0, ${type.create(0).wgsl()});
 }`;
 
-    const expect = isConvertible(type, Type.u32);
+    const expect = isConvertible(type, Type.u32) || isConvertible(type, Type.i32);
     t.expectCompileResult(expect, wgsl);
   });
 
@@ -136,8 +157,7 @@ fn main() -> @builtin(position) vec4f {
   return vec4f();
 }`;
 
-    const entry =
-      t.params.stage === 'compute' ? compute : t.params.stage === 'fragment' ? fragment : vertex;
+    const entry = { compute, fragment, vertex }[t.params.stage];
     const wgsl = `
 enable subgroups;
 fn foo() {
