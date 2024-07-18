@@ -1856,6 +1856,8 @@
   "webgpu:shader,execution,shader_io,fragment_builtins:inputs,position:*": { "subcaseMS": 1.001 },
   "webgpu:shader,execution,shader_io,fragment_builtins:inputs,sample_index:*": { "subcaseMS": 1.001 },
   "webgpu:shader,execution,shader_io,fragment_builtins:inputs,sample_mask:*": { "subcaseMS": 1.001 },
+  "webgpu:shader,execution,shader_io,fragment_builtins:subgroup_invocation_id:*": { "subcaseMS": 0.086 },
+  "webgpu:shader,execution,shader_io,fragment_builtins:subgroup_size:*": { "subcaseMS": 0.232 },
   "webgpu:shader,execution,shader_io,shared_structs:shared_between_stages:*": { "subcaseMS": 9.601 },
   "webgpu:shader,execution,shader_io,shared_structs:shared_with_buffer:*": { "subcaseMS": 20.701 },
   "webgpu:shader,execution,shader_io,shared_structs:shared_with_non_entry_point_function:*": { "subcaseMS": 6.801 },
