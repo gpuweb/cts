@@ -79,7 +79,8 @@ function checkBallots(
   data: Uint32Array,
   subgroupSize: number,
   filter: (id: number, s: number) => boolean,
-  expect: (s: number) => bigint
+  expect: (s: number) => bigint,
+  allActive: boolean
 ): Error | undefined {
   for (let i = 0; i < kInvocations; i++) {
     const idx = i * 4;
@@ -89,7 +90,7 @@ function checkBallots(
     }
     let expectedResult = expect(subgroupSize);
     const subgroupId = i % subgroupSize;
-    if (!filter(subgroupId, subgroupSize)) {
+    if (!allActive && !filter(subgroupId, subgroupSize)) {
       expectedResult = 0n;
     }
     if (expectedResult !== actual) {
@@ -199,11 +200,103 @@ fn main(@builtin(subgroup_size) subgroupSize : u32,
     });
     const output = outputReadback.data;
 
-    t.expectOK(checkBallots(output, subgroupSize, testcase.filter, testcase.expect));
+    t.expectOK(checkBallots(output, subgroupSize, testcase.filter, testcase.expect, false));
   });
 
 g.test('fragment,split').unimplemented();
 
 g.test('predicate')
-  .desc('Tests the predicate parameter with different const-ness and uniformity')
-  .unimplemented();
+  .desc('Tests the predicate parameter')
+  .params(u => u.combine('case', keysOf(kCases)))
+  .beforeAllSubcases(t => {
+    t.selectDeviceOrSkipTestCase('subgroups' as GPUFeatureName);
+  })
+  .fn(async t => {
+    const testcase = kCases[t.params.case];
+    const wgsl = `
+enable subgroups;
+
+@group(0) @binding(0)
+var<storage, read_write> size : u32;
+
+@group(0) @binding(1)
+var<storage, read_write> output : array<vec4u>;
+
+@compute @workgroup_size(${kInvocations})
+fn main(@builtin(subgroup_size) subgroupSize : u32,
+        @builtin(subgroup_invocation_id) id : u32,
+        @builtin(local_invocation_index) lid : u32) {
+  if (lid == 0) {
+    size = subgroupSize;
+  }
+  let cond = ${testcase.cond};
+  let b = subgroupBallot(cond);
+  output[lid] = b;
+}`;
+
+    const sizeBuffer = t.makeBufferWithContents(
+      new Uint32Array([0]),
+      GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE
+    );
+    t.trackForCleanup(sizeBuffer);
+
+    const outputNumInts = kInvocations * 4;
+    const outputBuffer = t.makeBufferWithContents(
+      new Uint32Array([...iterRange(outputNumInts, x => 0)]),
+      GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE
+    );
+    t.trackForCleanup(outputBuffer);
+
+    const pipeline = t.device.createComputePipeline({
+      layout: 'auto',
+      compute: {
+        module: t.device.createShaderModule({
+          code: wgsl,
+        }),
+        entryPoint: 'main',
+      },
+    });
+    const bg = t.device.createBindGroup({
+      layout: pipeline.getBindGroupLayout(0),
+      entries: [
+        {
+          binding: 0,
+          resource: {
+            buffer: sizeBuffer,
+          },
+        },
+        {
+          binding: 1,
+          resource: {
+            buffer: outputBuffer,
+          },
+        },
+      ],
+    });
+
+    const encoder = t.device.createCommandEncoder();
+    const pass = encoder.beginComputePass();
+    pass.setPipeline(pipeline);
+    pass.setBindGroup(0, bg);
+    pass.dispatchWorkgroups(1, 1, 1);
+    pass.end();
+    t.queue.submit([encoder.finish()]);
+
+    const sizeReadback = await t.readGPUBufferRangeTyped(sizeBuffer, {
+      srcByteOffset: 0,
+      type: Uint32Array,
+      typedLength: 1,
+      method: 'copy',
+    });
+    const subgroupSize = sizeReadback.data[0];
+
+    const outputReadback = await t.readGPUBufferRangeTyped(outputBuffer, {
+      srcByteOffset: 0,
+      type: Uint32Array,
+      typedLength: outputNumInts,
+      method: 'copy',
+    });
+    const output = outputReadback.data;
+
+    t.expectOK(checkBallots(output, subgroupSize, testcase.filter, testcase.expect, true));
+  });
