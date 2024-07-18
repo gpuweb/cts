@@ -166,7 +166,9 @@ function getTextureFormatTypeInfo(format: GPUTextureFormat) {
  * eg: `getTextureType('texture_2d', someUnsignedIntTextureFormat)` -> `texture_2d<u32>`
  */
 export function appendComponentTypeForFormatToTextureType(base: string, format: GPUTextureFormat) {
-  return `${base}<${getTextureFormatTypeInfo(format).componentType}>`;
+  return base.includes('depth')
+    ? base
+    : `${base}<${getTextureFormatTypeInfo(format).componentType}>`;
 }
 
 /**
@@ -217,8 +219,8 @@ export type Dimensionality = vec1 | vec2 | vec3;
 type TextureCallArgKeys = keyof TextureCallArgs<vec1>;
 const kTextureCallArgNames: TextureCallArgKeys[] = [
   'coords',
-  'mipLevel',
   'arrayIndex',
+  'mipLevel',
   'ddx',
   'ddy',
   'offset',
@@ -238,6 +240,7 @@ export interface TextureCall<T extends Dimensionality> extends TextureCallArgs<T
   builtin: 'textureSample' | 'textureLoad';
   coordType: 'f' | 'i' | 'u';
   levelType?: 'i' | 'u';
+  arrayIndexType?: 'i' | 'u';
 }
 
 function toArray(coords: Dimensionality): number[] {
@@ -337,6 +340,14 @@ function convertResultFormatToTexelViewFormat(
   return out;
 }
 
+function zeroValuePerTexelComponent(components: TexelComponent[]) {
+  const out: PerTexelComponent<number> = {};
+  for (const component of components) {
+    out[component] = 0;
+  }
+  return out;
+}
+
 /**
  * Returns the expect value for a WGSL builtin texture function for a single
  * mip level
@@ -364,7 +375,7 @@ export function softwareTextureReadMipLevel<T extends Dimensionality>(
     texture.texels[mipLevel].color({
       x: Math.floor(at[0]),
       y: Math.floor(at[1] ?? 0),
-      z: Math.floor(at[2] ?? 0),
+      z: call.arrayIndex ?? Math.floor(at[2] ?? 0),
     });
 
   const isCube = texture.viewDescriptor.dimension === 'cube';
@@ -513,8 +524,10 @@ export function softwareTextureReadMipLevel<T extends Dimensionality>(
       return convertPerTexelComponentToResultFormat(out, format);
     }
     case 'textureLoad': {
-      const c = applyAddressModesToCoords(addressMode, textureSize, call.coords!);
-      return convertPerTexelComponentToResultFormat(load(c), format);
+      const out: PerTexelComponent<number> = isOutOfBoundsCall(texture, call)
+        ? zeroValuePerTexelComponent(rep.componentOrder)
+        : load(call.coords!);
+      return convertPerTexelComponentToResultFormat(out, format);
     }
   }
 }
@@ -780,7 +793,9 @@ export async function checkCallResults<T extends Dimensionality>(
       const relDiff = absDiff / Math.max(Math.abs(g), Math.abs(e));
       if (ulpDiff > 3 && absDiff > maxFractionalDiff) {
         const desc = describeTextureCall(call);
+        const size = reifyExtent3D(texture.descriptor.size);
         errs.push(`component was not as expected:
+      size: [${size.width}, ${size.height}, ${size.depthOrArrayLayers}]
       call: ${desc}  // #${callIdx}
  component: ${component}
        got: ${g}
@@ -2194,7 +2209,12 @@ function buildBinnedCalls<T extends Dimensionality>(calls: TextureCall<T>[]) {
       if (name === 'offset') {
         args.push(`/* offset */ ${wgslExpr(value)}`);
       } else {
-        const type = name === 'mipLevel' ? prototype.levelType! : prototype.coordType;
+        const type =
+          name === 'mipLevel'
+            ? prototype.levelType!
+            : name === 'arrayIndex'
+            ? prototype.arrayIndexType!
+            : prototype.coordType;
         args.push(`args.${name}`);
         fields.push(`@align(16) ${name} : ${wgslTypeFor(value, type)}`);
       }
@@ -2263,6 +2283,8 @@ export function describeTextureCall<T extends Dimensionality>(call: TextureCall<
         args.push(`${name}: ${wgslExprFor(value, call.coordType)}`);
       } else if (name === 'mipLevel') {
         args.push(`${name}: ${wgslExprFor(value, call.levelType!)}`);
+      } else if (name === 'arrayIndex') {
+        args.push(`${name}: ${wgslExprFor(value, call.arrayIndexType!)}`);
       } else {
         args.push(`${name}: ${wgslExpr(value)}`);
       }
@@ -2325,7 +2347,10 @@ export async function doTextureCalls<T extends Dimensionality>(
   });
   t.device.queue.writeBuffer(dataBuffer, 0, new Uint32Array(data));
 
-  const { resultType, resultFormat } = getTextureFormatTypeInfo(gpuTexture.format);
+  const { resultType, resultFormat, componentType } = textureType.includes('depth')
+    ? ({ resultType: 'f32', resultFormat: 'rgba32float', componentType: 'f32' } as const)
+    : getTextureFormatTypeInfo(gpuTexture.format);
+  const returnType = `vec4<${componentType}>`;
 
   const rtWidth = 256;
   const renderTarget = t.createTextureTracked({
@@ -2355,11 +2380,11 @@ ${sampler ? '@group(0) @binding(1) var          S    : sampler' : ''};
 @group(0) @binding(2) var<storage> data : Data;
 
 @fragment
-fn fs_main(@builtin(position) frag_pos : vec4f) -> @location(0) ${resultType} {
+fn fs_main(@builtin(position) frag_pos : vec4f) -> @location(0) ${returnType} {
   let frag_idx = u32(frag_pos.x) + u32(frag_pos.y) * ${renderTarget.width};
   var result : ${resultType};
 ${body}
-  return result;
+  return ${returnType}(result);
 }
 `;
 
