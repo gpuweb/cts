@@ -315,9 +315,9 @@ g.test('partial_eval_errors')
     }
     const wgsl = `
 override o = 0u;
-fn foo() {
+fn foo() -> ${t.params.type} {
   var v : ${t.params.type} = 0;
-  let tmp = v ${t.params.op} ${rhs};
+  return v ${t.params.op} ${rhs};
 }`;
 
     const expect = t.params.value < 32;
@@ -330,7 +330,7 @@ fn foo() {
         expectedResult: expect,
         code: wgsl,
         constants,
-        reference: ['o'],
+        reference: ['o', 'foo()'],
       });
     }
   });
