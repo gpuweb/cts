@@ -444,7 +444,7 @@ fn main(@builtin(subgroup_size) size : u32,
         @builtin(workgroup_id) wgid : vec3u,
         @builtin(local_invocation_index) lid : u32) {
   output[lid + wgid.x * stride] = size;
-  let ballot = countOneBits(subgroupBallot());
+  let ballot = countOneBits(subgroupBallot(true));
   let ballotSize = ballot[0] + ballot[1] + ballot[2] + ballot[3];
   compare[lid + wgid.x * stride] = ballotSize;
 }`;

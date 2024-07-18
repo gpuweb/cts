@@ -129,7 +129,7 @@ fn main(@builtin(subgroup_size) subgroupSize : u32,
     size = subgroupSize;
   }
   if ${testcase.cond} {
-    output[lid] = subgroupBallot();
+    output[lid] = subgroupBallot(true);
   } else {
     return;
   }
