@@ -16,9 +16,34 @@ export const g = makeTestGroup(ShaderValidationTest);
 
 const kArgumentTypes = objectsToRecord(kAllScalarsAndVectors);
 
+const kStages: Record<string, string> = {
+  constant: `
+enable subgroups;
+@compute @workgroup_size(16)
+fn main() {
+  const x = subgroupBroadcast(0, 0);
+}`,
+  override: `
+enable subgroups;
+override o = subgroupBroadcast(0, 0);`,
+  runtime: `
+enable subgroups;
+@compute @workgroup_size(16)
+fn main() {
+  let x = subgroupBroadcast(0, 0);
+}`,
+};
+
 g.test('early_eval')
   .desc('Ensures the builtin is not able to be compile time evaluated')
-  .unimplemented();
+  .params(u => u.combine('stage', keysOf(kStages)))
+  .beforeAllSubcases(t => {
+    t.selectDeviceOrSkipTestCase('subgroups' as GPUFeatureName);
+  })
+  .fn(t => {
+    const code = kStages[t.params.stage];
+    t.expectCompileResult(t.params.stage === 'runtime', code);
+  });
 
 g.test('must_use')
   .desc('Tests that the builtin has the @must_use attribute')

@@ -9,6 +9,35 @@ import { ShaderValidationTest } from '../../../shader_validation_test.js';
 
 export const g = makeTestGroup(ShaderValidationTest);
 
+const kStages: Record<string, string> = {
+  constant: `
+enable subgroups;
+@compute @workgroup_size(16)
+fn main() {
+  const x = subgroupBallot(true);
+}`,
+  override: `
+enable subgroups;
+override o = subgroupBallot(true);`,
+  runtime: `
+enable subgroups;
+@compute @workgroup_size(16)
+fn main() {
+  let x = subgroupBallot(true);
+}`,
+};
+
+g.test('early_eval')
+  .desc('Ensures the builtin is not able to be compile time evaluated')
+  .params(u => u.combine('stage', keysOf(kStages)))
+  .beforeAllSubcases(t => {
+    t.selectDeviceOrSkipTestCase('subgroups' as GPUFeatureName);
+  })
+  .fn(t => {
+    const code = kStages[t.params.stage];
+    t.expectCompileResult(t.params.stage === 'runtime', code);
+  });
+
 const kArgumentTypes = objectsToRecord(kAllScalarsAndVectors);
 
 g.test('data_type')
