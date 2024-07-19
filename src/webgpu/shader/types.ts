@@ -210,7 +210,7 @@ export function* generateTypes({
   isAtomic = false,
 }: {
   addressSpace: AddressSpace;
-  /** Base scalar type (i32/u32/f32/bool). */
+  /** Base scalar type (i32/u32/f16/f32/bool). */
   baseType: ScalarType;
   /** Container type (scalar/vector/matrix/array) */
   containerType: ContainerType;
@@ -238,6 +238,11 @@ export function* generateTypes({
        * For a matrix type, this is the number of rows in the matrix.
        */
       innerLength?: number;
+      /**
+       * If defined, the list of array access suffixes to use to access all
+       * the elements of the array, each yielding an elementBaseType value.
+       */
+      accessSuffixes?: string[];
     };
   },
   void
@@ -308,6 +313,7 @@ export function* generateTypes({
     let arrayElementCount: number = kDefaultArrayLength;
     let supportsAtomics = scalarInfo.supportsAtomics;
     let layout: undefined | AlignmentAndSize = undefined;
+    let accessSuffixes: undefined | string[] = undefined;
     if (scalarInfo.layout) {
       // Compute the layout of the array type.
       // Adjust the array element count or element type as needed.
@@ -318,6 +324,7 @@ export function* generateTypes({
         assert(!isAtomic, 'the uniform case is making vec4 of scalar, which cannot handle atomics');
         arrayElemType = `vec4<${baseType}>`;
         supportsAtomics = false;
+        accessSuffixes = ['.x', '.y', '.z', '.w'];
         const arrayElemLayout = vectorLayout('vec4', baseType) as AlignmentAndSize;
         // assert(arrayElemLayout.alignment % 16 === 0); // Callers responsibility to avoid
         arrayElementCount = align(arrayElementCount, 4) / 4;
@@ -344,6 +351,7 @@ export function* generateTypes({
       arrayLength: arrayElementCount,
       layout,
       supportsAtomics,
+      accessSuffixes,
     };
 
     // Sized
