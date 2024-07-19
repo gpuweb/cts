@@ -777,7 +777,14 @@ const kPointerCases: Record<string, PointerCase> = {
     uniform: `never`,
     needs_deref_sugar: true,
   },
-  contents_rhs_pointer_swizzle: {
+  contents_rhs_pointer_swizzle_uniform: {
+    code: `func_vector = vec4(uniform_value);
+    let test_val = dot((&func_vector).yw, vec2());`,
+    check: `contents`,
+    uniform: true,
+    needs_deref_sugar: true,
+  },
+  contents_rhs_pointer_swizzle_non_uniform: {
     code: `func_vector = vec4(nonuniform_value);
     let test_val = dot((&func_vector).yw, vec2());`,
     check: `contents`,

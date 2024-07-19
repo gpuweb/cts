@@ -95,15 +95,12 @@ Pointer expression dereference as lhs of index accessor expression
     if (t.params.scalarType === 'f16') {
       t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
     }
+    t.skipIf(
+      kDerefCases[t.params.derefType].requires_pointer_composite_access &&
+        !t.hasLanguageFeature('pointer_composite_access')
+    );
   })
   .fn(async t => {
-    if (
-      kDerefCases[t.params.derefType].requires_pointer_composite_access &&
-      !t.hasLanguageFeature('pointer_composite_access')
-    ) {
-      return;
-    }
-
     const ty = scalarType(t.params.scalarType);
     const cases = sparseScalarF32Range().map(e => {
       return { input: ty.create(e), expected: ty.create(e) };
@@ -141,15 +138,12 @@ Pointer expression dereference as lhs of member accessor expression
     if (t.params.scalarType === 'f16') {
       t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
     }
+    t.skipIf(
+      kDerefCases[t.params.derefType].requires_pointer_composite_access &&
+        !t.hasLanguageFeature('pointer_composite_access')
+    );
   })
   .fn(async t => {
-    if (
-      kDerefCases[t.params.derefType].requires_pointer_composite_access &&
-      !t.hasLanguageFeature('pointer_composite_access')
-    ) {
-      return;
-    }
-
     const ty = scalarType(t.params.scalarType);
     const cases = sparseScalarF32Range().map(e => {
       return { input: ty.create(e), expected: ty.create(e) };
@@ -190,15 +184,12 @@ Pointer expression dereference as lhs of swizzle expression
     if (t.params.scalarType === 'f16') {
       t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
     }
+    t.skipIf(
+      kDerefCases[t.params.derefType].requires_pointer_composite_access &&
+        !t.hasLanguageFeature('pointer_composite_access')
+    );
   })
   .fn(async t => {
-    if (
-      kDerefCases[t.params.derefType].requires_pointer_composite_access &&
-      !t.hasLanguageFeature('pointer_composite_access')
-    ) {
-      return;
-    }
-
     const ty = scalarType(t.params.scalarType);
     const cases = sparseScalarF32Range().map(e => {
       return { input: ty.create(e), expected: ty.create(e) };
