@@ -1526,6 +1526,7 @@
   "webgpu:shader,execution,expression,call,builtin,subgroupBallot:compute,split:*": { "subcaseMS": 38.740 },
   "webgpu:shader,execution,expression,call,builtin,subgroupBallot:fragment,split:*": { "subcaseMS": 0.331 },
   "webgpu:shader,execution,expression,call,builtin,subgroupBallot:predicate:*": { "subcaseMS": 0.075 },
+  "webgpu:shader,execution,expression,call,builtin,subgroupBallot:predicate_and_control_flow:*": { "subcaseMS": 41.053 },
   "webgpu:shader,execution,expression,call,builtin,subgroupBroadcast:data_types:*": { "subcaseMS": 252.374 },
   "webgpu:shader,execution,expression,call,builtin,subgroupBroadcast:dynamically_uniform_id:*": { "subcaseMS": 0.211 },
   "webgpu:shader,execution,expression,call,builtin,subgroupBroadcast:workgroup_uniform_load:*": { "subcaseMS": 109.832 },

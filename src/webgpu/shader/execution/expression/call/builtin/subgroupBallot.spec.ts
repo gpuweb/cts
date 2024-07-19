@@ -23,6 +23,110 @@ function getMask(size: number): bigint {
   return (1n << BigInt(size)) - 1n;
 }
 
+function checkBallots(
+  data: Uint32Array,
+  subgroupSize: number,
+  filter: (id: number, s: number) => boolean,
+  expect: (s: number) => bigint,
+  allActive: boolean
+): Error | undefined {
+  for (let i = 0; i < kInvocations; i++) {
+    const idx = i * 4;
+    let actual = 0n;
+    for (let j = 0; j < 4; j++) {
+      actual |= BigInt(data[idx + j]) << BigInt(32 * j);
+    }
+    let expectedResult = expect(subgroupSize);
+    const subgroupId = i % subgroupSize;
+    if (!allActive && !filter(subgroupId, subgroupSize)) {
+      expectedResult = 0n;
+    }
+    if (expectedResult !== actual) {
+      return new Error(
+        `Invocation ${i}, subgroup inv id ${i % subgroupSize}, size ${subgroupSize}
+- expected: ${expectedResult.toString(16)}
+-      got: ${actual.toString(16)}`
+      );
+    }
+  }
+
+  return undefined;
+}
+
+async function runTest(
+  t: GPUTest,
+  wgsl: string,
+  filter: (id: number, s: number) => boolean,
+  expect: (s: number) => bigint,
+  allActive: boolean
+) {
+  const sizeBuffer = t.makeBufferWithContents(
+    new Uint32Array([0]),
+    GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE
+  );
+  t.trackForCleanup(sizeBuffer);
+
+  const outputNumInts = kInvocations * 4;
+  const outputBuffer = t.makeBufferWithContents(
+    new Uint32Array([...iterRange(outputNumInts, x => 0)]),
+    GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE
+  );
+  t.trackForCleanup(outputBuffer);
+
+  const pipeline = t.device.createComputePipeline({
+    layout: 'auto',
+    compute: {
+      module: t.device.createShaderModule({
+        code: wgsl,
+      }),
+      entryPoint: 'main',
+    },
+  });
+  const bg = t.device.createBindGroup({
+    layout: pipeline.getBindGroupLayout(0),
+    entries: [
+      {
+        binding: 0,
+        resource: {
+          buffer: sizeBuffer,
+        },
+      },
+      {
+        binding: 1,
+        resource: {
+          buffer: outputBuffer,
+        },
+      },
+    ],
+  });
+
+  const encoder = t.device.createCommandEncoder();
+  const pass = encoder.beginComputePass();
+  pass.setPipeline(pipeline);
+  pass.setBindGroup(0, bg);
+  pass.dispatchWorkgroups(1, 1, 1);
+  pass.end();
+  t.queue.submit([encoder.finish()]);
+
+  const sizeReadback = await t.readGPUBufferRangeTyped(sizeBuffer, {
+    srcByteOffset: 0,
+    type: Uint32Array,
+    typedLength: 1,
+    method: 'copy',
+  });
+  const subgroupSize = sizeReadback.data[0];
+
+  const outputReadback = await t.readGPUBufferRangeTyped(outputBuffer, {
+    srcByteOffset: 0,
+    type: Uint32Array,
+    typedLength: outputNumInts,
+    method: 'copy',
+  });
+  const output = outputReadback.data;
+
+  t.expectOK(checkBallots(output, subgroupSize, filter, expect, allActive));
+}
+
 const kCases = {
   every_even: {
     cond: `id % 2 == 0`,
@@ -75,36 +179,6 @@ const kCases = {
   },
 };
 
-function checkBallots(
-  data: Uint32Array,
-  subgroupSize: number,
-  filter: (id: number, s: number) => boolean,
-  expect: (s: number) => bigint,
-  allActive: boolean
-): Error | undefined {
-  for (let i = 0; i < kInvocations; i++) {
-    const idx = i * 4;
-    let actual = 0n;
-    for (let j = 0; j < 4; j++) {
-      actual |= BigInt(data[idx + j]) << BigInt(32 * j);
-    }
-    let expectedResult = expect(subgroupSize);
-    const subgroupId = i % subgroupSize;
-    if (!allActive && !filter(subgroupId, subgroupSize)) {
-      expectedResult = 0n;
-    }
-    if (expectedResult !== actual) {
-      return new Error(
-        `Invocation ${i}, subgroup inv id ${
-          i % subgroupSize
-        }\n- expected: ${expectedResult.toString(16)}\n-      got: ${actual.toString(16)}`
-      );
-    }
-  }
-
-  return undefined;
-}
-
 g.test('compute,split')
   .desc('Tests ballot in a split subgroup')
   .params(u => u.combine('case', keysOf(kCases)))
@@ -136,71 +210,7 @@ fn main(@builtin(subgroup_size) subgroupSize : u32,
   }
 }`;
 
-    const sizeBuffer = t.makeBufferWithContents(
-      new Uint32Array([0]),
-      GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE
-    );
-    t.trackForCleanup(sizeBuffer);
-
-    const outputNumInts = kInvocations * 4;
-    const outputBuffer = t.makeBufferWithContents(
-      new Uint32Array([...iterRange(outputNumInts, x => 0)]),
-      GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE
-    );
-    t.trackForCleanup(outputBuffer);
-
-    const pipeline = t.device.createComputePipeline({
-      layout: 'auto',
-      compute: {
-        module: t.device.createShaderModule({
-          code: wgsl,
-        }),
-        entryPoint: 'main',
-      },
-    });
-    const bg = t.device.createBindGroup({
-      layout: pipeline.getBindGroupLayout(0),
-      entries: [
-        {
-          binding: 0,
-          resource: {
-            buffer: sizeBuffer,
-          },
-        },
-        {
-          binding: 1,
-          resource: {
-            buffer: outputBuffer,
-          },
-        },
-      ],
-    });
-
-    const encoder = t.device.createCommandEncoder();
-    const pass = encoder.beginComputePass();
-    pass.setPipeline(pipeline);
-    pass.setBindGroup(0, bg);
-    pass.dispatchWorkgroups(1, 1, 1);
-    pass.end();
-    t.queue.submit([encoder.finish()]);
-
-    const sizeReadback = await t.readGPUBufferRangeTyped(sizeBuffer, {
-      srcByteOffset: 0,
-      type: Uint32Array,
-      typedLength: 1,
-      method: 'copy',
-    });
-    const subgroupSize = sizeReadback.data[0];
-
-    const outputReadback = await t.readGPUBufferRangeTyped(outputBuffer, {
-      srcByteOffset: 0,
-      type: Uint32Array,
-      typedLength: outputNumInts,
-      method: 'copy',
-    });
-    const output = outputReadback.data;
-
-    t.expectOK(checkBallots(output, subgroupSize, testcase.filter, testcase.expect, false));
+    await runTest(t, wgsl, testcase.filter, testcase.expect, false);
   });
 
 g.test('fragment,split').unimplemented();
@@ -234,69 +244,96 @@ fn main(@builtin(subgroup_size) subgroupSize : u32,
   output[lid] = b;
 }`;
 
-    const sizeBuffer = t.makeBufferWithContents(
-      new Uint32Array([0]),
-      GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE
-    );
-    t.trackForCleanup(sizeBuffer);
+    await runTest(t, wgsl, testcase.filter, testcase.expect, true);
+  });
 
-    const outputNumInts = kInvocations * 4;
-    const outputBuffer = t.makeBufferWithContents(
-      new Uint32Array([...iterRange(outputNumInts, x => 0)]),
-      GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE
-    );
-    t.trackForCleanup(outputBuffer);
+const kBothCases = {
+  empty: {
+    cond: `id < subgroupSize / 2`,
+    pred: `id >= subgroupSize / 2`,
+    filter: (id: number, size: number) => {
+      return id < Math.floor(size / 2);
+    },
+    expect: (size: number) => {
+      return 0n;
+    },
+  },
+  full: {
+    cond: `id < 128`,
+    pred: `lid < 128`,
+    filter: (id: number, size: number) => {
+      return true;
+    },
+    expect: (size: number) => {
+      return getMask(size);
+    },
+  },
+  one_in_four: {
+    cond: `id % 2 == 0`,
+    pred: `id % 4 == 0`,
+    filter: (id: number, size: number) => {
+      return id % 2 === 0;
+    },
+    expect: (size: number) => {
+      const base = BigInt('0x11111111111111111111111111111111');
+      const mask = getMask(size);
+      return base & mask;
+    },
+  },
+  middle_half: {
+    cond: `id >= subgroupSize / 4`,
+    pred: `id < 3 * (subgroupSize / 4)`,
+    filter: (id: number, size: number) => {
+      return id >= Math.floor(size / 4);
+    },
+    expect: (size: number) => {
+      return getMask(Math.floor(size / 2)) << BigInt(Math.floor(size / 4));
+    },
+  },
+  middle_half_every_other: {
+    cond: `(id >= subgroupSize / 4) && (id < 3 * (subgroupSize / 4))`,
+    pred: `id % 2 == 0`,
+    filter: (id: number, size: number) => {
+      return id >= Math.floor(size / 4) && id < 3 * Math.floor(size / 4);
+    },
+    expect: (size: number) => {
+      const base = BigInt('0x55555555555555555555555555555555');
+      const mask = getMask(Math.floor(size / 2)) << BigInt(Math.floor(size / 4));
+      return base & mask;
+    },
+  },
+};
 
-    const pipeline = t.device.createComputePipeline({
-      layout: 'auto',
-      compute: {
-        module: t.device.createShaderModule({
-          code: wgsl,
-        }),
-        entryPoint: 'main',
-      },
-    });
-    const bg = t.device.createBindGroup({
-      layout: pipeline.getBindGroupLayout(0),
-      entries: [
-        {
-          binding: 0,
-          resource: {
-            buffer: sizeBuffer,
-          },
-        },
-        {
-          binding: 1,
-          resource: {
-            buffer: outputBuffer,
-          },
-        },
-      ],
-    });
+g.test('predicate_and_control_flow')
+  .desc('Test dynamic predicate and control flow together')
+  .params(u => u.combine('case', keysOf(kBothCases)))
+  .beforeAllSubcases(t => {
+    t.selectDeviceOrSkipTestCase('subgroups' as GPUFeatureName);
+  })
+  .fn(async t => {
+    const testcase = kBothCases[t.params.case];
+    const wgsl = `
+enable subgroups;
 
-    const encoder = t.device.createCommandEncoder();
-    const pass = encoder.beginComputePass();
-    pass.setPipeline(pipeline);
-    pass.setBindGroup(0, bg);
-    pass.dispatchWorkgroups(1, 1, 1);
-    pass.end();
-    t.queue.submit([encoder.finish()]);
+@group(0) @binding(0)
+var<storage, read_write> size : u32;
 
-    const sizeReadback = await t.readGPUBufferRangeTyped(sizeBuffer, {
-      srcByteOffset: 0,
-      type: Uint32Array,
-      typedLength: 1,
-      method: 'copy',
-    });
-    const subgroupSize = sizeReadback.data[0];
+@group(0) @binding(1)
+var<storage, read_write> output : array<vec4u>;
 
-    const outputReadback = await t.readGPUBufferRangeTyped(outputBuffer, {
-      srcByteOffset: 0,
-      type: Uint32Array,
-      typedLength: outputNumInts,
-      method: 'copy',
-    });
-    const output = outputReadback.data;
+@compute @workgroup_size(${kInvocations})
+fn main(@builtin(subgroup_size) subgroupSize : u32,
+        @builtin(subgroup_invocation_id) id : u32,
+        @builtin(local_invocation_index) lid : u32) {
+  if (lid == 0) {
+    size = subgroupSize;
+  }
+  if ${testcase.cond} {
+    output[lid] = subgroupBallot(${testcase.pred});
+  } else {
+    return;
+  }
+}`;
 
-    t.expectOK(checkBallots(output, subgroupSize, testcase.filter, testcase.expect, true));
+    await runTest(t, wgsl, testcase.filter, testcase.expect, false);
   });
