@@ -535,6 +535,7 @@ Parameters:
   .beforeAllSubcases(t => {
     const { format } = t.params;
     t.skipIfTextureFormatNotSupported(format);
+    t.skipIfTextureLoadNotSupportedForTextureType(t.params.texture_type);
     t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
   })
   .fn(async t => {
