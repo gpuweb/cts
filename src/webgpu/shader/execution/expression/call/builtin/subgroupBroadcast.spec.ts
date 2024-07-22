@@ -319,3 +319,5 @@ fn main(@builtin(subgroup_invocation_id) id : u32,
   });
 
 g.test('dynamically_uniform_id').unimplemented();
+
+g.test('fragment').unimplemented();

@@ -337,3 +337,5 @@ fn main(@builtin(subgroup_size) subgroupSize : u32,
 
     await runTest(t, wgsl, testcase.filter, testcase.expect, false);
   });
+
+g.test('fragment').unimplemented();
