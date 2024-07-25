@@ -1887,6 +1887,7 @@
   "webgpu:shader,execution,statement,increment_decrement:vec3_element_increment:*": { "subcaseMS": 4.801 },
   "webgpu:shader,execution,statement,increment_decrement:vec4_element_decrement:*": { "subcaseMS": 5.300 },
   "webgpu:shader,execution,statement,increment_decrement:vec4_element_increment:*": { "subcaseMS": 6.300 },
+  "webgpu:shader,execution,statement,phony:executes:*": { "subcaseMS": 129.949 },
   "webgpu:shader,execution,value_init:array,nested:*": { "subcaseMS": 3004.523 },
   "webgpu:shader,execution,value_init:array:*": { "subcaseMS": 3831.989 },
   "webgpu:shader,execution,value_init:mat:*": { "subcaseMS": 703.612 },

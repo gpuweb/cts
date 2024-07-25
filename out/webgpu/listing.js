@@ -3839,6 +3839,14 @@ export const listing = [
     "file": [
       "shader",
       "execution",
+      "statement",
+      "phony"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
       "value_init"
     ]
   },
