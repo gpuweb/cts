@@ -16,14 +16,22 @@ If an out of bounds access occurs, the built-in function returns one of:
  * 0.0 for depth textures
 
 TODO: Test textureLoad with depth textures as texture_2d, etc...
+TODO: Test textureLoad with multisampled stencil8 format
+TODO: Test un-encodable formats.
+TODO: Test stencil8 format.
 `;
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { unreachable, iterRange } from '../../../../../../common/util/util.js';
 import {
+  canUseAsRenderTarget,
   isCompressedFloatTextureFormat,
   isDepthTextureFormat,
+  isEncodableTextureFormat,
+  isMultisampledTextureFormat,
+  isStencilTextureFormat,
   kCompressedTextureFormats,
+  kDepthStencilFormats,
   kEncodableTextureFormats,
   kTextureFormatInfo,
   textureDimensionAndFormatCompatible,
@@ -58,16 +66,13 @@ import {
   getCoordinateForBoundaries,
   getLayerFromLayerSpec,
   getMipLevelFromLevelSpec,
+  getSampleIndexFromSampleIndexSpec,
   isBoundaryNegative,
   isLayerSpecNegative,
   isLevelSpecNegative,
 } from './utils.js';
 
 const kTestableColorFormats = [...kEncodableTextureFormats, ...kCompressedTextureFormats] as const;
-
-function filterOutDepthAndCompressedFloatTextureFormats({ format }: { format: GPUTextureFormat }) {
-  return !isDepthTextureFormat(format) && !isCompressedFloatTextureFormat(format);
-}
 
 function filterOutU32WithNegativeValues(t: {
   C: 'i32' | 'u32';
@@ -178,7 +183,8 @@ Parameters:
   .params(u =>
     u
       .combine('format', kTestableColorFormats)
-      .filter(filterOutDepthAndCompressedFloatTextureFormats)
+      // MAINTENANCE_TODO: Update createTextureFromTexelViews to support stencil8 and remove this filter.
+      .filter(t => t.format !== 'stencil8' && !isCompressedFloatTextureFormat(t.format))
       .beginSubcases()
       .combine('C', ['i32', 'u32'] as const)
       .combine('L', ['i32', 'u32'] as const)
@@ -202,7 +208,10 @@ Parameters:
     const descriptor: GPUTextureDescriptor = {
       format,
       size,
-      usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
+      usage:
+        GPUTextureUsage.COPY_DST |
+        GPUTextureUsage.TEXTURE_BINDING |
+        (canUseAsRenderTarget(format) ? GPUTextureUsage.RENDER_ATTACHMENT : 0),
       mipLevelCount: maxMipLevelCount({ size }),
     };
     const { texels, texture } = await createTextureWithRandomDataAndGetTexels(t, descriptor);
@@ -311,9 +320,10 @@ g.test('multisampled')
   .desc(
     `
 C is i32 or u32
+S is i32 or u32
 
-fn textureLoad(t: texture_multisampled_2d<T>, coords: vec2<C>, sample_index: C)-> vec4<T>
-fn textureLoad(t: texture_depth_multisampled_2d, coords: vec2<C>, sample_index: C)-> f32
+fn textureLoad(t: texture_multisampled_2d<T>, coords: vec2<C>, sample_index: S)-> vec4<T>
+fn textureLoad(t: texture_depth_multisampled_2d, coords: vec2<C>, sample_index: S)-> f32
 
 Parameters:
  * t: The sampled texture to read from
@@ -327,12 +337,68 @@ Parameters:
         'texture_multisampled_2d',
         'texture_depth_multisampled_2d',
       ] as const)
+      .combine('format', kTestableColorFormats)
+      .filter(t => isMultisampledTextureFormat(t.format))
+      .filter(t => !isStencilTextureFormat(t.format))
+      // Filter out texture_depth_multisampled_2d with non-depth formats
+      .filter(
+        t =>
+          !(t.texture_type === 'texture_depth_multisampled_2d' && !isDepthTextureFormat(t.format))
+      )
       .beginSubcases()
       .combine('C', ['i32', 'u32'] as const)
-      .combine('coords', generateCoordBoundaries(2))
+      .combine('S', ['i32', 'u32'] as const)
+      .combine('coordsBoundary', generateCoordBoundaries(2))
       .combine('sample_index', [-1, 0, `sampleCount-1`, `sampleCount`] as const)
+      // Only test sample_index out of bounds if coordBoundary is in-bounds
+      .filter(t => !(t.sample_index !== 0 && t.coordsBoundary !== 'in-bounds'))
   )
-  .unimplemented();
+  .beforeAllSubcases(t => {
+    const { format } = t.params;
+    t.skipIfTextureFormatNotSupported(format);
+    t.skipIfTextureLoadNotSupportedForTextureType(t.params.texture_type);
+    t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
+  })
+  .fn(async t => {
+    const { texture_type, format, C, S, coordsBoundary, sample_index } = t.params;
+
+    const sampleCount = 4;
+    const descriptor: GPUTextureDescriptor = {
+      format,
+      size: [8, 8],
+      usage:
+        GPUTextureUsage.COPY_DST |
+        GPUTextureUsage.TEXTURE_BINDING |
+        GPUTextureUsage.RENDER_ATTACHMENT,
+      sampleCount,
+    };
+    const { texels, texture } = await createTextureWithRandomDataAndGetTexels(t, descriptor);
+    const sampleIndex = getSampleIndexFromSampleIndexSpec(texture.sampleCount, sample_index);
+    const coords = getCoordinateForBoundaries<vec2>(texture, 0, coordsBoundary);
+
+    const calls: TextureCall<vec2>[] = [
+      {
+        builtin: 'textureLoad',
+        coordType: C === 'i32' ? 'i' : 'u',
+        sampleIndexType: S === 'i32' ? 'i' : 'u',
+        sampleIndex,
+        coords,
+      },
+    ];
+    const textureType = appendComponentTypeForFormatToTextureType(texture_type, texture.format);
+    const viewDescriptor = {};
+    const sampler = undefined;
+    const results = await doTextureCalls(t, texture, viewDescriptor, textureType, sampler, calls);
+    const res = await checkCallResults(
+      t,
+      { texels, descriptor, viewDescriptor },
+      textureType,
+      sampler,
+      calls,
+      results
+    );
+    t.expectOK(res);
+  });
 
 g.test('depth')
   .specURL('https://www.w3.org/TR/WGSL/#textureload')
@@ -340,7 +406,7 @@ g.test('depth')
     `
 C is i32 or u32
 
-fn textureLoad(t: texture_depth_2d, coords: vec2<C>, level: C) -> f32
+fn textureLoad(t: texture_depth_2d, coords: vec2<C>, level: L) -> f32
 
 Parameters:
  * t: The sampled texture to read from
@@ -348,13 +414,67 @@ Parameters:
  * level: The mip level, with level 0 containing a full size version of the texture
 `
   )
-  .paramsSubcasesOnly(u =>
+  .params(u =>
     u
+      .combine('format', kDepthStencilFormats)
+      // filter out stencil only formats
+      .filter(t => isDepthTextureFormat(t.format))
+      // MAINTENANCE_TODO: Remove when support for depth24plus, depth24plus-stencil8, and depth32float-stencil8 is added.
+      .filter(t => isEncodableTextureFormat(t.format))
+      .beginSubcases()
       .combine('C', ['i32', 'u32'] as const)
-      .combine('coords', generateCoordBoundaries(2))
+      .combine('L', ['i32', 'u32'] as const)
+      .combine('coordsBoundary', generateCoordBoundaries(2))
       .combine('level', [-1, 0, `numLevels-1`, `numLevels`] as const)
+      // Only test level out of bounds if coordBoundary is in-bounds
+      .filter(t => !(t.level !== 0 && t.coordsBoundary !== 'in-bounds'))
+      .filter(filterOutU32WithNegativeValues)
   )
-  .unimplemented();
+  .beforeAllSubcases(t => {
+    t.skipIfTextureLoadNotSupportedForTextureType('texture_depth_2d');
+  })
+  .fn(async t => {
+    const { format, C, L, coordsBoundary, level } = t.params;
+
+    // We want at least 4 blocks or something wide enough for 3 mip levels.
+    const size = chooseTextureSize({ minSize: 8, minBlocks: 4, format });
+
+    const descriptor: GPUTextureDescriptor = {
+      format,
+      size,
+      usage:
+        GPUTextureUsage.COPY_DST |
+        GPUTextureUsage.TEXTURE_BINDING |
+        GPUTextureUsage.RENDER_ATTACHMENT,
+      mipLevelCount: maxMipLevelCount({ size }),
+    };
+    const { texels, texture } = await createTextureWithRandomDataAndGetTexels(t, descriptor);
+    const mipLevel = getMipLevelFromLevelSpec(texture.mipLevelCount, level);
+    const coords = getCoordinateForBoundaries<vec2>(texture, mipLevel, coordsBoundary);
+
+    const calls: TextureCall<vec2>[] = [
+      {
+        builtin: 'textureLoad',
+        coordType: C === 'i32' ? 'i' : 'u',
+        levelType: L === 'i32' ? 'i' : 'u',
+        mipLevel,
+        coords,
+      },
+    ];
+    const textureType = 'texture_depth_2d';
+    const viewDescriptor = {};
+    const sampler = undefined;
+    const results = await doTextureCalls(t, texture, viewDescriptor, textureType, sampler, calls);
+    const res = await checkCallResults(
+      t,
+      { texels, descriptor, viewDescriptor },
+      textureType,
+      sampler,
+      calls,
+      results
+    );
+    t.expectOK(res);
+  });
 
 g.test('external')
   .specURL('https://www.w3.org/TR/WGSL/#textureload')
@@ -393,8 +513,8 @@ Parameters:
   .params(u =>
     u
       .combine('format', kTestableColorFormats)
-      // MAINTENANCE_TODO: Update createTextureFromTexelViews to support depth32float and remove this filter.
-      .filter(t => t.format !== 'depth32float' && !isCompressedFloatTextureFormat(t.format))
+      // MAINTENANCE_TODO: Update createTextureFromTexelViews to support stencil8 and remove this filter.
+      .filter(t => t.format !== 'stencil8' && !isCompressedFloatTextureFormat(t.format))
       .combine('texture_type', ['texture_2d_array', 'texture_depth_2d_array'] as const)
       .filter(
         t => !(t.texture_type === 'texture_depth_2d_array' && !isDepthTextureFormat(t.format))
@@ -415,6 +535,7 @@ Parameters:
   .beforeAllSubcases(t => {
     const { format } = t.params;
     t.skipIfTextureFormatNotSupported(format);
+    t.skipIfTextureLoadNotSupportedForTextureType(t.params.texture_type);
     t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
   })
   .fn(async t => {
@@ -426,7 +547,10 @@ Parameters:
     const descriptor: GPUTextureDescriptor = {
       format,
       size,
-      usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
+      usage:
+        GPUTextureUsage.COPY_DST |
+        GPUTextureUsage.TEXTURE_BINDING |
+        (canUseAsRenderTarget(format) ? GPUTextureUsage.RENDER_ATTACHMENT : 0),
       mipLevelCount: maxMipLevelCount({ size }),
     };
     const { texels, texture } = await createTextureWithRandomDataAndGetTexels(t, descriptor);
