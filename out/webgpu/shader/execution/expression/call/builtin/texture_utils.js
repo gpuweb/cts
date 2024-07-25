@@ -23,6 +23,7 @@ import {
   effectiveViewDimensionForDimension,
   physicalMipSizeFromTexture,
   reifyTextureDescriptor,
+
   virtualMipSize } from
 '../../../../../util/texture/base.js';
 import {
@@ -177,12 +178,24 @@ export function appendComponentTypeForFormatToTextureType(base, format) {
 export function createRandomTexelView(info)
 
 
+
 {
   const rep = kTexelRepresentationInfo[info.format];
+  const size = reifyExtent3D(info.size);
   const generator = (coords) => {
     const texel = {};
     for (const component of rep.componentOrder) {
-      const rnd = hashU32(coords.x, coords.y, coords.z, component.charCodeAt(0));
+      const rnd = hashU32(
+        coords.x,
+        coords.y,
+        coords.z,
+        coords.sampleIndex ?? 0,
+        component.charCodeAt(0),
+        info.mipLevel,
+        size.width,
+        size.height,
+        size.depthOrArrayLayers
+      );
       const normalized = clamp(rnd / 0xffffffff, { min: 0, max: 1 });
       texel[component] = getValueBetweenMinAndMaxTexelValueInclusive(rep, component, normalized);
     }
@@ -205,7 +218,8 @@ export function createRandomTexelViewMipmap(info)
   return range(mipLevelCount, (i) =>
   createRandomTexelView({
     format: info.format,
-    size: virtualMipSize(dimension, info.size, i)
+    size: virtualMipSize(dimension, info.size, i),
+    mipLevel: i
   })
   );
 }
@@ -220,10 +234,12 @@ export function createRandomTexelViewMipmap(info)
 const kTextureCallArgNames = [
 'coords',
 'arrayIndex',
+'sampleIndex',
 'mipLevel',
 'ddx',
 'ddy',
 'offset'];
+
 
 
 
@@ -358,7 +374,7 @@ texture,
 sampler,
 mipLevel)
 {
-  const { format } = texture.texels[mipLevel];
+  const { format } = texture.texels[0];
   const rep = kTexelRepresentationInfo[format];
   const textureSize = virtualMipSize(
     texture.descriptor.dimension || '2d',
@@ -375,7 +391,8 @@ mipLevel)
   texture.texels[mipLevel].color({
     x: Math.floor(at[0]),
     y: Math.floor(at[1] ?? 0),
-    z: call.arrayIndex ?? Math.floor(at[2] ?? 0)
+    z: call.arrayIndex ?? Math.floor(at[2] ?? 0),
+    sampleIndex: call.sampleIndex
   });
 
   const isCube = texture.viewDescriptor.dimension === 'cube';
@@ -612,7 +629,6 @@ sampler)
  * * sample_index is outside the range [0, textureNumSamples(s))
  */
 function isOutOfBoundsCall(texture, call) {
-  assert(call.mipLevel !== undefined);
   assert(call.coords !== undefined);
   assert(call.offset === undefined);
 
@@ -620,14 +636,14 @@ function isOutOfBoundsCall(texture, call) {
 
   const { coords, mipLevel, arrayIndex, sampleIndex } = call;
 
-  if (mipLevel < 0 || mipLevel >= desc.mipLevelCount) {
+  if (mipLevel !== undefined && (mipLevel < 0 || mipLevel >= desc.mipLevelCount)) {
     return true;
   }
 
   const size = virtualMipSize(
     texture.descriptor.dimension || '2d',
     texture.descriptor.size,
-    mipLevel
+    mipLevel ?? 0
   );
 
   for (let i = 0; i < coords.length; ++i) {
@@ -693,13 +709,16 @@ maxFractionalDiff)
       texture.descriptor.size,
       mipLevel
     );
+    const sampleCount = texture.descriptor.sampleCount ?? 1;
     for (let z = 0; z < size[2]; ++z) {
       for (let y = 0; y < size[1]; ++y) {
         for (let x = 0; x < size[0]; ++x) {
-          const texel = mipTexels.color({ x, y, z });
-          const rgba = convertPerTexelComponentToResultFormat(texel, mipTexels.format);
-          if (texelsApproximatelyEqual(gotRGBA, rgba, mipTexels.format, maxFractionalDiff)) {
-            return true;
+          for (let sampleIndex = 0; sampleIndex < sampleCount; ++sampleIndex) {
+            const texel = mipTexels.color({ x, y, z, sampleIndex });
+            const rgba = convertPerTexelComponentToResultFormat(texel, mipTexels.format);
+            if (texelsApproximatelyEqual(gotRGBA, rgba, mipTexels.format, maxFractionalDiff)) {
+              return true;
+            }
           }
         }
       }
@@ -727,8 +746,14 @@ maxFractionalDiff)
   const rep = kTexelRepresentationInfo[format];
   const got = convertResultFormatToTexelViewFormat(gotRGBA, format);
   const expect = convertResultFormatToTexelViewFormat(expectRGBA, format);
-  const gULP = rep.bitsToULPFromZero(rep.numberToBits(got));
-  const eULP = rep.bitsToULPFromZero(rep.numberToBits(expect));
+  const gULP = convertPerTexelComponentToResultFormat(
+    rep.bitsToULPFromZero(rep.numberToBits(got)),
+    format
+  );
+  const eULP = convertPerTexelComponentToResultFormat(
+    rep.bitsToULPFromZero(rep.numberToBits(expect)),
+    format
+  );
 
   const rgbaComponentsToCheck = isDepthOrStencilTextureFormat(format) ?
   kRComponent :
@@ -769,7 +794,7 @@ results)
   for (let callIdx = 0; callIdx < calls.length; callIdx++) {
     const call = calls[callIdx];
     const gotRGBA = results[callIdx];
-    const expectRGBA = softwareTextureReadMipLevel(call, texture, sampler, 0);
+    const expectRGBA = softwareTextureReadMipLevel(call, texture, sampler, call.mipLevel ?? 0);
 
     if (
     texelsApproximatelyEqual(gotRGBA, expectRGBA, texture.texels[0].format, maxFractionalDiff))
@@ -796,6 +821,7 @@ results)
         const size = reifyExtent3D(texture.descriptor.size);
         errs.push(`component was not as expected:
       size: [${size.width}, ${size.height}, ${size.depthOrArrayLayers}]
+  mipCount: ${texture.descriptor.mipLevelCount ?? 1}
       call: ${desc}  // #${callIdx}
  component: ${component}
        got: ${g}
@@ -1253,10 +1279,17 @@ format)
   if (!pipeline) {
     let textureWGSL;
     let loadWGSL;
+    let dimensionWGSL = 'textureDimensions(tex, uni.mipLevel)';
     switch (viewDimension) {
       case '2d':
-        textureWGSL = 'texture_2d<f32>';
-        loadWGSL = 'textureLoad(tex, global_invocation_id.xy, mipLevel)';
+        if (texture.sampleCount > 1) {
+          textureWGSL = 'texture_multisampled_2d<f32>';
+          loadWGSL = 'textureLoad(tex, coord.xy, sampleIndex)';
+          dimensionWGSL = 'textureDimensions(tex)';
+        } else {
+          textureWGSL = 'texture_2d<f32>';
+          loadWGSL = 'textureLoad(tex, coord.xy, mipLevel)';
+        }
         break;
       case 'cube-array': // cube-array doesn't exist in compat so we can just use 2d_array for this
       case '2d-array':
@@ -1264,18 +1297,18 @@ format)
         loadWGSL = `
           textureLoad(
               tex,
-              global_invocation_id.xy,
-              global_invocation_id.z,
+              coord.xy,
+              coord.z,
               mipLevel)`;
         break;
       case '3d':
         textureWGSL = 'texture_3d<f32>';
-        loadWGSL = 'textureLoad(tex, global_invocation_id.xyz, mipLevel)';
+        loadWGSL = 'textureLoad(tex, coord.xyz, mipLevel)';
         break;
       case 'cube':
         textureWGSL = 'texture_cube<f32>';
         loadWGSL = `
-          textureLoadCubeAs2DArray(tex, global_invocation_id.xy, global_invocation_id.z, mipLevel);
+          textureLoadCubeAs2DArray(tex, coord.xy, coord.z, mipLevel);
         `;
         break;
       default:
@@ -1303,7 +1336,12 @@ format)
           return textureSampleLevel(tex, smp, cubeCoord, f32(mipLevel));
         }
 
-        @group(0) @binding(0) var<uniform> mipLevel: u32;
+        struct Uniforms {
+          mipLevel: u32,
+          sampleCount: u32,
+        };
+
+        @group(0) @binding(0) var<uniform> uni: Uniforms;
         @group(0) @binding(1) var tex: ${textureWGSL};
         @group(0) @binding(2) var smp: sampler;
         @group(0) @binding(3) var<storage, read_write> data: array<vec4f>;
@@ -1311,10 +1349,13 @@ format)
         @compute @workgroup_size(1) fn cs(
           @builtin(global_invocation_id) global_invocation_id : vec3<u32>) {
           _ = smp;
-          let size = textureDimensions(tex, mipLevel);
-          let ndx = global_invocation_id.z * size.x * size.y +
-                    global_invocation_id.y * size.x +
+          let size = ${dimensionWGSL};
+          let ndx = global_invocation_id.z * size.x * size.y * uni.sampleCount +
+                    global_invocation_id.y * size.x * uni.sampleCount +
                     global_invocation_id.x;
+          let coord = vec3u(global_invocation_id.x / uni.sampleCount, global_invocation_id.yz);
+          let sampleIndex = global_invocation_id.x % uni.sampleCount;
+          let mipLevel = uni.mipLevel;
           data[ndx] = ${loadWGSL};
         }
       `
@@ -1329,7 +1370,7 @@ format)
   for (let mipLevel = 0; mipLevel < texture.mipLevelCount; ++mipLevel) {
     const size = virtualMipSize(texture.dimension, texture, mipLevel);
 
-    const uniformValues = new Uint32Array([mipLevel, 0, 0, 0]); // min size is 16 bytes
+    const uniformValues = new Uint32Array([mipLevel, texture.sampleCount, 0, 0]); // min size is 16 bytes
     const uniformBuffer = t.createBufferTracked({
       size: uniformValues.byteLength,
       usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
@@ -1337,7 +1378,7 @@ format)
     device.queue.writeBuffer(uniformBuffer, 0, uniformValues);
 
     const storageBuffer = t.createBufferTracked({
-      size: size[0] * size[1] * size[2] * 4 * 4, // rgba32float
+      size: size[0] * size[1] * size[2] * 4 * 4 * texture.sampleCount, // rgba32float
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
     });
 
@@ -1362,7 +1403,7 @@ format)
     const pass = encoder.beginComputePass();
     pass.setPipeline(pipeline);
     pass.setBindGroup(0, bindGroup);
-    pass.dispatchWorkgroups(...size);
+    pass.dispatchWorkgroups(size[0] * texture.sampleCount, size[1], size[2]);
     pass.end();
     encoder.copyBufferToBuffer(storageBuffer, 0, readBuffer, 0, readBuffer.size);
   }
@@ -1378,9 +1419,13 @@ format)
     const data = new Float32Array(readBuffer.getMappedRange()).slice();
     readBuffer.unmap();
 
+    const { sampleCount } = texture;
     texelViews.push(
       TexelView.fromTexelsAsColors(format, (coord) => {
-        const offset = (coord.z * size[0] * size[1] + coord.y * size[0] + coord.x) * 4;
+        const offset =
+        ((coord.z * size[0] * size[1] + coord.y * size[0] + coord.x) * sampleCount + (
+        coord.sampleIndex ?? 0)) *
+        4;
         return {
           R: data[offset + 0],
           G: data[offset + 1],
@@ -2214,6 +2259,8 @@ function buildBinnedCalls(calls) {
         prototype.levelType :
         name === 'arrayIndex' ?
         prototype.arrayIndexType :
+        name === 'sampleIndex' ?
+        prototype.sampleIndexType :
         prototype.coordType;
         args.push(`args.${name}`);
         fields.push(`@align(16) ${name} : ${wgslTypeFor(value, type)}`);
@@ -2285,6 +2332,8 @@ export function describeTextureCall(call) {
         args.push(`${name}: ${wgslExprFor(value, call.levelType)}`);
       } else if (name === 'arrayIndex') {
         args.push(`${name}: ${wgslExprFor(value, call.arrayIndexType)}`);
+      } else if (name === 'sampleIndex') {
+        args.push(`${name}: ${wgslExprFor(value, call.sampleIndexType)}`);
       } else {
         args.push(`${name}: ${wgslExpr(value)}`);
       }

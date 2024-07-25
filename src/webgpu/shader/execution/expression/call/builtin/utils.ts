@@ -88,6 +88,30 @@ export function isLayerSpecNegative(layerSpec: LayerSpec) {
   return layerSpec === -1;
 }
 
+export type SampleIndexSpec = -1 | 0 | 'sampleCount-1' | 'sampleCount';
+
+export function getSampleIndexFromSampleIndexSpec(
+  sampleCount: number,
+  sampleIndexSpec: SampleIndexSpec
+): number {
+  switch (sampleIndexSpec) {
+    case -1:
+      return -1;
+    case 0:
+      return 0;
+    case 'sampleCount':
+      return sampleCount;
+    case 'sampleCount-1':
+      return sampleCount - 1;
+    default:
+      unreachable();
+  }
+}
+
+export function isSampleIndexSpecNegative(layerSpec: SampleIndexSpec) {
+  return layerSpec === -1;
+}
+
 function getCoordForSize(size: [number, number, number], boundary: Boundary) {
   const coord = size.map(v => Math.floor(v / 2));
   switch (boundary) {
