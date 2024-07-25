@@ -6,6 +6,11 @@ import { getTextureCopyLayout } from './texture/layout.js';
 import { TexelView } from './texture/texel_view.js';
 import { reifyExtent3D, reifyOrigin3D } from './unions.js';
 
+// Note: For values that are supposedly unused we use 0.123 as a sentinel for
+// float formats and 123 for integer formats. For example, rendering to r8unorm
+// returns (v, 9.123, 0.123, 0.123). Since only v should be used this shouldn't
+// matter but just in case we set it to 123 so it's more likely to cause an
+// issue if something is wrong.
 const kLoadValueFromStorageInfo: Partial<{
   [k in GPUTextureFormat]: {
     storageType: string;
@@ -18,21 +23,21 @@ const kLoadValueFromStorageInfo: Partial<{
     storageType: 'u32',
     texelType: 'vec4f',
     unpackWGSL: `
-    return vec4f(unpack4x8unorm(src[byteOffset / 4])[byteOffset % 4])
+    return vec4f(unpack4x8unorm(src[byteOffset / 4])[byteOffset % 4], 0.123, 0.123, 0.123)
   `,
   },
   r8uint: {
     storageType: 'u32',
     texelType: 'vec4u',
     unpackWGSL: `
-    return vec4u(unpack4xU8(src[byteOffset / 4])[byteOffset % 4])
+    return vec4u(unpack4xU8(src[byteOffset / 4])[byteOffset % 4], 123, 123, 123)
   `,
   },
   r8sint: {
     storageType: 'u32',
     texelType: 'vec4i',
     unpackWGSL: `
-    return vec4i(unpack4xI8(src[byteOffset / 4])[byteOffset % 4])
+    return vec4i(unpack4xI8(src[byteOffset / 4])[byteOffset % 4], 123, 123, 123)
   `,
   },
   rg8unorm: {
@@ -40,7 +45,7 @@ const kLoadValueFromStorageInfo: Partial<{
     texelType: 'vec4f',
     unpackWGSL: `
     let v = unpack4x8unorm(src[byteOffset / 4]);
-    return vec4f(select(v.rg, v.ba, byteOffset % 4 >= 2), 0, 1)
+    return vec4f(select(v.rg, v.ba, byteOffset % 4 >= 2), 0.123, 0.123)
   `,
   },
   rg8uint: {
@@ -48,7 +53,7 @@ const kLoadValueFromStorageInfo: Partial<{
     texelType: 'vec4u',
     unpackWGSL: `
     let v = unpack4xU8(src[byteOffset / 4]);
-    return vec4u(select(v.rg, v.ba, byteOffset % 4 >= 2), 0, 1)
+    return vec4u(select(v.rg, v.ba, byteOffset % 4 >= 2), 123, 123)
   `,
   },
   rg8sint: {
@@ -56,7 +61,7 @@ const kLoadValueFromStorageInfo: Partial<{
     texelType: 'vec4i',
     unpackWGSL: `
     let v = unpack4xI8(src[byteOffset / 4]);
-    return vec4i(select(v.rg, v.ba, byteOffset % 4 >= 2), 0, 1)
+    return vec4i(select(v.rg, v.ba, byteOffset % 4 >= 2), 123, 123)
   `,
   },
   rgba8unorm: {
@@ -108,31 +113,32 @@ const kLoadValueFromStorageInfo: Partial<{
   r16float: {
     storageType: 'u32',
     texelType: 'vec4f',
-    unpackWGSL: 'return vec4f(unpack2x16float(src[byteOffset / 4])[byteOffset % 4 / 2], 0, 0, 1)',
+    unpackWGSL:
+      'return vec4f(unpack2x16float(src[byteOffset / 4])[byteOffset % 4 / 2], 0.123, 0.123, 0.123)',
   },
   r16uint: {
     storageType: 'u32',
     texelType: 'vec4u',
     unpackWGSL:
-      'return vec4u(extractBits(src[byteOffset / 4], (byteOffset % 4 / 2 * 16), 16), 0, 0, 0)',
+      'return vec4u(extractBits(src[byteOffset / 4], (byteOffset % 4 / 2 * 16), 16), 123, 123, 123)',
   },
   r16sint: {
     storageType: 'i32',
     texelType: 'vec4i',
     unpackWGSL:
-      'return vec4i(extractBits(src[byteOffset / 4], byteOffset % 4 / 2 * 16, 16), 0, 0, 0)',
+      'return vec4i(extractBits(src[byteOffset / 4], byteOffset % 4 / 2 * 16, 16), 123, 123, 123)',
   },
   rg16float: {
     storageType: 'u32',
     texelType: 'vec4f',
-    unpackWGSL: 'return vec4f(unpack2x16float(src[byteOffset / 4]), 0, 1)',
+    unpackWGSL: 'return vec4f(unpack2x16float(src[byteOffset / 4]), 0.123, 0.123)',
   },
   rg16uint: {
     storageType: 'u32',
     texelType: 'vec4u',
     unpackWGSL: `
       let v = src[byteOffset / 4];
-      return vec4u(v & 0xFFFF, v >> 16, 0, 0)
+      return vec4u(v & 0xFFFF, v >> 16, 123, 123)
     `,
   },
   rg16sint: {
@@ -143,7 +149,7 @@ const kLoadValueFromStorageInfo: Partial<{
       return vec4i(
         extractBits(v, 0, 16),
         extractBits(v, 16, 16),
-        0, 0)
+        123, 123)
     `,
   },
   rgba16float: {
@@ -181,7 +187,7 @@ const kLoadValueFromStorageInfo: Partial<{
   r32float: {
     storageType: 'f32',
     texelType: 'vec4f',
-    unpackWGSL: 'return vec4f(src[byteOffset / 4], 0, 0, 1)',
+    unpackWGSL: 'return vec4f(src[byteOffset / 4], 0.123, 0.123, 0.123)',
   },
   rgb10a2uint: {
     storageType: 'u32',
@@ -214,7 +220,7 @@ const kLoadValueFromStorageInfo: Partial<{
     texelType: 'vec4f',
     unpackWGSL: `
       let v = unpack2x16unorm(src[byteOffset / 4])[byteOffset % 4 / 2];
-      return vec4f(v, v, v, 1)
+      return vec4f(v, 0.123, 0.123, 0.123)
     `,
     useFragDepth: true,
   },
@@ -223,7 +229,7 @@ const kLoadValueFromStorageInfo: Partial<{
     texelType: 'vec4f',
     unpackWGSL: `
       let v = src[byteOffset / 4];
-      return vec4f(v, v, v, 1)
+      return vec4f(v, 0.123, 0.123, 0.123)
     `,
     useFragDepth: true,
   },
@@ -352,6 +358,8 @@ function copyBufferToTextureViaRender(
   const baseMipLevel = dest.mipLevel;
   for (let l = 0; l < copySize.depthOrArrayLayers; ++l) {
     const baseArrayLayer = origin.z + l;
+    const mipLevelCount = 1;
+    const arrayLayerCount = 1;
     const pass = encoder.beginRenderPass(
       useFragDepth
         ? {
@@ -360,8 +368,8 @@ function copyBufferToTextureViaRender(
               view: dest.texture.createView({
                 baseMipLevel,
                 baseArrayLayer,
-                mipLevelCount: 1,
-                arrayLayerCount: 1,
+                mipLevelCount,
+                arrayLayerCount,
               }),
               depthClearValue: 0.5,
               depthLoadOp: 'clear',
@@ -374,8 +382,8 @@ function copyBufferToTextureViaRender(
                 view: dest.texture.createView({
                   baseMipLevel,
                   baseArrayLayer,
-                  mipLevelCount: 1,
-                  arrayLayerCount: 1,
+                  mipLevelCount,
+                  arrayLayerCount,
                 }),
                 loadOp: 'clear',
                 storeOp: 'store',
