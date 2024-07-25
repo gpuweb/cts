@@ -2695,6 +2695,7 @@
   "webgpu:shader,validation,statement,increment_decrement:var_init_type:*": { "subcaseMS": 270.034 },
   "webgpu:shader,validation,statement,loop:break_if_type:*": { "subcaseMS": 5.488 },
   "webgpu:shader,validation,statement,loop:parse:*": { "subcaseMS": 16.168 },
+  "webgpu:shader,validation,statement,phony:module_scope:*": { "subcaseMS": 0.381 },
   "webgpu:shader,validation,statement,phony:parse:*": { "subcaseMS": 149.639 },
   "webgpu:shader,validation,statement,phony:rhs_constructible:*": { "subcaseMS": 244.513 },
   "webgpu:shader,validation,statement,phony:rhs_with_decl:*": { "subcaseMS": 15.874 },
