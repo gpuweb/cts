@@ -275,23 +275,23 @@ function ErrorMsg(msg: string, got: number, expected: number): string {
 /**
  * Checks that the subgroup size and ballot buffers are consistent.
  *
- * This function assumes subgroups will be filled as much as possible with
- * up to 1 partial subgroup at the end of each workgroup.
+ * This function checks that all invocations see a consistent value for
+ * subgroup_size and that all ballots are less than or equal to that value.
  *
- * @param data The subgroup_size buffer
- * @param compare The ballot buffer
+ * @param subgroupSizes The subgroup_size buffer
+ * @param ballotSizes The ballot buffer
  * @param min The minimum subgroup size allowed
  * @param max The maximum subgroup size allowed
  * @param invocations The number of invocations in a workgroup
  */
 function checkSubgroupSizeConsistency(
-  data: Uint32Array,
-  compare: Uint32Array,
+  subgroupSizes: Uint32Array,
+  ballotSizes: Uint32Array,
   min: number,
   max: number,
   invocations: number
 ): Error | undefined {
-  const subgroupSize = data[0];
+  const subgroupSize = subgroupSizes[0];
   if (popcount(subgroupSize) !== 1) {
     return new Error(`Subgroup size '${subgroupSize}' is not a power of two`);
   }
@@ -303,66 +303,45 @@ function checkSubgroupSizeConsistency(
   }
 
   // Check that remaining invocations record a consistent subgroup size.
-  for (let i = 1; i < data.length; i++) {
-    if (data[i] !== subgroupSize) {
+  for (let i = 1; i < subgroupSizes.length; i++) {
+    if (subgroupSizes[i] !== subgroupSize) {
       return new Error(
-        ErrorMsg(`Invocation ${i}: subgroup size inconsistency`, data[i], subgroupSize)
+        ErrorMsg(`Invocation ${i}: subgroup size inconsistency`, subgroupSizes[i], subgroupSize)
       );
     }
   }
 
-  // Assumes workgroups are divided such that there is a single partial subgroup if any.
-  const partialExpected = invocations % subgroupSize;
-  let fullExpected = 0;
-  if (subgroupSize <= invocations) {
-    fullExpected = Math.floor(invocations / subgroupSize) * subgroupSize;
-  }
-  let fullCount = 0;
-  let partialCount = 0;
-  for (let i = 0; i < compare.length; i++) {
-    if (i % invocations === 0) {
-      if (i !== 0) {
-        // Check intermediate workgroup counts.
-        if (fullCount !== fullExpected) {
-          return new Error(
-            ErrorMsg(`Unexpected number of full invocations`, fullCount, fullExpected)
-          );
-        }
-        if (partialCount !== partialExpected) {
-          return new Error(
-            ErrorMsg(`Unexpected number of partial invocations`, partialCount, partialExpected)
-          );
-        }
-      }
-
-      // Reset for new workgroup.
-      fullCount = 0;
-      partialCount = 0;
+  for (let i = 0; i < ballotSizes.length; i++) {
+    if (ballotSizes[i] > subgroupSize) {
+      return new Error(
+        `Invocation ${i}, subgroup size, ${ballotSizes[i]}, is greater than built-in value, ${subgroupSize}`
+      );
     }
-
-    if (compare[i] === subgroupSize) {
-      fullCount++;
-    } else {
-      partialCount++;
-
-      // Check that all partial invocations are consistent.
-      if (compare[i] !== partialExpected) {
-        return new Error(ErrorMsg(`Partial subgroup size incorrect`, compare[i], partialExpected));
-      }
-    }
-  }
-
-  // Check final workgroup counts.
-  if (fullCount !== fullExpected) {
-    return new Error(ErrorMsg(`Unexpected number of full invocations`, fullCount, fullExpected));
-  }
-  if (partialCount !== partialExpected) {
-    return new Error(
-      ErrorMsg(`Unexpected number of partial invocations`, partialCount, partialExpected)
-    );
   }
 
   return undefined;
+}
+
+/**
+ * Returns a WGSL function that generates linear local id
+ *
+ * Using (0,1,2) generates the standard local linear id.
+ * Changing the order of p0, p1, and p2 changes the linearity.
+ *
+ * Assumes p0, p1, and p2 are not repeated and in range [0, 2].
+ * @param p0 The index used for the x-dimension
+ * @param p1 The index used for the y-dimension
+ * @param p2 The index used for the z-dimension
+ * @param sizes An array of workgroup sizes for each dimension.
+ */
+function genLID(p0: number, p1: number, p2: number, sizes: readonly number[]): string {
+  return `
+fn getLID(lid : vec3u) -> u32 {
+  let p0 = lid[${p0}];
+  let p1 = lid[${p1}] * ${sizes[p0]};
+  let p2 = lid[${p2}] * ${sizes[p0]} * ${sizes[p1]};
+  return p0 + p1 + p2;
+}`;
 }
 
 const kWGSizes = [
@@ -406,6 +385,14 @@ g.test('subgroup_size')
       .combine('sizes', kWGSizes)
       .beginSubcases()
       .combine('numWGs', [1, 2] as const)
+      .combine('lid', [
+        [0, 1, 2],
+        [0, 2, 1],
+        [1, 0, 2],
+        [1, 2, 0],
+        [2, 0, 1],
+        [2, 1, 0],
+      ] as const)
   )
   .beforeAllSubcases(t => {
     t.selectDeviceOrSkipTestCase('subgroups' as GPUFeatureName);
@@ -415,8 +402,13 @@ g.test('subgroup_size')
     const minSize = 4;
     const maxSize = 128;
 
+    const wgx = t.params.sizes[0];
+    const wgy = t.params.sizes[1];
+    const wgz = t.params.sizes[2];
+    const lid = t.params.lid;
+    const wgThreads = wgx * wgy * wgz;
+
     // Compatibility mode has lower workgroup limits.
-    const wgThreads = t.params.sizes[0] * t.params.sizes[1] * t.params.sizes[2];
     const {
       maxComputeInvocationsPerWorkgroup,
       maxComputeWorkgroupSizeX,
@@ -436,16 +428,21 @@ enable subgroups;
 
 const stride = ${wgThreads};
 
+${genLID(lid[0], lid[1], lid[2], t.params.sizes)}
+
 @group(0) @binding(0)
 var<storage, read_write> output : array<u32>;
 
 @group(0) @binding(1)
 var<storage, read_write> compare : array<u32>;
 
-@compute @workgroup_size(${t.params.sizes[0]}, ${t.params.sizes[1]}, ${t.params.sizes[2]})
+@compute @workgroup_size(${wgx}, ${wgy}, ${wgz})
 fn main(@builtin(subgroup_size) size : u32,
         @builtin(workgroup_id) wgid : vec3u,
-        @builtin(local_invocation_index) lid : u32) {
+        @builtin(local_invocation_id) local_id : vec3u) {
+  // Remap local ids according to test linearity.
+  let lid = getLID(local_id);
+
   output[lid + wgid.x * stride] = size;
   let ballot = countOneBits(subgroupBallot(true));
   let ballotSize = ballot[0] + ballot[1] + ballot[2] + ballot[3];
@@ -521,8 +518,14 @@ fn main(@builtin(subgroup_size) size : u32,
 /**
  * Checks the consistency of subgroup_invocation_id builtin values
  *
+ * Creates a ballot out consisting of all invocations sharing the same generated
+ * subgroup id. Checks that the ballot contains at most subgroupSize invocations
+ * and that the invocations are tightly packed from the lowest id.
  * @param data The subgroup_invocation_id output data
- * @param
+ * @param ids The representative subgroup ids for each invocation
+ * @param subgroupSize The subgroup size
+ * @param invocations The number of invocations per workgroup
+ * @param numWGs The number of workgroups
  */
 function checkSubgroupInvocationIdConsistency(
   data: Uint32Array,
@@ -532,17 +535,14 @@ function checkSubgroupInvocationIdConsistency(
   numWGs: number
 ): Error | undefined {
   for (let wg = 0; wg < numWGs; wg++) {
-    const mappings = new Map();
+    const mappings = new Map<number, bigint>();
     for (let i = 0; i < invocations; i++) {
       const idx = i + invocations * wg;
       const subgroup_id = ids[idx];
       if (subgroup_id === 999) {
         return new Error(`Invocation ${i}: no data`);
       }
-      if (!mappings.has(subgroup_id)) {
-        mappings.set(subgroup_id, 0n);
-      }
-      let v = mappings.get(subgroup_id);
+      let v = mappings.get(subgroup_id) ?? 0n;
       v |= 1n << BigInt(data[idx]);
       mappings.set(subgroup_id, v);
     }
@@ -562,11 +562,7 @@ function checkSubgroupInvocationIdConsistency(
       }
 
       const ballotP1 = ballot + 1n;
-      onebits = popcount(Number(BigInt.asUintN(32, ballotP1)));
-      onebits += popcount(Number(BigInt.asUintN(32, ballotP1 >> 32n)));
-      onebits += popcount(Number(BigInt.asUintN(32, ballotP1 >> 64n)));
-      onebits += popcount(Number(BigInt.asUintN(32, ballotP1 >> 96n)));
-      if (onebits !== 1) {
+      if ((ballot & ballotP1) !== 0n) {
         return new Error(
           `Subgroup including invocation ${id} has non-continguous ids: ${ballot.toString(2)}`
         );
@@ -620,22 +616,12 @@ g.test('subgroup_invocation_id')
       'Workgroup size too large'
     );
 
-    const lidGen = (p0: number, p1: number, p2: number) => {
-      return `
-fn getLID(lid : vec3u) -> u32 {
-  let p0 = lid[${p0}];
-  let p1 = lid[${p1}] * ${t.params.sizes[p0]};
-  let p2 = lid[${p2}] * ${t.params.sizes[p0]} * ${t.params.sizes[p1]};
-  return p0 + p1 + p2;
-}`;
-    };
-
     const wgsl = `
 enable subgroups;
 
 const stride = ${wgThreads};
 
-${lidGen(lid[0], lid[1], lid[2])}
+${genLID(lid[0], lid[1], lid[2], t.params.sizes)}
 
 @group(0) @binding(0)
 var<storage, read_write> output : array<u32>;
@@ -671,8 +657,9 @@ fn main(@builtin(subgroup_size) size : u32,
       GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
     );
     t.trackForCleanup(outputBuffer);
+    const placeholderValue = 999;
     const idsBuffer = t.makeBufferWithContents(
-      new Uint32Array([...iterRange(numInvocations, x => 999)]),
+      new Uint32Array([...iterRange(numInvocations, x => placeholderValue)]),
       GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
     );
     t.trackForCleanup(idsBuffer);
