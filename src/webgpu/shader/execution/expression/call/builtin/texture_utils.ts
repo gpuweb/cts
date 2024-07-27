@@ -94,6 +94,15 @@ export class WGSLTextureQueryTest extends GPUTest {
 }
 
 /**
+ * Used to specify a range from [0, num)
+ * The type is used to determine if values should be integers and if they can be negative.
+ */
+export type RangeDef = {
+  num: number;
+  type: 'f32' | 'i32' | 'u32';
+};
+
+/**
  * Generates an array of pseudo random values based on a hash.
  * For `i32` generates an integer in the range [-1, num]
  * For `u32` generates an integer in the range [0, num)
@@ -1741,15 +1750,6 @@ export type SamplePointMethods = (typeof kSamplePointMethods)[number];
 
 export const kCubeSamplePointMethods = ['cube-edges', 'texel-centre', 'spiral'] as const;
 export type CubeSamplePointMethods = (typeof kSamplePointMethods)[number];
-
-/**
- * Used to specify a range from [0, num)
- * The type is used to determine if values should be integers and if they can be negative.
- */
-export type RangeDef = {
-  num: number;
-  type: 'f32' | 'i32' | 'u32';
-};
 
 type TextureBuiltinInputArgs = {
   descriptor: GPUTextureDescriptor;
