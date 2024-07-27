@@ -93,6 +93,36 @@ export class WGSLTextureQueryTest extends GPUTest {
   }
 }
 
+/**
+ * Used to specify a range from [0, num)
+ * The type is used to determine if values should be integers and if they can be negative.
+ */
+export type RangeDef = {
+  num: number;
+  type: 'f32' | 'i32' | 'u32';
+};
+
+/**
+ * Generates an array of pseudo random values based on a hash.
+ * For `i32` generates an integer in the range [-1, num]
+ * For `u32` generates an integer in the range [0, num)
+ * for `f32` generates an number in the range [-1 to num)
+ */
+export function makeRepeatableValuesInRanges({
+  hashInputs,
+  rangeDefs,
+}: {
+  hashInputs: (number | string)[];
+  rangeDefs: RangeDef[];
+}): number[] {
+  const _hashInputs = hashInputs.map(v => (typeof v === 'string' ? sumOfCharCodesOfString(v) : v));
+  return rangeDefs.map(({ num, type }, i) => {
+    const range = num + type === 'u32' ? 1 : 2;
+    const number = (hashU32(..._hashInputs, i) / 0x1_0000_0000) * range - (type === 'u32' ? 0 : 1);
+    return type === 'f32' ? number : Math.floor(number);
+  });
+}
+
 function getLimitValue(v: number) {
   switch (v) {
     case Number.POSITIVE_INFINITY:
