@@ -9,6 +9,7 @@ import {
   kBlendOperations,
   kMaxColorAttachmentsToTest,
 } from '../../../capability_info.js';
+import { GPUConst } from '../../../constants.js';
 import {
   kAllTextureFormats,
   kRenderableColorTextureFormats,
@@ -24,7 +25,7 @@ import {
 } from '../../../util/shader.js';
 import { kTexelRepresentationInfo } from '../../../util/texture/texel_data.js';
 
-import { CreateRenderPipelineValidationTest } from './common.js';
+import { ColorTargetState, CreateRenderPipelineValidationTest } from './common.js';
 
 export const g = makeTestGroup(CreateRenderPipelineValidationTest);
 
@@ -465,5 +466,86 @@ g.test('pipeline_output_targets,blend')
       info.color.type === sampleType &&
       componentCount >= kTexelRepresentationInfo[format].componentOrder.length &&
       meetsExtraBlendingRequirement;
+    t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
+  });
+
+const kDualSourceBlendingFactors: GPUBlendFactor[] = [
+  'src1',
+  'one-minus-src1',
+  'src1-alpha',
+  'one-minus-src1-alpha',
+];
+
+g.test('dual_source_blending,color_target_count')
+  .desc(
+    `Test that when the blend factor of color attachment 0 uses src1 (the second input of the
+   corresponding blending unit), there must be exactly one color target.
+`
+  )
+  .beforeAllSubcases(t => t.selectDeviceOrSkipTestCase('dual-source-blending'))
+  .params(u =>
+    u
+      .combine('blendFactor', kDualSourceBlendingFactors)
+      .combine('colorTargetsCount', [1, 2] as const)
+      .combine('maskOutNonZeroIndexColorTargets', [true, false] as const)
+      .beginSubcases()
+      .combine('component', ['color', 'alpha'] as const)
+  )
+  .fn(t => {
+    const { blendFactor, colorTargetsCount, maskOutNonZeroIndexColorTargets, component } = t.params;
+
+    const defaultBlendComponent: GPUBlendComponent = {
+      srcFactor: 'src-alpha',
+      dstFactor: 'dst-alpha',
+      operation: 'add',
+    };
+    const testBlendComponent: GPUBlendComponent = {
+      srcFactor: blendFactor,
+      dstFactor: blendFactor,
+      operation: 'add',
+    };
+
+    assert(colorTargetsCount >= 1);
+    const colorTargetStates = new Array<ColorTargetState>(colorTargetsCount);
+    colorTargetStates[0] = {
+      format: 'rgba8unorm',
+      blend: {
+        color: component === 'color' ? testBlendComponent : defaultBlendComponent,
+        alpha: component === 'alpha' ? testBlendComponent : defaultBlendComponent,
+      },
+    };
+
+    for (let i = 1; i < colorTargetsCount; ++i) {
+      colorTargetStates[i] = {
+        format: 'rgba8unorm',
+        blend: {
+          color: defaultBlendComponent,
+          alpha: defaultBlendComponent,
+        },
+        writeMask: maskOutNonZeroIndexColorTargets ? 0 : GPUConst.ColorWrite.ALL,
+      };
+    }
+
+    const descriptor = t.getDescriptor({
+      targets: colorTargetStates,
+      fragmentShaderCode: `
+          enable dual_source_blending;
+
+          struct FragOutput {
+            @location(0) @blend_src(0) color : vec4f,
+            @location(0) @blend_src(1) blend : vec4f,
+          }
+
+          @fragment fn main() -> FragOutput {
+            var fragmentOutput : FragOutput;
+            fragmentOutput.color = vec4f(0.0, 1.0, 0.0, 1.0);
+            fragmentOutput.blend = fragmentOutput.color;
+            return fragmentOutput;
+          }
+          `,
+    });
+
+    const isAsync = false;
+    const _success = colorTargetsCount === 1;
     t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
   });
