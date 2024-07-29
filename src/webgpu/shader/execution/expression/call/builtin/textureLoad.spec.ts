@@ -58,10 +58,9 @@ import {
   vec2,
   vec3,
   kSamplePointMethods,
-  generateSamplePoints1D,
-  makeRepeatableValuesInRanges,
-  generateSamplePoints2D,
-  generateSamplePoints3D,
+  generateTextureBuiltinInputs1D,
+  generateTextureBuiltinInputs2D,
+  generateTextureBuiltinInputs3D,
   Dimensionality,
 } from './texture_utils.js';
 import { generateCoordBoundaries } from './utils.js';
@@ -128,15 +127,12 @@ Parameters:
     };
     const { texels, texture } = await createTextureWithRandomDataAndGetTexels(t, descriptor);
 
-    const calls: TextureCall<vec1>[] = generateSamplePoints1D(50, true, {
+    const calls: TextureCall<vec1>[] = generateTextureBuiltinInputs1D(50, {
       method: samplePoints,
-      textureWidth: texture.width,
-      textureHeight: texture.height,
-    }).map((coords, i) => {
-      const [mipLevel] = makeRepeatableValuesInRanges({
-        hashInputs: [format, samplePoints, C, L, i],
-        rangeDefs: [{ num: texture.mipLevelCount, type: L }],
-      });
+      descriptor,
+      mipLevel: { num: texture.mipLevelCount, type: L },
+      hashInputs: [format, samplePoints, C, L],
+    }).map(({ coords, mipLevel }, i) => {
       return {
         builtin: 'textureLoad',
         coordType: C === 'i32' ? 'i' : 'u',
@@ -208,15 +204,11 @@ Parameters:
     };
     const { texels, texture } = await createTextureWithRandomDataAndGetTexels(t, descriptor);
 
-    const calls: TextureCall<vec2>[] = generateSamplePoints2D(50, true, {
+    const calls: TextureCall<vec2>[] = generateTextureBuiltinInputs2D(50, {
       method: samplePoints,
-      textureWidth: texture.width,
-      textureHeight: texture.height,
-    }).map((coords, i) => {
-      const [mipLevel] = makeRepeatableValuesInRanges({
-        hashInputs: [format, samplePoints, C, L, i],
-        rangeDefs: [{ num: texture.mipLevelCount, type: L }],
-      });
+      descriptor,
+      hashInputs: [format, samplePoints, C, L],
+    }).map(({ coords, mipLevel }) => {
       return {
         builtin: 'textureLoad',
         coordType: C === 'i32' ? 'i' : 'u',
@@ -284,15 +276,12 @@ Parameters:
     };
     const { texels, texture } = await createTextureWithRandomDataAndGetTexels(t, descriptor);
 
-    const calls: TextureCall<vec3>[] = generateSamplePoints3D(50, true, {
+    const calls: TextureCall<vec3>[] = generateTextureBuiltinInputs3D(50, {
       method: samplePoints,
-      textureWidth: texture.width,
-      textureHeight: texture.height,
-    }).map((coords, i) => {
-      const [mipLevel] = makeRepeatableValuesInRanges({
-        hashInputs: [format, samplePoints, C, L, i],
-        rangeDefs: [{ num: texture.mipLevelCount, type: L }],
-      });
+      descriptor,
+      mipLevel: { num: texture.mipLevelCount, type: L },
+      hashInputs: [format, samplePoints, C, L],
+    }).map(({ coords, mipLevel }) => {
       return {
         builtin: 'textureLoad',
         coordType: C === 'i32' ? 'i' : 'u',
@@ -373,15 +362,12 @@ Parameters:
     };
     const { texels, texture } = await createTextureWithRandomDataAndGetTexels(t, descriptor);
 
-    const calls: TextureCall<vec2>[] = generateSamplePoints2D(50, true, {
+    const calls: TextureCall<vec2>[] = generateTextureBuiltinInputs2D(50, {
       method: samplePoints,
-      textureWidth: texture.width,
-      textureHeight: texture.height,
-    }).map((coords, i) => {
-      const [sampleIndex] = makeRepeatableValuesInRanges({
-        hashInputs: [format, samplePoints, C, S, i],
-        rangeDefs: [{ num: texture.sampleCount, type: S }],
-      });
+      descriptor,
+      sampleIndex: { num: texture.sampleCount, type: S },
+      hashInputs: [format, samplePoints, C, S],
+    }).map(({ coords, sampleIndex }) => {
       return {
         builtin: 'textureLoad',
         coordType: C === 'i32' ? 'i' : 'u',
@@ -452,15 +438,12 @@ Parameters:
     };
     const { texels, texture } = await createTextureWithRandomDataAndGetTexels(t, descriptor);
 
-    const calls: TextureCall<vec2>[] = generateSamplePoints2D(50, true, {
+    const calls: TextureCall<vec2>[] = generateTextureBuiltinInputs2D(50, {
       method: samplePoints,
-      textureWidth: texture.width,
-      textureHeight: texture.height,
-    }).map((coords, i) => {
-      const [mipLevel] = makeRepeatableValuesInRanges({
-        hashInputs: [format, samplePoints, C, L, i],
-        rangeDefs: [{ num: texture.mipLevelCount, type: L }],
-      });
+      descriptor,
+      mipLevel: { num: texture.mipLevelCount, type: L },
+      hashInputs: [format, samplePoints, C, L],
+    }).map(({ coords, mipLevel }) => {
       return {
         builtin: 'textureLoad',
         coordType: C === 'i32' ? 'i' : 'u',
@@ -559,18 +542,13 @@ Parameters:
     };
     const { texels, texture } = await createTextureWithRandomDataAndGetTexels(t, descriptor);
 
-    const calls: TextureCall<vec2>[] = generateSamplePoints2D(50, true, {
+    const calls: TextureCall<vec2>[] = generateTextureBuiltinInputs2D(50, {
       method: samplePoints,
-      textureWidth: texture.width,
-      textureHeight: texture.height,
-    }).map((coords, i) => {
-      const [mipLevel, arrayIndex] = makeRepeatableValuesInRanges({
-        hashInputs: [format, samplePoints, C, L, A, i],
-        rangeDefs: [
-          { num: texture.mipLevelCount, type: L },
-          { num: texture.depthOrArrayLayers, type: A },
-        ],
-      });
+      descriptor,
+      mipLevel: { num: texture.mipLevelCount, type: L },
+      arrayIndex: { num: texture.depthOrArrayLayers, type: A },
+      hashInputs: [format, samplePoints, C, L, A],
+    }).map(({ coords, mipLevel, arrayIndex }) => {
       return {
         builtin: 'textureLoad',
         coordType: C === 'i32' ? 'i' : 'u',
