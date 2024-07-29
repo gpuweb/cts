@@ -3,7 +3,7 @@ This test dedicatedly tests validation of GPUFragmentState of createRenderPipeli
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { assert, range } from '../../../../common/util/util.js';
+import { assert, range, unreachable } from '../../../../common/util/util.js';
 import {
   kBlendFactors,
   kBlendOperations,
@@ -547,5 +547,82 @@ g.test('dual_source_blending,color_target_count')
 
     const isAsync = false;
     const _success = colorTargetsCount === 1;
+    t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
+  });
+
+g.test('dual_source_blending,access_src1_alpha')
+  .desc(
+    `Test that when the blend factor of color attachment 0 reads the alpha channel of src1 (the
+    second input of the corresponding blending unit) the fragment output must be vec4f, otherwise
+    there is no such restriction.
+`
+  )
+  .beforeAllSubcases(t => t.selectDeviceOrSkipTestCase('dual-source-blending'))
+  .params(u =>
+    u
+      .combine('blendFactor', kDualSourceBlendingFactors)
+      .combine('fragmentOutputComponentCount', [1, 2, 4] as const)
+      .beginSubcases()
+      .combine('component', ['color', 'alpha'] as const)
+  )
+  .fn(t => {
+    const { blendFactor, fragmentOutputComponentCount, component } = t.params;
+
+    const defaultBlendComponent: GPUBlendComponent = {
+      srcFactor: 'src',
+      dstFactor: 'dst',
+      operation: 'add',
+    };
+    const testBlendComponent: GPUBlendComponent = {
+      srcFactor: blendFactor,
+      dstFactor: blendFactor,
+      operation: 'add',
+    };
+    let format: GPUTextureFormat = 'r8uint';
+    let fragmentOutputType = '';
+    switch (fragmentOutputComponentCount) {
+      case 1:
+        format = 'r8unorm';
+        fragmentOutputType = 'f32';
+        break;
+      case 2:
+        format = 'rg8unorm';
+        fragmentOutputType = 'vec2f';
+        break;
+      case 4:
+        format = 'rgba8unorm';
+        fragmentOutputType = 'vec4f';
+        break;
+      default:
+        unreachable();
+        break;
+    }
+
+    const descriptor = t.getDescriptor({
+      targets: [
+        {
+          format,
+          blend: {
+            color: component === 'color' ? testBlendComponent : defaultBlendComponent,
+            alpha: component === 'alpha' ? testBlendComponent : defaultBlendComponent,
+          },
+        },
+      ],
+      fragmentShaderCode: `
+          enable dual_source_blending;
+          struct FragOutput {
+            @location(0) @blend_src(0) color : ${fragmentOutputType},
+            @location(0) @blend_src(1) blend : ${fragmentOutputType},
+          }
+          @fragment fn main() -> FragOutput {
+            var fragmentOutput : FragOutput;
+            return fragmentOutput;
+          }
+          `,
+    });
+
+    const isAsync = false;
+    const useSrc1Alpha = blendFactor === 'src1-alpha' || blendFactor === 'one-minus-src1-alpha';
+    const _success = !useSrc1Alpha || fragmentOutputComponentCount === 4;
     t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
   });
