@@ -651,7 +651,7 @@ compared with 2d canvas rendering result.
     // Use WebGPU + GPUExternalTexture to render the captured frame.
     const colorAttachment = t.createTextureTracked({
       format: kFormat,
-      size: { width: frameWidth, height: frameHeight, depthOrArrayLayers: 1 },
+      size: { width: frameWidth, height: frameHeight },
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
     });
 
