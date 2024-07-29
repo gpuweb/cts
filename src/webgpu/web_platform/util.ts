@@ -567,7 +567,7 @@ export async function captureCameraFrame(test: GPUTest): Promise<VideoFrame> {
   }
 
   const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-  const track: MediaStreamVideoTrack = stream.getVideoTracks()[0] as MediaStreamVideoTrack;
+  const track = stream.getVideoTracks()[0] as MediaStreamVideoTrack;
 
   if (!track) {
     test.skip("Doesn't have valid camera captured stream for testing.");
