@@ -9,6 +9,7 @@ import {
   kBlendOperations,
   kMaxColorAttachmentsToTest,
 } from '../../../capability_info.js';
+import { GPUConst } from '../../../constants.js';
 import {
   kAllTextureFormats,
   kRenderableColorTextureFormats,
@@ -504,30 +505,25 @@ g.test('dual_source_blending,color_target_count')
       operation: 'add',
     };
 
-    const colorTargetState: ColorTargetState = {
-      format: 'rgba8unorm',
-    };
-    const defaultTargetState: ColorTargetState = {
-      format: 'rgba8unorm',
-      blend: {
-        color: defaultBlendComponent,
-        alpha: defaultBlendComponent,
-      },
-    };
-    colorTargetState.blend = {
-      color: component === 'color' ? testBlendComponent : defaultBlendComponent,
-      alpha: component === 'alpha' ? testBlendComponent : defaultBlendComponent,
-    };
-
     assert(colorTargetsCount >= 1);
     const colorTargetStates = new Array<ColorTargetState>(colorTargetsCount);
-    colorTargetStates[0] = colorTargetState;
+    colorTargetStates[0] = {
+      format: 'rgba8unorm',
+      blend: {
+        color: component === 'color' ? testBlendComponent : defaultBlendComponent,
+        alpha: component === 'alpha' ? testBlendComponent : defaultBlendComponent,
+      },
+    };
 
     for (let i = 1; i < colorTargetsCount; ++i) {
-      colorTargetStates[i] = defaultTargetState;
-      if (maskOutNonZeroIndexColorTargets) {
-        colorTargetStates[i].writeMask = 0;
-      }
+      colorTargetStates[i] = {
+        format: 'rgba8unorm',
+        blend: {
+          color: defaultBlendComponent,
+          alpha: defaultBlendComponent,
+        },
+        writeMask: maskOutNonZeroIndexColorTargets ? 0 : GPUConst.ColorWrite.ALL,
+      };
     }
 
     const descriptor = t.getDescriptor({
