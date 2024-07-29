@@ -93,6 +93,27 @@ export class WGSLTextureQueryTest extends GPUTest {
   }
 }
 
+/**
+ * Generates an array of pseudo random values based on a hash.
+ * For `i32` generates an integer in the range [-1, num]
+ * For `u32` generates an integer in the range [0, num)
+ * for `f32` generates an number in the range [-1 to num)
+ */
+export function makeRepeatableValuesInRanges({
+  hashInputs,
+  rangeDefs,
+}: {
+  hashInputs: (number | string)[];
+  rangeDefs: RangeDef[];
+}): number[] {
+  const _hashInputs = hashInputs.map(v => (typeof v === 'string' ? sumOfCharCodesOfString(v) : v));
+  return rangeDefs.map(({ num, type }, i) => {
+    const range = num + type === 'u32' ? 1 : 2;
+    const number = (hashU32(..._hashInputs, i) / 0x1_0000_0000) * range - (type === 'u32' ? 0 : 1);
+    return type === 'f32' ? number : Math.floor(number);
+  });
+}
+
 function getLimitValue(v: number) {
   switch (v) {
     case Number.POSITIVE_INFINITY:
@@ -1722,39 +1743,52 @@ export const kCubeSamplePointMethods = ['cube-edges', 'texel-centre', 'spiral'] 
 export type CubeSamplePointMethods = (typeof kSamplePointMethods)[number];
 
 /**
+ * Used to specify a range from [0, num)
+ * The type is used to determine if values should be integers and if they can be negative.
+ */
+export type RangeDef = {
+  num: number;
+  type: 'f32' | 'i32' | 'u32';
+};
+
+type TextureBuiltinInputArgs = {
+  descriptor: GPUTextureDescriptor;
+  sampler?: GPUSamplerDescriptor;
+  mipLevel?: RangeDef;
+  sampleIndex?: RangeDef;
+  arrayIndex?: RangeDef;
+  offset?: boolean;
+  hashInputs: (number | string | boolean)[];
+};
+
+/**
  * Generates an array of coordinates at which to sample a texture.
  */
-function generateSamplePointsImpl<T extends Dimensionality>(
+function generateTextureBuiltinInputsImpl<T extends Dimensionality>(
   makeValue: (x: number, y: number, z: number) => T,
   n: number,
-  nearest: boolean,
   args:
-    | {
+    | (TextureBuiltinInputArgs & {
         method: 'texel-centre';
-        textureWidth: number;
-        textureHeight: number;
-        textureDepthOrArrayLayers?: number;
-      }
-    | {
+      })
+    | (TextureBuiltinInputArgs & {
         method: 'spiral';
         radius?: number;
         loops?: number;
-        textureWidth: number;
-        textureHeight: number;
-        textureDepthOrArrayLayers?: number;
-      }
-) {
-  const { method, textureWidth, textureHeight, textureDepthOrArrayLayers = 1 } = args;
-  const out: T[] = [];
+      })
+): { coords: T; mipLevel: number; sampleIndex?: number; arrayIndex?: number; offset?: T }[] {
+  const { method, descriptor } = args;
+  const dimension = descriptor.dimension ?? '2d';
+  const size = virtualMipSize(dimension, descriptor.size, 0);
+  const coords: T[] = [];
   switch (method) {
     case 'texel-centre': {
       for (let i = 0; i < n; i++) {
         const r = hashU32(i);
-        const x = Math.floor(lerp(0, textureWidth - 1, (r & 0xff) / 0xff)) + 0.5;
-        const y = Math.floor(lerp(0, textureHeight - 1, ((r >> 8) & 0xff) / 0xff)) + 0.5;
-        const z =
-          Math.floor(lerp(0, textureDepthOrArrayLayers - 1, ((r >> 16) & 0xff) / 0xff)) + 0.5;
-        out.push(makeValue(x / textureWidth, y / textureHeight, z / textureDepthOrArrayLayers));
+        const x = Math.floor(lerp(0, size[0] - 1, (r & 0xff) / 0xff)) + 0.5;
+        const y = Math.floor(lerp(0, size[1] - 1, ((r >> 8) & 0xff) / 0xff)) + 0.5;
+        const z = Math.floor(lerp(0, size[2] - 1, ((r >> 16) & 0xff) / 0xff)) + 0.5;
+        coords.push(makeValue(x / size[0], y / size[1], z / size[2]));
       }
       break;
     }
@@ -1764,11 +1798,25 @@ function generateSamplePointsImpl<T extends Dimensionality>(
         const f = i / (Math.max(n, 2) - 1);
         const r = radius * f;
         const a = loops * 2 * Math.PI * f;
-        out.push(makeValue(0.5 + r * Math.cos(a), 0.5 + r * Math.sin(a), 0));
+        coords.push(makeValue(0.5 + r * Math.cos(a), 0.5 + r * Math.sin(a), 0));
       }
       break;
     }
   }
+
+  const _hashInputs = args.hashInputs.map(v =>
+    typeof v === 'string' ? sumOfCharCodesOfString(v) : typeof v === 'boolean' ? (v ? 1 : 0) : v
+  );
+  const makeRangeValue = ({ num, type }: RangeDef, ...hashInputs: number[]) => {
+    const range = num + type === 'u32' ? 1 : 2;
+    const number =
+      (hashU32(..._hashInputs, ...hashInputs) / 0x1_0000_0000) * range - (type === 'u32' ? 0 : 1);
+    return type === 'f32' ? number : Math.floor(number);
+  };
+  const makeIntHashValue = (min: number, max: number, ...hashInputs: number[]) => {
+    const range = max - min;
+    return min + Math.floor((hashU32(..._hashInputs, ...hashInputs) / 0x1_0000_0000) * range);
+  };
 
   // Samplers across devices use different methods to interpolate.
   // Quantizing the texture coordinates seems to hit coords that produce
@@ -1779,40 +1827,54 @@ function generateSamplePointsImpl<T extends Dimensionality>(
   // Linux, AMD Radeon Pro WX 3200: 256
   // MacOS, M1 Mac: 256
   const kSubdivisionsPerTexel = 4;
-  const q = [
-    textureWidth * kSubdivisionsPerTexel,
-    textureHeight * kSubdivisionsPerTexel,
-    textureDepthOrArrayLayers * kSubdivisionsPerTexel,
-  ];
-  return out.map(
-    c =>
-      c.map((v, i) => {
-        // Quantize to kSubdivisionsPerPixel
-        const v1 = Math.floor(v * q[i]);
-        // If it's nearest and we're on the edge of a texel then move us off the edge
-        // since the edge could choose one texel or another in nearest mode
-        const v2 = nearest && v1 % kSubdivisionsPerTexel === 0 ? v1 + 1 : v1;
-        // Convert back to texture coords
-        return v2 / q[i];
-      }) as T
-  );
+  const nearest = !args.sampler || args.sampler.minFilter === 'nearest';
+  return coords.map((c, i) => {
+    const mipLevel = args.mipLevel ? makeRangeValue(args.mipLevel, i) : 0;
+    const mipSize = virtualMipSize(dimension, size, mipLevel);
+    const q = mipSize.map(v => v * kSubdivisionsPerTexel);
+
+    const coords = c.map((v, i) => {
+      // Quantize to kSubdivisionsPerPixel
+      const v1 = Math.floor(v * q[i]);
+      // If it's nearest and we're on the edge of a texel then move us off the edge
+      // since the edge could choose one texel or another in nearest mode
+      const v2 = nearest && v1 % kSubdivisionsPerTexel === 0 ? v1 + 1 : v1;
+      // Convert back to texture coords
+      return v2 / q[i];
+    }) as T;
+
+    return {
+      coords,
+      mipLevel,
+      sampleIndex: args.sampleIndex ? makeRangeValue(args.sampleIndex, i, 1) : undefined,
+      arrayIndex: args.arrayIndex ? makeRangeValue(args.arrayIndex, i, 2) : undefined,
+      offset: args.offset
+        ? (coords.map((_, j) => makeIntHashValue(-8, 8, i, 3 + j)) as T)
+        : undefined,
+    };
+  });
 }
 
 // Removes the first element from an array of types
 type FilterFirstElement<T extends unknown[]> = T extends [unknown, ...infer R] ? R : [];
 
-type GenerateSamplePointsImplArgs = FilterFirstElement<Parameters<typeof generateSamplePointsImpl>>;
+type GenerateTextureBuiltinInputsImplArgs = FilterFirstElement<
+  Parameters<typeof generateTextureBuiltinInputsImpl>
+>;
 
-export function generateSamplePoints1D(...args: GenerateSamplePointsImplArgs) {
-  return generateSamplePointsImpl<vec1>((x: number) => [x], ...args);
+export function generateTextureBuiltinInputs1D(...args: GenerateTextureBuiltinInputsImplArgs) {
+  return generateTextureBuiltinInputsImpl<vec1>((x: number) => [x], ...args);
 }
 
-export function generateSamplePoints2D(...args: GenerateSamplePointsImplArgs) {
-  return generateSamplePointsImpl<vec2>((x: number, y: number) => [x, y], ...args);
+export function generateTextureBuiltinInputs2D(...args: GenerateTextureBuiltinInputsImplArgs) {
+  return generateTextureBuiltinInputsImpl<vec2>((x: number, y: number) => [x, y], ...args);
 }
 
-export function generateSamplePoints3D(...args: GenerateSamplePointsImplArgs) {
-  return generateSamplePointsImpl<vec3>((x: number, y: number, z: number) => [x, y, z], ...args);
+export function generateTextureBuiltinInputs3D(...args: GenerateTextureBuiltinInputsImplArgs) {
+  return generateTextureBuiltinInputsImpl<vec3>(
+    (x: number, y: number, z: number) => [x, y, z],
+    ...args
+  );
 }
 
 type mat3 =
@@ -2049,28 +2111,28 @@ function applyAddressModesToCoords(
  */
 export function generateSamplePointsCube(
   n: number,
-  nearest: boolean,
   args:
-    | {
+    | (TextureBuiltinInputArgs & {
         method: 'texel-centre';
-        textureWidth: number;
-        textureDepthOrArrayLayers?: number;
-      }
-    | {
+      })
+    | (TextureBuiltinInputArgs & {
         method: 'spiral';
         radius?: number;
         loops?: number;
-        textureWidth: number;
-        textureDepthOrArrayLayers?: number;
-      }
-    | {
+      })
+    | (TextureBuiltinInputArgs & {
         method: 'cube-edges';
-        textureWidth: number;
-        textureDepthOrArrayLayers?: number;
-      }
-) {
-  const { method, textureWidth } = args;
-  const out: vec3[] = [];
+      })
+): {
+  coords: vec3;
+  mipLevel: number;
+  arrayIndex?: number;
+  offset?: undefined;
+}[] {
+  const { method, descriptor } = args;
+  const size = virtualMipSize('2d', descriptor.size, 0);
+  const textureWidth = size[0];
+  const coords: vec3[] = [];
   switch (method) {
     case 'texel-centre': {
       for (let i = 0; i < n; i++) {
@@ -2079,7 +2141,7 @@ export function generateSamplePointsCube(
         const v =
           (Math.floor(lerp(0, textureWidth - 1, ((r >> 8) & 0xff) / 0xff)) + 0.5) / textureWidth;
         const face = Math.floor(lerp(0, 6, ((r >> 16) & 0xff) / 0x100));
-        out.push(convertNormalized3DTexCoordToCubeCoord([u, v, face]));
+        coords.push(convertNormalized3DTexCoordToCubeCoord([u, v, face]));
       }
       break;
     }
@@ -2097,13 +2159,13 @@ export function generateSamplePointsCube(
         const ux = cosTheta * sinPhi;
         const uy = cosPhi;
         const uz = sinTheta * sinPhi;
-        out.push([ux * r, uy * r, uz * r]);
+        coords.push([ux * r, uy * r, uz * r]);
       }
       break;
     }
     case 'cube-edges': {
       /* prettier-ignore */
-      out.push(
+      coords.push(
         // between edges
         [-1.01, -1.02,  0],
         [ 1.01, -1.02,  0],
@@ -2135,6 +2197,16 @@ export function generateSamplePointsCube(
     }
   }
 
+  const _hashInputs = args.hashInputs.map(v =>
+    typeof v === 'string' ? sumOfCharCodesOfString(v) : typeof v === 'boolean' ? (v ? 1 : 0) : v
+  );
+  const makeRangeValue = ({ num, type }: RangeDef, ...hashInputs: number[]) => {
+    const range = num + type === 'u32' ? 1 : 2;
+    const number =
+      (hashU32(..._hashInputs, ...hashInputs) / 0x1_0000_0000) * range - (type === 'u32' ? 0 : 1);
+    return type === 'f32' ? number : Math.floor(number);
+  };
+
   // Samplers across devices use different methods to interpolate.
   // Quantizing the texture coordinates seems to hit coords that produce
   // comparable results to our computed results.
@@ -2144,12 +2216,16 @@ export function generateSamplePointsCube(
   // Linux, AMD Radeon Pro WX 3200: 256
   // MacOS, M1 Mac: 256
   const kSubdivisionsPerTexel = 4;
-  const q = [
-    textureWidth * kSubdivisionsPerTexel,
-    textureWidth * kSubdivisionsPerTexel,
-    6 * kSubdivisionsPerTexel,
-  ];
-  return out.map(c => {
+  const nearest = !args.sampler || args.sampler.minFilter === 'nearest';
+  return coords.map((c, i) => {
+    const mipLevel = args.mipLevel ? makeRangeValue(args.mipLevel, i) : 0;
+    const mipSize = virtualMipSize('2d', size, mipLevel);
+    const q = [
+      mipSize[0] * kSubdivisionsPerTexel,
+      mipSize[0] * kSubdivisionsPerTexel,
+      6 * kSubdivisionsPerTexel,
+    ];
+
     const uvw = convertCubeCoordToNormalized3DTextureCoord(c);
 
     // If this is a corner, move to in so it's not
@@ -2169,7 +2245,12 @@ export function generateSamplePointsCube(
       // Convert back to texture coords
       return v2 / q[i];
     }) as vec3;
-    return convertNormalized3DTexCoordToCubeCoord(quantizedUVW);
+    const coords = convertNormalized3DTexCoordToCubeCoord(quantizedUVW);
+    return {
+      coords,
+      mipLevel,
+      arrayIndex: args.arrayIndex ? makeRangeValue(args.arrayIndex, i, 2) : undefined,
+    };
   });
 }
 
