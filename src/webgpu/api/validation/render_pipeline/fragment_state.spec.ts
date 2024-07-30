@@ -597,7 +597,7 @@ g.test('dual_source_blending,use_blend_src')
 
           struct FragOutput {
             @location(0) ${useBlendSrc1 ? '@blend_src(0)' : ''} color : vec4f,
-            ${useBlendSrc1 ? ' @location(0) @blend_src(1) blend : vec4f,' : ''}
+            ${useBlendSrc1 ? '@location(0) @blend_src(1) blend : vec4f,' : ''}
           }
 
           @fragment fn main() -> FragOutput {
