@@ -44,7 +44,7 @@ import {
   pack4x8unorm,
   pack4x8snorm,
 } from '../../../../../util/conversion.js';
-import { maxMipLevelCount } from '../../../../../util/texture/base.js';
+import { maxMipLevelCount, virtualMipSize } from '../../../../../util/texture/base.js';
 import { TexelFormats } from '../../../../types.js';
 
 import {
@@ -54,38 +54,30 @@ import {
   createTextureWithRandomDataAndGetTexels,
   doTextureCalls,
   appendComponentTypeForFormatToTextureType,
-  vec2,
   vec1,
+  vec2,
   vec3,
+  kSamplePointMethods,
+  generateTextureBuiltinInputs1D,
+  generateTextureBuiltinInputs2D,
+  generateTextureBuiltinInputs3D,
+  Dimensionality,
 } from './texture_utils.js';
-import {
-  Boundary,
-  LayerSpec,
-  LevelSpec,
-  generateCoordBoundaries,
-  getCoordinateForBoundaries,
-  getLayerFromLayerSpec,
-  getMipLevelFromLevelSpec,
-  getSampleIndexFromSampleIndexSpec,
-  isBoundaryNegative,
-  isLayerSpecNegative,
-  isLevelSpecNegative,
-} from './utils.js';
+import { generateCoordBoundaries } from './utils.js';
 
 const kTestableColorFormats = [...kEncodableTextureFormats, ...kCompressedTextureFormats] as const;
 
-function filterOutU32WithNegativeValues(t: {
-  C: 'i32' | 'u32';
-  level: LevelSpec;
-  coordsBoundary: Boundary;
-  array_index?: LayerSpec;
-}) {
-  return (
-    t.C === 'i32' ||
-    (!isLevelSpecNegative(t.level) &&
-      !isBoundaryNegative(t.coordsBoundary) &&
-      !isLayerSpecNegative(t.array_index ?? 0))
-  );
+export function normalizedCoordToTexelLoadTestCoord<T extends Dimensionality>(
+  descriptor: GPUTextureDescriptor,
+  mipLevel: number,
+  coordType: 'i32' | 'u32',
+  v: T
+): T {
+  const size = virtualMipSize(descriptor.dimension ?? '2d', descriptor.size, mipLevel);
+  return v.map((v, i) => {
+    const t = v * size[i];
+    return coordType === 'u32' ? Math.abs(Math.round(t)) : Math.round(t);
+  }) as T;
 }
 
 export const g = makeTestGroup(GPUTest);
@@ -111,13 +103,9 @@ Parameters:
       // 1d textures can't have a height !== 1
       .filter(t => kTextureFormatInfo[t.format].blockHeight === 1)
       .beginSubcases()
+      .combine('samplePoints', kSamplePointMethods)
       .combine('C', ['i32', 'u32'] as const)
       .combine('L', ['i32', 'u32'] as const)
-      .combine('coordsBoundary', generateCoordBoundaries(1))
-      .combine('level', [-1, 0, `numLevels-1`, `numLevels`] as const)
-      // Only test level out of bounds if coordBoundary is in-bounds
-      .filter(t => !(t.level !== 0 && t.coordsBoundary !== 'in-bounds'))
-      .filter(filterOutU32WithNegativeValues)
   )
   .beforeAllSubcases(t => {
     const { format } = t.params;
@@ -125,7 +113,7 @@ Parameters:
     t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
   })
   .fn(async t => {
-    const { format, C, L, coordsBoundary, level } = t.params;
+    const { format, C, L, samplePoints } = t.params;
 
     // We want at least 4 blocks or something wide enough for 3 mip levels.
     const [width] = chooseTextureSize({ minSize: 8, minBlocks: 4, format });
@@ -138,18 +126,22 @@ Parameters:
       usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
     };
     const { texels, texture } = await createTextureWithRandomDataAndGetTexels(t, descriptor);
-    const mipLevel = getMipLevelFromLevelSpec(texture.mipLevelCount, level);
-    const coords = getCoordinateForBoundaries<vec1>(texture, mipLevel, coordsBoundary);
 
-    const calls: TextureCall<vec1>[] = [
-      {
+    const calls: TextureCall<vec1>[] = generateTextureBuiltinInputs1D(50, {
+      method: samplePoints,
+      descriptor,
+      mipLevel: { num: texture.mipLevelCount, type: L },
+      hashInputs: [format, samplePoints, C, L],
+    }).map(({ coords, mipLevel }, i) => {
+      return {
         builtin: 'textureLoad',
         coordType: C === 'i32' ? 'i' : 'u',
         levelType: L === 'i32' ? 'i' : 'u',
         mipLevel,
-        coords,
-      },
-    ];
+        coords: normalizedCoordToTexelLoadTestCoord(descriptor, mipLevel, C, coords),
+      };
+    });
+
     const textureType = appendComponentTypeForFormatToTextureType('texture_1d', texture.format);
     const viewDescriptor = {};
     const sampler = undefined;
@@ -186,13 +178,9 @@ Parameters:
       // MAINTENANCE_TODO: Update createTextureFromTexelViews to support stencil8 and remove this filter.
       .filter(t => t.format !== 'stencil8' && !isCompressedFloatTextureFormat(t.format))
       .beginSubcases()
+      .combine('samplePoints', kSamplePointMethods)
       .combine('C', ['i32', 'u32'] as const)
       .combine('L', ['i32', 'u32'] as const)
-      .combine('coordsBoundary', generateCoordBoundaries(2))
-      .combine('level', [-1, 0, `numLevels-1`, `numLevels`] as const)
-      // Only test level out of bounds if coordBoundary is in-bounds
-      .filter(t => !(t.level !== 0 && t.coordsBoundary !== 'in-bounds'))
-      .filter(filterOutU32WithNegativeValues)
   )
   .beforeAllSubcases(t => {
     const { format } = t.params;
@@ -200,7 +188,7 @@ Parameters:
     t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
   })
   .fn(async t => {
-    const { format, C, L, coordsBoundary, level } = t.params;
+    const { format, samplePoints, C, L } = t.params;
 
     // We want at least 4 blocks or something wide enough for 3 mip levels.
     const size = chooseTextureSize({ minSize: 8, minBlocks: 4, format });
@@ -215,18 +203,21 @@ Parameters:
       mipLevelCount: maxMipLevelCount({ size }),
     };
     const { texels, texture } = await createTextureWithRandomDataAndGetTexels(t, descriptor);
-    const mipLevel = getMipLevelFromLevelSpec(texture.mipLevelCount, level);
-    const coords = getCoordinateForBoundaries<vec2>(texture, mipLevel, coordsBoundary);
 
-    const calls: TextureCall<vec2>[] = [
-      {
+    const calls: TextureCall<vec2>[] = generateTextureBuiltinInputs2D(50, {
+      method: samplePoints,
+      descriptor,
+      hashInputs: [format, samplePoints, C, L],
+    }).map(({ coords, mipLevel }) => {
+      return {
         builtin: 'textureLoad',
         coordType: C === 'i32' ? 'i' : 'u',
         levelType: L === 'i32' ? 'i' : 'u',
         mipLevel,
-        coords,
-      },
-    ];
+        coords: normalizedCoordToTexelLoadTestCoord(descriptor, mipLevel, C, coords),
+      };
+    });
+
     const textureType = appendComponentTypeForFormatToTextureType('texture_2d', texture.format);
     const viewDescriptor = {};
     const sampler = undefined;
@@ -261,13 +252,9 @@ Parameters:
       .combine('format', kTestableColorFormats)
       .filter(t => textureDimensionAndFormatCompatible('3d', t.format))
       .beginSubcases()
+      .combine('samplePoints', kSamplePointMethods)
       .combine('C', ['i32', 'u32'] as const)
       .combine('L', ['i32', 'u32'] as const)
-      .combine('coordsBoundary', generateCoordBoundaries(3))
-      .combine('level', [-1, 0, `numLevels-1`, `numLevels`] as const)
-      // Only test level out of bounds if coordBoundary is in-bounds
-      .filter(t => !(t.level !== 0 && t.coordsBoundary !== 'in-bounds'))
-      .filter(filterOutU32WithNegativeValues)
   )
   .beforeAllSubcases(t => {
     const { format } = t.params;
@@ -275,7 +262,7 @@ Parameters:
     t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
   })
   .fn(async t => {
-    const { format, C, L, coordsBoundary, level } = t.params;
+    const { format, samplePoints, C, L } = t.params;
 
     // We want at least 4 blocks or something wide enough for 3 mip levels.
     const size = chooseTextureSize({ minSize: 8, minBlocks: 4, format, viewDimension: '3d' });
@@ -288,18 +275,22 @@ Parameters:
       mipLevelCount: maxMipLevelCount({ size }),
     };
     const { texels, texture } = await createTextureWithRandomDataAndGetTexels(t, descriptor);
-    const mipLevel = getMipLevelFromLevelSpec(texture.mipLevelCount, level);
-    const coords = getCoordinateForBoundaries<vec3>(texture, mipLevel, coordsBoundary);
 
-    const calls: TextureCall<vec3>[] = [
-      {
+    const calls: TextureCall<vec3>[] = generateTextureBuiltinInputs3D(50, {
+      method: samplePoints,
+      descriptor,
+      mipLevel: { num: texture.mipLevelCount, type: L },
+      hashInputs: [format, samplePoints, C, L],
+    }).map(({ coords, mipLevel }) => {
+      return {
         builtin: 'textureLoad',
         coordType: C === 'i32' ? 'i' : 'u',
         levelType: L === 'i32' ? 'i' : 'u',
         mipLevel,
-        coords,
-      },
-    ];
+        coords: normalizedCoordToTexelLoadTestCoord(descriptor, mipLevel, C, coords),
+      };
+    });
+
     const textureType = appendComponentTypeForFormatToTextureType('texture_3d', texture.format);
     const viewDescriptor = {};
     const sampler = undefined;
@@ -346,12 +337,9 @@ Parameters:
           !(t.texture_type === 'texture_depth_multisampled_2d' && !isDepthTextureFormat(t.format))
       )
       .beginSubcases()
+      .combine('samplePoints', kSamplePointMethods)
       .combine('C', ['i32', 'u32'] as const)
       .combine('S', ['i32', 'u32'] as const)
-      .combine('coordsBoundary', generateCoordBoundaries(2))
-      .combine('sample_index', [-1, 0, `sampleCount-1`, `sampleCount`] as const)
-      // Only test sample_index out of bounds if coordBoundary is in-bounds
-      .filter(t => !(t.sample_index !== 0 && t.coordsBoundary !== 'in-bounds'))
   )
   .beforeAllSubcases(t => {
     const { format } = t.params;
@@ -360,7 +348,7 @@ Parameters:
     t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
   })
   .fn(async t => {
-    const { texture_type, format, C, S, coordsBoundary, sample_index } = t.params;
+    const { texture_type, format, samplePoints, C, S } = t.params;
 
     const sampleCount = 4;
     const descriptor: GPUTextureDescriptor = {
@@ -373,18 +361,22 @@ Parameters:
       sampleCount,
     };
     const { texels, texture } = await createTextureWithRandomDataAndGetTexels(t, descriptor);
-    const sampleIndex = getSampleIndexFromSampleIndexSpec(texture.sampleCount, sample_index);
-    const coords = getCoordinateForBoundaries<vec2>(texture, 0, coordsBoundary);
 
-    const calls: TextureCall<vec2>[] = [
-      {
+    const calls: TextureCall<vec2>[] = generateTextureBuiltinInputs2D(50, {
+      method: samplePoints,
+      descriptor,
+      sampleIndex: { num: texture.sampleCount, type: S },
+      hashInputs: [format, samplePoints, C, S],
+    }).map(({ coords, sampleIndex }) => {
+      return {
         builtin: 'textureLoad',
         coordType: C === 'i32' ? 'i' : 'u',
         sampleIndexType: S === 'i32' ? 'i' : 'u',
         sampleIndex,
-        coords,
-      },
-    ];
+        coords: normalizedCoordToTexelLoadTestCoord(descriptor, 0, C, coords),
+      };
+    });
+
     const textureType = appendComponentTypeForFormatToTextureType(texture_type, texture.format);
     const viewDescriptor = {};
     const sampler = undefined;
@@ -422,19 +414,15 @@ Parameters:
       // MAINTENANCE_TODO: Remove when support for depth24plus, depth24plus-stencil8, and depth32float-stencil8 is added.
       .filter(t => isEncodableTextureFormat(t.format))
       .beginSubcases()
+      .combine('samplePoints', kSamplePointMethods)
       .combine('C', ['i32', 'u32'] as const)
       .combine('L', ['i32', 'u32'] as const)
-      .combine('coordsBoundary', generateCoordBoundaries(2))
-      .combine('level', [-1, 0, `numLevels-1`, `numLevels`] as const)
-      // Only test level out of bounds if coordBoundary is in-bounds
-      .filter(t => !(t.level !== 0 && t.coordsBoundary !== 'in-bounds'))
-      .filter(filterOutU32WithNegativeValues)
   )
   .beforeAllSubcases(t => {
     t.skipIfTextureLoadNotSupportedForTextureType('texture_depth_2d');
   })
   .fn(async t => {
-    const { format, C, L, coordsBoundary, level } = t.params;
+    const { format, samplePoints, C, L } = t.params;
 
     // We want at least 4 blocks or something wide enough for 3 mip levels.
     const size = chooseTextureSize({ minSize: 8, minBlocks: 4, format });
@@ -449,18 +437,21 @@ Parameters:
       mipLevelCount: maxMipLevelCount({ size }),
     };
     const { texels, texture } = await createTextureWithRandomDataAndGetTexels(t, descriptor);
-    const mipLevel = getMipLevelFromLevelSpec(texture.mipLevelCount, level);
-    const coords = getCoordinateForBoundaries<vec2>(texture, mipLevel, coordsBoundary);
 
-    const calls: TextureCall<vec2>[] = [
-      {
+    const calls: TextureCall<vec2>[] = generateTextureBuiltinInputs2D(50, {
+      method: samplePoints,
+      descriptor,
+      mipLevel: { num: texture.mipLevelCount, type: L },
+      hashInputs: [format, samplePoints, C, L],
+    }).map(({ coords, mipLevel }) => {
+      return {
         builtin: 'textureLoad',
         coordType: C === 'i32' ? 'i' : 'u',
         levelType: L === 'i32' ? 'i' : 'u',
         mipLevel,
-        coords,
-      },
-    ];
+        coords: normalizedCoordToTexelLoadTestCoord(descriptor, mipLevel, C, coords),
+      };
+    });
     const textureType = 'texture_depth_2d';
     const viewDescriptor = {};
     const sampler = undefined;
@@ -520,17 +511,13 @@ Parameters:
         t => !(t.texture_type === 'texture_depth_2d_array' && !isDepthTextureFormat(t.format))
       )
       .beginSubcases()
-      .combine('C', ['i32', 'u32'] as const)
-      .combine('A', ['i32', 'u32'] as const)
-      .combine('L', ['i32', 'u32'] as const)
-      .combine('coordsBoundary', generateCoordBoundaries(3))
-      .combine('array_index', [-1, 0, `numLayers-1`, `numLayers`] as const)
-      // Only test array_index out of bounds if coordBoundary is in bounds
-      .filter(t => !(t.array_index !== 0 && t.coordsBoundary !== 'in-bounds'))
-      .combine('level', [-1, 0, `numLevels-1`, `numLevels`] as const)
-      // Only test level out of bounds if coordBoundary and array_index are in bounds
-      .filter(t => !(t.level !== 0 && (t.coordsBoundary !== 'in-bounds' || t.array_index !== 0)))
-      .filter(filterOutU32WithNegativeValues)
+      .combine('samplePoints', kSamplePointMethods)
+      .combineWithParams([
+        { C: 'i32', A: 'u32', L: 'u32' },
+        { C: 'u32', A: 'u32', L: 'u32' },
+        { C: 'u32', A: 'i32', L: 'u32' },
+        { C: 'u32', A: 'u32', L: 'i32' },
+      ] as const)
   )
   .beforeAllSubcases(t => {
     const { format } = t.params;
@@ -539,7 +526,7 @@ Parameters:
     t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
   })
   .fn(async t => {
-    const { texture_type, format, C, A, L, coordsBoundary, level, array_index } = t.params;
+    const { texture_type, format, samplePoints, C, A, L } = t.params;
 
     // We want at least 4 blocks or something wide enough for 3 mip levels.
     const size = chooseTextureSize({ minSize: 8, minBlocks: 4, format, viewDimension: '3d' });
@@ -554,21 +541,24 @@ Parameters:
       mipLevelCount: maxMipLevelCount({ size }),
     };
     const { texels, texture } = await createTextureWithRandomDataAndGetTexels(t, descriptor);
-    const mipLevel = getMipLevelFromLevelSpec(texture.mipLevelCount, level);
-    const arrayIndex = getLayerFromLayerSpec(texture.depthOrArrayLayers, array_index);
-    const coords = getCoordinateForBoundaries<vec2>(texture, mipLevel, coordsBoundary);
 
-    const calls: TextureCall<vec2>[] = [
-      {
+    const calls: TextureCall<vec2>[] = generateTextureBuiltinInputs2D(50, {
+      method: samplePoints,
+      descriptor,
+      mipLevel: { num: texture.mipLevelCount, type: L },
+      arrayIndex: { num: texture.depthOrArrayLayers, type: A },
+      hashInputs: [format, samplePoints, C, L, A],
+    }).map(({ coords, mipLevel, arrayIndex }) => {
+      return {
         builtin: 'textureLoad',
         coordType: C === 'i32' ? 'i' : 'u',
         levelType: L === 'i32' ? 'i' : 'u',
         arrayIndexType: A === 'i32' ? 'i' : 'u',
         arrayIndex,
         mipLevel,
-        coords,
-      },
-    ];
+        coords: normalizedCoordToTexelLoadTestCoord(descriptor, mipLevel, C, coords),
+      };
+    });
     const textureType = appendComponentTypeForFormatToTextureType(texture_type, texture.format);
     const viewDescriptor = {};
     const sampler = undefined;
