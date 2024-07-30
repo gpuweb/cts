@@ -549,3 +549,66 @@ g.test('dual_source_blending,color_target_count')
     const _success = colorTargetsCount === 1;
     t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
   });
+
+g.test('dual_source_blending,use_blend_src')
+  .desc(
+    `Test that when the blend factor of color attachment 0 uses src1, dual source blending must be
+    used in the fragment shader, whether the corresponding color write mask is 0 or not. In
+    contrast, when dual source blending is used in the fragment shader, we don't require blend
+    factor must use src1 (the second input of the corresponding blending unit).
+`
+  )
+  .beforeAllSubcases(t => t.selectDeviceOrSkipTestCase('dual-source-blending'))
+  .params(u =>
+    u
+      .combine('blendFactor', [...kDualSourceBlendingFactors, ...kBlendFactors] as const)
+      .combine('useBlendSrc1', [true, false] as const)
+      .combine('writeMask', [0, GPUConst.ColorWrite.ALL] as const)
+      .beginSubcases()
+      .combine('component', ['color', 'alpha'] as const)
+  )
+  .fn(t => {
+    const { blendFactor, useBlendSrc1, writeMask, component } = t.params;
+
+    const defaultBlendComponent: GPUBlendComponent = {
+      srcFactor: 'src-alpha',
+      dstFactor: 'dst-alpha',
+      operation: 'add',
+    };
+    const testBlendComponent: GPUBlendComponent = {
+      srcFactor: blendFactor,
+      dstFactor: blendFactor,
+      operation: 'add',
+    };
+
+    const descriptor = t.getDescriptor({
+      targets: [
+        {
+          format: 'rgba8unorm',
+          blend: {
+            color: component === 'color' ? testBlendComponent : defaultBlendComponent,
+            alpha: component === 'alpha' ? testBlendComponent : defaultBlendComponent,
+          },
+          writeMask,
+        },
+      ],
+      fragmentShaderCode: `
+          ${useBlendSrc1 ? 'enable dual_source_blending;' : ''}
+
+          struct FragOutput {
+            @location(0) ${useBlendSrc1 ? '@blend_src(0)' : ''} color : vec4f,
+            ${useBlendSrc1 ? ' @location(0) @blend_src(1) blend : vec4f,' : ''}
+          }
+
+          @fragment fn main() -> FragOutput {
+            var fragmentOutput : FragOutput;
+            return fragmentOutput;
+          }
+          `,
+    });
+
+    const kDualSourceBlendingFactorsSet = new Set(kDualSourceBlendingFactors);
+    const _success = !kDualSourceBlendingFactorsSet.has(blendFactor) || useBlendSrc1;
+    const isAsync = false;
+    t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
+  });
