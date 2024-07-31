@@ -3,9 +3,10 @@ This test dedicatedly tests validation of GPUFragmentState of createRenderPipeli
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { assert, range, unreachable } from '../../../../common/util/util.js';
+import { assert, range } from '../../../../common/util/util.js';
 import {
   kBlendFactors,
+  kDualSourceBlendingFactorsSet,
   kBlendOperations,
   kMaxColorAttachmentsToTest,
 } from '../../../capability_info.js';
@@ -290,11 +291,20 @@ g.test('targets_blend')
     u
       .combine('isAsync', [false, true])
       .combine('component', ['color', 'alpha'] as const)
-      .beginSubcases()
       .combine('srcFactor', kBlendFactors)
       .combine('dstFactor', kBlendFactors)
+      .beginSubcases()
       .combine('operation', kBlendOperations)
   )
+  .beforeAllSubcases(t => {
+    const { srcFactor, dstFactor } = t.params;
+    if (
+      kDualSourceBlendingFactorsSet.has(srcFactor) ||
+      kDualSourceBlendingFactorsSet.has(dstFactor)
+    ) {
+      t.selectDeviceOrSkipTestCase('dual-source-blending');
+    }
+  })
   .fn(t => {
     const { isAsync, component, srcFactor, dstFactor, operation } = t.params;
 
@@ -309,6 +319,21 @@ g.test('targets_blend')
       operation,
     };
     const format = 'rgba8unorm';
+    const useDualSourceBlending =
+      kDualSourceBlendingFactorsSet.has(srcFactor) || kDualSourceBlendingFactorsSet.has(dstFactor);
+    const fragmentShaderCode = useDualSourceBlending
+      ? `enable dual_source_blending;
+
+    struct FragOutput {
+      @location(0) @blend_src(0) color : vec4f,
+      @location(0) @blend_src(1) blend : vec4f,
+    }
+
+    @fragment fn main() -> FragOutput {
+      var fragmentOutput : FragOutput;
+      return fragmentOutput;
+    }`
+      : undefined;
 
     const descriptor = t.getDescriptor({
       targets: [
@@ -320,6 +345,7 @@ g.test('targets_blend')
           },
         },
       ],
+      fragmentShaderCode,
     });
 
     if (operation === 'min' || operation === 'max') {
@@ -410,6 +436,7 @@ g.test('pipeline_output_targets,blend')
   .desc(
     `On top of requirements from pipeline_output_targets, when blending is enabled and alpha channel is read indicated by any blend factor, an extra requirement is added:
   - fragment output must be vec4.
+  TODO: Test Dual Source Blending
   `
   )
   .params(u =>
@@ -417,7 +444,6 @@ g.test('pipeline_output_targets,blend')
       .combine('isAsync', [false, true])
       .combine('format', ['r8unorm', 'rg8unorm', 'rgba8unorm', 'bgra8unorm'] as const)
       .combine('componentCount', [1, 2, 3, 4])
-      .beginSubcases()
       // The default srcFactor and dstFactor are 'one' and 'zero'. Override just one at a time.
       .combineWithParams([
         ...u.combine('colorSrcFactor', kBlendFactors),
@@ -425,6 +451,13 @@ g.test('pipeline_output_targets,blend')
         ...u.combine('alphaSrcFactor', kBlendFactors),
         ...u.combine('alphaDstFactor', kBlendFactors),
       ] as const)
+      .unless(
+        p =>
+          (p.colorSrcFactor !== undefined && kDualSourceBlendingFactorsSet.has(p.colorSrcFactor)) ||
+          (p.colorDstFactor !== undefined && kDualSourceBlendingFactorsSet.has(p.colorDstFactor)) ||
+          (p.alphaSrcFactor !== undefined && kDualSourceBlendingFactorsSet.has(p.alphaSrcFactor)) ||
+          (p.alphaDstFactor !== undefined && kDualSourceBlendingFactorsSet.has(p.alphaDstFactor))
+      )
   )
   .beforeAllSubcases(t => {
     const { format } = t.params;
@@ -561,7 +594,7 @@ g.test('dual_source_blending,use_blend_src')
   .beforeAllSubcases(t => t.selectDeviceOrSkipTestCase('dual-source-blending'))
   .params(u =>
     u
-      .combine('blendFactor', [...kDualSourceBlendingFactors, ...kBlendFactors] as const)
+      .combine('blendFactor', kBlendFactors)
       .combine('useBlendSrc1', [true, false] as const)
       .combine('writeMask', [0, GPUConst.ColorWrite.ALL] as const)
       .beginSubcases()
@@ -608,82 +641,5 @@ g.test('dual_source_blending,use_blend_src')
     const kDualSourceBlendingFactorsSet = new Set(kDualSourceBlendingFactors);
     const _success = !kDualSourceBlendingFactorsSet.has(blendFactor) || useBlendSrc1;
     const isAsync = false;
-    t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
-  });
-
-g.test('dual_source_blending,access_src1_alpha')
-  .desc(
-    `Test that when the blend factor of color attachment 0 reads the alpha channel of src1 (the
-    second input of the corresponding blending unit) the fragment output must be vec4f, otherwise
-    there is no such restriction.
-`
-  )
-  .beforeAllSubcases(t => t.selectDeviceOrSkipTestCase('dual-source-blending'))
-  .params(u =>
-    u
-      .combine('blendFactor', kDualSourceBlendingFactors)
-      .combine('fragmentOutputComponentCount', [1, 2, 4] as const)
-      .beginSubcases()
-      .combine('component', ['color', 'alpha'] as const)
-  )
-  .fn(t => {
-    const { blendFactor, fragmentOutputComponentCount, component } = t.params;
-
-    const defaultBlendComponent: GPUBlendComponent = {
-      srcFactor: 'src',
-      dstFactor: 'dst',
-      operation: 'add',
-    };
-    const testBlendComponent: GPUBlendComponent = {
-      srcFactor: blendFactor,
-      dstFactor: blendFactor,
-      operation: 'add',
-    };
-    let format: GPUTextureFormat = 'r8uint';
-    let fragmentOutputType = '';
-    switch (fragmentOutputComponentCount) {
-      case 1:
-        format = 'r8unorm';
-        fragmentOutputType = 'f32';
-        break;
-      case 2:
-        format = 'rg8unorm';
-        fragmentOutputType = 'vec2f';
-        break;
-      case 4:
-        format = 'rgba8unorm';
-        fragmentOutputType = 'vec4f';
-        break;
-      default:
-        unreachable();
-        break;
-    }
-
-    const descriptor = t.getDescriptor({
-      targets: [
-        {
-          format,
-          blend: {
-            color: component === 'color' ? testBlendComponent : defaultBlendComponent,
-            alpha: component === 'alpha' ? testBlendComponent : defaultBlendComponent,
-          },
-        },
-      ],
-      fragmentShaderCode: `
-          enable dual_source_blending;
-          struct FragOutput {
-            @location(0) @blend_src(0) color : ${fragmentOutputType},
-            @location(0) @blend_src(1) blend : ${fragmentOutputType},
-          }
-          @fragment fn main() -> FragOutput {
-            var fragmentOutput : FragOutput;
-            return fragmentOutput;
-          }
-          `,
-    });
-
-    const isAsync = false;
-    const useSrc1Alpha = blendFactor === 'src1-alpha' || blendFactor === 'one-minus-src1-alpha';
-    const _success = !useSrc1Alpha || fragmentOutputComponentCount === 4;
     t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
   });
