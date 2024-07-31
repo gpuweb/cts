@@ -9,7 +9,11 @@ TODO:
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { assert, TypedArrayBufferView, unreachable } from '../../../../common/util/util.js';
-import { kBlendFactors, kBlendOperations } from '../../../capability_info.js';
+import {
+  kBlendFactors,
+  kDualSourceBlendingFactorsSet,
+  kBlendOperations,
+} from '../../../capability_info.js';
 import { GPUConst } from '../../../constants.js';
 import { kRegularTextureFormats, kTextureFormatInfo } from '../../../format_info.js';
 import { GPUTest, TextureTestMixin } from '../../../gpu_test.js';
@@ -155,16 +159,6 @@ function computeBlendOperation(
   }
 }
 
-const kDualSourceBlendingFactors: GPUBlendFactor[] = [
-  'src1',
-  'one-minus-src1',
-  'src1-alpha',
-  'one-minus-src1-alpha',
-];
-const kDualSourceBlendingFactorsSet = new Set(kDualSourceBlendingFactors);
-
-const kAllBlendFactors = [...kBlendFactors, ...kDualSourceBlendingFactors];
-
 g.test('blending,GPUBlendComponent')
   .desc(
     `Test all combinations of parameters for GPUBlendComponent.
@@ -182,8 +176,8 @@ g.test('blending,GPUBlendComponent')
   .params(u =>
     u //
       .combine('component', ['color', 'alpha'] as const)
-      .combine('srcFactor', kAllBlendFactors)
-      .combine('dstFactor', kAllBlendFactors)
+      .combine('srcFactor', kBlendFactors)
+      .combine('dstFactor', kBlendFactors)
       .beginSubcases()
       .combine('operation', kBlendOperations)
       .filter(t => {
