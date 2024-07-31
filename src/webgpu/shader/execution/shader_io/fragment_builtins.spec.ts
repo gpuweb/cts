@@ -1423,3 +1423,7 @@ g.test('inputs,sample_mask')
       })
     );
   });
+
+g.test('subgroup_size').unimplemented();
+
+g.test('subgroup_invocation_id').unimplemented();
