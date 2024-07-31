@@ -434,9 +434,12 @@ g.test('pipeline_output_targets')
 
 g.test('pipeline_output_targets,blend')
   .desc(
-    `On top of requirements from pipeline_output_targets, when blending is enabled and alpha channel is read indicated by any blend factor, an extra requirement is added:
-  - fragment output must be vec4.
-  TODO: Test Dual Source Blending
+    `On top of requirements from pipeline_output_targets, when blending is enabled and alpha channel
+    is read indicated by any color blend factor, an extra requirement is added:
+      - fragment output must be vec4.
+
+    TODO: Implement all the skipped tests about the blend factors added in the extension
+          "dual-source-blending"
   `
   )
   .params(u =>
