@@ -85,6 +85,7 @@ function mapColor(
 
 function computeBlendFactor(
   src: GPUColorDict,
+  src1: GPUColorDict,
   dst: GPUColorDict,
   blendColor: GPUColorDict | undefined,
   factor: GPUBlendFactor
@@ -120,6 +121,14 @@ function computeBlendFactor(
     case 'one-minus-constant':
       assert(blendColor !== undefined);
       return mapColor(blendColor, v => 1 - v);
+    case 'src1':
+      return { ...src1 };
+    case 'one-minus-src1':
+      return mapColor(src1, v => 1 - v);
+    case 'src1-alpha':
+      return mapColor(src1, () => src1.a);
+    case 'one-minus-src1-alpha':
+      return mapColor(src1, () => 1 - src1.a);
     default:
       unreachable();
   }
@@ -146,6 +155,16 @@ function computeBlendOperation(
   }
 }
 
+const kDualSourceBlendingFactors: GPUBlendFactor[] = [
+  'src1',
+  'one-minus-src1',
+  'src1-alpha',
+  'one-minus-src1-alpha',
+];
+const kDualSourceBlendingFactorsSet = new Set(kDualSourceBlendingFactors);
+
+const kAllBlendFactors = [...kBlendFactors, ...kDualSourceBlendingFactors];
+
 g.test('blending,GPUBlendComponent')
   .desc(
     `Test all combinations of parameters for GPUBlendComponent.
@@ -163,8 +182,8 @@ g.test('blending,GPUBlendComponent')
   .params(u =>
     u //
       .combine('component', ['color', 'alpha'] as const)
-      .combine('srcFactor', kBlendFactors)
-      .combine('dstFactor', kBlendFactors)
+      .combine('srcFactor', kAllBlendFactors)
+      .combine('dstFactor', kAllBlendFactors)
       .beginSubcases()
       .combine('operation', kBlendOperations)
       .filter(t => {
@@ -174,6 +193,7 @@ g.test('blending,GPUBlendComponent')
         return true;
       })
       .combine('srcColor', [{ r: 0.11, g: 0.61, b: 0.81, a: 0.44 }])
+      .combine('srcColor1', [{ r: 0.22, g: 0.41, b: 0.51, a: 0.33 }])
       .combine('dstColor', [
         { r: 0.51, g: 0.22, b: 0.71, a: 0.33 },
         { r: 0.09, g: 0.73, b: 0.93, a: 0.81 },
@@ -187,14 +207,35 @@ g.test('blending,GPUBlendComponent')
         return needsBlendConstant ? [{ r: 0.91, g: 0.82, b: 0.73, a: 0.64 }] : [undefined];
       })
   )
+  .beforeAllSubcases(t => {
+    if (
+      kDualSourceBlendingFactorsSet.has(t.params.srcFactor) ||
+      kDualSourceBlendingFactorsSet.has(t.params.dstFactor)
+    ) {
+      t.selectDeviceOrSkipTestCase('dual-source-blending');
+    }
+  })
   .fn(t => {
     const textureFormat: GPUTextureFormat = 'rgba16float';
     const srcColor = t.params.srcColor;
+    const srcColor1 = t.params.srcColor1;
     const dstColor = t.params.dstColor;
     const blendConstant = t.params.blendConstant;
 
-    const srcFactor = computeBlendFactor(srcColor, dstColor, blendConstant, t.params.srcFactor);
-    const dstFactor = computeBlendFactor(srcColor, dstColor, blendConstant, t.params.dstFactor);
+    const srcFactor = computeBlendFactor(
+      srcColor,
+      srcColor1,
+      dstColor,
+      blendConstant,
+      t.params.srcFactor
+    );
+    const dstFactor = computeBlendFactor(
+      srcColor,
+      srcColor1,
+      dstColor,
+      blendConstant,
+      t.params.dstFactor
+    );
 
     const expectedColor = computeBlendOperation(
       srcColor,
@@ -214,6 +255,10 @@ g.test('blending,GPUBlendComponent')
         expectedColor.b = srcColor.b;
         break;
     }
+
+    const useBlendSrc1 =
+      kDualSourceBlendingFactorsSet.has(t.params.srcFactor) ||
+      kDualSourceBlendingFactorsSet.has(t.params.dstFactor);
 
     const pipeline = t.device.createRenderPipeline({
       layout: 'auto',
@@ -236,13 +281,24 @@ g.test('blending,GPUBlendComponent')
         ],
         module: t.device.createShaderModule({
           code: `
+${useBlendSrc1 ? 'enable dual_source_blending;' : ''}
+
 struct Uniform {
-  color: vec4<f32>
+  color: vec4f,
+  blend: vec4f,
 };
 @group(0) @binding(0) var<uniform> u : Uniform;
 
-@fragment fn main() -> @location(0) vec4<f32> {
-  return u.color;
+struct FragOutput {
+  @location(0) ${useBlendSrc1 ? '@blend_src(0)' : ''} color : vec4f,
+  ${useBlendSrc1 ? '@location(0) @blend_src(1) blend : vec4f,' : ''}
+}
+
+@fragment fn main() ->FragOutput {
+  var fragOutput : FragOutput;
+  fragOutput.color = u.color;
+  ${useBlendSrc1 ? 'fragOutput.blend = u.blend;' : ''}
+  return fragOutput;
 }
           `,
         }),
@@ -293,7 +349,16 @@ struct Uniform {
             binding: 0,
             resource: {
               buffer: t.makeBufferWithContents(
-                new Float32Array([srcColor.r, srcColor.g, srcColor.b, srcColor.a]),
+                new Float32Array([
+                  srcColor.r,
+                  srcColor.g,
+                  srcColor.b,
+                  srcColor.a,
+                  srcColor1.r,
+                  srcColor1.g,
+                  srcColor1.b,
+                  srcColor1.a,
+                ]),
                 GPUBufferUsage.UNIFORM
               ),
             },
