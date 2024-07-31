@@ -535,6 +535,8 @@ function checkSubgroupInvocationIdConsistency(
   numWGs: number
 ): Error | undefined {
   for (let wg = 0; wg < numWGs; wg++) {
+    // Tracks an effective ballot of each subgroup based on the representative id
+    // (global id of invocation 0 in the subgroup).
     const mappings = new Map<number, bigint>();
     for (let i = 0; i < invocations; i++) {
       const idx = i + invocations * wg;
@@ -626,6 +628,7 @@ ${genLID(lid[0], lid[1], lid[2], t.params.sizes)}
 @group(0) @binding(0)
 var<storage, read_write> output : array<u32>;
 
+// This var stores the global id of invocation 0 in the subgroup.
 @group(0) @binding(1)
 var<storage, read_write> subgroup_ids : array<u32>;
 

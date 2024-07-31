@@ -5,8 +5,6 @@ Note: There is a lack of portability for non-uniform execution so these tests
 restrict themselves to uniform control flow or returning early.
 Note: There is no guaranteed mapping between subgroup_invocation_id and
 local_invocation_index. Tests should avoid assuming there is.
-
-Note: This currently uses a parameter-less version of ballot.
 `;
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
