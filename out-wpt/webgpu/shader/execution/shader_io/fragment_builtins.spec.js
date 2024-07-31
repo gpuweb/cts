@@ -1423,3 +1423,7 @@ fn(async (t) => {
     })
   );
 });
+
+g.test('subgroup_size').unimplemented();
+
+g.test('subgroup_invocation_id').unimplemented();

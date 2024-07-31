@@ -3135,6 +3135,26 @@ export const listing = [
       "expression",
       "call",
       "builtin",
+      "subgroupBallot"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "call",
+      "builtin",
+      "subgroupBroadcast"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "call",
+      "builtin",
       "tan"
     ]
   },
@@ -4755,6 +4775,26 @@ export const listing = [
       "call",
       "builtin",
       "step"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
+      "call",
+      "builtin",
+      "subgroupBallot"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
+      "call",
+      "builtin",
+      "subgroupBroadcast"
     ]
   },
   {
