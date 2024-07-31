@@ -659,7 +659,19 @@ export const kBlendFactors: readonly GPUBlendFactor[] = [
   'src-alpha-saturated',
   'constant',
   'one-minus-constant',
+  'src1',
+  'one-minus-src1',
+  'src1-alpha',
+  'one-minus-src1-alpha',
 ];
+
+/** Set of all GPUBlendFactor values added in the extension "dual-source-blending". */
+export const kDualSourceBlendingFactorsSet = new Set([
+  'src1',
+  'one-minus-src1',
+  'src1-alpha',
+  'one-minus-src1-alpha',
+]);
 
 /** List of all GPUBlendOperation values. */
 export const kBlendOperations: readonly GPUBlendOperation[] = [
