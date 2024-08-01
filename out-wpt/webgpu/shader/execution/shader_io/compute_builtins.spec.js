@@ -398,9 +398,11 @@ beforeAllSubcases((t) => {
   t.selectDeviceOrSkipTestCase('subgroups');
 }).
 fn(async (t) => {
-  // Replace these with the limits when they are wired up.
-  const minSize = 4;
-  const maxSize = 128;
+
+
+
+
+  const { minSubgroupSize, maxSubgroupSize } = t.device.limits;
 
   const wgx = t.params.sizes[0];
   const wgy = t.params.sizes[1];
@@ -512,7 +514,15 @@ fn main(@builtin(subgroup_size) size : u32,
   });
   const compareData = compareReadback.data;
 
-  t.expectOK(checkSubgroupSizeConsistency(sizesData, compareData, minSize, maxSize, wgThreads));
+  t.expectOK(
+    checkSubgroupSizeConsistency(
+      sizesData,
+      compareData,
+      minSubgroupSize,
+      maxSubgroupSize,
+      wgThreads
+    )
+  );
 });
 
 /**
