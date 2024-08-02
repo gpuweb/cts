@@ -448,10 +448,10 @@ g.test('pipeline_output_targets,blend')
     const requiredFeatures: (GPUFeatureName | undefined)[] = [info.feature];
 
     if (
-      (colorSrcFactor !== undefined && IsDualSourceBlendingFactor(colorSrcFactor)) ||
-      (colorDstFactor !== undefined && IsDualSourceBlendingFactor(colorDstFactor)) ||
-      (alphaSrcFactor !== undefined && IsDualSourceBlendingFactor(alphaSrcFactor)) ||
-      (alphaDstFactor !== undefined && IsDualSourceBlendingFactor(alphaDstFactor))
+      IsDualSourceBlendingFactor(colorSrcFactor) ||
+      IsDualSourceBlendingFactor(colorDstFactor) ||
+      IsDualSourceBlendingFactor(alphaSrcFactor) ||
+      IsDualSourceBlendingFactor(alphaDstFactor)
     ) {
       requiredFeatures.push('dual-source-blending');
     }
