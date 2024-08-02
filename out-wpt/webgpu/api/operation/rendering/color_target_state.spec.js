@@ -10,8 +10,8 @@ TODO:
 `;import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { assert, unreachable } from '../../../../common/util/util.js';
 import {
+  IsDualSourceBlendingFactor,
   kBlendFactors,
-  kDualSourceBlendingFactorsSet,
   kBlendOperations } from
 '../../../capability_info.js';
 import { GPUConst } from '../../../constants.js';
@@ -203,8 +203,8 @@ expand('blendConstant', (p) => {
 ).
 beforeAllSubcases((t) => {
   if (
-  kDualSourceBlendingFactorsSet.has(t.params.srcFactor) ||
-  kDualSourceBlendingFactorsSet.has(t.params.dstFactor))
+  IsDualSourceBlendingFactor(t.params.srcFactor) ||
+  IsDualSourceBlendingFactor(t.params.dstFactor))
   {
     t.selectDeviceOrSkipTestCase('dual-source-blending');
   }
@@ -251,8 +251,8 @@ fn((t) => {
   }
 
   const useBlendSrc1 =
-  kDualSourceBlendingFactorsSet.has(t.params.srcFactor) ||
-  kDualSourceBlendingFactorsSet.has(t.params.dstFactor);
+  IsDualSourceBlendingFactor(t.params.srcFactor) ||
+  IsDualSourceBlendingFactor(t.params.dstFactor);
 
   const pipeline = t.device.createRenderPipeline({
     layout: 'auto',
