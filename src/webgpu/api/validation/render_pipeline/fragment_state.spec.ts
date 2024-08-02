@@ -5,8 +5,8 @@ This test dedicatedly tests validation of GPUFragmentState of createRenderPipeli
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { assert, range } from '../../../../common/util/util.js';
 import {
+  IsDualSourceBlendingFactor,
   kBlendFactors,
-  kDualSourceBlendingFactorsSet,
   kBlendOperations,
   kMaxColorAttachmentsToTest,
 } from '../../../capability_info.js';
@@ -298,10 +298,7 @@ g.test('targets_blend')
   )
   .beforeAllSubcases(t => {
     const { srcFactor, dstFactor } = t.params;
-    if (
-      kDualSourceBlendingFactorsSet.has(srcFactor) ||
-      kDualSourceBlendingFactorsSet.has(dstFactor)
-    ) {
+    if (IsDualSourceBlendingFactor(srcFactor) || IsDualSourceBlendingFactor(dstFactor)) {
       t.selectDeviceOrSkipTestCase('dual-source-blending');
     }
   })
@@ -320,20 +317,12 @@ g.test('targets_blend')
     };
     const format = 'rgba8unorm';
     const useDualSourceBlending =
-      kDualSourceBlendingFactorsSet.has(srcFactor) || kDualSourceBlendingFactorsSet.has(dstFactor);
-    const fragmentShaderCode = useDualSourceBlending
-      ? `enable dual_source_blending;
-
-    struct FragOutput {
-      @location(0) @blend_src(0) color : vec4f,
-      @location(0) @blend_src(1) blend : vec4f,
-    }
-
-    @fragment fn main() -> FragOutput {
-      var fragmentOutput : FragOutput;
-      return fragmentOutput;
-    }`
-      : undefined;
+      IsDualSourceBlendingFactor(srcFactor) || IsDualSourceBlendingFactor(dstFactor);
+    const fragmentShaderCode = getFragmentShaderCodeWithOutput(
+      [{ values, plainType: 'f32', componentCount: 4 }],
+      null,
+      useDualSourceBlending
+    );
 
     const descriptor = t.getDescriptor({
       targets: [
@@ -437,9 +426,6 @@ g.test('pipeline_output_targets,blend')
     `On top of requirements from pipeline_output_targets, when blending is enabled and alpha channel
     is read indicated by any color blend factor, an extra requirement is added:
       - fragment output must be vec4.
-
-    TODO: Implement all the skipped tests about the blend factors added in the extension
-          "dual-source-blending"
   `
   )
   .params(u =>
@@ -454,18 +440,23 @@ g.test('pipeline_output_targets,blend')
         ...u.combine('alphaSrcFactor', kBlendFactors),
         ...u.combine('alphaDstFactor', kBlendFactors),
       ] as const)
-      .unless(
-        p =>
-          (p.colorSrcFactor !== undefined && kDualSourceBlendingFactorsSet.has(p.colorSrcFactor)) ||
-          (p.colorDstFactor !== undefined && kDualSourceBlendingFactorsSet.has(p.colorDstFactor)) ||
-          (p.alphaSrcFactor !== undefined && kDualSourceBlendingFactorsSet.has(p.alphaSrcFactor)) ||
-          (p.alphaDstFactor !== undefined && kDualSourceBlendingFactorsSet.has(p.alphaDstFactor))
-      )
   )
   .beforeAllSubcases(t => {
-    const { format } = t.params;
+    const { format, colorSrcFactor, colorDstFactor, alphaSrcFactor, alphaDstFactor } = t.params;
+
     const info = kTextureFormatInfo[format];
-    t.selectDeviceOrSkipTestCase(info.feature);
+    const requiredFeatures: (GPUFeatureName | undefined)[] = [info.feature];
+
+    if (
+      IsDualSourceBlendingFactor(colorSrcFactor) ||
+      IsDualSourceBlendingFactor(colorDstFactor) ||
+      IsDualSourceBlendingFactor(alphaSrcFactor) ||
+      IsDualSourceBlendingFactor(alphaDstFactor)
+    ) {
+      requiredFeatures.push('dual-source-blending');
+    }
+
+    t.selectDeviceOrSkipTestCase(requiredFeatures);
   })
   .fn(t => {
     const sampleType = 'float';
@@ -480,6 +471,12 @@ g.test('pipeline_output_targets,blend')
     } = t.params;
     const info = kTextureFormatInfo[format];
 
+    const useDualSourceBlending =
+      IsDualSourceBlendingFactor(colorSrcFactor) ||
+      IsDualSourceBlendingFactor(colorDstFactor) ||
+      IsDualSourceBlendingFactor(alphaSrcFactor) ||
+      IsDualSourceBlendingFactor(alphaDstFactor);
+
     const descriptor = t.getDescriptor({
       targets: [
         {
@@ -490,13 +487,18 @@ g.test('pipeline_output_targets,blend')
           },
         },
       ],
-      fragmentShaderCode: getFragmentShaderCodeWithOutput([
-        { values, plainType: getPlainTypeInfo(sampleType), componentCount },
-      ]),
+      fragmentShaderCode: getFragmentShaderCodeWithOutput(
+        [{ values, plainType: getPlainTypeInfo(sampleType), componentCount }],
+        null,
+        useDualSourceBlending
+      ),
     });
 
     const colorBlendReadsSrcAlpha =
-      colorSrcFactor?.includes('src-alpha') || colorDstFactor?.includes('src-alpha');
+      colorSrcFactor?.includes('src-alpha') ||
+      colorDstFactor?.includes('src-alpha') ||
+      colorSrcFactor?.includes('src1-alpha') ||
+      colorDstFactor?.includes('src1-alpha');
     const meetsExtraBlendingRequirement = !colorBlendReadsSrcAlpha || componentCount === 4;
     const _success =
       info.color.type === sampleType &&
@@ -564,21 +566,11 @@ g.test('dual_source_blending,color_target_count')
 
     const descriptor = t.getDescriptor({
       targets: colorTargetStates,
-      fragmentShaderCode: `
-          enable dual_source_blending;
-
-          struct FragOutput {
-            @location(0) @blend_src(0) color : vec4f,
-            @location(0) @blend_src(1) blend : vec4f,
-          }
-
-          @fragment fn main() -> FragOutput {
-            var fragmentOutput : FragOutput;
-            fragmentOutput.color = vec4f(0.0, 1.0, 0.0, 1.0);
-            fragmentOutput.blend = fragmentOutput.color;
-            return fragmentOutput;
-          }
-          `,
+      fragmentShaderCode: getFragmentShaderCodeWithOutput(
+        [{ values, plainType: 'f32', componentCount: 4 }],
+        null,
+        true
+      ),
     });
 
     const isAsync = false;
@@ -628,21 +620,14 @@ g.test('dual_source_blending,use_blend_src')
           writeMask,
         },
       ],
-      fragmentShaderCode: `
-          ${useBlendSrc1 ? 'enable dual_source_blending;' : ''}
-          struct FragOutput {
-            @location(0) ${useBlendSrc1 ? '@blend_src(0)' : ''} color : vec4f,
-            ${useBlendSrc1 ? '@location(0) @blend_src(1) blend : vec4f,' : ''}
-          }
-          @fragment fn main() -> FragOutput {
-            var fragmentOutput : FragOutput;
-            return fragmentOutput;
-          }
-          `,
+      fragmentShaderCode: getFragmentShaderCodeWithOutput(
+        [{ values, plainType: 'f32', componentCount: 4 }],
+        null,
+        useBlendSrc1
+      ),
     });
 
-    const kDualSourceBlendingFactorsSet = new Set(kDualSourceBlendingFactors);
-    const _success = !kDualSourceBlendingFactorsSet.has(blendFactor) || useBlendSrc1;
+    const _success = !IsDualSourceBlendingFactor(blendFactor) || useBlendSrc1;
     const isAsync = false;
     t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
   });
