@@ -472,10 +472,10 @@ g.test('pipeline_output_targets,blend')
     const info = kTextureFormatInfo[format];
 
     const useDualSourceBlending =
-      (colorSrcFactor !== undefined && IsDualSourceBlendingFactor(colorSrcFactor)) ||
-      (colorDstFactor !== undefined && IsDualSourceBlendingFactor(colorDstFactor)) ||
-      (alphaSrcFactor !== undefined && IsDualSourceBlendingFactor(alphaSrcFactor)) ||
-      (alphaDstFactor !== undefined && IsDualSourceBlendingFactor(alphaDstFactor));
+      IsDualSourceBlendingFactor(colorSrcFactor) ||
+      IsDualSourceBlendingFactor(colorDstFactor) ||
+      IsDualSourceBlendingFactor(alphaSrcFactor) ||
+      IsDualSourceBlendingFactor(alphaDstFactor);
 
     const descriptor = t.getDescriptor({
       targets: [

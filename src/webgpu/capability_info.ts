@@ -666,7 +666,7 @@ export const kBlendFactors: readonly GPUBlendFactor[] = [
 ];
 
 /** Check if `blendFactor` belongs to the blend factors in the extension "dual-source-blending". */
-export function IsDualSourceBlendingFactor(blendFactor: GPUBlendFactor): boolean {
+export function IsDualSourceBlendingFactor(blendFactor?: GPUBlendFactor): boolean {
   switch (blendFactor) {
     case 'src1':
     case 'one-minus-src1':
