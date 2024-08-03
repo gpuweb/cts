@@ -1798,6 +1798,48 @@ function valueIfAllComponentsAreEqual(
   return s.size === 1 ? s.values().next().value : undefined;
 }
 
+/**
+ * Creates a VideoFrame with random data and a TexelView with the same data.
+ */
+export function createVideoFrameWithRandomDataAndGetTexels(textureSize: GPUExtent3D) {
+  const size = reifyExtent3D(textureSize);
+  assert(size.depthOrArrayLayers === 1);
+
+  // Fill ImageData with random values.
+  const imageData = new ImageData(size.width, size.height);
+  const data = imageData.data;
+  const asU32 = new Uint32Array(data.buffer);
+  for (let i = 0; i < asU32.length; ++i) {
+    asU32[i] = hashU32(i);
+  }
+
+  // Put the ImageData into a canvas and make a VideoFrame
+  const canvas = new OffscreenCanvas(size.width, size.height);
+  const ctx = canvas.getContext('2d')!;
+  ctx.putImageData(imageData, 0, 0);
+  const videoFrame = new VideoFrame(canvas, { timestamp: 0 });
+
+  // Premultiply the ImageData
+  for (let i = 0; i < data.length; i += 4) {
+    const alpha = data[i + 3] / 255;
+    data[i + 0] = data[i + 0] * alpha;
+    data[i + 1] = data[i + 1] * alpha;
+    data[i + 2] = data[i + 2] * alpha;
+  }
+
+  // Create a TexelView from the premultiplied ImageData
+  const texels = [
+    TexelView.fromTextureDataByReference('rgba8unorm', data, {
+      bytesPerRow: size.width * 4,
+      rowsPerImage: size.height,
+      subrectOrigin: [0, 0, 0],
+      subrectSize: size,
+    }),
+  ];
+
+  return { videoFrame, texels };
+}
+
 const kFaceNames = ['+x', '-x', '+y', '-y', '+z', '-z'] as const;
 
 /**
@@ -2831,7 +2873,7 @@ const s_deviceToPipelines = new WeakMap<GPUDevice, Map<string, GPURenderPipeline
  */
 export async function doTextureCalls<T extends Dimensionality>(
   t: GPUTest,
-  gpuTexture: GPUTexture,
+  gpuTexture: GPUTexture | GPUExternalTexture,
   viewDescriptor: GPUTextureViewDescriptor,
   textureType: string,
   sampler: GPUSamplerDescriptor | undefined,
@@ -2869,9 +2911,12 @@ export async function doTextureCalls<T extends Dimensionality>(
   });
   t.device.queue.writeBuffer(dataBuffer, 0, new Uint32Array(data));
 
-  const { resultType, resultFormat, componentType } = textureType.includes('depth')
-    ? ({ resultType: 'f32', resultFormat: 'rgba32float', componentType: 'f32' } as const)
-    : getTextureFormatTypeInfo(gpuTexture.format);
+  const { resultType, resultFormat, componentType } =
+    gpuTexture instanceof GPUExternalTexture
+      ? ({ resultType: 'vec4f', resultFormat: 'rgba32float', componentType: 'f32' } as const)
+      : textureType.includes('depth')
+      ? ({ resultType: 'f32', resultFormat: 'rgba32float', componentType: 'f32' } as const)
+      : getTextureFormatTypeInfo(gpuTexture.format);
   const returnType = `vec4<${componentType}>`;
 
   const rtWidth = 256;
@@ -2936,7 +2981,13 @@ ${body}
   const bindGroup = t.device.createBindGroup({
     layout: pipeline.getBindGroupLayout(0),
     entries: [
-      { binding: 0, resource: gpuTexture.createView(viewDescriptor) },
+      {
+        binding: 0,
+        resource:
+          gpuTexture instanceof GPUExternalTexture
+            ? gpuTexture
+            : gpuTexture.createView(viewDescriptor),
+      },
       ...(sampler ? [{ binding: 1, resource: gpuSampler! }] : []),
       { binding: 2, resource: { buffer: dataBuffer } },
     ],

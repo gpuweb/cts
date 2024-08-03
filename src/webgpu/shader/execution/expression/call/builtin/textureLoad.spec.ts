@@ -54,8 +54,8 @@ import {
   generateTextureBuiltinInputs2D,
   generateTextureBuiltinInputs3D,
   Dimensionality,
+  createVideoFrameWithRandomDataAndGetTexels,
 } from './texture_utils.js';
-import { generateCoordBoundaries } from './utils.js';
 
 const kTestableColorFormats = [...kEncodableTextureFormats, ...kCompressedTextureFormats] as const;
 
@@ -469,13 +469,57 @@ fn textureLoad(t: texture_external, coords: vec2<C>) -> vec4<f32>
 
 Parameters:
  * t: The sampled texture to read from
- * coords: The 0-based texel coordinate
+ * coords: The 0-based texel coordinate.
 `
   )
   .paramsSubcasesOnly(u =>
-    u.combine('C', ['i32', 'u32'] as const).combine('coords', generateCoordBoundaries(2))
+    u
+      .combine('samplePoints', kSamplePointMethods)
+      .combine('C', ['i32', 'u32'] as const)
+      .combine('L', ['i32', 'u32'] as const)
   )
-  .unimplemented();
+  .fn(async t => {
+    const { samplePoints, C, L } = t.params;
+
+    const size = [8, 8, 1];
+
+    // Note: external texture doesn't use this descriptor.
+    // It's used to pass to the softwareTextureRead functions.
+    const descriptor: GPUTextureDescriptor = {
+      format: 'rgba8unorm',
+      size,
+      usage: GPUTextureUsage.COPY_DST,
+    };
+    const { texels, videoFrame } = createVideoFrameWithRandomDataAndGetTexels(descriptor.size);
+    const texture = t.device.importExternalTexture({ source: videoFrame });
+
+    const calls: TextureCall<vec2>[] = generateTextureBuiltinInputs2D(50, {
+      method: samplePoints,
+      descriptor,
+      hashInputs: [samplePoints, C, L],
+    }).map(({ coords }) => {
+      return {
+        builtin: 'textureLoad',
+        coordType: C === 'i32' ? 'i' : 'u',
+        coords: normalizedCoordToTexelLoadTestCoord(descriptor, 0, C, coords),
+      };
+    });
+
+    const textureType = 'texture_external';
+    const viewDescriptor = {};
+    const sampler = undefined;
+    const results = await doTextureCalls(t, texture, viewDescriptor, textureType, sampler, calls);
+    const res = await checkCallResults(
+      t,
+      { texels, descriptor, viewDescriptor },
+      textureType,
+      sampler,
+      calls,
+      results
+    );
+    t.expectOK(res);
+    videoFrame.close();
+  });
 
 g.test('arrayed')
   .specURL('https://www.w3.org/TR/WGSL/#textureload')
