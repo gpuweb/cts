@@ -11,7 +11,7 @@ g.test('cube_array')
   .params(u => u.combine('dimension', ['cube', 'cube-array'] as const))
   .fn(t => {
     const { dimension } = t.params;
-    const texture = t.device.createTexture({
+    const texture = t.createTextureTracked({
       size: [1, 1, 6],
       format: 'rgba8unorm',
       usage: GPUTextureUsage.TEXTURE_BINDING,

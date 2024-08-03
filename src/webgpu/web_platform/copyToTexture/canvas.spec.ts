@@ -10,11 +10,11 @@ import {
   kValidTextureFormatsForCopyE2T,
   RegularTextureFormat,
 } from '../../format_info.js';
-import { CopyToTextureUtils } from '../../util/copy_to_texture.js';
+import { TextureUploadingUtils } from '../../util/copy_to_texture.js';
 import { CanvasType, kAllCanvasTypes, createCanvas } from '../../util/create_elements.js';
 import { TexelCompareOptions } from '../../util/texture/texture_ok.js';
 
-class F extends CopyToTextureUtils {
+class F extends TextureUploadingUtils {
   init2DCanvasContentWithColorSpace({
     width,
     height,
@@ -401,7 +401,7 @@ class F extends CopyToTextureUtils {
       dstPremultiplied: boolean;
     }
   ) {
-    const dst = this.device.createTexture({
+    const dst = this.createTextureTracked({
       size: {
         width: p.width,
         height: p.height,
@@ -787,7 +787,7 @@ g.test('color_space_conversion')
       colorSpace: srcColorSpace,
     });
 
-    const dst = t.device.createTexture({
+    const dst = t.createTextureTracked({
       size: { width, height },
       format: dstColorFormat,
       usage:

@@ -243,14 +243,13 @@ function createResourcesForRenderPassTest(
   textureType: TextureType,
   bindConfig: BindConfig
 ) {
-  const texture = t.device.createTexture({
+  const texture = t.createTextureTracked({
     size: [2, 1, 1],
     mipLevelCount: 2,
     format: 'rgba8unorm',
     usage:
       textureType === 'storage' ? GPUTextureUsage.STORAGE_BINDING : GPUTextureUsage.TEXTURE_BINDING,
   });
-  t.trackForCleanup(texture);
 
   const module = getRenderShaderModule(t.device, textureType, bindConfig);
   const pipeline = t.device.createRenderPipeline({
@@ -274,14 +273,13 @@ function createResourcesForComputePassTest(
   textureType: TextureType,
   bindConfig: BindConfig
 ) {
-  const texture = t.device.createTexture({
+  const texture = t.createTextureTracked({
     size: [2, 1, 1],
     mipLevelCount: 2,
     format: 'rgba8unorm',
     usage:
       textureType === 'storage' ? GPUTextureUsage.STORAGE_BINDING : GPUTextureUsage.TEXTURE_BINDING,
   });
-  t.trackForCleanup(texture);
 
   const module = getComputeShaderModule(t.device, textureType, bindConfig);
   const pipeline = t.device.createComputePipeline({

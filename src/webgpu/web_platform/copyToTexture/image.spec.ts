@@ -5,7 +5,7 @@ copyExternalImageToTexture from HTMLImageElement source.
 import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { raceWithRejectOnTimeout } from '../../../common/util/util.js';
 import { kTextureFormatInfo, kValidTextureFormatsForCopyE2T } from '../../format_info.js';
-import { CopyToTextureUtils, kCopySubrectInfo } from '../../util/copy_to_texture.js';
+import { TextureUploadingUtils, kCopySubrectInfo } from '../../util/copy_to_texture.js';
 
 import { kTestColorsOpaque, makeTestColorsTexelView } from './util.js';
 
@@ -21,7 +21,7 @@ async function decodeImageFromCanvas(canvas: HTMLCanvasElement): Promise<HTMLIma
   return image;
 }
 
-export const g = makeTestGroup(CopyToTextureUtils);
+export const g = makeTestGroup(TextureUploadingUtils);
 
 g.test('from_image')
   .desc(
@@ -101,7 +101,7 @@ g.test('from_image')
 
     const image = await decodeImageFromCanvas(imageCanvas);
 
-    const dst = t.device.createTexture({
+    const dst = t.createTextureTracked({
       size: { width, height },
       format: dstColorFormat,
       usage:
@@ -186,7 +186,7 @@ g.test('from_fully_transparent_image')
       'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAEUlEQVR42mP8nzaTAQQYYQwALssD/5ca+r8AAAAASUVORK5CYII=';
     await raceWithRejectOnTimeout(image.decode(), 5000, 'decode image timeout');
 
-    const dst = t.device.createTexture({
+    const dst = t.createTextureTracked({
       size: { width: kImageWidth, height: kImageHeight },
       format: kColorFormat,
       usage:
@@ -214,9 +214,6 @@ g.test('from_fully_transparent_image')
     t.expectSinglePixelComparisonsAreOkInTexture({ texture: dst }, [
       { coord: { x: kImageWidth * 0.3, y: kImageHeight * 0.3 }, exp: expectedPixels },
     ]);
-
-    // Track created texture.
-    t.trackForCleanup(dst);
   });
 
 g.test('copy_subrect_from_2D_Canvas')
@@ -299,7 +296,7 @@ g.test('copy_subrect_from_2D_Canvas')
 
     const image = await decodeImageFromCanvas(imageCanvas);
 
-    const dst = t.device.createTexture({
+    const dst = t.createTextureTracked({
       size: dstSize,
       format: kColorFormat,
       usage:

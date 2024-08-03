@@ -58,6 +58,7 @@ g.test('scalar_vector')
       .combine('compound_assignment', [false, true] as const)
       .beginSubcases()
       .combine('op', keysOf(kOperators))
+      .combine('rhs_value', [0, 1] as const)
   )
   .beforeAllSubcases(t => {
     if (
@@ -82,19 +83,26 @@ g.test('scalar_vector')
 ${hasF16 ? 'enable f16;' : ''}
 fn f() {
   var v = ${lhs.create(0).wgsl()};
-  v ${op.op}= ${rhs.create(0).wgsl()};
+  v ${op.op}= ${rhs.create(t.params.rhs_value).wgsl()};
 }
 `
       : `
 ${hasF16 ? 'enable f16;' : ''}
 const lhs = ${lhs.create(1).wgsl()};
-const rhs = ${rhs.create(1).wgsl()};
+const rhs = ${rhs.create(t.params.rhs_value).wgsl()};
 const foo ${resTypeIsTypeable ? `: ${resType}` : ''} = lhs ${op.op} rhs;
 `;
 
+    const scalarLHS = scalarTypeOf(concreteTypeOf(lhs));
+    const integral = scalarLHS === Type.u32 || scalarLHS === Type.i32;
     let valid = !hasBool && resType !== null;
     if (valid && t.params.compound_assignment) {
-      valid = valid && isConvertible(resType!, concreteTypeOf(lhs));
+      valid =
+        valid &&
+        isConvertible(resType!, concreteTypeOf(lhs)) &&
+        (!integral || t.params.rhs_value === 1);
+    } else {
+      valid = valid && t.params.rhs_value === 1;
     }
     t.expectCompileResult(valid, code);
   });
@@ -134,10 +142,14 @@ g.test('scalar_vector_out_of_range')
         return p.nonOneIndex === 0;
       })
       .expandWithParams(p => {
+        // When lhs is a non-const expression, division by zero is only an error for integral types.
+        const partialDivByZeroIsError = [Type.i32, Type.u32].includes(
+          scalarTypeOf(kScalarAndVectorTypes[p.rhs])
+        );
         const cases = [
           { leftValue: 42, rightValue: 0, error: true, leftRuntime: false },
-          { leftValue: 42, rightValue: 0, error: true, leftRuntime: true },
-          { leftValue: 0, rightValue: 0, error: true, leftRuntime: true },
+          { leftValue: 42, rightValue: 0, error: partialDivByZeroIsError, leftRuntime: true },
+          { leftValue: 0, rightValue: 0, error: partialDivByZeroIsError, leftRuntime: true },
           { leftValue: 0, rightValue: 42, error: false, leftRuntime: false },
         ];
         if (p.lhs === 'i32') {

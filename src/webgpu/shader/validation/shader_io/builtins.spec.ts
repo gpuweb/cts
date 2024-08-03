@@ -26,6 +26,10 @@ export const kBuiltins = [
   { name: 'sample_index', stage: 'fragment', io: 'in', type: 'u32' },
   { name: 'sample_mask', stage: 'fragment', io: 'in', type: 'u32' },
   { name: 'sample_mask', stage: 'fragment', io: 'out', type: 'u32' },
+  { name: 'subgroup_invocation_id', stage: 'compute', io: 'in', type: 'u32' },
+  { name: 'subgroup_size', stage: 'compute', io: 'in', type: 'u32' },
+  { name: 'subgroup_invocation_id', stage: 'fragment', io: 'in', type: 'u32' },
+  { name: 'subgroup_size', stage: 'fragment', io: 'in', type: 'u32' },
 ] as const;
 
 // List of types to test against.
@@ -81,6 +85,9 @@ g.test('stage_inout')
       t.isCompatibility && ['sample_index', 'sample_mask'].includes(t.params.name),
       'compatibility mode does not support sample_index or sample_mask'
     );
+    if (t.params.name.includes('subgroup')) {
+      t.selectDeviceOrSkipTestCase('subgroups' as GPUFeatureName);
+    }
   })
   .fn(t => {
     const code = generateShader({
@@ -119,6 +126,9 @@ g.test('type')
       t.isCompatibility && ['sample_index', 'sample_mask'].includes(t.params.name),
       'compatibility mode does not support sample_index or sample_mask'
     );
+    if (t.params.name.includes('subgroup')) {
+      t.selectDeviceOrSkipTestCase('subgroups' as GPUFeatureName);
+    }
   })
   .fn(t => {
     let code = '';
@@ -199,21 +209,33 @@ g.test('duplicates')
   })
   .fn(t => {
     const p1 =
-      t.params.first === 'p1' ? '@builtin(sample_mask)' : '@location(1) @interpolate(flat)';
+      t.params.first === 'p1' ? '@builtin(sample_mask)' : '@location(1) @interpolate(flat, either)';
     const p2 =
-      t.params.second === 'p2' ? '@builtin(sample_mask)' : '@location(2) @interpolate(flat)';
+      t.params.second === 'p2'
+        ? '@builtin(sample_mask)'
+        : '@location(2) @interpolate(flat, either)';
     const s1a =
-      t.params.first === 's1a' ? '@builtin(sample_mask)' : '@location(3) @interpolate(flat)';
+      t.params.first === 's1a'
+        ? '@builtin(sample_mask)'
+        : '@location(3) @interpolate(flat, either)';
     const s1b =
-      t.params.second === 's1b' ? '@builtin(sample_mask)' : '@location(4) @interpolate(flat)';
+      t.params.second === 's1b'
+        ? '@builtin(sample_mask)'
+        : '@location(4) @interpolate(flat, either)';
     const s2a =
-      t.params.first === 's2a' ? '@builtin(sample_mask)' : '@location(5) @interpolate(flat)';
+      t.params.first === 's2a'
+        ? '@builtin(sample_mask)'
+        : '@location(5) @interpolate(flat, either)';
     const s2b =
-      t.params.second === 's2b' ? '@builtin(sample_mask)' : '@location(6) @interpolate(flat)';
+      t.params.second === 's2b'
+        ? '@builtin(sample_mask)'
+        : '@location(6) @interpolate(flat, either)';
     const ra =
-      t.params.first === 'ra' ? '@builtin(sample_mask)' : '@location(1) @interpolate(flat)';
+      t.params.first === 'ra' ? '@builtin(sample_mask)' : '@location(1) @interpolate(flat, either)';
     const rb =
-      t.params.second === 'rb' ? '@builtin(sample_mask)' : '@location(2) @interpolate(flat)';
+      t.params.second === 'rb'
+        ? '@builtin(sample_mask)'
+        : '@location(2) @interpolate(flat, either)';
     const code = `
     struct S1 {
       ${s1a} a : u32,
@@ -276,6 +298,11 @@ g.test('reuse_builtin_name')
       .combineWithParams(kBuiltins)
       .combine('use', ['alias', 'struct', 'function', 'module-var', 'function-var'])
   )
+  .beforeAllSubcases(t => {
+    if (t.params.name.includes('subgroup')) {
+      t.selectDeviceOrSkipTestCase('subgroups' as GPUFeatureName);
+    }
+  })
   .fn(t => {
     let code = '';
     if (t.params.use === 'alias') {

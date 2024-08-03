@@ -24,6 +24,10 @@ export function generateShader({
 }) {
   let code = '';
 
+  if (attribute.includes('subgroup')) {
+    code += 'enable subgroups;\n';
+  }
+
   if (use_struct) {
     // Generate a struct that wraps the entry point IO variable.
     code += 'struct S {\n';
@@ -111,7 +115,7 @@ export const kResourceEmitters = new Map<string, ResourceDeclarationEmitter>([
   ['texture_storage_1d', basicEmitter('texture_storage_1d<rgba8unorm, write>')],
   ['texture_storage_2d', basicEmitter('texture_storage_2d<rgba8sint, write>')],
   ['texture_storage_2d_array', basicEmitter('texture_storage_2d_array<r32uint, write>')],
-  ['texture_storage_3d', basicEmitter('texture_storage_3d<rg32uint, write>')],
+  ['texture_storage_3d', basicEmitter('texture_storage_3d<rgba32uint, write>')],
   ['texture_depth_2d', basicEmitter('texture_depth_2d')],
   ['texture_depth_2d_array', basicEmitter('texture_depth_2d_array')],
   ['texture_depth_cube', basicEmitter('texture_depth_cube')],
