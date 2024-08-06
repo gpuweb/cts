@@ -294,6 +294,11 @@ function getCopyBufferToTextureViaRenderCode(format) {
     `;
 }
 
+const s_copyBufferToTextureViaRenderPipelines = new WeakMap(
+
+
+);
+
 function copyBufferToTextureViaRender(
 t,
 encoder,
@@ -311,33 +316,41 @@ size)
 
   const { device } = t;
   const code = getCopyBufferToTextureViaRenderCode(format);
-  const module = device.createShaderModule({ code });
-  const pipeline = device.createRenderPipeline({
-    layout: 'auto',
-    vertex: { module },
-    ...(useFragDepth ?
-    {
-      fragment: {
-        module,
-        targets: []
+  const id = JSON.stringify({ format, useFragDepth, sampleCount, code });
+  const pipelines =
+  s_copyBufferToTextureViaRenderPipelines.get(device) ?? new Map();
+  s_copyBufferToTextureViaRenderPipelines.set(device, pipelines);
+  let pipeline = pipelines.get(id);
+  if (!pipeline) {
+    const module = device.createShaderModule({ code });
+    pipeline = device.createRenderPipeline({
+      layout: 'auto',
+      vertex: { module },
+      ...(useFragDepth ?
+      {
+        fragment: {
+          module,
+          targets: []
+        },
+        depthStencil: {
+          depthWriteEnabled: true,
+          depthCompare: 'always',
+          format
+        }
+      } :
+      {
+        fragment: {
+          module,
+          targets: [{ format }]
+        }
+      }),
+      primitive: {
+        topology: 'triangle-strip'
       },
-      depthStencil: {
-        depthWriteEnabled: true,
-        depthCompare: 'always',
-        format
-      }
-    } :
-    {
-      fragment: {
-        module,
-        targets: [{ format }]
-      }
-    }),
-    primitive: {
-      topology: 'triangle-strip'
-    },
-    ...(sampleCount > 1 && { multisample: { count: sampleCount } })
-  });
+      ...(sampleCount > 1 && { multisample: { count: sampleCount } })
+    });
+    pipelines.set(id, pipeline);
+  }
 
   const info = kTextureFormatInfo[format];
   const uniforms = new Uint32Array([
@@ -371,7 +384,7 @@ size)
             mipLevelCount,
             arrayLayerCount
           }),
-          depthClearValue: 0.5,
+          depthClearValue: 0,
           depthLoadOp: 'clear',
           depthStoreOp: 'store'
         }

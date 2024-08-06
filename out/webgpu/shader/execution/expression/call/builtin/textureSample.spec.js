@@ -5,14 +5,12 @@ Samples a texture.
 
 note: uniformity validation is covered in src/webgpu/shader/validation/uniformity/uniformity.spec.ts
 `;import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
-import { unreachable } from '../../../../../../common/util/util.js';
 import {
   isCompressedTextureFormat,
   kCompressedTextureFormats,
-  kEncodableTextureFormats,
-  kTextureFormatInfo } from
+  kEncodableTextureFormats } from
 '../../../../../format_info.js';
-import { GPUTest, TextureTestMixin } from '../../../../../gpu_test.js';
+import { TextureTestMixin } from '../../../../../gpu_test.js';
 
 import {
 
@@ -28,39 +26,18 @@ import {
   generateSamplePointsCube,
   kCubeSamplePointMethods,
 
-  chooseTextureSize } from
+  chooseTextureSize,
+  isPotentiallyFilterableAndFillable,
+  skipIfTextureFormatNotSupportedNotAvailableOrNotFilterable,
+  getDepthOrArrayLayersForViewDimension,
+  getTextureTypeForTextureViewDimension,
+  WGSLTextureSampleTest } from
 './texture_utils.js';
 import { generateCoordBoundaries, generateOffsets } from './utils.js';
 
 const kTestableColorFormats = [...kEncodableTextureFormats, ...kCompressedTextureFormats];
 
-function getDepthOrArrayLayersForViewDimension(viewDimension) {
-  switch (viewDimension) {
-    case '2d':
-      return 1;
-    case '3d':
-      return 8;
-    case 'cube':
-      return 6;
-    default:
-      unreachable();
-  }
-}
-
-function getTextureTypeForTextureViewDimension(viewDimension) {
-  switch (viewDimension) {
-    case '2d':
-      return 'texture_2d<f32>';
-    case '3d':
-      return 'texture_3d<f32>';
-    case 'cube':
-      return 'texture_cube<f32>';
-    default:
-      unreachable();
-  }
-}
-
-export const g = makeTestGroup(TextureTestMixin(GPUTest));
+export const g = makeTestGroup(TextureTestMixin(WGSLTextureSampleTest));
 
 g.test('sampled_1d_coords').
 specURL('https://www.w3.org/TR/WGSL/#texturesample').
@@ -103,14 +80,7 @@ Parameters:
 params((u) =>
 u.
 combine('format', kTestableColorFormats).
-filter((t) => {
-  const type = kTextureFormatInfo[t.format].color?.type;
-  const canPotentialFilter = type === 'float' || type === 'unfilterable-float';
-  // We can't easily put random bytes into compressed textures if they are float formats
-  // since we want the range to be +/- 1000 and not +/- infinity or NaN.
-  const isFillable = !isCompressedTextureFormat(t.format) || !t.format.endsWith('float');
-  return canPotentialFilter && isFillable;
-}).
+filter((t) => isPotentiallyFilterableAndFillable(t.format)).
 combine('samplePoints', kSamplePointMethods).
 beginSubcases().
 combine('addressModeU', ['clamp-to-edge', 'repeat', 'mirror-repeat']).
@@ -118,16 +88,9 @@ combine('addressModeV', ['clamp-to-edge', 'repeat', 'mirror-repeat']).
 combine('minFilter', ['nearest', 'linear']).
 combine('offset', [false, true])
 ).
-beforeAllSubcases((t) => {
-  const { format } = t.params;
-  t.skipIfTextureFormatNotSupported(format);
-  const info = kTextureFormatInfo[format];
-  if (info.color?.type === 'unfilterable-float') {
-    t.selectDeviceOrSkipTestCase('float32-filterable');
-  } else {
-    t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
-  }
-}).
+beforeAllSubcases((t) =>
+skipIfTextureFormatNotSupportedNotAvailableOrNotFilterable(t, t.params.format)
+).
 fn(async (t) => {
   const { format, samplePoints, addressModeU, addressModeV, minFilter, offset } = t.params;
 
@@ -194,14 +157,7 @@ test mip level selection based on derivatives
 params((u) =>
 u.
 combine('format', kTestableColorFormats).
-filter((t) => {
-  const type = kTextureFormatInfo[t.format].color?.type;
-  const canPotentialFilter = type === 'float' || type === 'unfilterable-float';
-  // We can't easily put random bytes into compressed textures if they are float formats
-  // since we want the range to be +/- 1000 and not +/- infinity or NaN.
-  const isFillable = !isCompressedTextureFormat(t.format) || !t.format.endsWith('float');
-  return canPotentialFilter && isFillable;
-}).
+filter((t) => isPotentiallyFilterableAndFillable(t.format)).
 combine('mipmapFilter', ['nearest', 'linear']).
 beginSubcases()
 // note: this is the derivative we want at sample time. It is not the value
@@ -220,16 +176,9 @@ beginSubcases()
 { ddx: 1.5, ddy: 1.5, uvwStart: [-3.5, -4] } // test mix between 1 and 2 with negative coords
 ])
 ).
-beforeAllSubcases((t) => {
-  const { format } = t.params;
-  t.skipIfTextureFormatNotSupported(format);
-  const info = kTextureFormatInfo[format];
-  if (info.color?.type === 'unfilterable-float') {
-    t.selectDeviceOrSkipTestCase('float32-filterable');
-  } else {
-    t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
-  }
-}).
+beforeAllSubcases((t) =>
+skipIfTextureFormatNotSupportedNotAvailableOrNotFilterable(t, t.params.format)
+).
 fn(async (t) => {
   const { format, mipmapFilter, ddx, ddy, uvwStart, offset } = t.params;
 
@@ -285,14 +234,7 @@ Parameters:
 params((u) =>
 u.
 combine('format', kTestableColorFormats).
-filter((t) => {
-  const type = kTextureFormatInfo[t.format].color?.type;
-  const canPotentialFilter = type === 'float' || type === 'unfilterable-float';
-  // We can't easily put random bytes into compressed textures if they are float formats
-  // since we want the range to be +/- 1000 and not +/- infinity or NaN.
-  const isFillable = !isCompressedTextureFormat(t.format) || !t.format.endsWith('float');
-  return canPotentialFilter && isFillable;
-}).
+filter((t) => isPotentiallyFilterableAndFillable(t.format)).
 combine('viewDimension', ['3d', 'cube']).
 filter((t) => !isCompressedTextureFormat(t.format) || t.viewDimension === 'cube').
 combine('samplePoints', kCubeSamplePointMethods).
@@ -305,16 +247,9 @@ combine('minFilter', ['nearest', 'linear']).
 combine('offset', [false, true]).
 filter((t) => t.viewDimension !== 'cube' || t.offset !== true)
 ).
-beforeAllSubcases((t) => {
-  const { format } = t.params;
-  t.skipIfTextureFormatNotSupported(format);
-  const info = kTextureFormatInfo[format];
-  if (info.color?.type === 'unfilterable-float') {
-    t.selectDeviceOrSkipTestCase('float32-filterable');
-  } else {
-    t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
-  }
-}).
+beforeAllSubcases((t) =>
+skipIfTextureFormatNotSupportedNotAvailableOrNotFilterable(t, t.params.format)
+).
 fn(async (t) => {
   const {
     format,
