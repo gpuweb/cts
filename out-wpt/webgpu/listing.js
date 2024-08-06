@@ -1697,7 +1697,7 @@ export const listing = [
       "api",
       "validation",
       "render_pipeline",
-      "vertex_state"
+      "unsupported_wgsl"
     ]
   },
   {
@@ -1705,8 +1705,8 @@ export const listing = [
       "compat",
       "api",
       "validation",
-      "shader_module",
-      "shader_module"
+      "render_pipeline",
+      "vertex_state"
     ]
   },
   {
