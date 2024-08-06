@@ -491,6 +491,7 @@ onChange)
   {
     $('<input>').
     attr('type', 'text').
+    attr('title', n.query.toString()).
     prop('readonly', true).
     addClass('nodequery').
     on('click', (event) => {
