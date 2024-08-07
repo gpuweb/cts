@@ -1584,6 +1584,7 @@
   "webgpu:shader,execution,expression,call,builtin,textureSample:sampled_3d_coords:*": { "subcaseMS": 36.002 },
   "webgpu:shader,execution,expression,call,builtin,textureSample:sampled_array_2d_coords:*": { "subcaseMS": 92.500 },
   "webgpu:shader,execution,expression,call,builtin,textureSample:sampled_array_3d_coords:*": { "subcaseMS": 20.200 },
+  "webgpu:shader,execution,expression,call,builtin,textureSampleBaseClampToEdge:2d_coords:*": { "subcaseMS": 55.401 },
   "webgpu:shader,execution,expression,call,builtin,textureSampleBias:arrayed_2d_coords:*": { "subcaseMS": 585.100 },
   "webgpu:shader,execution,expression,call,builtin,textureSampleBias:arrayed_3d_coords:*": { "subcaseMS": 121.600 },
   "webgpu:shader,execution,expression,call,builtin,textureSampleBias:sampled_2d_coords:*": { "subcaseMS": 48.601 },
