@@ -477,7 +477,7 @@ export interface TextureCallArgs<T extends Dimensionality> {
 }
 
 export interface TextureCall<T extends Dimensionality> extends TextureCallArgs<T> {
-  builtin: 'textureSample' | 'textureLoad' | 'textureSampleLevel';
+  builtin: 'textureLoad' | 'textureSample' | 'textureSampleBaseClampToEdge' | 'textureSampleLevel';
   coordType: 'f' | 'i' | 'u';
   levelType?: 'i' | 'u' | 'f';
   arrayIndexType?: 'i' | 'u';
@@ -652,11 +652,14 @@ export function softwareTextureReadMipLevel<T extends Dimensionality>(
     texture.descriptor.size,
     mipLevel
   );
-  const addressMode = [
-    sampler?.addressModeU ?? 'clamp-to-edge',
-    sampler?.addressModeV ?? 'clamp-to-edge',
-    sampler?.addressModeW ?? 'clamp-to-edge',
-  ];
+  const addressMode: GPUAddressMode[] =
+    call.builtin === 'textureSampleBaseClampToEdge'
+      ? ['clamp-to-edge', 'clamp-to-edge', 'clamp-to-edge']
+      : [
+          sampler?.addressModeU ?? 'clamp-to-edge',
+          sampler?.addressModeV ?? 'clamp-to-edge',
+          sampler?.addressModeW ?? 'clamp-to-edge',
+        ];
 
   const isCube =
     texture.viewDescriptor.dimension === 'cube' ||
@@ -682,6 +685,7 @@ export function softwareTextureReadMipLevel<T extends Dimensionality>(
 
   switch (call.builtin) {
     case 'textureSample':
+    case 'textureSampleBaseClampToEdge':
     case 'textureSampleLevel': {
       let coords = toArray(call.coords!);
 
@@ -830,6 +834,8 @@ export function softwareTextureReadMipLevel<T extends Dimensionality>(
         : load(call.coords!);
       return convertPerTexelComponentToResultFormat(out, format);
     }
+    default:
+      unreachable();
   }
 }
 

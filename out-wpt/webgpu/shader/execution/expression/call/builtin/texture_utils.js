@@ -652,7 +652,10 @@ mipLevel)
     texture.descriptor.size,
     mipLevel
   );
-  const addressMode = [
+  const addressMode =
+  call.builtin === 'textureSampleBaseClampToEdge' ?
+  ['clamp-to-edge', 'clamp-to-edge', 'clamp-to-edge'] :
+  [
   sampler?.addressModeU ?? 'clamp-to-edge',
   sampler?.addressModeV ?? 'clamp-to-edge',
   sampler?.addressModeW ?? 'clamp-to-edge'];
@@ -682,6 +685,7 @@ mipLevel)
 
   switch (call.builtin) {
     case 'textureSample':
+    case 'textureSampleBaseClampToEdge':
     case 'textureSampleLevel':{
         let coords = toArray(call.coords);
 
@@ -830,6 +834,8 @@ mipLevel)
         load(call.coords);
         return convertPerTexelComponentToResultFormat(out, format);
       }
+    default:
+      unreachable();
   }
 }
 
