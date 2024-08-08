@@ -923,7 +923,6 @@ export function softwareTextureReadMipLevel<T extends Dimensionality>(
           const rgba = convertPerTexelComponentToResultFormat(v, format);
           out[kRGBAComponents[i]] = rgba[component];
         });
-
         return out;
       }
 
@@ -1286,6 +1285,10 @@ export async function checkCallResults<T extends Dimensionality>(
 
     if (texelsApproximatelyEqual(gotRGBA, expectRGBA, format, maxFractionalDiff)) {
       continue;
+    }
+
+    if (texelsApproximatelyEqual(gotRGBA, expectRGBA, format, maxFractionalDiff)) {
+      //continue;
     }
 
     if (!sampler && okBecauseOutOfBounds(texture, call, gotRGBA, maxFractionalDiff)) {
@@ -2156,7 +2159,7 @@ async function identifySamplePoints<T extends Dimensionality>(
       unclassifiedStack.push(setB);
     }
 
-    // See if any of the texels in setA were sampled.
+    // See if any of the texels in setA were sampled.0
     const results = convertResultAsAppropriate(
       await run(
         range(mipLevelCount, mipLevel =>
