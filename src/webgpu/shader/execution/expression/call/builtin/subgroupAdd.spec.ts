@@ -303,66 +303,31 @@ const kWGSizes = [
 ] as const;
 
 /**
- * Checks reduce add
+ * Checks subgroup additions
  *
- * Each invocation should have result equal to its actual subgroup size.
+ * Expected results:
+ * - reduction: each invocation should have result equal to real subgroup size
+ * - exclusive-scan: each invocation should have result equal to its subgroup invocation id
  * @param metadata Array containing actual subgroup size per invocation followed by
  *                 subgroup invocation id per invocation
  * @param output Array of additions
+ * @param type The data type
+ * @param operation Type of addition
  */
-function checkReduction(metadata: Uint32Array, output: Uint32Array, type: Type): undefined | Error {
-  let numEles = 1;
-  if (type instanceof VectorType) {
-    numEles = type.width;
-  }
-  const scalarTy = scalarTypeOf(type);
-  for (let i = 0; i < metadata.length / 2; i++) {
-    const size = metadata[i];
-    for (let j = 0; j < numEles; j++) {
-      let idx = i * numEles + j;
-      if (scalarTy === Type.f16) {
-        idx = Math.floor(idx / 2);
-      }
-      let val = output[idx];
-      if (scalarTy === Type.f32) {
-        val = floatBitsToNumber(val, kFloat32Format);
-      } else if (scalarTy === Type.f16) {
-        if (j & 0x1) {
-          val = val >> 16;
-        }
-        val = floatBitsToNumber(val & 0xffff, kFloat16Format);
-      }
-      if (size !== val) {
-        return new Error(`Invocation ${i}, component ${j}: incorrect result
-- expected: ${size}
--      got: ${val}`);
-      }
-    }
-  }
-
-  return undefined;
-}
-
-/**
- * Checks exclusive-scan add
- *
- * Each invocation should have result equal to its subgroup invocation id.
- * @param metadata Array containing actual subgroup size per invocation followed by
- *                 subgroup invocation id per invocation
- * @param output Array of additions
- */
-function checkExclusiveScan(
+function checkAddition(
   metadata: Uint32Array,
   output: Uint32Array,
-  type: Type
+  type: Type,
+  operation: 'reduction' | 'exclusive-scan'
 ): undefined | Error {
   let numEles = 1;
   if (type instanceof VectorType) {
     numEles = type.width;
   }
   const scalarTy = scalarTypeOf(type);
+  const expectedOffset = operation === 'reduction' ? 0 : metadata.length / 2;
   for (let i = 0; i < metadata.length / 2; i++) {
-    const invocation = metadata[i + metadata.length / 2];
+    const expected = metadata[i + expectedOffset];
     for (let j = 0; j < numEles; j++) {
       let idx = i * numEles + j;
       const isOdd = idx & 0x1;
@@ -378,9 +343,9 @@ function checkExclusiveScan(
         }
         val = floatBitsToNumber(val & 0xffff, kFloat16Format);
       }
-      if (invocation !== val) {
+      if (expected !== val) {
         return new Error(`Invocation ${i}, component ${j}: incorrect result
-- expected: ${invocation}
+- expected: ${expected}
 -      got: ${val}`);
       }
     }
@@ -575,11 +540,7 @@ fn main(
     });
     const output = outputReadback.data;
 
-    if (t.params.operation === 'reduction') {
-      t.expectOK(checkReduction(metadata, output, type));
-    } else {
-      t.expectOK(checkExclusiveScan(metadata, output, type));
-    }
+    t.expectOK(checkAddition(metadata, output, type, t.params.operation));
   });
 
 g.test('fragment').unimplemented();
