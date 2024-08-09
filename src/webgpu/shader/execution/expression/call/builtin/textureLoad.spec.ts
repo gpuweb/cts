@@ -167,8 +167,7 @@ Parameters:
   .params(u =>
     u
       .combine('format', kTestableColorFormats)
-      // MAINTENANCE_TODO: Update createTextureFromTexelViews to support stencil8 and remove this filter.
-      .filter(t => t.format !== 'stencil8' && !isCompressedFloatTextureFormat(t.format))
+      .filter(t => !isCompressedFloatTextureFormat(t.format))
       .beginSubcases()
       .combine('samplePoints', kSamplePointMethods)
       .combine('C', ['i32', 'u32'] as const)
