@@ -186,7 +186,8 @@ fn foo() {
       expectedResult: !pipeline_error,
       code: wgsl,
       constants,
-      reference: ['o_low', 'o_high']
+      reference: ['o_low', 'o_high'],
+      statements: ['foo();']
     });
   }
 });
