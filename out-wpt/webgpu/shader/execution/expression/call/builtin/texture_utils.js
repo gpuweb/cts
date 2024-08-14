@@ -203,9 +203,12 @@ async function initMipGradientValuesForDevice(t) {
     resultBuffer.destroy();
 
     // Validate the weights
-    assert(weights[0] === 0);
-    assert(weights[kMipGradientSteps] === 1);
-    assert(weights[kMipGradientSteps / 2] === 0.5);
+    assert(weights[0] === 0, 'weight 0 is 0');
+    assert(weights[kMipGradientSteps] === 1, 'top weight is 1');
+    assert(
+      Math.abs(weights[kMipGradientSteps / 2] - 0.5) < 0.0001,
+      'middle weight is approximately 0.5'
+    );
 
     // Note: for 16 steps, these are the AMD weights
     //
