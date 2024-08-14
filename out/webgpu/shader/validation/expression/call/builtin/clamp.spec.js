@@ -127,6 +127,8 @@ filter((t) => {
   const scalar = scalarTypeOf(ty);
   return scalar !== Type.abstractInt && scalar !== Type.abstractFloat;
 })
+// in_shader: Is the function call statically accessed by the entry point?
+.combine('in_shader', [false, true])
 ).
 beforeAllSubcases((t) => {
   const ty = kValuesTypes[t.params.type];
@@ -176,7 +178,10 @@ fn foo() {
   const shader_error =
   error && t.params.lowStage === 'constant' && t.params.highStage === 'constant';
   const pipeline_error =
-  error && t.params.lowStage !== 'runtime' && t.params.highStage !== 'runtime';
+  t.params.in_shader &&
+  error &&
+  t.params.lowStage !== 'runtime' &&
+  t.params.highStage !== 'runtime';
   t.expectCompileResult(!shader_error, wgsl);
   if (!shader_error) {
     const constants = {};
@@ -187,7 +192,7 @@ fn foo() {
       code: wgsl,
       constants,
       reference: ['o_low', 'o_high'],
-      statements: ['foo();']
+      statements: t.params.in_shader ? ['foo();'] : []
     });
   }
 });
