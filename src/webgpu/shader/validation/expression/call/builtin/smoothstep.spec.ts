@@ -80,6 +80,8 @@ g.test('partial_eval_errors')
       .beginSubcases()
       .expand('low', u => [0, 10])
       .expand('high', u => [0, 10])
+      // in_shader: Is the function call statically accessed by the entry point?
+      .combine('in_shader', [false, true] as const)
   )
   .beforeAllSubcases(t => {
     if (scalarTypeOf(kValuesTypes[t.params.type]) === Type.f16) {
@@ -129,7 +131,10 @@ fn foo() {
     const shader_error =
       error && t.params.lowStage === 'constant' && t.params.highStage === 'constant';
     const pipeline_error =
-      error && t.params.lowStage !== 'runtime' && t.params.highStage !== 'runtime';
+      t.params.in_shader &&
+      error &&
+      t.params.lowStage !== 'runtime' &&
+      t.params.highStage !== 'runtime';
     t.expectCompileResult(!shader_error, wgsl);
     if (!shader_error) {
       const constants: Record<string, number> = {};
@@ -140,7 +145,7 @@ fn foo() {
         code: wgsl,
         constants,
         reference: ['o_low', 'o_high'],
-        statements: ['foo();'],
+        statements: t.params.in_shader ? ['foo();'] : [],
       });
     }
   });
