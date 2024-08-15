@@ -267,7 +267,7 @@ g.test('textureLoad_with_depth_textures,computePipeline')
       `,
     });
 
-    const isValid = !t.isCompatibility;
+    const isValid = !t.isCompatibility || entryPoint === 'csWithoutDepthUsage';
     t.doCreateComputePipelineTest(async, isValid, {
       layout: 'auto',
       compute: { module, entryPoint },
@@ -301,7 +301,7 @@ g.test('textureLoad_with_depth_textures,renderPipeline')
       `,
     });
 
-    const isValid = !t.isCompatibility;
+    const isValid = !t.isCompatibility || entryPoint === 'vsWithoutDepthUsage';
     t.doCreateRenderPipelineTest(async, isValid, {
       layout: 'auto',
       vertex: { module, entryPoint },
