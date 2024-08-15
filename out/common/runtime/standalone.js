@@ -369,6 +369,9 @@ parentLevel)
   const runMySubtree = async () => {
     const results = [];
     for (const { runSubtree } of childFns) {
+      if (stopRequested) {
+        break;
+      }
       results.push(await runSubtree());
     }
     return mergeSubtreeResults(...results);
