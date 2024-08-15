@@ -134,16 +134,32 @@ async function initMipGradientValuesForDevice(t) {
         @group(0) @binding(1) var smp: sampler;
         @group(0) @binding(2) var<storage, read_write> result: array<f32>;
 
-        @compute @workgroup_size(1) fn cs(@builtin(global_invocation_id) id: vec3u) {
-          let mipLevel = f32(id.x) / ${kMipGradientSteps};
-          result[id.x] = textureSampleLevel(tex, smp, vec2f(0.5), mipLevel).r;
+        @vertex fn vs(@builtin(vertex_index) vNdx: u32) -> @builtin(position) vec4f {
+          let pos = array(
+            vec2f(-1,  3),
+            vec2f( 3, -1),
+            vec2f(-1, -1),
+          );
+          return vec4f(pos[vNdx], 0, 1);
+        }
+        @fragment fn fs(@builtin(position) pos: vec4f) -> @location(0) vec4f {
+          let mipLevel = floor(pos.x) / ${kMipGradientSteps};
+          result[u32(pos.x)] = textureSampleLevel(tex, smp, vec2f(0.5), mipLevel).r;
+          return vec4f(0);
         }
       `
     });
 
-    const pipeline = device.createComputePipeline({
+    const pipeline = device.createRenderPipeline({
       layout: 'auto',
-      compute: { module }
+      vertex: { module },
+      fragment: { module, targets: [{ format: 'rgba8unorm' }] }
+    });
+
+    const target = t.createTextureTracked({
+      size: [kMipGradientSteps + 1, 1, 1],
+      format: 'rgba8unorm',
+      usage: GPUTextureUsage.RENDER_ATTACHMENT
     });
 
     const texture = t.createTextureTracked({
@@ -186,10 +202,18 @@ async function initMipGradientValuesForDevice(t) {
     });
 
     const encoder = device.createCommandEncoder();
-    const pass = encoder.beginComputePass();
+    const pass = encoder.beginRenderPass({
+      colorAttachments: [
+      {
+        view: target.createView(),
+        loadOp: 'clear',
+        storeOp: 'store'
+      }]
+
+    });
     pass.setPipeline(pipeline);
     pass.setBindGroup(0, bindGroup);
-    pass.dispatchWorkgroups(kMipGradientSteps + 1);
+    pass.draw(3);
     pass.end();
     encoder.copyBufferToBuffer(storageBuffer, 0, resultBuffer, 0, resultBuffer.size);
     device.queue.submit([encoder.finish()]);
@@ -215,7 +239,7 @@ async function initMipGradientValuesForDevice(t) {
     //                 standard
     // step  mipLevel    gpu        AMD
     // ----  --------  --------  ----------
-    //  0:   0         0           1
+    //  0:   0         0           0
     //  1:   0.0625    0.0625      0
     //  2:   0.125     0.125       0.03125
     //  3:   0.1875    0.1875      0.109375
