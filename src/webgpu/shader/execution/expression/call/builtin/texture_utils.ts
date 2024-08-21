@@ -226,12 +226,19 @@ async function initMipGradientValuesForDevice(t: GPUTest) {
     storageBuffer.destroy();
     resultBuffer.destroy();
 
+    const showWeights = () => weights.map((v, i) => `${i.toString().padStart(2)}: ${v}`).join('\n');
+
     // Validate the weights
-    assert(weights[0] === 0, 'weight 0 is 0');
-    assert(weights[kMipGradientSteps] === 1, 'top weight is 1');
+    assert(weights[0] === 0, `weight 0 expected 0 but was ${weights[0]}\n${showWeights()}`);
+    assert(
+      weights[kMipGradientSteps] === 1,
+      `top weight expected 1 but was ${weights[kMipGradientSteps]}\n${showWeights()}`
+    );
     assert(
       Math.abs(weights[kMipGradientSteps / 2] - 0.5) < 0.0001,
-      'middle weight is approximately 0.5'
+      `middle weight expected approximately 0.5 but was ${
+        weights[kMipGradientSteps / 2]
+      }\n${showWeights()}`
     );
 
     // Note: for 16 steps, these are the AMD weights
