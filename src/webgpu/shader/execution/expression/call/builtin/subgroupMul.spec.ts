@@ -1,5 +1,5 @@
 export const description = `
-Execution tests for subgroupAdd and subgroupExclusiveAdd
+Execution tests for subgroupMul and subgroupExclusiveMul
 
 Note: There is a lack of portability for non-uniform execution so these tests
 restrict themselves to uniform control flow.
@@ -27,15 +27,15 @@ import { kNumCases, kStride, kWGSizes, kPredicateCases, runAccuracyTest, runComp
 
 export const g = makeTestGroup(GPUTest);
 
-const kIdentity = 0;
+const kIdentity = 1;
 
 const kDataTypes = objectsToRecord(kConcreteNumericScalarsAndVectors);
 
-const kOperations = ['subgroupAdd', 'subgroupExclusiveAdd'] as const;
+const kOperations = ['subgroupMul', 'subgroupExclusiveMul'] as const;
 
 g.test('fp_accuracy')
   .desc(
-    `Tests the accuracy of floating-point addition.
+    `Tests the accuracy of floating-point multiplication.
 
 The order of operations is implementation defined, most threads are filled with
 the identity value and two receive random values.
@@ -66,39 +66,39 @@ and limit the number of permutations needed to calculate the final result.`
       t,
       t.params.case,
       [t.params.wgSize[0], t.params.wgSize[1], t.params.wgSize[2]],
-      'subgroupAdd',
+      'subgroupMul',
       t.params.type,
       kIdentity,
-      t.params.type === 'f16' ? FP.f16.additionInterval : FP.f32.additionInterval
+      t.params.type === 'f16' ? FP.f16.multiplicationInterval : FP.f32.multiplicationInterval
     );
   });
 
 /**
- * Checks subgroup additions
+ * Checks subgroup multiplications.
  *
  * Expected results:
- * - subgroupAdd: each invocation should have result equal to real subgroup size
- * - subgroupExclusiveAdd: each invocation should have result equal to its subgroup invocation id
+ * - subgroupMul: each invocation should have result equal to real subgroup size
+ * - subgroupExclusiveMul: each invocation should have result equal to its subgroup invocation id
  * @param metadata An array containing actual subgroup size per invocation followed by
  *                 subgroup invocation id per invocation
- * @param output An array of additions
+ * @param output An array of multiplications
  * @param type The data type
- * @param operation Type of addition
+ * @param operation Type of multiplication
  */
-function checkAddition(
+function checkMultiplication(
   metadata: Uint32Array,
   output: Uint32Array,
   type: Type,
-  operation: 'subgroupAdd' | 'subgroupExclusiveAdd'
+  operation: 'subgroupMul' | 'subgroupExclusiveMul'
 ): undefined | Error {
   let numEles = 1;
   if (type instanceof VectorType) {
     numEles = type.width;
   }
   const scalarTy = scalarTypeOf(type);
-  const expectedOffset = operation === 'subgroupAdd' ? 0 : metadata.length / 2;
+  const expectedOffset = operation === 'subgroupMul' ? 0 : metadata.length / 2;
   for (let i = 0; i < metadata.length / 2; i++) {
-    const expected = metadata[i + expectedOffset];
+    let expected = Math.pow(2, metadata[i + expectedOffset]);
     for (let j = 0; j < numEles; j++) {
       let idx = i * numEles + j;
       const isOdd = idx & 0x1;
@@ -127,9 +127,9 @@ function checkAddition(
 
 g.test('data_types')
   .desc(
-    `Tests subgroup addition for valid data types
+    `Tests subgroup multiplication for valid data types
 
-Tests a simple addition of all 1 values.
+Tests a simple multiplication of all 2 values.
 Reductions expect result to be equal to actual subgroup size.
 Exclusice scans expect result to be equal subgroup invocation id.
   `
@@ -146,7 +146,26 @@ Exclusice scans expect result to be equal subgroup invocation id.
         return true;
       })
       .beginSubcases()
-      .combine('wgSize', kWGSizes)
+      // Workgroup sizes are kept < 16 to avoid overflows.
+      // Other tests cover that the full subgroup will contribute.
+      .combine('wgSize', [
+        [4, 1, 1],
+        [8, 1, 1],
+        [1, 4, 1],
+        [1, 8, 1],
+        [1, 1, 4],
+        [1, 1, 8],
+        [2, 2, 2],
+        [4, 2, 1],
+        [4, 1, 2],
+        [2, 4, 1],
+        [2, 1, 4],
+        [1, 4, 2],
+        [1, 2, 4],
+        [3, 3, 1],
+        [3, 1, 3],
+        [1, 3, 3],
+      ] as const)
       .combine('operation', kOperations)
   )
   .beforeAllSubcases(t => {
@@ -210,12 +229,12 @@ fn main(
   outputs[lid] = ${t.params.operation}(inputs[lid]);
 }`;
 
-    let fillValue = 1;
+    let fillValue = 2;
     let numUints = wgThreads * numEles;
     if (scalarType === Type.f32) {
-      fillValue = numberToFloatBits(1, kFloat32Format);
+      fillValue = numberToFloatBits(fillValue, kFloat32Format);
     } else if (scalarType === Type.f16) {
-      const f16 = numberToFloatBits(1, kFloat16Format);
+      const f16 = numberToFloatBits(fillValue, kFloat16Format);
       fillValue = f16 | (f16 << 16);
       numUints = Math.ceil(numUints / 2);
     }
@@ -226,7 +245,7 @@ fn main(
       numUints,
       new Uint32Array([...iterRange(numUints, x => fillValue)]),
       (metadata: Uint32Array, output: Uint32Array) => {
-        return checkAddition(metadata, output, type, t.params.operation);
+        return checkMultiplication(metadata, output, type, t.params.operation);
       }
     );
   });
@@ -234,31 +253,31 @@ fn main(
 g.test('fragment').unimplemented();
 
 /**
- * Performs correctness checking for predicated additions
+ * Performs correctness checking for predicated multiplications
  *
- * Assumes the shader performs a predicated subgroup addition with the
+ * Assumes the shader performs a predicated subgroup multiplication with the
  * subgroup_invocation_id as the data.
  *
  * @param metadata An array containing subgroup sizes and subgroup invocation ids
  * @param output An array containing the output results
- * @param operation The type of addition
+ * @param operation The type of multiplication
  * @param filter A functor that mirrors the predication in the shader
  */
-function checkPredicatedAddition(
+function checkPredicatedMultiplication(
   metadata: Uint32Array,
   output: Uint32Array,
-  operation: 'subgroupAdd' | 'subgroupExclusiveAdd',
+  operation: 'subgroupMul' | 'subgroupExclusiveMul',
   filter: (id: number, size: number) => boolean
 ): Error | undefined {
   for (let i = 0; i < output.length; i++) {
     const size = metadata[i];
     const id = metadata[output.length + i];
-    let expected = 0;
+    let expected = 1;
     if (filter(id, size)) {
-      const bound = operation === 'subgroupAdd' ? size : id;
+      const bound = operation === 'subgroupMul' ? size : id;
       for (let j = 0; j < bound; j++) {
         if (filter(j, size)) {
-          expected += j;
+          expected *= (j % 4) + 1;
         }
       }
     } else {
@@ -329,7 +348,7 @@ fn main(
   metadata.subgroup_invocation_id[lid] = id;
 
   if ${testcase.cond} {
-    outputs[lid] = ${t.params.operation}(id);
+    outputs[lid] = ${t.params.operation}((id % 4) + 1);
   } else {
     return;
   }
@@ -342,7 +361,8 @@ fn main(
       outputUintsPerElement,
       inputData,
       (metadata: Uint32Array, output: Uint32Array) => {
-        return checkPredicatedAddition(metadata, output, t.params.operation, testcase.filter);
+        return checkPredicatedMultiplication(metadata, output, t.params.operation, testcase.filter);
       }
     );
   });
+

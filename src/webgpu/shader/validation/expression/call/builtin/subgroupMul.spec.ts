@@ -192,3 +192,47 @@ ${entry}
 
     t.expectCompileResult(t.params.stage !== 'vertex', wgsl);
   });
+
+const kInvalidTypeCases: Record<string, string> = {
+  array_u32: `array(1u,2u,3u)`,
+  array_f32: `array<f32, 4>()`,
+  struct_s: `S()`,
+  struct_t: `T(1, 1)`,
+  ptr_func: `&func_var`,
+  ptr_priv: `&priv_var`,
+  frexp_ret: `frexp(0)`,
+};
+
+g.test('invalid_types')
+  .desc('Tests that invalid non-plain types are rejected')
+  .params(u =>
+    u
+      .combine('case', keysOf(kInvalidTypeCases))
+      .beginSubcases()
+      .combine('builtin', kBuiltins)
+  )
+  .beforeAllSubcases(t => {
+    t.selectDeviceOrSkipTestCase('subgroups' as GPUFeatureName);
+  })
+  .fn(t => {
+    const val = kInvalidTypeCases[t.params.case];
+    const wgsl = `
+enable subgroups;
+
+struct S {
+  x : u32
+}
+
+struct T {
+  a : f32,
+  b : u32,
+}
+
+var<private> priv_var : f32;
+fn foo() {
+  var func_var : vec4u;
+  _ = ${t.params.builtin}(${val});
+}`;
+
+  t.expectCompileResult(false, wgsl);
+  });
