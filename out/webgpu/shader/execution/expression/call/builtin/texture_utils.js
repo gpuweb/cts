@@ -2266,9 +2266,10 @@ args)
     hashU32(..._hashInputs, ...hashInputs) / 0x1_0000_0000 * range - (type === 'u32' ? 0 : 1);
     return type === 'f32' ? number : Math.floor(number);
   };
-  const makeIntHashValue = (min, max, ...hashInputs) => {
+  // Generates the same values per coord instead of using all the extra `_hashInputs`.
+  const makeIntHashValueRepeatable = (min, max, ...hashInputs) => {
     const range = max - min;
-    return min + Math.floor(hashU32(..._hashInputs, ...hashInputs) / 0x1_0000_0000 * range);
+    return min + Math.floor(hashU32(...hashInputs) / 0x1_0000_0000 * range);
   };
 
   // Samplers across devices use different methods to interpolate.
@@ -2305,7 +2306,7 @@ args)
       sampleIndex: args.sampleIndex ? makeRangeValue(args.sampleIndex, i, 1) : undefined,
       arrayIndex: args.arrayIndex ? makeRangeValue(args.arrayIndex, i, 2) : undefined,
       offset: args.offset ?
-      coords.map((_, j) => makeIntHashValue(-8, 8, i, 3 + j)) :
+      coords.map((_, j) => makeIntHashValueRepeatable(-8, 8, i, 3 + j)) :
       undefined
     };
   });
