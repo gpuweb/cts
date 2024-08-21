@@ -2197,7 +2197,9 @@ export function chooseTextureSize({
   const width = align(Math.max(minSize, blockWidth * minBlocks), blockWidth);
   const height = align(Math.max(minSize, blockHeight * minBlocks), blockHeight);
   if (viewDimension === 'cube' || viewDimension === 'cube-array') {
-    const size = lcm(width, height);
+    const blockLCM = lcm(blockWidth, blockHeight);
+    const largest = Math.max(width, height);
+    const size = align(largest, blockLCM);
     return [size, size, viewDimension === 'cube-array' ? 24 : 6];
   }
   const depthOrArrayLayers = getDepthOrArrayLayersForViewDimension(viewDimension);
