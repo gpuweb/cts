@@ -83,7 +83,7 @@ const is32Float = (format: GPUTextureFormat) =>
 
 /**
  * Skips a subcase if the filter === 'linear' and the format is type
- * 'unfilterable-float' and we enable filtering.
+ * 'unfilterable-float' and we cannot enable filtering.
  */
 export function skipIfNeedsFilteringAndIsUnfilterableOrSelectDevice(
   t: GPUTestSubcaseBatchState,
@@ -710,13 +710,6 @@ function convertResultFormatToTexelViewFormat(
   return out;
 }
 
-function convertResultFormatToTexelViewFormat2(
-  src: PerTexelComponent<number>,
-  format: EncodableTextureFormat
-): PerTexelComponent<number> {
-  return src;
-}
-
 function zeroValuePerTexelComponent(components: TexelComponent[]) {
   const out: PerTexelComponent<number> = {};
   for (const component of components) {
@@ -922,20 +915,14 @@ export function softwareTextureReadMipLevel<T extends Dimensionality>(
         assert(samples.length === 4);
         const component = kRGBAComponents[componentNdx];
         const out: PerTexelComponent<number> = {};
-        let hasFace2ToFace1Edge = false;
         samples.forEach((sample, i) => {
           const c = isCube
             ? wrapFaceCoordToCubeFaceAtEdgeBoundaries(textureSize[0], sample.at as vec3)
             : applyAddressModesToCoords(addressMode, textureSize, sample.at);
-          hasFace2ToFace1Edge = hasFace2ToFace1Edge || (sample.at[2] === 2 && c[2] === 1);
           const v = load(c);
           const rgba = convertPerTexelComponentToResultFormat(v, format);
           out[kRGBAComponents[i]] = rgba[component];
         });
-
-        //if (hasFace2ToFace1Edge) {
-        //  [out.R, out.A] = [out.A, out.R];
-        //}
 
         return out;
       }
@@ -1217,12 +1204,20 @@ function texelsApproximatelyEqual(
   return true;
 }
 
-// If it's `textureGather` then we need to convert all values
-// to one component. In other words, imagine the format is
-// rg11b10ufloat and component = 2 (blue), then we need all
-// 4 channels (r, g, b, a) which are all the component 2 (blue)
-// from different texels, to go through bitsToULPFromZero for 10bit
-// floats.
+// If it's `textureGather` then we need to convert all values to one component.
+// In other words, imagine the format is rg11b10ufloat. If it was
+// `textureSample` we'd have `r11, g11, b10, a=1` but for `textureGather`
+//
+// component = 0 => `r11, r11, r11, r11`
+// component = 1 => `g11, g11, g11, g11`
+// component = 2 => `b10, b10, b10, b10`
+//
+// etc..., each from a different texel
+//
+// The Texel utils don't handle this. So if `component = 2` we take each value,
+// copy it to the `B` component, run it through the texel utils so it returns
+// the correct ULP for a 10bit float (not an 11 bit float). Then copy it back to
+// the channel it came from.
 function getULPFromZeroForComponents(
   rgba: PerTexelComponent<number>,
   format: EncodableTextureFormat,
@@ -1290,7 +1285,7 @@ export async function checkCallResults<T extends Dimensionality>(
     }
 
     if (texelsApproximatelyEqual(gotRGBA, expectRGBA, format, maxFractionalDiff)) {
-      //continue;
+      continue;
     }
 
     if (!sampler && okBecauseOutOfBounds(texture, call, gotRGBA, maxFractionalDiff)) {
@@ -1303,11 +1298,9 @@ export async function checkCallResults<T extends Dimensionality>(
     // from the spec: https://gpuweb.github.io/gpuweb/#reading-depth-stencil
     // depth and stencil values are D, ?, ?, ?
     const rgbaComponentsToCheck =
-      call.builtin === 'textureGather'
+      call.builtin === 'textureGather' || !isDepthOrStencilTextureFormat(format)
         ? kRGBAComponents
-        : isDepthOrStencilTextureFormat(format)
-        ? kRComponent
-        : kRGBAComponents;
+        : kRComponent;
 
     let bad = false;
     const diffs = rgbaComponentsToCheck.map(component => {
@@ -2143,6 +2136,8 @@ async function identifySamplePoints<T extends Dimensionality>(
   const rep = kTexelRepresentationInfo[format];
 
   const components = call.builtin === 'textureGather' ? kRGBAComponents : rep.componentOrder;
+  const convertResultAsAppropriate =
+    call.builtin === 'textureGather' ? <T>(v: T) => v : convertResultFormatToTexelViewFormat;
 
   // Identify all the texels that are sampled, and their weights.
   const sampledTexelWeights = new Map<number, PerTexelComponent<number>>();
@@ -2162,7 +2157,7 @@ async function identifySamplePoints<T extends Dimensionality>(
     }
 
     // See if any of the texels in setA were sampled.
-    const results = convertResultFormatToTexelViewFormat2(
+    const results = convertResultAsAppropriate(
       await run(
         range(mipLevelCount, mipLevel =>
           TexelView.fromTexelsAsColors(
@@ -2510,7 +2505,7 @@ function generateTextureBuiltinInputsImpl<T extends Dimensionality>(
       offset: args.offset
         ? (coords.map((_, j) => makeIntHashValueRepeatable(-8, 8, i, 3 + j)) as T)
         : undefined,
-      component: args.component ? makeIntHashValue(0, numComponents, i, 4) : undefined,
+      component: args.component ? makeIntHashValueRepeatable(0, numComponents, i, 4) : undefined,
     };
   });
 }
@@ -2825,7 +2820,7 @@ export function generateSamplePointsCube(
   // MacOS, M1 Mac: 256
   //
   // Note: When doing `textureGather...` we can't use texel centers
-  // because which 4 pixels will be gathered go jump if we're slightly under
+  // because which 4 pixels will be gathered jumps if we're slightly under
   // or slightly over the center
   //
   // Similarly, if we're using 'nearest' filtering then we don't want texel
@@ -2833,11 +2828,11 @@ export function generateSamplePointsCube(
   //
   // Also note that for textureGather. The way it works for cube maps is to
   // first convert from cube map coordinate to a 2D texture coordinate and
-  // a face. The choose 4 texels just like normal 2D texture coordinates.
+  // a face. Then, choose 4 texels just like normal 2D texture coordinates.
   // If one of the 4 texels is outside the current face, wrap it to the correct
   // face.
   //
-  // An issue this brings up though. Imagine a 2D texture with addressMode = 'repeat
+  // An issue this brings up though. Imagine a 2D texture with addressMode = 'repeat'
   //
   //       2d texture   (same texture repeated to show 'repeat')
   //     ┌───┬───┬───┐     ┌───┬───┬───┐
@@ -2898,7 +2893,7 @@ export function generateSamplePointsCube(
   // read a,b,c,d according to the 2 diagrams above.
   //
   // But, notice that when reading from the POV of +y vs +x,
-  // which actual texels are a,b,c,d are different.
+  // which actual a,b,c,d texels are different.
   //
   // From the POV of face +x: a,b are in face +x and c,d are in face +y
   // From the POV of face +y: a,c are in face +x and b,d are in face +y
