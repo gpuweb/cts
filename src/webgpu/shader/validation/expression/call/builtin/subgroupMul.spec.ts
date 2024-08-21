@@ -206,10 +206,7 @@ const kInvalidTypeCases: Record<string, string> = {
 g.test('invalid_types')
   .desc('Tests that invalid non-plain types are rejected')
   .params(u =>
-    u
-      .combine('case', keysOf(kInvalidTypeCases))
-      .beginSubcases()
-      .combine('builtin', kBuiltins)
+    u.combine('case', keysOf(kInvalidTypeCases)).beginSubcases().combine('builtin', kBuiltins)
   )
   .beforeAllSubcases(t => {
     t.selectDeviceOrSkipTestCase('subgroups' as GPUFeatureName);
@@ -234,5 +231,5 @@ fn foo() {
   _ = ${t.params.builtin}(${val});
 }`;
 
-  t.expectCompileResult(false, wgsl);
+    t.expectCompileResult(false, wgsl);
   });

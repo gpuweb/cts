@@ -23,7 +23,14 @@ import {
 } from '../../../../../util/conversion.js';
 import { FP } from '../../../../../util/floating_point.js';
 
-import { kNumCases, kStride, kWGSizes, kPredicateCases, runAccuracyTest, runComputeTest } from './subgroup_util.js';
+import {
+  kNumCases,
+  kStride,
+  kWGSizes,
+  kPredicateCases,
+  runAccuracyTest,
+  runComputeTest,
+} from './subgroup_util.js';
 
 export const g = makeTestGroup(GPUTest);
 
@@ -98,7 +105,7 @@ function checkMultiplication(
   const scalarTy = scalarTypeOf(type);
   const expectedOffset = operation === 'subgroupMul' ? 0 : metadata.length / 2;
   for (let i = 0; i < metadata.length / 2; i++) {
-    let expected = Math.pow(2, metadata[i + expectedOffset]);
+    const expected = Math.pow(2, metadata[i + expectedOffset]);
     for (let j = 0; j < numEles; j++) {
       let idx = i * numEles + j;
       const isOdd = idx & 0x1;
@@ -365,4 +372,3 @@ fn main(
       }
     );
   });
-

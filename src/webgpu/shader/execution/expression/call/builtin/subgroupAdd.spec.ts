@@ -23,7 +23,14 @@ import {
 } from '../../../../../util/conversion.js';
 import { FP } from '../../../../../util/floating_point.js';
 
-import { kNumCases, kStride, kWGSizes, kPredicateCases, runAccuracyTest, runComputeTest } from './subgroup_util.js';
+import {
+  kNumCases,
+  kStride,
+  kWGSizes,
+  kPredicateCases,
+  runAccuracyTest,
+  runComputeTest,
+} from './subgroup_util.js';
 
 export const g = makeTestGroup(GPUTest);
 
