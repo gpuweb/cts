@@ -17,6 +17,7 @@ const kLoadValueFromStorageInfo: Partial<{
     texelType: string;
     unpackWGSL: string;
     useFragDepth?: boolean;
+    discardWithStencil?: boolean;
   };
 }> = {
   r8unorm: {
@@ -233,16 +234,26 @@ const kLoadValueFromStorageInfo: Partial<{
     `,
     useFragDepth: true,
   },
+  stencil8: {
+    storageType: 'u32',
+    texelType: 'vec4u',
+    unpackWGSL: `
+      return vec4u(unpack4xU8(src[byteOffset / 4])[byteOffset % 4], 123, 123, 123)
+    `,
+    discardWithStencil: true,
+  },
 };
 
 function getCopyBufferToTextureViaRenderCode(format: GPUTextureFormat) {
   const info = kLoadValueFromStorageInfo[format];
   assert(!!info);
-  const { storageType, texelType, unpackWGSL, useFragDepth } = info;
+  const { storageType, texelType, unpackWGSL, useFragDepth, discardWithStencil } = info;
 
   const [depthDecl, depthCode] = useFragDepth
     ? ['@builtin(frag_depth) d: f32,', 'fs.d = fs.v[0];']
     : ['', ''];
+
+  const stencilCode = discardWithStencil ? 'if ((fs.v.r & vin.stencilMask) == 0) { discard; }' : '';
 
   return `
     struct Uniforms {
@@ -255,9 +266,10 @@ function getCopyBufferToTextureViaRenderCode(format: GPUTextureFormat) {
     struct VSOutput {
       @builtin(position) pos: vec4f,
       @location(0) @interpolate(flat, either) sampleIndex: u32,
+      @location(1) @interpolate(flat, either) stencilMask: u32,
     };
 
-    @vertex fn vs(@builtin(vertex_index) vNdx: u32) -> VSOutput {
+    @vertex fn vs(@builtin(vertex_index) vNdx: u32, @builtin(instance_index) iNdx: u32) -> VSOutput {
       let points = array(
         vec2f(0, 0), vec2f(1, 0), vec2f(0, 1), vec2f(1, 1),
       );
@@ -266,7 +278,10 @@ function getCopyBufferToTextureViaRenderCode(format: GPUTextureFormat) {
       let rowOffset = f32(sampleRow) / numSampleRows;
       let rowMult = 1.0 / numSampleRows;
       let p = (points[vNdx % 4] * vec2f(1, rowMult) + vec2f(0, rowOffset)) * 2.0 - 1.0;
-      return VSOutput(vec4f(p, 0, 1), uni.sampleCount - sampleRow % uni.sampleCount - 1);
+      return VSOutput(
+        vec4f(p, 0, 1),
+        uni.sampleCount - sampleRow % uni.sampleCount - 1,
+        1u << iNdx);
     }
 
     @group(0) @binding(0) var<uniform> uni: Uniforms;
@@ -289,6 +304,7 @@ function getCopyBufferToTextureViaRenderCode(format: GPUTextureFormat) {
       var fs: FSOutput;
       fs.v = unpack(byteOffset);
       ${depthCode}
+      ${stencilCode}
       return fs;
     }
     `;
@@ -312,114 +328,158 @@ function copyBufferToTextureViaRender(
 
   const msInfo = kLoadValueFromStorageInfo[format];
   assert(!!msInfo);
-  const { useFragDepth } = msInfo;
+  const { useFragDepth, discardWithStencil } = msInfo;
 
   const { device } = t;
-  const code = getCopyBufferToTextureViaRenderCode(format);
-  const id = JSON.stringify({ format, useFragDepth, sampleCount, code });
-  const pipelines =
-    s_copyBufferToTextureViaRenderPipelines.get(device) ?? new Map<string, GPURenderPipeline>();
-  s_copyBufferToTextureViaRenderPipelines.set(device, pipelines);
-  let pipeline = pipelines.get(id);
-  if (!pipeline) {
-    const module = device.createShaderModule({ code });
-    pipeline = device.createRenderPipeline({
-      layout: 'auto',
-      vertex: { module },
-      ...(useFragDepth
-        ? {
-            fragment: {
-              module,
-              targets: [],
-            },
-            depthStencil: {
-              depthWriteEnabled: true,
-              depthCompare: 'always',
-              format,
-            },
-          }
-        : {
-            fragment: {
-              module,
-              targets: [{ format }],
-            },
-          }),
-      primitive: {
-        topology: 'triangle-strip',
-      },
-      ...(sampleCount > 1 && { multisample: { count: sampleCount } }),
+  const numBlits = discardWithStencil ? 8 : 1;
+  for (let blitCount = 0; blitCount < numBlits; ++blitCount) {
+    const code = getCopyBufferToTextureViaRenderCode(format);
+    const stencilWriteMask = 1 << blitCount;
+    const id = JSON.stringify({
+      format,
+      useFragDepth,
+      stencilWriteMask,
+      discardWithStencil,
+      sampleCount,
+      code,
     });
-    pipelines.set(id, pipeline);
-  }
+    const pipelines =
+      s_copyBufferToTextureViaRenderPipelines.get(device) ?? new Map<string, GPURenderPipeline>();
+    s_copyBufferToTextureViaRenderPipelines.set(device, pipelines);
+    let pipeline = pipelines.get(id);
+    if (!pipeline) {
+      const module = device.createShaderModule({ code });
+      pipeline = device.createRenderPipeline({
+        label: `blitCopyFor-${format}`,
+        layout: 'auto',
+        vertex: { module },
+        ...(discardWithStencil
+          ? {
+              fragment: {
+                module,
+                targets: [],
+              },
+              depthStencil: {
+                depthWriteEnabled: false,
+                depthCompare: 'always',
+                format,
+                stencilWriteMask,
+                stencilFront: {
+                  passOp: 'replace',
+                },
+              },
+            }
+          : useFragDepth
+          ? {
+              fragment: {
+                module,
+                targets: [],
+              },
+              depthStencil: {
+                depthWriteEnabled: true,
+                depthCompare: 'always',
+                format,
+              },
+            }
+          : {
+              fragment: {
+                module,
+                targets: [{ format }],
+              },
+            }),
+        primitive: {
+          topology: 'triangle-strip',
+        },
+        ...(sampleCount > 1 && { multisample: { count: sampleCount } }),
+      });
+      pipelines.set(id, pipeline);
+    }
 
-  const info = kTextureFormatInfo[format];
-  const uniforms = new Uint32Array([
-    copySize.height, //  numTexelRows: u32,
-    source.bytesPerRow!, //  bytesPerRow: u32,
-    info.bytesPerBlock!, //  bytesPerSample: u32,
-    dest.texture.sampleCount, //  sampleCount: u32,
-  ]);
-  const uniformBuffer = t.makeBufferWithContents(
-    uniforms,
-    GPUBufferUsage.COPY_DST | GPUBufferUsage.UNIFORM
-  );
-  const storageBuffer = t.createBufferTracked({
-    size: source.buffer.size,
-    usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE,
-  });
-  encoder.copyBufferToBuffer(source.buffer, 0, storageBuffer, 0, storageBuffer.size);
-  const baseMipLevel = dest.mipLevel;
-  for (let l = 0; l < copySize.depthOrArrayLayers; ++l) {
-    const baseArrayLayer = origin.z + l;
-    const mipLevelCount = 1;
-    const arrayLayerCount = 1;
-    const pass = encoder.beginRenderPass(
-      useFragDepth
-        ? {
-            colorAttachments: [],
-            depthStencilAttachment: {
-              view: dest.texture.createView({
-                baseMipLevel,
-                baseArrayLayer,
-                mipLevelCount,
-                arrayLayerCount,
-              }),
-              depthClearValue: 0,
-              depthLoadOp: 'clear',
-              depthStoreOp: 'store',
-            },
-          }
-        : {
-            colorAttachments: [
-              {
+    const info = kTextureFormatInfo[format];
+    const uniforms = new Uint32Array([
+      copySize.height, //  numTexelRows: u32,
+      source.bytesPerRow!, //  bytesPerRow: u32,
+      info.bytesPerBlock!, //  bytesPerSample: u32,
+      dest.texture.sampleCount, //  sampleCount: u32,
+    ]);
+    const uniformBuffer = t.makeBufferWithContents(
+      uniforms,
+      GPUBufferUsage.COPY_DST | GPUBufferUsage.UNIFORM
+    );
+    const storageBuffer = t.createBufferTracked({
+      size: source.buffer.size,
+      usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE,
+    });
+    encoder.copyBufferToBuffer(source.buffer, 0, storageBuffer, 0, storageBuffer.size);
+    const baseMipLevel = dest.mipLevel;
+    for (let l = 0; l < copySize.depthOrArrayLayers; ++l) {
+      const baseArrayLayer = origin.z + l;
+      const mipLevelCount = 1;
+      const arrayLayerCount = 1;
+      const pass = encoder.beginRenderPass(
+        discardWithStencil
+          ? {
+              colorAttachments: [],
+              depthStencilAttachment: {
                 view: dest.texture.createView({
                   baseMipLevel,
                   baseArrayLayer,
                   mipLevelCount,
                   arrayLayerCount,
                 }),
-                loadOp: 'clear',
-                storeOp: 'store',
+                stencilClearValue: 0,
+                stencilLoadOp: 'load',
+                stencilStoreOp: 'store',
               },
-            ],
-          }
-    );
-    pass.setViewport(origin.x, origin.y, copySize.width, copySize.height, 0, 1);
-    pass.setPipeline(pipeline);
+            }
+          : useFragDepth
+          ? {
+              colorAttachments: [],
+              depthStencilAttachment: {
+                view: dest.texture.createView({
+                  baseMipLevel,
+                  baseArrayLayer,
+                  mipLevelCount,
+                  arrayLayerCount,
+                }),
+                depthClearValue: 0,
+                depthLoadOp: 'clear',
+                depthStoreOp: 'store',
+              },
+            }
+          : {
+              colorAttachments: [
+                {
+                  view: dest.texture.createView({
+                    baseMipLevel,
+                    baseArrayLayer,
+                    mipLevelCount,
+                    arrayLayerCount,
+                  }),
+                  loadOp: 'clear',
+                  storeOp: 'store',
+                },
+              ],
+            }
+      );
+      pass.setViewport(origin.x, origin.y, copySize.width, copySize.height, 0, 1);
+      pass.setPipeline(pipeline);
 
-    const offset =
-      (source.offset ?? 0) + (source.bytesPerRow ?? 0) * (source.rowsPerImage ?? 0) * l;
-    const bindGroup = device.createBindGroup({
-      layout: pipeline.getBindGroupLayout(0),
-      entries: [
-        { binding: 0, resource: { buffer: uniformBuffer } },
-        { binding: 1, resource: { buffer: storageBuffer, offset } },
-      ],
-    });
+      const offset =
+        (source.offset ?? 0) + (source.bytesPerRow ?? 0) * (source.rowsPerImage ?? 0) * l;
+      const bindGroup = device.createBindGroup({
+        layout: pipeline.getBindGroupLayout(0),
+        entries: [
+          { binding: 0, resource: { buffer: uniformBuffer } },
+          { binding: 1, resource: { buffer: storageBuffer, offset } },
+        ],
+      });
 
-    pass.setBindGroup(0, bindGroup);
-    pass.draw(4 * copySize.height * dest.texture.sampleCount);
-    pass.end();
+      pass.setBindGroup(0, bindGroup);
+      pass.setStencilReference(0xff);
+      pass.draw(4 * copySize.height * dest.texture.sampleCount, 1, 0, blitCount);
+      pass.end();
+    }
   }
 }
 

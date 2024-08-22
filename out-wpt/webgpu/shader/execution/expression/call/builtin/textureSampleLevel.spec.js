@@ -7,15 +7,6 @@ Must only be used in a fragment shader stage.
 Must only be invoked in uniform control flow.
 
 - TODO: Test un-encodable formats.
-- TODO: set mipLevelCount to 3 for cubemaps. See MAINTENANCE_TODO below
-
-  The issue is sampling a corner of a cubemap is undefined. We try to quantize coordinates
-  so we never get a corner but when sampling smaller mip levels that's more difficult unless we make the textures
-  larger. Larger is slower.
-
-  Solution 1: Fix the quantization
-  Solution 2: special case checking cube corners. Expect some value between the color of the 3 corner texels.
-
 `;import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import {
   isCompressedTextureFormat,
@@ -284,7 +275,7 @@ skipIfTextureFormatNotSupportedNotAvailableOrNotFilterable(t, t.params.format)
 fn(async (t) => {
   const { format, viewDimension, samplePoints, addressMode, minFilter, offset } = t.params;
 
-  const [width, height] = chooseTextureSize({ minSize: 8, minBlocks: 2, format, viewDimension });
+  const [width, height] = chooseTextureSize({ minSize: 32, minBlocks: 2, format, viewDimension });
   const depthOrArrayLayers = getDepthOrArrayLayersForViewDimension(viewDimension);
 
   const descriptor = {
@@ -293,8 +284,7 @@ fn(async (t) => {
     ...(t.isCompatibility && { textureBindingViewDimension: viewDimension }),
     size: { width, height, depthOrArrayLayers },
     usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
-    // MAINTENANCE_TODO: make mipLevelCount always 3
-    mipLevelCount: viewDimension === 'cube' ? 1 : 3
+    mipLevelCount: 3
   };
   const { texels, texture } = await createTextureWithRandomDataAndGetTexels(t, descriptor);
   const sampler = {
@@ -396,7 +386,7 @@ fn(async (t) => {
 
   const viewDimension = 'cube-array';
   const size = chooseTextureSize({
-    minSize: 8,
+    minSize: 32,
     minBlocks: 4,
     format,
     viewDimension
@@ -405,8 +395,7 @@ fn(async (t) => {
     format,
     size,
     usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
-    // MAINTENANCE_TODO: Set this to 3. See above.
-    mipLevelCount: 1
+    mipLevelCount: 3
   };
   const { texels, texture } = await createTextureWithRandomDataAndGetTexels(t, descriptor);
   const sampler = {
@@ -423,8 +412,8 @@ fn(async (t) => {
     sampler,
     descriptor,
     mipLevel: { num: texture.mipLevelCount, type: 'f32' },
-    arrayIndex: { num: texture.depthOrArrayLayers, type: A },
-    hashInputs: [format, viewDimension, samplePoints, addressMode, minFilter]
+    arrayIndex: { num: texture.depthOrArrayLayers / 6, type: A },
+    hashInputs: [format, viewDimension, A, samplePoints, addressMode, minFilter]
   }).map(({ coords, mipLevel, arrayIndex }) => {
     return {
       builtin: 'textureSampleLevel',
@@ -456,7 +445,7 @@ g.test('depth_2d_coords').
 specURL('https://www.w3.org/TR/WGSL/#texturesamplelevel').
 desc(
   `
-C is i32 or u32
+L is i32 or u32
 
 fn textureSampleLevel(t: texture_depth_2d, s: sampler, coords: vec2<f32>, level: L) -> f32
 fn textureSampleLevel(t: texture_depth_2d, s: sampler, coords: vec2<f32>, level: L, offset: vec2<i32>) -> f32
@@ -504,10 +493,7 @@ fn(async (t) => {
     format,
     size: { width, height },
     mipLevelCount: 3,
-    usage:
-    GPUTextureUsage.COPY_DST |
-    GPUTextureUsage.TEXTURE_BINDING |
-    GPUTextureUsage.RENDER_ATTACHMENT
+    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
   };
   const { texels, texture } = await createTextureWithRandomDataAndGetTexels(t, descriptor);
   const sampler = {
@@ -553,7 +539,8 @@ g.test('depth_array_2d_coords').
 specURL('https://www.w3.org/TR/WGSL/#texturesamplelevel').
 desc(
   `
-C is i32 or u32
+A is i32 or u32
+L is i32 or u32
 
 fn textureSampleLevel(t: texture_depth_2d_array, s: sampler, coords: vec2<f32>, array_index: A, level: L) -> f32
 fn textureSampleLevel(t: texture_depth_2d_array, s: sampler, coords: vec2<f32>, array_index: A, level: L, offset: vec2<i32>) -> f32
@@ -603,10 +590,7 @@ fn(async (t) => {
     format,
     size: { width, height },
     mipLevelCount: 3,
-    usage:
-    GPUTextureUsage.COPY_DST |
-    GPUTextureUsage.TEXTURE_BINDING |
-    GPUTextureUsage.RENDER_ATTACHMENT,
+    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
     ...(t.isCompatibility && { textureBindingViewDimension: '2d-array' })
   };
   const { texels, texture } = await createTextureWithRandomDataAndGetTexels(t, descriptor);
@@ -656,7 +640,8 @@ g.test('depth_3d_coords').
 specURL('https://www.w3.org/TR/WGSL/#texturesamplelevel').
 desc(
   `
-C is i32 or u32
+L is i32 or u32
+A is i32 or u32
 
 fn textureSampleLevel(t: texture_depth_cube, s: sampler, coords: vec3<f32>, level: L) -> f32
 fn textureSampleLevel(t: texture_depth_cube_array, s: sampler, coords: vec3<f32>, array_index: A, level: L) -> f32
@@ -704,7 +689,7 @@ fn(async (t) => {
   const { format, viewDimension, samplePoints, A, L, addressMode, minFilter } = t.params;
 
   const size = chooseTextureSize({
-    minSize: 8,
+    minSize: 32,
     minBlocks: 4,
     format,
     viewDimension
@@ -712,10 +697,7 @@ fn(async (t) => {
   const descriptor = {
     format,
     size,
-    usage:
-    GPUTextureUsage.COPY_DST |
-    GPUTextureUsage.TEXTURE_BINDING |
-    GPUTextureUsage.RENDER_ATTACHMENT,
+    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
     mipLevelCount: 3,
     ...(t.isCompatibility && { textureBindingViewDimension: viewDimension })
   };
@@ -733,8 +715,8 @@ fn(async (t) => {
     method: samplePoints,
     sampler,
     descriptor,
-    mipLevel: { num: texture.mipLevelCount, type: L },
-    arrayIndex: A ? { num: texture.depthOrArrayLayers, type: A } : undefined,
+    mipLevel: { num: texture.mipLevelCount - 1, type: L },
+    arrayIndex: A ? { num: texture.depthOrArrayLayers / 6, type: A } : undefined,
     hashInputs: [format, viewDimension, samplePoints, addressMode, minFilter]
   }).map(({ coords, mipLevel, arrayIndex }) => {
     return {
