@@ -744,7 +744,7 @@ fn(async (t) => {
     textureBuiltin: 'textureGather',
     arrayIndex: { num: texture.depthOrArrayLayers / 6, type: A },
     hashInputs: [format, samplePoints, addressMode, minFilter]
-  }).map(({ coords, component, arrayIndex }) => {
+  }).map(({ coords, arrayIndex }) => {
     return {
       builtin: 'textureGather',
       arrayIndex,

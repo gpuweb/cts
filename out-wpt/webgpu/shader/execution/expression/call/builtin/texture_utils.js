@@ -535,6 +535,7 @@ const kTextureCallArgNames = [
 'mipLevel',
 'ddx',
 'ddy',
+'depthRef',
 'offset'];
 
 
@@ -564,6 +565,12 @@ const kTextureCallArgNames = [
 
 
 
+
+
+
+const isBuiltinComparison = (builtin) => builtin === 'textureGatherCompare';
+const isBuiltinGather = (builtin) =>
+builtin === 'textureGather' || builtin === 'textureGatherCompare';
 
 const s_u32 = new Uint32Array(1);
 const s_f32 = new Float32Array(s_u32.buffer);
@@ -605,6 +612,7 @@ argName)
     case 'sampleIndex':
       assert(call.sampleIndexType !== undefined);
       return call.sampleIndexType;
+    case 'depthRef':
     case 'ddx':
     case 'ddy':
       return 'f';
@@ -718,6 +726,37 @@ function zeroValuePerTexelComponent(components) {
   return out;
 }
 
+const kSamplerFns = {
+  never: (ref, v) => false,
+  less: (ref, v) => ref < v,
+  equal: (ref, v) => ref === v,
+  'less-equal': (ref, v) => ref <= v,
+  greater: (ref, v) => ref > v,
+  'not-equal': (ref, v) => ref !== v,
+  'greater-equal': (ref, v) => ref >= v,
+  always: (ref, v) => true
+};
+
+function applyCompare(
+call,
+sampler,
+components,
+src)
+{
+  if (isBuiltinComparison(call.builtin)) {
+    assert(sampler !== undefined);
+    assert(call.depthRef !== undefined);
+    const out = {};
+    const compareFn = kSamplerFns[sampler.compare];
+    for (const component of components) {
+      out[component] = compareFn(call.depthRef, src[component]) ? 1 : 0;
+    }
+    return out;
+  } else {
+    return src;
+  }
+}
+
 /**
  * Returns the expect value for a WGSL builtin texture function for a single
  * mip level
@@ -769,6 +808,7 @@ mipLevel)
 
   switch (call.builtin) {
     case 'textureGather':
+    case 'textureGatherCompare':
     case 'textureSample':
     case 'textureSampleBaseClampToEdge':
     case 'textureSampleLevel':{
@@ -799,7 +839,7 @@ mipLevel)
 
         const samples = [];
 
-        const filter = call.builtin === 'textureGather' ? 'linear' : sampler?.minFilter ?? 'nearest';
+        const filter = isBuiltinGather(call.builtin) ? 'linear' : sampler?.minFilter ?? 'nearest';
         switch (filter) {
           case 'linear':{
               // 'p0' is the lower texel for 'at'
@@ -909,7 +949,7 @@ mipLevel)
             unreachable();
         }
 
-        if (call.builtin === 'textureGather') {
+        if (isBuiltinGather(call.builtin)) {
           const componentNdx = call.component ?? 0;
           assert(componentNdx >= 0 && componentNdx < 4);
           assert(samples.length === 4);
@@ -920,23 +960,22 @@ mipLevel)
             wrapFaceCoordToCubeFaceAtEdgeBoundaries(textureSize[0], sample.at) :
             applyAddressModesToCoords(addressMode, textureSize, sample.at);
             const v = load(c);
-            const rgba = convertPerTexelComponentToResultFormat(v, format);
+            const postV = applyCompare(call, sampler, rep.componentOrder, v);
+            const rgba = convertPerTexelComponentToResultFormat(postV, format);
             out[kRGBAComponents[i]] = rgba[component];
           });
-
           return out;
         }
 
         const out = {};
-        const ss = [];
         for (const sample of samples) {
           const c = isCube ?
           wrapFaceCoordToCubeFaceAtEdgeBoundaries(textureSize[0], sample.at) :
           applyAddressModesToCoords(addressMode, textureSize, sample.at);
           const v = load(c);
-          ss.push(v);
+          const postV = applyCompare(call, sampler, rep.componentOrder, v);
           for (const component of rep.componentOrder) {
-            out[component] = (out[component] ?? 0) + v[component] * sample.weight;
+            out[component] = (out[component] ?? 0) + postV[component] * sample.weight;
           }
         }
 
@@ -1225,7 +1264,7 @@ builtin,
 componentNdx)
 {
   const rep = kTexelRepresentationInfo[format];
-  if (builtin === 'textureGather') {
+  if (isBuiltinGather(builtin)) {
     const out = {};
     const component = kRGBAComponents[componentNdx ?? 0];
     const temp = { R: 0, G: 0, B: 0, A: 1 };
@@ -1278,7 +1317,7 @@ results)
     // so if this is `textureGather` and component > 0 then there's nothing to check.
     if (
     isDepthOrStencilTextureFormat(format) &&
-    call.builtin === 'textureGather' &&
+    isBuiltinGather(call.builtin) &&
     call.component > 0)
     {
       continue;
@@ -1298,7 +1337,7 @@ results)
     // from the spec: https://gpuweb.github.io/gpuweb/#reading-depth-stencil
     // depth and stencil values are D, ?, ?, ?
     const rgbaComponentsToCheck =
-    call.builtin === 'textureGather' || !isDepthOrStencilTextureFormat(format) ?
+    isBuiltinGather(call.builtin) || !isDepthOrStencilTextureFormat(format) ?
     kRGBAComponents :
     kRComponent;
 
@@ -2135,9 +2174,10 @@ run)
 
   const rep = kTexelRepresentationInfo[format];
 
-  const components = call.builtin === 'textureGather' ? kRGBAComponents : rep.componentOrder;
-  const convertResultAsAppropriate =
-  call.builtin === 'textureGather' ? (v) => v : convertResultFormatToTexelViewFormat;
+  const components = isBuiltinGather(call.builtin) ? kRGBAComponents : rep.componentOrder;
+  const convertResultAsAppropriate = isBuiltinGather(call.builtin) ?
+  (v) => v :
+  convertResultFormatToTexelViewFormat;
 
   // Identify all the texels that are sampled, and their weights.
   const sampledTexelWeights = new Map();
@@ -2156,7 +2196,7 @@ run)
       unclassifiedStack.push(setB);
     }
 
-    // See if any of the texels in setA were sampled.
+    // See if any of the texels in setA were sampled.0
     const results = convertResultAsAppropriate(
       await run(
         range(mipLevelCount, (mipLevel) =>
@@ -2397,6 +2437,7 @@ export const kCubeSamplePointMethods = ['cube-edges', 'texel-centre', 'spiral'];
 
 
 
+
 /**
  * Generates an array of coordinates at which to sample a texture.
  */
@@ -2404,6 +2445,7 @@ function generateTextureBuiltinInputsImpl(
 makeValue,
 n,
 args)
+
 
 
 
@@ -2473,9 +2515,7 @@ args)
   // MacOS, M1 Mac: 256
   const kSubdivisionsPerTexel = 4;
   const avoidEdgeCase =
-  !args.sampler ||
-  args.sampler.minFilter === 'nearest' ||
-  args.textureBuiltin === 'textureGather';
+  !args.sampler || args.sampler.minFilter === 'nearest' || isBuiltinGather(args.textureBuiltin);
   const edgeRemainder = args.textureBuiltin === 'textureGather' ? kSubdivisionsPerTexel / 2 : 0;
   const numComponents = isDepthOrStencilTextureFormat(descriptor.format) ? 1 : 4;
   return coords.map((c, i) => {
@@ -2502,6 +2542,7 @@ args)
       mipLevel,
       sampleIndex: args.sampleIndex ? makeRangeValue(args.sampleIndex, i, 1) : undefined,
       arrayIndex: args.arrayIndex ? makeRangeValue(args.arrayIndex, i, 2) : undefined,
+      depthRef: args.depthRef ? makeRangeValue({ num: 1, type: 'f32' }, i, 5) : undefined,
       offset: args.offset ?
       coords.map((_, j) => makeIntHashValueRepeatable(-8, 8, i, 3 + j)) :
       undefined,
@@ -2691,6 +2732,7 @@ coord)
 export function generateSamplePointsCube(
 n,
 args)
+
 
 
 
@@ -2906,10 +2948,8 @@ args)
   //
   const kSubdivisionsPerTexel = 4;
   const avoidEdgeCase =
-  !args.sampler ||
-  args.sampler.minFilter === 'nearest' ||
-  args.textureBuiltin === 'textureGather';
-  const edgeRemainder = args.textureBuiltin === 'textureGather' ? kSubdivisionsPerTexel / 2 : 0;
+  !args.sampler || args.sampler.minFilter === 'nearest' || isBuiltinGather(args.textureBuiltin);
+  const edgeRemainder = isBuiltinGather(args.textureBuiltin) ? kSubdivisionsPerTexel / 2 : 0;
 
   return coords.map((c, i) => {
     const mipLevel = args.mipLevel ?
@@ -2949,6 +2989,7 @@ args)
       coords,
       mipLevel,
       arrayIndex: args.arrayIndex ? makeRangeValue(args.arrayIndex, i, 2) : undefined,
+      depthRef: args.depthRef ? makeRangeValue({ num: 1, type: 'f32' }, i, 5) : undefined,
       component: args.component ? makeIntHashValue(0, 4, i, 4) : undefined
     };
   });
@@ -3054,6 +3095,8 @@ function buildBinnedCalls(calls) {
         prototype.arrayIndexType :
         name === 'sampleIndex' ?
         prototype.sampleIndexType :
+        name === 'depthRef' ?
+        'f' :
         prototype.coordType;
         args.push(`args.${name}`);
         fields.push(`@align(16) ${name} : ${wgslTypeFor(value, type)}`);
@@ -3127,6 +3170,8 @@ export function describeTextureCall(call) {
         args.push(`${name}: ${wgslExprFor(value, call.arrayIndexType)}`);
       } else if (name === 'sampleIndex') {
         args.push(`${name}: ${wgslExprFor(value, call.sampleIndexType)}`);
+      } else if (name === 'depthRef') {
+        args.push(`${name}: ${wgslExprFor(value, 'f')}`);
       } else {
         args.push(`${name}: ${wgslExpr(value)}`);
       }
@@ -3204,8 +3249,10 @@ calls)
   });
   t.device.queue.writeBuffer(dataBuffer, 0, new Uint32Array(data));
 
-  const { resultType, resultFormat, componentType } =
-  calls[0].builtin === 'textureGather' ?
+  const builtin = calls[0].builtin;
+  const isCompare = isBuiltinComparison(builtin);
+
+  const { resultType, resultFormat, componentType } = isBuiltinGather(builtin) ?
   getTextureFormatTypeInfo(format) :
   gpuTexture instanceof GPUExternalTexture ?
   { resultType: 'vec4f', resultFormat: 'rgba32float', componentType: 'f32' } :
@@ -3213,6 +3260,8 @@ calls)
   { resultType: 'f32', resultFormat: 'rgba32float', componentType: 'f32' } :
   getTextureFormatTypeInfo(format);
   const returnType = `vec4<${componentType}>`;
+
+  const samplerType = isCompare ? 'sampler_comparison' : 'sampler';
 
   const rtWidth = 256;
   const renderTarget = t.createTextureTracked({
@@ -3238,7 +3287,7 @@ fn vs_main(@builtin(vertex_index) vertex_index : u32) -> @builtin(position) vec4
 }
 
 @group(0) @binding(0) var          T    : ${textureType};
-${sampler ? '@group(0) @binding(1) var          S    : sampler' : ''};
+${sampler ? `@group(0) @binding(1) var          S    : ${samplerType}` : ''};
 @group(0) @binding(2) var<storage> data : Data;
 
 @fragment
@@ -3329,7 +3378,7 @@ ${body}
       binding: 1,
       visibility: GPUShaderStage.FRAGMENT,
       sampler: {
-        type: isFiltering ? 'filtering' : 'non-filtering'
+        type: isCompare ? 'comparison' : isFiltering ? 'filtering' : 'non-filtering'
       }
     });
   }
