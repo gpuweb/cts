@@ -226,12 +226,19 @@ async function initMipGradientValuesForDevice(t: GPUTest) {
     storageBuffer.destroy();
     resultBuffer.destroy();
 
+    const showWeights = () => weights.map((v, i) => `${i.toString().padStart(2)}: ${v}`).join('\n');
+
     // Validate the weights
-    assert(weights[0] === 0, 'weight 0 is 0');
-    assert(weights[kMipGradientSteps] === 1, 'top weight is 1');
+    assert(weights[0] === 0, `weight 0 expected 0 but was ${weights[0]}\n${showWeights()}`);
+    assert(
+      weights[kMipGradientSteps] === 1,
+      `top weight expected 1 but was ${weights[kMipGradientSteps]}\n${showWeights()}`
+    );
     assert(
       Math.abs(weights[kMipGradientSteps / 2] - 0.5) < 0.0001,
-      'middle weight is approximately 0.5'
+      `middle weight expected approximately 0.5 but was ${
+        weights[kMipGradientSteps / 2]
+      }\n${showWeights()}`
     );
 
     // Note: for 16 steps, these are the AMD weights
@@ -2190,7 +2197,9 @@ export function chooseTextureSize({
   const width = align(Math.max(minSize, blockWidth * minBlocks), blockWidth);
   const height = align(Math.max(minSize, blockHeight * minBlocks), blockHeight);
   if (viewDimension === 'cube' || viewDimension === 'cube-array') {
-    const size = lcm(width, height);
+    const blockLCM = lcm(blockWidth, blockHeight);
+    const largest = Math.max(width, height);
+    const size = align(largest, blockLCM);
     return [size, size, viewDimension === 'cube-array' ? 24 : 6];
   }
   const depthOrArrayLayers = getDepthOrArrayLayersForViewDimension(viewDimension);
@@ -2266,9 +2275,10 @@ function generateTextureBuiltinInputsImpl<T extends Dimensionality>(
       (hashU32(..._hashInputs, ...hashInputs) / 0x1_0000_0000) * range - (type === 'u32' ? 0 : 1);
     return type === 'f32' ? number : Math.floor(number);
   };
-  const makeIntHashValue = (min: number, max: number, ...hashInputs: number[]) => {
+  // Generates the same values per coord instead of using all the extra `_hashInputs`.
+  const makeIntHashValueRepeatable = (min: number, max: number, ...hashInputs: number[]) => {
     const range = max - min;
-    return min + Math.floor((hashU32(..._hashInputs, ...hashInputs) / 0x1_0000_0000) * range);
+    return min + Math.floor((hashU32(...hashInputs) / 0x1_0000_0000) * range);
   };
 
   // Samplers across devices use different methods to interpolate.
@@ -2305,7 +2315,7 @@ function generateTextureBuiltinInputsImpl<T extends Dimensionality>(
       sampleIndex: args.sampleIndex ? makeRangeValue(args.sampleIndex, i, 1) : undefined,
       arrayIndex: args.arrayIndex ? makeRangeValue(args.arrayIndex, i, 2) : undefined,
       offset: args.offset
-        ? (coords.map((_, j) => makeIntHashValue(-8, 8, i, 3 + j)) as T)
+        ? (coords.map((_, j) => makeIntHashValueRepeatable(-8, 8, i, 3 + j)) as T)
         : undefined,
     };
   });
