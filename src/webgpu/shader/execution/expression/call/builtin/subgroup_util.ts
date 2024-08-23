@@ -189,7 +189,6 @@ var<storage, read_write> metadata : Metadata;
 @compute @workgroup_size(${wgSize[0]}, ${wgSize[1]}, ${wgSize[2]})
 fn main(
   @builtin(local_invocation_index) lid : u32,
-  @builtin(subgroup_size) sg_size : u32,
 ) {
   metadata.subgroup_id[lid] = subgroupBroadcast(lid, 0);
   outputs[lid] = ${operation}(inputs[lid]);

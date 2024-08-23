@@ -139,13 +139,14 @@ g.test('data_types')
 Tests a simple addition of all 1 values.
 Reductions expect result to be equal to actual subgroup size.
 Exclusice scans expect result to be equal subgroup invocation id.
+
+TODO: support vec3 types.
   `
   )
   .params(u =>
     u
       .combine('type', keysOf(kDataTypes))
       .filter(t => {
-        // Support vec3 in the future.
         const type = kDataTypes[t.type];
         if (type instanceof VectorType) {
           return type.width !== 3;

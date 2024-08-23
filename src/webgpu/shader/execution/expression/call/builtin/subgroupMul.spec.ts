@@ -84,8 +84,8 @@ and limit the number of permutations needed to calculate the final result.`
  * Checks subgroup multiplications.
  *
  * Expected results:
- * - subgroupMul: each invocation should have result equal to real subgroup size
- * - subgroupExclusiveMul: each invocation should have result equal to its subgroup invocation id
+ * - subgroupMul: each invocation should have result equal to 2 to the real subgroup size
+ * - subgroupExclusiveMul: each invocation should have result equal to 2 to its subgroup invocation id
  * @param metadata An array containing actual subgroup size per invocation followed by
  *                 subgroup invocation id per invocation
  * @param output An array of multiplications
@@ -139,13 +139,14 @@ g.test('data_types')
 Tests a simple multiplication of all 2 values.
 Reductions expect result to be equal to actual subgroup size.
 Exclusice scans expect result to be equal subgroup invocation id.
+
+TODO: support vec3 types.
   `
   )
   .params(u =>
     u
       .combine('type', keysOf(kDataTypes))
       .filter(t => {
-        // Support vec3 in the future.
         const type = kDataTypes[t.type];
         if (type instanceof VectorType) {
           return type.width !== 3;
