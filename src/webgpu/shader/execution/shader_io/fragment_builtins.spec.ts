@@ -1480,6 +1480,7 @@ function checkSubgroupSizeConsistency(
 ): Error | undefined {
   const { blockWidth, blockHeight, bytesPerBlock } = kTextureFormatInfo[format];
   const blocksPerRow = width / blockWidth;
+  // Image copies require bytesPerRow to be a multiple of 256.
   const bytesPerRow = align(blocksPerRow * (bytesPerBlock ?? 1), 256);
   const uintsPerRow = bytesPerRow / 4;
   const uintsPerTexel = (bytesPerBlock ?? 1) / blockWidth / blockHeight / 4;
@@ -1707,7 +1708,7 @@ fn fsMain(
  * @param data An array of vec4u that contains (per texel):
  *             * subgroup_invocation_id
  *             * ballot size
- *             * representative subgroup id
+ *             * non-zero ID unique to each subgroup
  *             * 0
  * @param format The texture format of data
  * @param width The width of the framebuffer
