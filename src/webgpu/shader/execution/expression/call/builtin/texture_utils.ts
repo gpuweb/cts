@@ -569,7 +569,7 @@ export interface TextureCall<T extends Dimensionality> extends TextureCallArgs<T
 }
 
 const isBuiltinComparison = (builtin: TextureBuiltin) => builtin === 'textureGatherCompare';
-const isBuiltinGather = (builtin: TextureBuiltin) =>
+const isBuiltinGather = (builtin: TextureBuiltin | undefined) =>
   builtin === 'textureGather' || builtin === 'textureGatherCompare';
 
 const s_u32 = new Uint32Array(1);
@@ -2515,8 +2515,8 @@ function generateTextureBuiltinInputsImpl<T extends Dimensionality>(
   // MacOS, M1 Mac: 256
   const kSubdivisionsPerTexel = 4;
   const avoidEdgeCase =
-    !args.sampler || args.sampler.minFilter === 'nearest' || isBuiltinGather(args.textureBuiltin!);
-  const edgeRemainder = args.textureBuiltin === 'textureGather' ? kSubdivisionsPerTexel / 2 : 0;
+    !args.sampler || args.sampler.minFilter === 'nearest' || isBuiltinGather(args.textureBuiltin);
+  const edgeRemainder = isBuiltinGather(args.textureBuiltin) ? kSubdivisionsPerTexel / 2 : 0;
   const numComponents = isDepthOrStencilTextureFormat(descriptor.format) ? 1 : 4;
   return coords.map((c, i) => {
     const mipLevel = args.mipLevel
@@ -2948,8 +2948,8 @@ export function generateSamplePointsCube(
   //
   const kSubdivisionsPerTexel = 4;
   const avoidEdgeCase =
-    !args.sampler || args.sampler.minFilter === 'nearest' || isBuiltinGather(args.textureBuiltin!);
-  const edgeRemainder = isBuiltinGather(args.textureBuiltin!) ? kSubdivisionsPerTexel / 2 : 0;
+    !args.sampler || args.sampler.minFilter === 'nearest' || isBuiltinGather(args.textureBuiltin);
+  const edgeRemainder = isBuiltinGather(args.textureBuiltin) ? kSubdivisionsPerTexel / 2 : 0;
 
   return coords.map((c, i) => {
     const mipLevel = args.mipLevel
