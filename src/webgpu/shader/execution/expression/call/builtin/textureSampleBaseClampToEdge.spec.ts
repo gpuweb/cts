@@ -30,7 +30,11 @@ async function createTextureAndDataForTest(
   videoFrame?: VideoFrame;
 }> {
   if (isExternal) {
+    if (typeof VideoFrame === 'undefined') {
+      t.skip('VideoFrame is not supported');
+    }
     const { texels, videoFrame } = createVideoFrameWithRandomDataAndGetTexels(descriptor.size);
+
     const texture = t.device.importExternalTexture({ source: videoFrame });
     return { texels, texture, videoFrame };
   } else {

@@ -483,7 +483,12 @@ Parameters:
       size,
       usage: GPUTextureUsage.COPY_DST,
     };
+
+    if (typeof VideoFrame === 'undefined') {
+      t.skip('VideoFrame is not supported');
+    }
     const { texels, videoFrame } = createVideoFrameWithRandomDataAndGetTexels(descriptor.size);
+
     const texture = t.device.importExternalTexture({ source: videoFrame });
 
     const calls: TextureCall<vec2>[] = generateTextureBuiltinInputs2D(50, {
