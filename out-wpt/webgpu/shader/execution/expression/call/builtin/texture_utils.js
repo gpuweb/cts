@@ -2516,7 +2516,7 @@ args)
   const kSubdivisionsPerTexel = 4;
   const avoidEdgeCase =
   !args.sampler || args.sampler.minFilter === 'nearest' || isBuiltinGather(args.textureBuiltin);
-  const edgeRemainder = args.textureBuiltin === 'textureGather' ? kSubdivisionsPerTexel / 2 : 0;
+  const edgeRemainder = isBuiltinGather(args.textureBuiltin) ? kSubdivisionsPerTexel / 2 : 0;
   const numComponents = isDepthOrStencilTextureFormat(descriptor.format) ? 1 : 4;
   return coords.map((c, i) => {
     const mipLevel = args.mipLevel ?
