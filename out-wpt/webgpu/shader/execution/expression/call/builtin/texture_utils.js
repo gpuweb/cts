@@ -1308,7 +1308,7 @@ results)
   getMaxFractionalDiffForTextureFormat(texture.descriptor.format) :
   0;
 
-  for (let callIdx = 0; callIdx < calls.length /*&& errs.length === 0*/; callIdx++) {
+  for (let callIdx = 0; callIdx < calls.length; callIdx++) {
     const call = calls[callIdx];
     const gotRGBA = results[callIdx];
     const expectRGBA = softwareTextureReadLevel(t, call, texture, sampler, call.mipLevel ?? 0);
@@ -1356,7 +1356,11 @@ results)
       return { absDiff, relDiff, ulpDiff };
     });
 
-    const fix5 = (n) => n.toFixed(5);
+    const isFloatType = (format) => {
+      const info = kTextureFormatInfo[format];
+      return info.color?.type === 'float' || info.depth?.type === 'depth';
+    };
+    const fix5 = (n) => isFloatType(format) ? n.toFixed(5) : n.toString();
     const fix5v = (arr) => arr.map((v) => fix5(v)).join(', ');
     const rgbaToArray = (p) =>
     rgbaComponentsToCheck.map((component) => p[component]);
@@ -1410,6 +1414,10 @@ results)
         errs.push('  sample points:');
         errs.push(layoutTwoColumns(expectedSamplePoints, gotSamplePoints).join('\n'));
         errs.push('', '');
+
+        // This path is slow so if we took it, don't report the other errors. One is enough
+        // to fail the test.
+        break;
       }
     }
   }
