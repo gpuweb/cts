@@ -1,5 +1,5 @@
 export const description = `
-Validation tests for subgroupBroadcast
+Validation tests for quadBroadcast
 `;
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
@@ -21,16 +21,16 @@ const kStages: Record<string, string> = {
 enable subgroups;
 @compute @workgroup_size(16)
 fn main() {
-  const x = subgroupBroadcast(0, 0);
+  const x = quadBroadcast(0, 0);
 }`,
   override: `
 enable subgroups;
-override o = subgroupBroadcast(0, 0);`,
+override o = quadBroadcast(0, 0);`,
   runtime: `
 enable subgroups;
 @compute @workgroup_size(16)
 fn main() {
-  let x = subgroupBroadcast(0, 0);
+  let x = quadBroadcast(0, 0);
 }`,
 };
 
@@ -56,7 +56,7 @@ g.test('must_use')
 enable subgroups;
 @compute @workgroup_size(16)
 fn main() {
-  ${t.params.must_use ? '_ = ' : ''}subgroupBroadcast(0, 0);
+  ${t.params.must_use ? '_ = ' : ''}quadBroadcast(0, 0);
 }`;
 
     t.expectCompileResult(t.params.must_use, wgsl);
@@ -84,7 +84,7 @@ g.test('data_type')
 ${enables}
 @compute @workgroup_size(1)
 fn main() {
-  _ = subgroupBroadcast(${type.create(0).wgsl()}, 0);
+  _ = quadBroadcast(${type.create(0).wgsl()}, 0);
 }`;
 
     t.expectCompileResult(elementTypeOf(type) !== Type.bool, wgsl);
@@ -130,7 +130,7 @@ g.test('return_type')
 ${enables}
 @compute @workgroup_size(1)
 fn main() {
-  let res : ${retType.toString()} = subgroupBroadcast(${dataType.create(0).wgsl()}, 0);
+  let res : ${retType.toString()} = quadBroadcast(${dataType.create(0).wgsl()}, 0);
 }`;
 
     const expect = elementTypeOf(dataType) !== Type.bool && dataType === retType;
@@ -149,7 +149,7 @@ g.test('id_type')
 enable subgroups;
 @compute @workgroup_size(1)
 fn main() {
-  _ = subgroupBroadcast(0, ${type.create(0).wgsl()});
+  _ = quadBroadcast(0, ${type.create(0).wgsl()});
 }`;
 
     const expect = isConvertible(type, Type.u32) || isConvertible(type, Type.i32);
@@ -202,7 +202,7 @@ fn foo() {
   var var_func_decl : u32;
   let let_decl = var_func_decl;
   const const_decl = 0u;
-  _ = subgroupBroadcast(0, ${kIdCases[t.params.value].code});
+  _ = quadBroadcast(0, ${kIdCases[t.params.value].code});
 }`;
 
     t.expectCompileResult(kIdCases[t.params.value].valid, wgsl);
@@ -238,7 +238,7 @@ fn main() -> @builtin(position) vec4f {
     const wgsl = `
 enable subgroups;
 fn foo() {
-  _ = subgroupBroadcast(0, 0);
+  _ = quadBroadcast(0, 0);
 }
 
 ${entry}
