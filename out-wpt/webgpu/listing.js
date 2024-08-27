@@ -3135,6 +3135,16 @@ export const listing = [
       "expression",
       "call",
       "builtin",
+      "subgroupAdd"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "call",
+      "builtin",
       "subgroupBallot"
     ]
   },
@@ -3146,6 +3156,16 @@ export const listing = [
       "call",
       "builtin",
       "subgroupBroadcast"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "call",
+      "builtin",
+      "subgroupMul"
     ]
   },
   {
@@ -4794,6 +4814,16 @@ export const listing = [
       "expression",
       "call",
       "builtin",
+      "subgroupAdd"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
+      "call",
+      "builtin",
       "subgroupBallot"
     ]
   },
@@ -4805,6 +4835,16 @@ export const listing = [
       "call",
       "builtin",
       "subgroupBroadcast"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
+      "call",
+      "builtin",
+      "subgroupMul"
     ]
   },
   {
