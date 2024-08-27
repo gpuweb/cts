@@ -2338,7 +2338,6 @@
   "webgpu:shader,validation,expression,call,builtin,subgroupBroadcastFirst:data_type:*": { "subcaseMS": 32.168 },
   "webgpu:shader,validation,expression,call,builtin,subgroupBroadcastFirst:early_eval:*": { "subcaseMS": 57.922 },
   "webgpu:shader,validation,expression,call,builtin,subgroupBroadcastFirst:must_use:*": { "subcaseMS": 36.296 },
-  "webgpu:shader,validation,expression,call,builtin,subgroupBroadcastFirst:requires_enable:*": { "subcaseMS": 38.471 },
   "webgpu:shader,validation,expression,call,builtin,subgroupBroadcastFirst:requires_subgroups:*": { "subcaseMS": 42.522 },
   "webgpu:shader,validation,expression,call,builtin,subgroupBroadcastFirst:requires_subgroups_f16:*": { "subcaseMS": 47.111 },
   "webgpu:shader,validation,expression,call,builtin,subgroupBroadcastFirst:return_type:*": { "subcaseMS": 402.558 },
