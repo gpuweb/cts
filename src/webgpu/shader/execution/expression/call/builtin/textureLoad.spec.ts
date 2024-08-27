@@ -471,6 +471,9 @@ Parameters:
       .combine('C', ['i32', 'u32'] as const)
       .combine('L', ['i32', 'u32'] as const)
   )
+  .beforeAllSubcases(t =>
+    t.skipIf(typeof VideoFrame === 'undefined', 'VideoFrames are not supported')
+  )
   .fn(async t => {
     const { samplePoints, C, L } = t.params;
 
@@ -484,11 +487,7 @@ Parameters:
       usage: GPUTextureUsage.COPY_DST,
     };
 
-    if (typeof VideoFrame === 'undefined') {
-      t.skip('VideoFrame is not supported');
-    }
     const { texels, videoFrame } = createVideoFrameWithRandomDataAndGetTexels(descriptor.size);
-
     const texture = t.device.importExternalTexture({ source: videoFrame });
 
     const calls: TextureCall<vec2>[] = generateTextureBuiltinInputs2D(50, {

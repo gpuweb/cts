@@ -30,11 +30,7 @@ async function createTextureAndDataForTest(
   videoFrame?: VideoFrame;
 }> {
   if (isExternal) {
-    if (typeof VideoFrame === 'undefined') {
-      t.skip('VideoFrame is not supported');
-    }
     const { texels, videoFrame } = createVideoFrameWithRandomDataAndGetTexels(descriptor.size);
-
     const texture = t.device.importExternalTexture({ source: videoFrame });
     return { texels, texture, videoFrame };
   } else {
@@ -64,6 +60,12 @@ Parameters:
       .combine('addressModeU', ['clamp-to-edge', 'repeat', 'mirror-repeat'] as const)
       .combine('addressModeV', ['clamp-to-edge', 'repeat', 'mirror-repeat'] as const)
       .combine('minFilter', ['nearest', 'linear'] as const)
+  )
+  .beforeAllSubcases(t =>
+    t.skipIf(
+      t.params.textureType === 'texture_external' && typeof VideoFrame === 'undefined',
+      'VideoFrames are not supported'
+    )
   )
   .fn(async t => {
     const { textureType, samplePoints, addressModeU, addressModeV, minFilter } = t.params;
