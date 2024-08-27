@@ -9,6 +9,22 @@ import { ShaderValidationTest } from '../../../shader_validation_test.js';
 
 export const g = makeTestGroup(ShaderValidationTest);
 
+g.test('requires_subgroups')
+  .desc('Validates that the subgroups feature is required')
+  .params(u => u.combine('enable', [false, true] as const))
+  .beforeAllSubcases(t => {
+    t.selectDeviceOrSkipTestCase('subgroups' as GPUFeatureName);
+  })
+  .fn(t => {
+    const wgsl = `
+${t.params.enable ? 'enable subgroups;' : ''}
+fn foo() {
+  _ = subgroupElect();
+}`;
+
+    t.expectCompileResult(t.params.enable, wgsl);
+  });
+
 const kStages: Record<string, string> = {
   constant: `
 enable subgroups;

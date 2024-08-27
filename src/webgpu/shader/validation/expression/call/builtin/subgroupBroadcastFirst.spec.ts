@@ -9,6 +9,44 @@ import { ShaderValidationTest } from '../../../shader_validation_test.js';
 
 export const g = makeTestGroup(ShaderValidationTest);
 
+g.test('requires_subgroups')
+  .desc('Validates that the subgroups feature is required')
+  .params(u => u.combine('enable', [false, true] as const))
+  .beforeAllSubcases(t => {
+    t.selectDeviceOrSkipTestCase('subgroups' as GPUFeatureName);
+  })
+  .fn(t => {
+    const wgsl = `
+${t.params.enable ? 'enable subgroups;' : ''}
+fn foo() {
+  _ = subgroupBroadcastFirst(0);
+}`;
+
+    t.expectCompileResult(t.params.enable, wgsl);
+  });
+
+g.test('requires_subgroups_f16')
+  .desc('Validates that the subgroups feature is required')
+  .params(u => u.combine('enable', [false, true] as const))
+  .beforeAllSubcases(t => {
+    const features: GPUFeatureName[] = ['shader-f16', 'subgroups' as GPUFeatureName];
+    if (t.params.enable) {
+      features.push('subgroups-f16' as GPUFeatureName);
+    }
+    t.selectDeviceOrSkipTestCase(features);
+  })
+  .fn(t => {
+    const wgsl = `
+enable f16;
+enable subgroups;
+${t.params.enable ? 'enable subgroups_f16;' : ''}
+fn foo() {
+  _ = subgroupBroadcastFirst(0h);
+}`;
+
+    t.expectCompileResult(t.params.enable, wgsl);
+  });
+
 const kArgumentTypes = objectsToRecord(kAllScalarsAndVectors);
 
 const kStages: Record<string, string> = {

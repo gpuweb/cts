@@ -16,6 +16,22 @@ export const g = makeTestGroup(ShaderValidationTest);
 
 const kOps = ['subgroupAnd', 'subgroupOr', 'subgroupXor'] as const;
 
+g.test('requires_subgroups')
+  .desc('Validates that the subgroups feature is required')
+  .params(u => u.combine('enable', [false, true] as const).combine('op', kOps))
+  .beforeAllSubcases(t => {
+    t.selectDeviceOrSkipTestCase('subgroups' as GPUFeatureName);
+  })
+  .fn(t => {
+    const wgsl = `
+${t.params.enable ? 'enable subgroups;' : ''}
+fn foo() {
+  _ = ${t.params.op}(0);
+}`;
+
+    t.expectCompileResult(t.params.enable, wgsl);
+  });
+
 const kStages: Record<string, (op: string) => string> = {
   constant: (op: string) => {
     return `
