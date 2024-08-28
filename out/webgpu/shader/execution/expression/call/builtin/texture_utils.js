@@ -1011,7 +1011,8 @@ mipLevel)
     return softwareTextureReadMipLevel(call, texture, sampler, mipLevel);
   }
 
-  switch (sampler.mipmapFilter) {
+  const effectiveMipmapFilter = isBuiltinGather(call.builtin) ? 'nearest' : sampler.mipmapFilter;
+  switch (effectiveMipmapFilter) {
     case 'linear':{
         const clampedMipLevel = clamp(mipLevel, { min: 0, max: maxLevel });
         const baseMipLevel = Math.floor(clampedMipLevel);
@@ -1387,6 +1388,16 @@ results)
           errs.push(
             `          : as texel coord mip level[${mipLevel}]: (${t[0]}, ${t[1]}), face: ${faceNdx}(${kFaceNames[faceNdx]})`
           );
+        }
+      } else {
+        for (let mipLevel = 0; mipLevel < (texture.descriptor.mipLevelCount ?? 1); ++mipLevel) {
+          const mipSize = virtualMipSize(
+            texture.descriptor.dimension ?? '2d',
+            texture.descriptor.size,
+            mipLevel
+          );
+          const t = call.coords.map((v, i) => (v * mipSize[i]).toFixed(3));
+          errs.push(`          : as texel coord @ mip level[${mipLevel}]: (${t.join(', ')})`);
         }
       }
       errs.push(`\
@@ -2558,7 +2569,7 @@ args)
       const v1 = Math.floor(v * q[i]);
       // If it's nearest or textureGather and we're on the edge of a texel then move us off the edge
       // since the edge could choose one texel or another.
-      const isEdgeCase = v1 % kSubdivisionsPerTexel === edgeRemainder;
+      const isEdgeCase = Math.abs(v1 % kSubdivisionsPerTexel) === edgeRemainder;
       const v2 = isEdgeCase && avoidEdgeCase ? v1 + 1 : v1;
       // Convert back to texture coords
       return v2 / q[i];
@@ -3004,7 +3015,7 @@ args)
       const v1 = Math.floor(v * q[i]);
       // If it's nearest or textureGather and we're on the edge of a texel then move us off the edge
       // since the edge could choose one texel or another.
-      const isEdgeCase = v1 % kSubdivisionsPerTexel === edgeRemainder;
+      const isEdgeCase = Math.abs(v1 % kSubdivisionsPerTexel) === edgeRemainder;
       const v2 = isEdgeCase && avoidEdgeCase ? v1 + 1 : v1;
       // Convert back to texture coords slightly off
       return (v2 + 1 / 16) / q[i];
