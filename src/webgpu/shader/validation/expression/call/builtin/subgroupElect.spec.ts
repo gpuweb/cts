@@ -1,5 +1,5 @@
 export const description = `
-Validation tests for subgroupBallot
+Validation tests for subgroupElect.
 `;
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
@@ -19,7 +19,7 @@ g.test('requires_subgroups')
     const wgsl = `
 ${t.params.enable ? 'enable subgroups;' : ''}
 fn foo() {
-  _ = subgroupBallot(true);
+  _ = subgroupElect();
 }`;
 
     t.expectCompileResult(t.params.enable, wgsl);
@@ -30,16 +30,16 @@ const kStages: Record<string, string> = {
 enable subgroups;
 @compute @workgroup_size(16)
 fn main() {
-  const x = subgroupBallot(true);
+  const x = subgroupElect();
 }`,
   override: `
-enable subgroups;
-override o = subgroupBallot(true);`,
+enable subgroups
+override o = select(0, 1, subgroupElect());`,
   runtime: `
 enable subgroups;
 @compute @workgroup_size(16)
 fn main() {
-  let x = subgroupBallot(true);
+  let x = subgroupElect();
 }`,
 };
 
@@ -65,78 +65,78 @@ g.test('must_use')
 enable subgroups;
 @compute @workgroup_size(16)
 fn main() {
-  ${t.params.must_use ? '_ = ' : ''}subgroupBallot(true);
+  ${t.params.must_use ? '_ = ' : ''}subgroupElect();
 }`;
 
     t.expectCompileResult(t.params.must_use, wgsl);
   });
 
-const kArgumentTypes = objectsToRecord(kAllScalarsAndVectors);
+const kTypes = objectsToRecord(kAllScalarsAndVectors);
 
 g.test('data_type')
-  .desc('Validates data parameter type')
-  .params(u => u.combine('type', keysOf(kArgumentTypes)))
+  .desc('Validates there are no valid data parameters')
+  .params(u => u.combine('type', keysOf(kTypes)))
   .beforeAllSubcases(t => {
     const features = ['subgroups' as GPUFeatureName];
-    const type = kArgumentTypes[t.params.type];
+    const type = kTypes[t.params.type];
     if (type.requiresF16()) {
-      features.push('subgroups-f16' as GPUFeatureName);
       features.push('shader-f16');
+      features.push('subgroups-f16' as GPUFeatureName);
     }
     t.selectDeviceOrSkipTestCase(features);
   })
   .fn(t => {
-    const type = kArgumentTypes[t.params.type];
+    const type = kTypes[t.params.type];
     let enables = `enable subgroups;\n`;
     if (type.requiresF16()) {
-      enables += `enable subgroups_f16;\nenable f16;`;
+      enables += `enable f16;\nenable subgroups_f16;`;
     }
     const wgsl = `
 ${enables}
 @compute @workgroup_size(1)
 fn main() {
-  _ = subgroupBallot(${type.create(0).wgsl()});
+  _ = subgroupElect(${type.create(0).wgsl()});
 }`;
 
-    t.expectCompileResult(type === Type.bool, wgsl);
+    t.expectCompileResult(false, wgsl);
   });
 
 g.test('return_type')
   .desc('Validates return type')
   .params(u =>
-    u.combine('type', keysOf(kArgumentTypes)).filter(t => {
-      const type = kArgumentTypes[t.type];
+    u.combine('type', keysOf(kTypes)).filter(t => {
+      const type = kTypes[t.type];
       const eleType = elementTypeOf(type);
       return eleType !== Type.abstractInt && eleType !== Type.abstractFloat;
     })
   )
   .beforeAllSubcases(t => {
     const features = ['subgroups' as GPUFeatureName];
-    const type = kArgumentTypes[t.params.type];
+    const type = kTypes[t.params.type];
     if (type.requiresF16()) {
-      features.push('subgroups-f16' as GPUFeatureName);
       features.push('shader-f16');
+      features.push('subgroups-f16' as GPUFeatureName);
     }
     t.selectDeviceOrSkipTestCase(features);
   })
   .fn(t => {
-    const type = kArgumentTypes[t.params.type];
+    const type = kTypes[t.params.type];
     let enables = `enable subgroups;\n`;
     if (type.requiresF16()) {
-      enables += `enable subgroups_f16;\nenable f16;`;
+      enables += `enable f16;\nenable subgroups_f16;`;
     }
     const wgsl = `
 ${enables}
 @compute @workgroup_size(1)
 fn main() {
-  let res : ${type.toString()} = subgroupBallot(true);
+  let res : ${type.toString()} = subgroupElect();
 }`;
 
-    t.expectCompileResult(type === Type.vec4u, wgsl);
+    t.expectCompileResult(type === Type.bool, wgsl);
   });
 
 g.test('stage')
-  .desc('Validates it is only usable in correct stage')
+  .desc('validates builtin is only usable in the correct stages')
   .params(u => u.combine('stage', ['compute', 'fragment', 'vertex'] as const))
   .beforeAllSubcases(t => {
     t.selectDeviceOrSkipTestCase('subgroups' as GPUFeatureName);
@@ -165,7 +165,7 @@ fn main() -> @builtin(position) vec4f {
     const wgsl = `
 enable subgroups;
 fn foo() {
-  _ = subgroupBallot(true);
+  _ = subgroupElect();
 }
 
 ${entry}
