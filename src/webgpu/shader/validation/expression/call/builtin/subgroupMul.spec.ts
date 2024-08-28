@@ -1,91 +1,59 @@
 export const description = `
-Validation tests for subgroupBroadcast
+Validation tests for subgroupMul and subgroupExclusiveMul
 `;
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { keysOf, objectsToRecord } from '../../../../../../common/util/data_tables.js';
-import {
-  isConvertible,
-  Type,
-  elementTypeOf,
-  kAllScalarsAndVectors,
-} from '../../../../../util/conversion.js';
+import { Type, elementTypeOf, kAllScalarsAndVectors } from '../../../../../util/conversion.js';
 import { ShaderValidationTest } from '../../../shader_validation_test.js';
 
 export const g = makeTestGroup(ShaderValidationTest);
 
-g.test('requires_subgroups')
-  .desc('Validates that the subgroups feature is required')
-  .params(u => u.combine('enable', [false, true] as const))
-  .beforeAllSubcases(t => {
-    t.selectDeviceOrSkipTestCase('subgroups' as GPUFeatureName);
-  })
-  .fn(t => {
-    const wgsl = `
-${t.params.enable ? 'enable subgroups;' : ''}
-fn foo() {
-  _ = subgroupBroadcast(0, 0);
-}`;
+const kBuiltins = ['subgroupMul', 'subgroupExclusiveMul'] as const;
 
-    t.expectCompileResult(t.params.enable, wgsl);
-  });
-
-g.test('requires_subgroups_f16')
-  .desc('Validates that the subgroups feature is required')
-  .params(u => u.combine('enable', [false, true] as const))
-  .beforeAllSubcases(t => {
-    const features: GPUFeatureName[] = ['shader-f16', 'subgroups' as GPUFeatureName];
-    if (t.params.enable) {
-      features.push('subgroups-f16' as GPUFeatureName);
-    }
-    t.selectDeviceOrSkipTestCase(features);
-  })
-  .fn(t => {
-    const wgsl = `
-enable f16;
-enable subgroups;
-${t.params.enable ? 'enable subgroups_f16;' : ''}
-fn foo() {
-  _ = subgroupBroadcast(0h, 0);
-}`;
-
-    t.expectCompileResult(t.params.enable, wgsl);
-  });
-
-const kArgumentTypes = objectsToRecord(kAllScalarsAndVectors);
-
-const kStages: Record<string, string> = {
-  constant: `
+const kStages: Record<string, (builtin: string) => string> = {
+  constant: (builtin: string) => {
+    return `
 enable subgroups;
 @compute @workgroup_size(16)
 fn main() {
-  const x = subgroupBroadcast(0, 0);
-}`,
-  override: `
+  const x = ${builtin}(0);
+}`;
+  },
+  override: (builtin: string) => {
+    return `
 enable subgroups;
-override o = subgroupBroadcast(0, 0);`,
-  runtime: `
+override o = ${builtin}(0);`;
+  },
+  runtime: (builtin: string) => {
+    return `
 enable subgroups;
 @compute @workgroup_size(16)
 fn main() {
-  let x = subgroupBroadcast(0, 0);
-}`,
+  let x = ${builtin}(0);
+}`;
+  },
 };
 
 g.test('early_eval')
   .desc('Ensures the builtin is not able to be compile time evaluated')
-  .params(u => u.combine('stage', keysOf(kStages)))
+  .params(u => u.combine('stage', keysOf(kStages)).beginSubcases().combine('builtin', kBuiltins))
   .beforeAllSubcases(t => {
     t.selectDeviceOrSkipTestCase('subgroups' as GPUFeatureName);
   })
   .fn(t => {
-    const code = kStages[t.params.stage];
+    const code = kStages[t.params.stage](t.params.builtin);
     t.expectCompileResult(t.params.stage === 'runtime', code);
   });
 
 g.test('must_use')
   .desc('Tests that the builtin has the @must_use attribute')
-  .params(u => u.combine('must_use', [true, false] as const))
+  .params(u =>
+    u
+      .combine('must_use', [true, false] as const)
+      .beginSubcases()
+      .combine('builtin', kBuiltins)
+  )
   .beforeAllSubcases(t => {
     t.selectDeviceOrSkipTestCase('subgroups' as GPUFeatureName);
   })
@@ -94,15 +62,19 @@ g.test('must_use')
 enable subgroups;
 @compute @workgroup_size(16)
 fn main() {
-  ${t.params.must_use ? '_ = ' : ''}subgroupBroadcast(0, 0);
+  ${t.params.must_use ? '_ = ' : ''}${t.params.builtin}(0);
 }`;
 
     t.expectCompileResult(t.params.must_use, wgsl);
   });
 
+const kArgumentTypes = objectsToRecord(kAllScalarsAndVectors);
+
 g.test('data_type')
   .desc('Validates data parameter type')
-  .params(u => u.combine('type', keysOf(kArgumentTypes)))
+  .params(u =>
+    u.combine('type', keysOf(kArgumentTypes)).beginSubcases().combine('builtin', kBuiltins)
+  )
   .beforeAllSubcases(t => {
     const features = ['subgroups' as GPUFeatureName];
     const type = kArgumentTypes[t.params.type];
@@ -122,7 +94,7 @@ g.test('data_type')
 ${enables}
 @compute @workgroup_size(1)
 fn main() {
-  _ = subgroupBroadcast(${type.create(0).wgsl()}, 0);
+  _ = ${t.params.builtin}(${type.create(0).wgsl()});
 }`;
 
     t.expectCompileResult(elementTypeOf(type) !== Type.bool, wgsl);
@@ -146,6 +118,8 @@ g.test('return_type')
           dataEleTy !== Type.abstractFloat
         );
       })
+      .beginSubcases()
+      .combine('builtin', kBuiltins)
   )
   .beforeAllSubcases(t => {
     const features = ['subgroups' as GPUFeatureName];
@@ -168,87 +142,21 @@ g.test('return_type')
 ${enables}
 @compute @workgroup_size(1)
 fn main() {
-  let res : ${retType.toString()} = subgroupBroadcast(${dataType.create(0).wgsl()}, 0);
+  let res : ${retType.toString()} = ${t.params.builtin}(${dataType.create(0).wgsl()});
 }`;
 
     const expect = elementTypeOf(dataType) !== Type.bool && dataType === retType;
     t.expectCompileResult(expect, wgsl);
   });
 
-g.test('id_type')
-  .desc('Validates id parameter type')
-  .params(u => u.combine('type', keysOf(kArgumentTypes)))
-  .beforeAllSubcases(t => {
-    t.selectDeviceOrSkipTestCase('subgroups' as GPUFeatureName);
-  })
-  .fn(t => {
-    const type = kArgumentTypes[t.params.type];
-    const wgsl = `
-enable subgroups;
-@compute @workgroup_size(1)
-fn main() {
-  _ = subgroupBroadcast(0, ${type.create(0).wgsl()});
-}`;
-
-    const expect = isConvertible(type, Type.u32) || isConvertible(type, Type.i32);
-    t.expectCompileResult(expect, wgsl);
-  });
-
-const kIdCases = {
-  const_decl: {
-    code: 'const_decl',
-    valid: true,
-  },
-  const_literal: {
-    code: '0',
-    valid: true,
-  },
-  const_expr: {
-    code: 'const_decl + 2',
-    valid: true,
-  },
-  let_decl: {
-    code: 'let_decl',
-    valid: false,
-  },
-  override_decl: {
-    code: 'override_decl',
-    valid: false,
-  },
-  var_func_decl: {
-    code: 'var_func_decl',
-    valid: false,
-  },
-  var_priv_decl: {
-    code: 'var_priv_decl',
-    valid: false,
-  },
-};
-
-g.test('id_constness')
-  .desc('Validates that id must be a const-expression')
-  .params(u => u.combine('value', keysOf(kIdCases)))
-  .beforeAllSubcases(t => {
-    t.selectDeviceOrSkipTestCase('subgroups' as GPUFeatureName);
-  })
-  .fn(t => {
-    const wgsl = `
-enable subgroups;
-override override_decl : u32;
-var<private> var_priv_decl : u32;
-fn foo() {
-  var var_func_decl : u32;
-  let let_decl = var_func_decl;
-  const const_decl = 0u;
-  _ = subgroupBroadcast(0, ${kIdCases[t.params.value].code});
-}`;
-
-    t.expectCompileResult(kIdCases[t.params.value].valid, wgsl);
-  });
-
 g.test('stage')
   .desc('Validates it is only usable in correct stage')
-  .params(u => u.combine('stage', ['compute', 'fragment', 'vertex'] as const))
+  .params(u =>
+    u
+      .combine('stage', ['compute', 'fragment', 'vertex'] as const)
+      .beginSubcases()
+      .combine('builtin', kBuiltins)
+  )
   .beforeAllSubcases(t => {
     t.selectDeviceOrSkipTestCase('subgroups' as GPUFeatureName);
   })
@@ -276,11 +184,52 @@ fn main() -> @builtin(position) vec4f {
     const wgsl = `
 enable subgroups;
 fn foo() {
-  _ = subgroupBroadcast(0, 0);
+  _ = ${t.params.builtin}(0);
 }
 
 ${entry}
 `;
 
     t.expectCompileResult(t.params.stage !== 'vertex', wgsl);
+  });
+
+const kInvalidTypeCases: Record<string, string> = {
+  array_u32: `array(1u,2u,3u)`,
+  array_f32: `array<f32, 4>()`,
+  struct_s: `S()`,
+  struct_t: `T(1, 1)`,
+  ptr_func: `&func_var`,
+  ptr_priv: `&priv_var`,
+  frexp_ret: `frexp(0)`,
+};
+
+g.test('invalid_types')
+  .desc('Tests that invalid non-plain types are rejected')
+  .params(u =>
+    u.combine('case', keysOf(kInvalidTypeCases)).beginSubcases().combine('builtin', kBuiltins)
+  )
+  .beforeAllSubcases(t => {
+    t.selectDeviceOrSkipTestCase('subgroups' as GPUFeatureName);
+  })
+  .fn(t => {
+    const val = kInvalidTypeCases[t.params.case];
+    const wgsl = `
+enable subgroups;
+
+struct S {
+  x : u32
+}
+
+struct T {
+  a : f32,
+  b : u32,
+}
+
+var<private> priv_var : f32;
+fn foo() {
+  var func_var : vec4u;
+  _ = ${t.params.builtin}(${val});
+}`;
+
+    t.expectCompileResult(false, wgsl);
   });

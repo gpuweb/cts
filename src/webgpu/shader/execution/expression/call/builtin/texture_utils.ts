@@ -569,7 +569,7 @@ export interface TextureCall<T extends Dimensionality> extends TextureCallArgs<T
 }
 
 const isBuiltinComparison = (builtin: TextureBuiltin) => builtin === 'textureGatherCompare';
-const isBuiltinGather = (builtin: TextureBuiltin) =>
+const isBuiltinGather = (builtin: TextureBuiltin | undefined) =>
   builtin === 'textureGather' || builtin === 'textureGatherCompare';
 
 const s_u32 = new Uint32Array(1);
@@ -1308,7 +1308,7 @@ export async function checkCallResults<T extends Dimensionality>(
       ? getMaxFractionalDiffForTextureFormat(texture.descriptor.format)
       : 0;
 
-  for (let callIdx = 0; callIdx < calls.length /*&& errs.length === 0*/; callIdx++) {
+  for (let callIdx = 0; callIdx < calls.length; callIdx++) {
     const call = calls[callIdx];
     const gotRGBA = results[callIdx];
     const expectRGBA = softwareTextureReadLevel(t, call, texture, sampler, call.mipLevel ?? 0);
@@ -1356,7 +1356,11 @@ export async function checkCallResults<T extends Dimensionality>(
       return { absDiff, relDiff, ulpDiff };
     });
 
-    const fix5 = (n: number) => n.toFixed(5);
+    const isFloatType = (format: GPUTextureFormat) => {
+      const info = kTextureFormatInfo[format];
+      return info.color?.type === 'float' || info.depth?.type === 'depth';
+    };
+    const fix5 = (n: number) => (isFloatType(format) ? n.toFixed(5) : n.toString());
     const fix5v = (arr: number[]) => arr.map(v => fix5(v)).join(', ');
     const rgbaToArray = (p: PerTexelComponent<number>): number[] =>
       rgbaComponentsToCheck.map(component => p[component]!);
@@ -1410,6 +1414,10 @@ export async function checkCallResults<T extends Dimensionality>(
         errs.push('  sample points:');
         errs.push(layoutTwoColumns(expectedSamplePoints, gotSamplePoints).join('\n'));
         errs.push('', '');
+
+        // This path is slow so if we took it, don't report the other errors. One is enough
+        // to fail the test.
+        break;
       }
     }
   }
@@ -2515,8 +2523,8 @@ function generateTextureBuiltinInputsImpl<T extends Dimensionality>(
   // MacOS, M1 Mac: 256
   const kSubdivisionsPerTexel = 4;
   const avoidEdgeCase =
-    !args.sampler || args.sampler.minFilter === 'nearest' || isBuiltinGather(args.textureBuiltin!);
-  const edgeRemainder = args.textureBuiltin === 'textureGather' ? kSubdivisionsPerTexel / 2 : 0;
+    !args.sampler || args.sampler.minFilter === 'nearest' || isBuiltinGather(args.textureBuiltin);
+  const edgeRemainder = isBuiltinGather(args.textureBuiltin) ? kSubdivisionsPerTexel / 2 : 0;
   const numComponents = isDepthOrStencilTextureFormat(descriptor.format) ? 1 : 4;
   return coords.map((c, i) => {
     const mipLevel = args.mipLevel
@@ -2948,8 +2956,8 @@ export function generateSamplePointsCube(
   //
   const kSubdivisionsPerTexel = 4;
   const avoidEdgeCase =
-    !args.sampler || args.sampler.minFilter === 'nearest' || isBuiltinGather(args.textureBuiltin!);
-  const edgeRemainder = isBuiltinGather(args.textureBuiltin!) ? kSubdivisionsPerTexel / 2 : 0;
+    !args.sampler || args.sampler.minFilter === 'nearest' || isBuiltinGather(args.textureBuiltin);
+  const edgeRemainder = isBuiltinGather(args.textureBuiltin) ? kSubdivisionsPerTexel / 2 : 0;
 
   return coords.map((c, i) => {
     const mipLevel = args.mipLevel
