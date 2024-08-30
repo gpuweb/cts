@@ -2552,9 +2552,76 @@ args)
   // Linux, AMD Radeon Pro WX 3200: 256
   // MacOS, M1 Mac: 256
   const kSubdivisionsPerTexel = 4;
+
+  // When filtering is nearest then we want to avoid edges of texels
+  //
+  //             U
+  //             |
+  //     +---+---+---+---+---+---+---+---+
+  //     |   | A | B |   |   |   |   |   |
+  //     +---+---+---+---+---+---+---+---+
+  //
+  // Above, coordinate U could sample either A or B
+  //
+  //               U
+  //               |
+  //     +---+---+---+---+---+---+---+---+
+  //     |   | A | B | C |   |   |   |   |
+  //     +---+---+---+---+---+---+---+---+
+  //
+  // For textureGather we want to avoid texel centers
+  // as for coordinate U could either gather A,B or B,C.
+
   const avoidEdgeCase =
   !args.sampler || args.sampler.minFilter === 'nearest' || isBuiltinGather(args.textureBuiltin);
   const edgeRemainder = isBuiltinGather(args.textureBuiltin) ? kSubdivisionsPerTexel / 2 : 0;
+
+  // textureGather issues for 2d/3d textures
+  //
+  // If addressModeU is repeat, then on an 8x1 texture, u = 0.01 or u = 0.99
+  // would gather these texels
+  //
+  //     +---+---+---+---+---+---+---+---+
+  //     | * |   |   |   |   |   |   | * |
+  //     +---+---+---+---+---+---+---+---+
+  //
+  // If addressModeU is clamp-to-edge or mirror-repeat,
+  // then on an 8x1 texture, u = 0.01 would gather this texel
+  //
+  //     +---+---+---+---+---+---+---+---+
+  //     | * |   |   |   |   |   |   |   |
+  //     +---+---+---+---+---+---+---+---+
+  //
+  // and 0.99 would gather this texel
+  //
+  //     +---+---+---+---+---+---+---+---+
+  //     |   |   |   |   |   |   |   | * |
+  //     +---+---+---+---+---+---+---+---+
+  //
+  // This means we have to if addressMode is not `repeat`, we
+  // need to avoid the edge of the texture.
+  //
+  // Note: we don't have these specific issues with cube maps
+  // as they ignore addressMode
+  const euclideanModulo = (n, m) => (n % m + m) % m;
+  const addressMode =
+  args.textureBuiltin === 'textureSampleBaseClampToEdge' ?
+  ['clamp-to-edge', 'clamp-to-edge', 'clamp-to-edge'] :
+  [
+  args.sampler?.addressModeU ?? 'clamp-to-edge',
+  args.sampler?.addressModeV ?? 'clamp-to-edge',
+  args.sampler?.addressModeW ?? 'clamp-to-edge'];
+
+  const avoidTextureEdge = (axis, textureDimensionUnits, v) => {
+    assert(isBuiltinGather(args.textureBuiltin));
+    if (addressMode[axis] === 'repeat') {
+      return v;
+    }
+    const inside = euclideanModulo(v, textureDimensionUnits);
+    const outside = v - inside;
+    return outside + clamp(inside, { min: 1, max: textureDimensionUnits - 1 });
+  };
+
   const numComponents = isDepthOrStencilTextureFormat(descriptor.format) ? 1 : 4;
   return coords.map((c, i) => {
     const mipLevel = args.mipLevel ?
@@ -2569,10 +2636,11 @@ args)
       const v1 = Math.floor(v * q[i]);
       // If it's nearest or textureGather and we're on the edge of a texel then move us off the edge
       // since the edge could choose one texel or another.
-      const isEdgeCase = Math.abs(v1 % kSubdivisionsPerTexel) === edgeRemainder;
-      const v2 = isEdgeCase && avoidEdgeCase ? v1 + 1 : v1;
+      const isTexelEdgeCase = Math.abs(v1 % kSubdivisionsPerTexel) === edgeRemainder;
+      const v2 = isTexelEdgeCase && avoidEdgeCase ? v1 + 1 : v1;
+      const v3 = isBuiltinGather(args.textureBuiltin) ? avoidTextureEdge(i, q[i], v2) : v2;
       // Convert back to texture coords
-      return v2 / q[i];
+      return v3 / q[i];
     });
 
     return {
