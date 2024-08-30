@@ -10,8 +10,6 @@ local_invocation_index. Tests should avoid assuming there is.
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { keysOf } from '../../../../../../common/util/data_tables.js';
 import { iterRange } from '../../../../../../common/util/util.js';
-import { kTextureFormatInfo } from '../../../../../format_info.js';
-import { align } from '../../../../../util/math.js';
 import { PRNG } from '../../../../../util/prng.js';
 
 import {
@@ -19,7 +17,7 @@ import {
   kPredicateCases,
   SubgroupTest,
   runComputeTest,
-  kDataSentinel
+  kDataSentinel,
 } from './subgroup_util.js';
 
 export const g = makeTestGroup(SubgroupTest);
@@ -45,22 +43,24 @@ function generateInputData(seed: number, num: number, addCounter: boolean): Uint
   const index = prng.uniformInt(bound);
   //console.log(`bound = ${bound}, index = ${index}`);
 
-  return new Uint32Array([...iterRange(num, x => {
-    if (addCounter && x === 0) {
-      // Counter should start at 1 to avoid clear value.
-      return 1;
-    }
+  return new Uint32Array([
+    ...iterRange(num, x => {
+      if (addCounter && x === 0) {
+        // Counter should start at 1 to avoid clear value.
+        return 1;
+      }
 
-    if (seed === 0) {
-      return 0;
-    } else if (seed === 1) {
-      return 1;
-    } else if (seed < 10) {
-      const bounded = (addCounter ? x + 1 : x) % bound;
-      return bounded === index ? 0 : 1;
-    }
-    return prng.uniformInt(2);
-  })]);
+      if (seed === 0) {
+        return 0;
+      } else if (seed === 1) {
+        return 1;
+      } else if (seed < 10) {
+        const bounded = (addCounter ? x + 1 : x) % bound;
+        return bounded === index ? 0 : 1;
+      }
+      return prng.uniformInt(2);
+    }),
+  ]);
 }
 
 /**
@@ -263,4 +263,4 @@ fn main(
     );
   });
 
-g.test('fragment').unimplemented()
+g.test('fragment').unimplemented();

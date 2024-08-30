@@ -1,9 +1,8 @@
 import { assert, iterRange } from '../../../../../../common/util/util.js';
 import { Float16Array } from '../../../../../../external/petamoriken/float16/float16.js';
-import { kTextureFormatInfo } from '../../../../../format_info.js';
 import { GPUTest, TextureTestMixin } from '../../../../../gpu_test.js';
 import { FPInterval } from '../../../../../util/floating_point.js';
-import { sparseScalarF16Range, sparseScalarF32Range, align } from '../../../../../util/math.js';
+import { sparseScalarF16Range, sparseScalarF32Range } from '../../../../../util/math.js';
 import { PRNG } from '../../../../../util/prng.js';
 
 export class SubgroupTest extends TextureTestMixin(GPUTest) {}
