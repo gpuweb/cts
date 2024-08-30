@@ -41,7 +41,6 @@ function generateInputData(seed: number, num: number, addCounter: boolean): Uint
 
   const bound = Math.min(num, 32);
   const index = prng.uniformInt(bound);
-  //console.log(`bound = ${bound}, index = ${index}`);
 
   return new Uint32Array([
     ...iterRange(num, x => {
