@@ -1,8 +1,9 @@
 import { assert, iterRange } from '../../../../../../common/util/util.js';
 import { Float16Array } from '../../../../../../external/petamoriken/float16/float16.js';
+import { kTextureFormatInfo } from '../../../../../format_info.js';
 import { GPUTest, TextureTestMixin } from '../../../../../gpu_test.js';
 import { FPInterval } from '../../../../../util/floating_point.js';
-import { sparseScalarF16Range, sparseScalarF32Range } from '../../../../../util/math.js';
+import { sparseScalarF16Range, sparseScalarF32Range, align } from '../../../../../util/math.js';
 import { PRNG } from '../../../../../util/prng.js';
 
 export class SubgroupTest extends TextureTestMixin(GPUTest) {}
@@ -418,4 +419,129 @@ export async function runComputeTest(
   const output = outputReadback.data;
 
   t.expectOK(checkFunction(metadata, output));
+}
+
+export const kFramebufferSizes = [
+  [15, 15],
+  [16, 16],
+  [17, 17],
+  [19, 13],
+  [13, 10],
+  [111, 2],
+  [2, 111],
+  [35, 2],
+  [2, 35],
+  [53, 13],
+  [13, 53],
+] as const;
+
+/**
+ * Runs a subgroup builtin test for fragment shaders
+ *
+ * This test draws a full screen triangle.
+ * @param t The base test
+ * @param format The framebuffer format
+ * @param fsShader The fragment shader with the following interface:
+ *                 Location 0 output is framebuffer with format
+ *                 Group 0 binding 0 is input data
+ * @param width The framebuffer width
+ * @param height The framebuffer height
+ * @param inputData The input data
+ * @param checker A functor to check the framebuffer values
+ */
+export async function runFragmentTest(
+  t: SubgroupTest,
+  format: GPUTextureFormat,
+  fsShader: string,
+  width: number,
+  height: number,
+  inputData: Uint32Array | Float32Array | Float16Array,
+  checker: (data: Uint32Array) => Error | undefined
+) {
+  const vsShader = `
+@vertex
+fn vsMain(@builtin(vertex_index) index : u32) -> @builtin(position) vec4f {
+  const vertices = array(
+    vec2(-2, 4), vec2(-2, -4), vec2(2, 0),
+  );
+  return vec4f(vec2f(vertices[index]), 0, 1);
+}`;
+
+  const pipeline = t.device.createRenderPipeline({
+    layout: 'auto',
+    vertex: {
+      module: t.device.createShaderModule({ code: vsShader }),
+    },
+    fragment: {
+      module: t.device.createShaderModule({ code: fsShader }),
+      targets: [{ format }],
+    },
+    primitive: {
+      topology: 'triangle-list',
+    },
+  });
+
+  const { blockWidth, blockHeight, bytesPerBlock } = kTextureFormatInfo[format];
+  assert(bytesPerBlock !== undefined);
+
+  const blocksPerRow = width / blockWidth;
+  const blocksPerColumn = height / blockHeight;
+  // 256 minimum arises from image copy requirements.
+  const bytesPerRow = align(blocksPerRow * (bytesPerBlock ?? 1), 256);
+  const byteLength = bytesPerRow * blocksPerColumn;
+  const uintLength = byteLength / 4;
+
+  const buffer = t.makeBufferWithContents(
+    inputData,
+    GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
+  );
+
+  const bg = t.device.createBindGroup({
+    layout: pipeline.getBindGroupLayout(0),
+    entries: [
+      {
+        binding: 0,
+        resource: {
+          buffer,
+        },
+      },
+    ],
+  });
+
+  const framebuffer = t.createTextureTracked({
+    size: [width, height],
+    usage:
+      GPUTextureUsage.COPY_SRC |
+      GPUTextureUsage.COPY_DST |
+      GPUTextureUsage.RENDER_ATTACHMENT |
+      GPUTextureUsage.TEXTURE_BINDING,
+    format,
+  });
+
+  const encoder = t.device.createCommandEncoder();
+  const pass = encoder.beginRenderPass({
+    colorAttachments: [
+      {
+        view: framebuffer.createView(),
+        loadOp: 'clear',
+        storeOp: 'store',
+      },
+    ],
+  });
+  pass.setPipeline(pipeline);
+  pass.setBindGroup(0, bg);
+  pass.draw(3);
+  pass.end();
+  t.queue.submit([encoder.finish()]);
+
+  const copyBuffer = t.copyWholeTextureToNewBufferSimple(framebuffer, 0);
+  const readback = await t.readGPUBufferRangeTyped(copyBuffer, {
+    srcByteOffset: 0,
+    type: Uint32Array,
+    typedLength: uintLength,
+    method: 'copy',
+  });
+  const data: Uint32Array = readback.data;
+
+  t.expectOK(checker(data));
 }

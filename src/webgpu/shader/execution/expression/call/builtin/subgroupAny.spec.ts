@@ -10,14 +10,18 @@ local_invocation_index. Tests should avoid assuming there is.
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { keysOf } from '../../../../../../common/util/data_tables.js';
 import { iterRange } from '../../../../../../common/util/util.js';
+import { kTextureFormatInfo } from '../../../../../format_info.js';
+import { align } from '../../../../../util/math.js';
 import { PRNG } from '../../../../../util/prng.js';
 
 import {
   kWGSizes,
   kPredicateCases,
   SubgroupTest,
-  runComputeTest,
   kDataSentinel,
+  runComputeTest,
+  runFragmentTest,
+  kFramebufferSizes,
 } from './subgroup_util.js';
 
 export const g = makeTestGroup(SubgroupTest);
@@ -262,4 +266,151 @@ fn main(
     );
   });
 
-g.test('fragment').unimplemented();
+/**
+ * Checks subgroupAny results from a fragment shader.
+ *
+ * @param data Framebuffer output
+ *             * component 0 is result
+ *             * component 1 is generated subgroup id
+ * @param input An array of input data offset by 1 uint
+ * @param format The framebuffer format
+ * @param width Framebuffer width
+ * @param height Framebuffer height
+ */
+function checkFragmentAny(
+  data: Uint32Array,
+  input: Uint32Array,
+  format: GPUTextureFormat,
+  width: number,
+  height: number
+): Error | undefined {
+  const { blockWidth, blockHeight, bytesPerBlock } = kTextureFormatInfo[format];
+  const blocksPerRow = width / blockWidth;
+  // 256 minimum comes from image copy requirements.
+  const bytesPerRow = align(blocksPerRow * (bytesPerBlock ?? 1), 256);
+  const uintsPerRow = bytesPerRow / 4;
+  const uintsPerTexel = (bytesPerBlock ?? 1) / blockWidth / blockHeight / 4;
+
+  const expected = new Map<number, number>();
+  for (let row = 0; row < height; row++) {
+    for (let col = 0; col < width; col++) {
+      const offset = uintsPerRow * row + col * uintsPerTexel;
+      const subgroup_id = data[offset + 1];
+
+      if (subgroup_id === 0) {
+        return new Error(`Internal error: helper invocation at (${col}, ${row})`);
+      }
+
+      let v = expected.get(subgroup_id) ?? 0;
+      // First index of input is an atomic counter.
+      v |= input[1 + row * width + col];
+      expected.set(subgroup_id, v);
+    }
+  }
+
+  for (let row = 0; row < height; row++) {
+    for (let col = 0; col < width; col++) {
+      const offset = uintsPerRow * row + col * uintsPerTexel;
+      const res = data[offset];
+      const subgroup_id = data[offset + 1];
+
+      if (subgroup_id === 0) {
+        // Inactive in the fragment.
+        continue;
+      }
+
+      const expected_v = expected.get(subgroup_id) ?? 0;
+      if (expected_v !== res) {
+        return new Error(`Row ${row}, col ${col}: incorrect results:
+- expected: ${expected_v}
+-      got: ${res}`);
+      }
+    }
+  }
+
+  return undefined;
+}
+
+g.test('fragment')
+  .desc('Tests subgroupAny in fragment shaders')
+  .params(u =>
+    u
+      .combine('size', kFramebufferSizes)
+      .beginSubcases()
+      .combine('case', [...iterRange(kNumCases, x => x)])
+      .combineWithParams([{ format: 'rg32uint' }] as const)
+  )
+  .beforeAllSubcases(t => {
+    t.selectDeviceOrSkipTestCase('subgroups' as GPUFeatureName);
+  })
+  .fn(async t => {
+    const prng = new PRNG(t.params.case);
+    // Case 0 is all 0s.
+    // Case 1 is all 1s.
+    // Other cases are filled with random 0s and 1s.
+    //
+    // Note: the first index is used as an atomic counter for subgroup ids.
+    const numInputs = t.params.size[0] * t.params.size[1] + 1;
+    const inputData = new Uint32Array([
+      ...iterRange(numInputs, x => {
+        if (x === 0) {
+          // All subgroup ids start from index 1.
+          return 1;
+        } else if (t.params.case === 0) {
+          return 0;
+        } else if (t.params.case === 1) {
+          return 1;
+        }
+        return prng.uniformInt(2);
+      }),
+    ]);
+
+    const fsShader = `
+enable subgroups;
+
+struct Inputs {
+  subgroup_id : atomic<u32>,
+  data : array<u32>,
+}
+
+@group(0) @binding(0)
+var<storage, read_write> inputs : Inputs;
+
+@fragment
+fn main(
+  @builtin(position) pos : vec4f,
+) -> @location(0) vec2u {
+  var subgroup_id = 0u;
+  if subgroupElect() {
+    subgroup_id = atomicAdd(&inputs.subgroup_id, 1);
+  }
+  subgroup_id = subgroupBroadcastFirst(subgroup_id);
+
+  // Filter out texels outside the frame (possible helper invocations).
+  var input = 0u;
+  if (u32(pos.x) >= 0 && u32(pos.x) < ${t.params.size[0]} &&
+      u32(pos.y) >= 0 && u32(pos.y) < ${t.params.size[1]}) {
+    input = inputs.data[u32(pos.y) * ${t.params.size[0]} + u32(pos.x)];
+  }
+  let res = select(0u, 1u, subgroupAny(bool(input)));
+  return vec2u(res, subgroup_id);
+}`;
+
+    await runFragmentTest(
+      t,
+      t.params.format,
+      fsShader,
+      t.params.size[0],
+      t.params.size[1],
+      inputData,
+      (data: Uint32Array) => {
+        return checkFragmentAny(
+          data,
+          inputData,
+          t.params.format,
+          t.params.size[0],
+          t.params.size[1]
+        );
+      }
+    );
+  });
