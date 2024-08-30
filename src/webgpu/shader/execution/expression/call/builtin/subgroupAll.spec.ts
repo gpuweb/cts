@@ -1,0 +1,401 @@
+export const description = `
+Execution tests for subgroupAll.
+
+Note: There is a lack of portability for non-uniform execution so these tests
+restrict themselves to uniform control flow.
+Note: There is no guaranteed mapping between subgroup_invocation_id and
+local_invocation_index. Tests should avoid assuming there is.
+`;
+
+import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
+import { keysOf } from '../../../../../../common/util/data_tables.js';
+import { iterRange } from '../../../../../../common/util/util.js';
+import { kTextureFormatInfo } from '../../../../../format_info.js';
+import { align } from '../../../../../util/math.js';
+import { PRNG } from '../../../../../util/prng.js';
+
+import {
+  kWGSizes,
+  kPredicateCases,
+  SubgroupTest,
+  kFramebufferSizes,
+  runComputeTest,
+  runFragmentTest,
+} from './subgroup_util.js';
+
+export const g = makeTestGroup(SubgroupTest);
+
+const kNumCases = 10;
+
+/**
+ * Checks the result of a subgroupAll operation
+ *
+ * Since subgroup size depends on the pipeline compile, we calculate the expected
+ * results after execution. The shader generates a subgroup id and records it for
+ * each invocation. The check first calculates the expected result for each subgroup
+ * and then compares to the actual result for each invocation. The filter functor
+ * ensures only the correct invocations contribute to the calculation.
+ * @param metadata An array of uints:
+ *                 * first half containing subgroup sizes (from builtin value)
+ *                 * second half subgroup invocation id
+ * @param output An array of uints containing:
+ *               * first half is the outputs of subgroupAll
+ *               * second half is a generated subgroup id
+ * @param numInvs Number of invocations executed
+ * @param input The input data (equal size to output)
+ * @param filter A functor to filter active invocations
+ */
+function checkAll(
+  metadata: Uint32Array, // unused
+  output: Uint32Array,
+  numInvs: number,
+  input: Uint32Array,
+  filter: (id: number, size: number) => boolean
+): Error | undefined {
+  // First, generate expected results.
+  const expected = new Map<number, number>();
+  for (let inv = 0; inv < numInvs; inv++) {
+    const size = metadata[inv];
+    const id = metadata[inv + numInvs];
+    if (!filter(id, size)) {
+      continue;
+    }
+    const subgroup_id = output[numInvs + inv];
+    let v = expected.get(subgroup_id) ?? 1;
+    v &= input[inv];
+    expected.set(subgroup_id, v);
+  }
+
+  // Second, check against actual results.
+  for (let inv = 0; inv < numInvs; inv++) {
+    const size = metadata[inv];
+    const id = metadata[inv + numInvs];
+    const res = output[inv];
+    if (filter(id, size)) {
+      const subgroup_id = output[numInvs + inv];
+      const expected_v = expected.get(subgroup_id) ?? 0;
+      if (expected_v !== res) {
+        return new Error(`Invocation ${inv}:
+- expected: ${expected_v}
+-      got: ${res}`);
+      }
+    } else {
+      if (res !== 999) {
+        return new Error(`Invocation ${inv} unexpected write:
+- subgroup invocation id: ${id}
+-          subgroup size: ${size}`);
+      }
+    }
+  }
+
+  return undefined;
+}
+
+g.test('compute,all_active')
+  .desc(`Test compute subgroupAll`)
+  .params(u =>
+    u
+      .combine('wgSize', kWGSizes)
+      .beginSubcases()
+      .combine('case', [...iterRange(kNumCases, x => x)])
+  )
+  .beforeAllSubcases(t => {
+    t.selectDeviceOrSkipTestCase('subgroups' as GPUFeatureName);
+  })
+  .fn(async t => {
+    const wgThreads = t.params.wgSize[0] * t.params.wgSize[1] * t.params.wgSize[2];
+
+    const wgsl = `
+enable subgroups;
+
+@group(0) @binding(0)
+var<storage> inputs : array<u32>;
+
+@group(0) @binding(1)
+var<storage, read_write> outputs : array<u32>;
+
+struct Metadata {
+  subgroup_size: array<u32, ${wgThreads}>,
+  subgroup_invocation_id: array<u32, ${wgThreads}>,
+}
+
+@group(0) @binding(2)
+var<storage, read_write> metadata : Metadata;
+
+@compute @workgroup_size(${t.params.wgSize[0]}, ${t.params.wgSize[1]}, ${t.params.wgSize[2]})
+fn main(
+  @builtin(local_invocation_index) lid : u32,
+  @builtin(subgroup_invocation_id) id : u32,
+  @builtin(subgroup_size) subgroupSize : u32,
+) {
+  metadata.subgroup_size[lid] = subgroupSize;
+
+  metadata.subgroup_invocation_id[lid] = id;
+
+  // Record a representative subgroup id.
+  outputs[lid + ${wgThreads}] = subgroupBroadcastFirst(lid);
+
+  let res = select(0u, 1u, subgroupAll(bool(inputs[lid])));
+  outputs[lid] = res;
+}`;
+
+    const prng = new PRNG(t.params.case);
+    // Case 0 is all 0s.
+    // Case 1 is all 1s.
+    // Other cases are filled with random 0s and 1s.
+    const inputData = new Uint32Array([
+      ...iterRange(wgThreads, x => {
+        if (t.params.case === 0) {
+          return 0;
+        } else if (t.params.case === 1) {
+          return 1;
+        }
+        return prng.uniformInt(2);
+      }),
+    ]);
+
+    const uintsPerOutput = 2;
+    await runComputeTest(
+      t,
+      wgsl,
+      [t.params.wgSize[0], t.params.wgSize[1], t.params.wgSize[2]],
+      uintsPerOutput,
+      inputData,
+      (metadata: Uint32Array, output: Uint32Array) => {
+        return checkAll(metadata, output, wgThreads, inputData, (id: number, size: number) => {
+          return true;
+        });
+      }
+    );
+  });
+
+g.test('compute,split')
+  .desc('Test that only active invocation participate')
+  .params(u =>
+    u
+      .combine('predicate', keysOf(kPredicateCases))
+      .beginSubcases()
+      .combine('wgSize', kWGSizes)
+      .combine('case', [...iterRange(kNumCases, x => x)])
+  )
+  .beforeAllSubcases(t => {
+    t.selectDeviceOrSkipTestCase('subgroups' as GPUFeatureName);
+  })
+  .fn(async t => {
+    const testcase = kPredicateCases[t.params.predicate];
+    const wgThreads = t.params.wgSize[0] * t.params.wgSize[1] * t.params.wgSize[2];
+
+    const wgsl = `
+enable subgroups;
+
+@group(0) @binding(0)
+var<storage> inputs : array<u32>;
+
+@group(0) @binding(1)
+var<storage, read_write> outputs : array<u32>;
+
+struct Metadata {
+  subgroup_size : array<u32, ${wgThreads}>,
+  subgroup_invocation_id : array<u32, ${wgThreads}>,
+}
+
+@group(0) @binding(2)
+var<storage, read_write> metadata : Metadata;
+
+@compute @workgroup_size(${t.params.wgSize[0]}, ${t.params.wgSize[1]}, ${t.params.wgSize[2]})
+fn main(
+  @builtin(local_invocation_index) lid : u32,
+  @builtin(subgroup_invocation_id) id : u32,
+  @builtin(subgroup_size) subgroupSize : u32,
+) {
+  metadata.subgroup_size[lid] = subgroupSize;
+
+  // Record subgroup invocation id for this invocation.
+  metadata.subgroup_invocation_id[lid] = id;
+
+  // Record a generated subgroup id.
+  outputs[${wgThreads} + lid] = subgroupBroadcastFirst(lid);
+
+  if ${testcase.cond} {
+    outputs[lid] = select(0u, 1u, subgroupAll(bool(inputs[lid])));
+  } else {
+    return;
+  }
+}`;
+
+    const prng = new PRNG(t.params.case);
+    // Case 0 is all 0s.
+    // Case 1 is all 1s.
+    // Other cases are filled with random 0s and 1s.
+    const inputData = new Uint32Array([
+      ...iterRange(wgThreads, x => {
+        if (t.params.case === 0) {
+          return 0;
+        } else if (t.params.case === 1) {
+          return 1;
+        }
+        return prng.uniformInt(2);
+      }),
+    ]);
+
+    const uintsPerOutput = 2;
+    await runComputeTest(
+      t,
+      wgsl,
+      [t.params.wgSize[0], t.params.wgSize[1], t.params.wgSize[2]],
+      uintsPerOutput,
+      inputData,
+      (metadata: Uint32Array, output: Uint32Array) => {
+        return checkAll(metadata, output, wgThreads, inputData, testcase.filter);
+      }
+    );
+  });
+
+/**
+ * Checks subgroupAll results from a fragment shader.
+ *
+ * @param data Framebuffer output
+ *             * component 0 is result
+ *             * component 1 is generated subgroup id
+ * @param input An array of input data offset by 1 uint
+ * @param format The framebuffer format
+ * @param width Framebuffer width
+ * @param height Framebuffer height
+ */
+function checkFragmentAll(
+  data: Uint32Array,
+  input: Uint32Array,
+  format: GPUTextureFormat,
+  width: number,
+  height: number
+): Error | undefined {
+  const { blockWidth, blockHeight, bytesPerBlock } = kTextureFormatInfo[format];
+  const blocksPerRow = width / blockWidth;
+  // 256 minimum comes from image copy requirements.
+  const bytesPerRow = align(blocksPerRow * (bytesPerBlock ?? 1), 256);
+  const uintsPerRow = bytesPerRow / 4;
+  const uintsPerTexel = (bytesPerBlock ?? 1) / blockWidth / blockHeight / 4;
+
+  const expected = new Map<number, number>();
+  for (let row = 0; row < height; row++) {
+    for (let col = 0; col < width; col++) {
+      const offset = uintsPerRow * row + col * uintsPerTexel;
+      const subgroup_id = data[offset + 1];
+
+      if (subgroup_id === 0) {
+        return new Error(`Internal error: helper invocation at (${col}, ${row})`);
+      }
+
+      let v = expected.get(subgroup_id) ?? 1;
+      // First index of input is an atomic counter.
+      v &= input[1 + row * width + col];
+      expected.set(subgroup_id, v);
+    }
+  }
+
+  for (let row = 0; row < height; row++) {
+    for (let col = 0; col < width; col++) {
+      const offset = uintsPerRow * row + col * uintsPerTexel;
+      const res = data[offset];
+      const subgroup_id = data[offset + 1];
+
+      if (subgroup_id === 0) {
+        // Inactive in the fragment.
+        continue;
+      }
+
+      const expected_v = expected.get(subgroup_id) ?? 0;
+      if (expected_v !== res) {
+        return new Error(`Row ${row}, col ${col}: incorrect results:
+- expected: ${expected_v}
+-      got: ${res}`);
+      }
+    }
+  }
+
+  return undefined;
+}
+
+g.test('fragment')
+  .desc('Tests subgroupAll in fragment shaders')
+  .params(u =>
+    u
+      .combine('size', kFramebufferSizes)
+      .beginSubcases()
+      .combine('case', [...iterRange(kNumCases, x => x)])
+      .combineWithParams([{ format: 'rg32uint' }] as const)
+  )
+  .beforeAllSubcases(t => {
+    t.selectDeviceOrSkipTestCase('subgroups' as GPUFeatureName);
+  })
+  .fn(async t => {
+    const prng = new PRNG(t.params.case);
+    // Case 0 is all 0s.
+    // Case 1 is all 1s.
+    // Other cases are filled with random 0s and 1s.
+    //
+    // Note: the first index is used as an atomic counter for subgroup ids.
+    const numInputs = t.params.size[0] * t.params.size[1] + 1;
+    const inputData = new Uint32Array([
+      ...iterRange(numInputs, x => {
+        if (x === 0) {
+          // All subgroup ids start from index 1.
+          return 1;
+        } else if (t.params.case === 0) {
+          return 0;
+        } else if (t.params.case === 1) {
+          return 1;
+        }
+        return prng.uniformInt(2);
+      }),
+    ]);
+
+    const fsShader = `
+enable subgroups;
+
+struct Inputs {
+  subgroup_id : atomic<u32>,
+  data : array<u32>,
+}
+
+@group(0) @binding(0)
+var<storage, read_write> inputs : Inputs;
+
+@fragment
+fn main(
+  @builtin(position) pos : vec4f,
+) -> @location(0) vec2u {
+  var subgroup_id = 0u;
+  if subgroupElect() {
+    subgroup_id = atomicAdd(&inputs.subgroup_id, 1);
+  }
+  subgroup_id = subgroupBroadcastFirst(subgroup_id);
+
+  // Filter out texels outside the frame (possible helper invocations).
+  var input = 1u;
+  if (u32(pos.x) >= 0 && u32(pos.x) < ${t.params.size[0]} &&
+      u32(pos.y) >= 0 && u32(pos.y) < ${t.params.size[1]}) {
+    input = inputs.data[u32(pos.y) * ${t.params.size[0]} + u32(pos.x)];
+  }
+  let res = select(0u, 1u, subgroupAll(bool(input)));
+  return vec2u(res, subgroup_id);
+}`;
+
+    await runFragmentTest(
+      t,
+      t.params.format,
+      fsShader,
+      t.params.size[0],
+      t.params.size[1],
+      inputData,
+      (data: Uint32Array) => {
+        return checkFragmentAll(
+          data,
+          inputData,
+          t.params.format,
+          t.params.size[0],
+          t.params.size[1]
+        );
+      }
+    );
+  });
