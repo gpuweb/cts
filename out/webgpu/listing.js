@@ -3145,6 +3145,26 @@ export const listing = [
       "expression",
       "call",
       "builtin",
+      "subgroupAll"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "call",
+      "builtin",
+      "subgroupAny"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "call",
+      "builtin",
       "subgroupBallot"
     ]
   },

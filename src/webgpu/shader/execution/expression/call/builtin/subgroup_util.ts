@@ -1,9 +1,11 @@
 import { assert, iterRange } from '../../../../../../common/util/util.js';
 import { Float16Array } from '../../../../../../external/petamoriken/float16/float16.js';
-import { GPUTest } from '../../../../../gpu_test.js';
+import { GPUTest, TextureTestMixin } from '../../../../../gpu_test.js';
 import { FPInterval } from '../../../../../util/floating_point.js';
 import { sparseScalarF16Range, sparseScalarF32Range } from '../../../../../util/math.js';
 import { PRNG } from '../../../../../util/prng.js';
+
+export class SubgroupTest extends TextureTestMixin(GPUTest) {}
 
 export const kNumCases = 1000;
 export const kStride = 128;
@@ -300,6 +302,8 @@ fn main(
   t.expectOK(checkAccuracy(metadata, output, [idx1, idx2], [val1, val2], identity, intervalGen));
 }
 
+export const kDataSentinel = 999;
+
 /**
  * Runs compute shader subgroup test
  *
@@ -346,14 +350,14 @@ export async function runComputeTest(
 
   const outputUints = outputUintsPerElement * wgThreads;
   const outputBuffer = t.makeBufferWithContents(
-    new Uint32Array([...iterRange(outputUints, x => 999)]),
+    new Uint32Array([...iterRange(outputUints, x => kDataSentinel)]),
     GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE
   );
   t.trackForCleanup(outputBuffer);
 
   const numMetadata = 2 * wgThreads;
   const metadataBuffer = t.makeBufferWithContents(
-    new Uint32Array([...iterRange(numMetadata, x => 999)]),
+    new Uint32Array([...iterRange(numMetadata, x => kDataSentinel)]),
     GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE
   );
 
