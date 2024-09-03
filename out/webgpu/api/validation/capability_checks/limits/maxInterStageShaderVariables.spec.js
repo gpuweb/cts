@@ -19,7 +19,8 @@
     vertex: {
       module,
       entryPoint: 'vs'
-    }
+    },
+    depthStencil: { format: 'depth32float', depthWriteEnabled: true, depthCompare: 'always' }
   };
 }
 
