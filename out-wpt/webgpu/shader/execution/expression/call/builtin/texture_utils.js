@@ -142,6 +142,156 @@ format)
   }
 }
 
+async function queryMipGradientValuesForDevice(t) {
+  const { device } = t;
+  const module = device.createShaderModule({
+    code: `
+      @group(0) @binding(0) var tex: texture_2d<f32>;
+      @group(0) @binding(1) var smp: sampler;
+      @group(0) @binding(2) var<storage, read_write> result: array<f32>;
+
+      @vertex fn vs(@builtin(vertex_index) vNdx: u32) -> @builtin(position) vec4f {
+        let pos = array(
+          vec2f(-1,  3),
+          vec2f( 3, -1),
+          vec2f(-1, -1),
+        );
+        return vec4f(pos[vNdx], 0, 1);
+      }
+      @fragment fn fs(@builtin(position) pos: vec4f) -> @location(0) vec4f {
+        let mipLevel = floor(pos.x) / ${kMipGradientSteps};
+        result[u32(pos.x)] = textureSampleLevel(tex, smp, vec2f(0.5), mipLevel).r;
+        return vec4f(0);
+      }
+    `
+  });
+
+  const pipeline = device.createRenderPipeline({
+    layout: 'auto',
+    vertex: { module },
+    fragment: { module, targets: [{ format: 'rgba8unorm' }] }
+  });
+
+  const target = t.createTextureTracked({
+    size: [kMipGradientSteps + 1, 1, 1],
+    format: 'rgba8unorm',
+    usage: GPUTextureUsage.RENDER_ATTACHMENT
+  });
+
+  const texture = t.createTextureTracked({
+    size: [2, 2, 1],
+    format: 'r8unorm',
+    usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST,
+    mipLevelCount: 2
+  });
+
+  device.queue.writeTexture(
+    { texture, mipLevel: 1 },
+    new Uint8Array([255]),
+    { bytesPerRow: 1 },
+    [1, 1]
+  );
+
+  const sampler = device.createSampler({
+    minFilter: 'linear',
+    magFilter: 'linear',
+    mipmapFilter: 'linear'
+  });
+
+  const storageBuffer = t.createBufferTracked({
+    size: 4 * (kMipGradientSteps + 1),
+    usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
+  });
+
+  const resultBuffer = t.createBufferTracked({
+    size: storageBuffer.size,
+    usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
+  });
+
+  const bindGroup = device.createBindGroup({
+    layout: pipeline.getBindGroupLayout(0),
+    entries: [
+    { binding: 0, resource: texture.createView() },
+    { binding: 1, resource: sampler },
+    { binding: 2, resource: { buffer: storageBuffer } }]
+
+  });
+
+  const encoder = device.createCommandEncoder();
+  const pass = encoder.beginRenderPass({
+    colorAttachments: [
+    {
+      view: target.createView(),
+      loadOp: 'clear',
+      storeOp: 'store'
+    }]
+
+  });
+  pass.setPipeline(pipeline);
+  pass.setBindGroup(0, bindGroup);
+  pass.draw(3);
+  pass.end();
+  encoder.copyBufferToBuffer(storageBuffer, 0, resultBuffer, 0, resultBuffer.size);
+  device.queue.submit([encoder.finish()]);
+
+  await resultBuffer.mapAsync(GPUMapMode.READ);
+  const weights = Array.from(new Float32Array(resultBuffer.getMappedRange()));
+  resultBuffer.unmap();
+
+  texture.destroy();
+  storageBuffer.destroy();
+  resultBuffer.destroy();
+
+  const showWeights = () => weights.map((v, i) => `${i.toString().padStart(2)}: ${v}`).join('\n');
+
+  // Validate the weights
+  assert(weights[0] === 0, `weight 0 expected 0 but was ${weights[0]}\n${showWeights()}`);
+  assert(
+    weights[kMipGradientSteps] === 1,
+    `top weight expected 1 but was ${weights[kMipGradientSteps]}\n${showWeights()}`
+  );
+  assert(
+    Math.abs(weights[kMipGradientSteps / 2] - 0.5) < 0.0001,
+    `middle weight expected approximately 0.5 but was ${
+    weights[kMipGradientSteps / 2]
+    }\n${showWeights()}`
+  );
+
+  // Note: for 16 steps, these are the AMD weights
+  //
+  //                 standard
+  // step  mipLevel    gpu        AMD
+  // ----  --------  --------  ----------
+  //  0:   0         0           0
+  //  1:   0.0625    0.0625      0
+  //  2:   0.125     0.125       0.03125
+  //  3:   0.1875    0.1875      0.109375
+  //  4:   0.25      0.25        0.1875
+  //  5:   0.3125    0.3125      0.265625
+  //  6:   0.375     0.375       0.34375
+  //  7:   0.4375    0.4375      0.421875
+  //  8:   0.5       0.5         0.5
+  //  9:   0.5625    0.5625      0.578125
+  // 10:   0.625     0.625       0.65625
+  // 11:   0.6875    0.6875      0.734375
+  // 12:   0.75      0.75        0.8125
+  // 13:   0.8125    0.8125      0.890625
+  // 14:   0.875     0.875       0.96875
+  // 15:   0.9375    0.9375      1
+  // 16:   1         1           1
+  //
+  // notice step 1 is 0 and step 15 is 1.
+  // so we only check the 1 through 14.
+  for (let i = 1; i < kMipGradientSteps - 1; ++i) {
+    assert(
+      weights[i] < weights[i + 1],
+      `weight[${i}] was not less than < weight[${i + 1}]\n${showWeights()}`
+    );
+  }
+
+  s_deviceToMipGradientValues.set(device, weights);
+}
+
 /**
  * Gets the mip gradient values for the current device.
  * The issue is, different GPUs have different ways of mixing between mip levels.
@@ -158,157 +308,28 @@ format)
  *
  * There's an assumption that the gradient will be the same for all formats
  * and usages.
+ *
+ * Note: The code below has 2 maps. One device->Promise, the other device->weights
+ * device->weights is meant to be used synchronously by other code so we don't
+ * want to leave initMipGradientValuesForDevice until the weights have been read.
+ * But, multiple subcases will run because this function is async. So, subcase 1
+ * runs, hits this init code, this code waits for the weights. Then, subcase 2
+ * runs and hits this init code. The weights will not be in the device->weights map
+ * yet which is why we have the device->Promise map. This is so subcase 2 waits
+ * for subcase 1's "query the weights" step. Otherwise, all subcases would do the
+ * "get the weights" step separately.
  */
 const kMipGradientSteps = 16;
+const s_deviceToMipGradientValuesPromise = new WeakMap();
 const s_deviceToMipGradientValues = new WeakMap();
 async function initMipGradientValuesForDevice(t) {
   const { device } = t;
-  const weights = s_deviceToMipGradientValues.get(device);
-  if (!weights) {
-    const module = device.createShaderModule({
-      code: `
-        @group(0) @binding(0) var tex: texture_2d<f32>;
-        @group(0) @binding(1) var smp: sampler;
-        @group(0) @binding(2) var<storage, read_write> result: array<f32>;
-
-        @vertex fn vs(@builtin(vertex_index) vNdx: u32) -> @builtin(position) vec4f {
-          let pos = array(
-            vec2f(-1,  3),
-            vec2f( 3, -1),
-            vec2f(-1, -1),
-          );
-          return vec4f(pos[vNdx], 0, 1);
-        }
-        @fragment fn fs(@builtin(position) pos: vec4f) -> @location(0) vec4f {
-          let mipLevel = floor(pos.x) / ${kMipGradientSteps};
-          result[u32(pos.x)] = textureSampleLevel(tex, smp, vec2f(0.5), mipLevel).r;
-          return vec4f(0);
-        }
-      `
-    });
-
-    const pipeline = device.createRenderPipeline({
-      layout: 'auto',
-      vertex: { module },
-      fragment: { module, targets: [{ format: 'rgba8unorm' }] }
-    });
-
-    const target = t.createTextureTracked({
-      size: [kMipGradientSteps + 1, 1, 1],
-      format: 'rgba8unorm',
-      usage: GPUTextureUsage.RENDER_ATTACHMENT
-    });
-
-    const texture = t.createTextureTracked({
-      size: [2, 2, 1],
-      format: 'r8unorm',
-      usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST,
-      mipLevelCount: 2
-    });
-
-    device.queue.writeTexture(
-      { texture, mipLevel: 1 },
-      new Uint8Array([255]),
-      { bytesPerRow: 1 },
-      [1, 1]
-    );
-
-    const sampler = device.createSampler({
-      minFilter: 'linear',
-      magFilter: 'linear',
-      mipmapFilter: 'linear'
-    });
-
-    const storageBuffer = t.createBufferTracked({
-      size: 4 * (kMipGradientSteps + 1),
-      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
-    });
-
-    const resultBuffer = t.createBufferTracked({
-      size: storageBuffer.size,
-      usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
-    });
-
-    const bindGroup = device.createBindGroup({
-      layout: pipeline.getBindGroupLayout(0),
-      entries: [
-      { binding: 0, resource: texture.createView() },
-      { binding: 1, resource: sampler },
-      { binding: 2, resource: { buffer: storageBuffer } }]
-
-    });
-
-    const encoder = device.createCommandEncoder();
-    const pass = encoder.beginRenderPass({
-      colorAttachments: [
-      {
-        view: target.createView(),
-        loadOp: 'clear',
-        storeOp: 'store'
-      }]
-
-    });
-    pass.setPipeline(pipeline);
-    pass.setBindGroup(0, bindGroup);
-    pass.draw(3);
-    pass.end();
-    encoder.copyBufferToBuffer(storageBuffer, 0, resultBuffer, 0, resultBuffer.size);
-    device.queue.submit([encoder.finish()]);
-
-    await resultBuffer.mapAsync(GPUMapMode.READ);
-    const weights = Array.from(new Float32Array(resultBuffer.getMappedRange()));
-    resultBuffer.unmap();
-
-    texture.destroy();
-    storageBuffer.destroy();
-    resultBuffer.destroy();
-
-    const showWeights = () => weights.map((v, i) => `${i.toString().padStart(2)}: ${v}`).join('\n');
-
-    // Validate the weights
-    assert(weights[0] === 0, `weight 0 expected 0 but was ${weights[0]}\n${showWeights()}`);
-    assert(
-      weights[kMipGradientSteps] === 1,
-      `top weight expected 1 but was ${weights[kMipGradientSteps]}\n${showWeights()}`
-    );
-    assert(
-      Math.abs(weights[kMipGradientSteps / 2] - 0.5) < 0.0001,
-      `middle weight expected approximately 0.5 but was ${
-      weights[kMipGradientSteps / 2]
-      }\n${showWeights()}`
-    );
-
-    // Note: for 16 steps, these are the AMD weights
-    //
-    //                 standard
-    // step  mipLevel    gpu        AMD
-    // ----  --------  --------  ----------
-    //  0:   0         0           0
-    //  1:   0.0625    0.0625      0
-    //  2:   0.125     0.125       0.03125
-    //  3:   0.1875    0.1875      0.109375
-    //  4:   0.25      0.25        0.1875
-    //  5:   0.3125    0.3125      0.265625
-    //  6:   0.375     0.375       0.34375
-    //  7:   0.4375    0.4375      0.421875
-    //  8:   0.5       0.5         0.5
-    //  9:   0.5625    0.5625      0.578125
-    // 10:   0.625     0.625       0.65625
-    // 11:   0.6875    0.6875      0.734375
-    // 12:   0.75      0.75        0.8125
-    // 13:   0.8125    0.8125      0.890625
-    // 14:   0.875     0.875       0.96875
-    // 15:   0.9375    0.9375      1
-    // 16:   1         1           1
-    //
-    // notice step 1 is 0 and step 15 is 1.
-    // so we only check the 1 through 14.
-    for (let i = 1; i < kMipGradientSteps - 1; ++i) {
-      assert(weights[i] < weights[i + 1]);
-    }
-
-    s_deviceToMipGradientValues.set(device, weights);
+  let weightsP = s_deviceToMipGradientValuesPromise.get(device);
+  if (!weightsP) {
+    weightsP = queryMipGradientValuesForDevice(t);
+    s_deviceToMipGradientValuesPromise.set(device, weightsP);
   }
+  return await weightsP;
 }
 
 function getWeightForMipLevel(t, mipLevelCount, mipLevel) {
