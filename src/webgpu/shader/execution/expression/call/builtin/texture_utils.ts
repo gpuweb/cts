@@ -2346,7 +2346,12 @@ async function identifySamplePoints<T extends Dimensionality>(
       const orderedTexelIndices: number[] = [];
       lines.push('');
       const unSampled = layerEntries ? '' : 'un-sampled';
-      lines.push(`layer: ${layer}${isCube ? ` (${kFaceNames[layer]})` : ''} ${unSampled}`);
+      if (isCube) {
+        const face = kFaceNames[layer % 6];
+        lines.push(`layer: ${layer}, cube-layer: ${(layer / 6) | 0} (${face}) ${unSampled}`);
+      } else {
+        lines.push(`layer: ${unSampled}`);
+      }
 
       if (!layerEntries) {
         continue;
