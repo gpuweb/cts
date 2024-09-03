@@ -1320,7 +1320,7 @@ export async function checkCallResults<T extends Dimensionality>(
   textureType: string,
   sampler: GPUSamplerDescriptor | undefined,
   calls: TextureCall<T>[],
-  results: PerTexelComponent<number>[]
+  results: Awaited<ReturnType<typeof doTextureCalls<T>>>
 ) {
   const errs: string[] = [];
   const format = texture.texels[0].format;
@@ -1334,7 +1334,7 @@ export async function checkCallResults<T extends Dimensionality>(
 
   for (let callIdx = 0; callIdx < calls.length; callIdx++) {
     const call = calls[callIdx];
-    const gotRGBA = results[callIdx];
+    const gotRGBA = results.results[callIdx];
     const expectRGBA = softwareTextureReadLevel(t, call, texture, sampler, call.mipLevel ?? 0);
 
     // The spec says depth and stencil have implementation defined values for G, B, and A
@@ -1453,11 +1453,7 @@ export async function checkCallResults<T extends Dimensionality>(
           'got:',
           ...(await identifySamplePoints(texture, call, async (texels: TexelView[]) => {
             const gpuTexture = createTextureFromTexelViewsLocal(t, texels, texture.descriptor);
-            const result = (
-              await doTextureCalls(t, gpuTexture, texture.viewDescriptor, textureType, sampler, [
-                call,
-              ])
-            )[0];
+            const result = (await results.run(gpuTexture))[callIdx];
             gpuTexture.destroy();
             return result;
           })),
@@ -1472,6 +1468,8 @@ export async function checkCallResults<T extends Dimensionality>(
       } // if (sampler)
     } // if (bad)
   } // for cellNdx
+
+  results.destroy();
 
   return errs.length > 0 ? new Error(errs.join('\n')) : undefined;
 }
@@ -3316,6 +3314,18 @@ const s_deviceToPipelines = new WeakMap<GPUDevice, Map<string, GPURenderPipeline
  * Calls are "binned" by call parameters. Each bin has its own structure and
  * field in the storage buffer. This allows the calls to be non-homogenous and
  * each have their own data type for coordinates.
+ *
+ * Note: this function returns:
+ *
+ * 'results': an array of results, one for each call.
+ *
+ * 'run': a function that accepts a texture and runs the same class pipeline with
+ *        that texture as input, returning an array of results. This can be used by
+ *        identifySamplePoints to query the mix-weights used. We do this so we're
+ *        using the same shader that generated the original results when querying
+ *        the weights.
+ *
+ * 'destroy': a function that cleans up the buffers used by `run`.
  */
 export async function doTextureCalls<T extends Dimensionality>(
   t: GPUTest,
@@ -3515,7 +3525,7 @@ ${body}
       bindGroupLayouts: [bindGroupLayout],
     });
 
-    pipeline = await t.device.createRenderPipelineAsync({
+    pipeline = t.device.createRenderPipeline({
       layout,
       vertex: { module: shaderModule },
       fragment: {
@@ -3530,75 +3540,88 @@ ${body}
 
   const gpuSampler = sampler ? t.device.createSampler(sampler) : undefined;
 
-  const bindGroup = t.device.createBindGroup({
-    layout: pipeline.getBindGroupLayout(0),
-    entries: [
+  const run = async (gpuTexture: GPUTexture | GPUExternalTexture) => {
+    const bindGroup = t.device.createBindGroup({
+      layout: pipeline!.getBindGroupLayout(0),
+      entries: [
+        {
+          binding: 0,
+          resource:
+            gpuTexture instanceof GPUExternalTexture
+              ? gpuTexture
+              : gpuTexture.createView(viewDescriptor),
+        },
+        ...(sampler ? [{ binding: 1, resource: gpuSampler! }] : []),
+        { binding: 2, resource: { buffer: dataBuffer } },
+      ],
+    });
+
+    const bytesPerRow = align(16 * renderTarget.width, 256);
+    const resultBuffer = t.createBufferTracked({
+      size: renderTarget.height * bytesPerRow,
+      usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
+    });
+
+    const encoder = t.device.createCommandEncoder();
+
+    const renderPass = encoder.beginRenderPass({
+      colorAttachments: [
+        {
+          view: renderTarget.createView(),
+          loadOp: 'clear',
+          storeOp: 'store',
+        },
+      ],
+    });
+
+    renderPass.setPipeline(pipeline!);
+    renderPass.setBindGroup(0, bindGroup);
+    renderPass.draw(4);
+    renderPass.end();
+    encoder.copyTextureToBuffer(
+      { texture: renderTarget },
+      { buffer: resultBuffer, bytesPerRow },
+      { width: renderTarget.width, height: renderTarget.height }
+    );
+    t.device.queue.submit([encoder.finish()]);
+
+    await resultBuffer.mapAsync(GPUMapMode.READ);
+
+    const view = TexelView.fromTextureDataByReference(
+      renderTarget.format as EncodableTextureFormat,
+      new Uint8Array(resultBuffer.getMappedRange()),
       {
-        binding: 0,
-        resource:
-          gpuTexture instanceof GPUExternalTexture
-            ? gpuTexture
-            : gpuTexture.createView(viewDescriptor),
-      },
-      ...(sampler ? [{ binding: 1, resource: gpuSampler! }] : []),
-      { binding: 2, resource: { buffer: dataBuffer } },
-    ],
-  });
+        bytesPerRow,
+        rowsPerImage: renderTarget.height,
+        subrectOrigin: [0, 0, 0],
+        subrectSize: [renderTarget.width, renderTarget.height],
+      }
+    );
 
-  const bytesPerRow = align(16 * renderTarget.width, 256);
-  const resultBuffer = t.createBufferTracked({
-    size: renderTarget.height * bytesPerRow,
-    usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
-  });
-  const encoder = t.device.createCommandEncoder();
-
-  const renderPass = encoder.beginRenderPass({
-    colorAttachments: [
-      {
-        view: renderTarget.createView(),
-        loadOp: 'clear',
-        storeOp: 'store',
-      },
-    ],
-  });
-
-  renderPass.setPipeline(pipeline);
-  renderPass.setBindGroup(0, bindGroup);
-  renderPass.draw(4);
-  renderPass.end();
-  encoder.copyTextureToBuffer(
-    { texture: renderTarget },
-    { buffer: resultBuffer, bytesPerRow },
-    { width: renderTarget.width, height: renderTarget.height }
-  );
-  t.device.queue.submit([encoder.finish()]);
-
-  await resultBuffer.mapAsync(GPUMapMode.READ);
-
-  const view = TexelView.fromTextureDataByReference(
-    renderTarget.format as EncodableTextureFormat,
-    new Uint8Array(resultBuffer.getMappedRange()),
-    {
-      bytesPerRow,
-      rowsPerImage: renderTarget.height,
-      subrectOrigin: [0, 0, 0],
-      subrectSize: [renderTarget.width, renderTarget.height],
+    let outIdx = 0;
+    const out = new Array<PerTexelComponent<number>>(calls.length);
+    for (const bin of binned) {
+      for (const callIdx of bin) {
+        const x = outIdx % rtWidth;
+        const y = Math.floor(outIdx / rtWidth);
+        out[callIdx] = view.color({ x, y, z: 0 });
+        outIdx++;
+      }
     }
-  );
 
-  let outIdx = 0;
-  const out = new Array<PerTexelComponent<number>>(calls.length);
-  for (const bin of binned) {
-    for (const callIdx of bin) {
-      const x = outIdx % rtWidth;
-      const y = Math.floor(outIdx / rtWidth);
-      out[callIdx] = view.color({ x, y, z: 0 });
-      outIdx++;
-    }
-  }
+    resultBuffer.destroy();
 
-  renderTarget.destroy();
-  resultBuffer.destroy();
+    return out;
+  };
 
-  return out;
+  const results = await run(gpuTexture);
+
+  return {
+    run,
+    results,
+    destroy() {
+      dataBuffer.destroy();
+      renderTarget.destroy();
+    },
+  };
 }
