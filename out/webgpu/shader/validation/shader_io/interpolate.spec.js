@@ -9,15 +9,11 @@ import { generateShader } from './util.js';
 export const g = makeTestGroup(ShaderValidationTest);
 
 // List of valid interpolation attributes.
-const kValidCompatInterpolationAttributes = new Set([
+const kValidInterpolationAttributes = new Set([
 '',
-'@interpolate(flat, either)',
 '@interpolate(perspective)',
 '@interpolate(perspective, center)',
-'@interpolate(perspective, centroid)']
-);
-const kValidInterpolationAttributes = new Set([
-...kValidCompatInterpolationAttributes,
+'@interpolate(perspective, centroid)',
 '@interpolate(flat)',
 '@interpolate(flat, first)',
 '@interpolate(flat, either)',
@@ -83,10 +79,7 @@ fn((t) => {
     io: t.params.io,
     use_struct: t.params.use_struct
   });
-  const validInterpolationAttributes = t.isCompatibility ?
-  kValidCompatInterpolationAttributes :
-  kValidInterpolationAttributes;
-  t.expectCompileResult(validInterpolationAttributes.has(interpolate), code);
+  t.expectCompileResult(kValidInterpolationAttributes.has(interpolate), code);
 });
 
 g.test('require_location').
