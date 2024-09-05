@@ -272,7 +272,7 @@ fn main(
  * @param data Framebuffer output
  *             * component 0 is result
  *             * component 1 is generated subgroup id
- * @param input An array of input data offset by 1 uint
+ * @param input An array of input data
  * @param format The framebuffer format
  * @param width Framebuffer width
  * @param height Framebuffer height
@@ -291,9 +291,11 @@ function checkFragmentAny(
   const uintsPerRow = bytesPerRow / 4;
   const uintsPerTexel = (bytesPerBlock ?? 1) / blockWidth / blockHeight / 4;
 
+  // Iteration skips last row and column to avoid helper invocations because it is not
+  // guaranteed whether or not they participate in the subgroup operation.
   const expected = new Map<number, number>();
-  for (let row = 0; row < height; row++) {
-    for (let col = 0; col < width; col++) {
+  for (let row = 0; row < height - 1; row++) {
+    for (let col = 0; col < width - 1; col++) {
       const offset = uintsPerRow * row + col * uintsPerTexel;
       const subgroup_id = data[offset + 1];
 
@@ -303,13 +305,13 @@ function checkFragmentAny(
 
       let v = expected.get(subgroup_id) ?? 0;
       // First index of input is an atomic counter.
-      v |= input[1 + row * width + col];
+      v |= input[row * width + col];
       expected.set(subgroup_id, v);
     }
   }
 
-  for (let row = 0; row < height; row++) {
-    for (let col = 0; col < width; col++) {
+  for (let row = 0; row < height - 1; row++) {
+    for (let col = 0; col < width - 1; col++) {
       const offset = uintsPerRow * row + col * uintsPerTexel;
       const res = data[offset];
       const subgroup_id = data[offset + 1];
@@ -344,22 +346,24 @@ g.test('fragment')
     t.selectDeviceOrSkipTestCase('subgroups' as GPUFeatureName);
   })
   .fn(async t => {
+    //t.skipIf(t.params.case !== 6, 'skip');
+
     const prng = new PRNG(t.params.case);
     // Case 0 is all 0s.
     // Case 1 is all 1s.
     // Other cases are filled with random 0s and 1s.
-    //
-    // Note: the first index is used as an atomic counter for subgroup ids.
-    const numInputs = t.params.size[0] * t.params.size[1] + 1;
+    const numInputs = t.params.size[0] * t.params.size[1];
+    const bounds = Math.min(32, t.params.size[0] * t.params.size[1]);
+    const index = prng.uniformInt(bounds);
     const inputData = new Uint32Array([
       ...iterRange(numInputs, x => {
-        if (x === 0) {
-          // All subgroup ids start from index 1.
-          return 1;
-        } else if (t.params.case === 0) {
+        if (t.params.case === 0) {
           return 0;
         } else if (t.params.case === 1) {
           return 1;
+        } else if (t.params.case < 10) {
+          const bounded = x % bounds;
+          return bounded === index ? 1 : 0;
         }
         return prng.uniformInt(2);
       }),
@@ -368,29 +372,22 @@ g.test('fragment')
     const fsShader = `
 enable subgroups;
 
-struct Inputs {
-  subgroup_id : atomic<u32>,
-  data : array<u32>,
-}
-
 @group(0) @binding(0)
-var<storage, read_write> inputs : Inputs;
+var<storage, read_write> inputs : array<u32>;
 
 @fragment
 fn main(
   @builtin(position) pos : vec4f,
 ) -> @location(0) vec2u {
-  var subgroup_id = 0u;
-  if subgroupElect() {
-    subgroup_id = atomicAdd(&inputs.subgroup_id, 1);
-  }
+  // Generate a subgroup id based on linearized position, but avoid 0.
+  var subgroup_id = u32(pos.x) + u32(pos.y) * ${t.params.size[0]} + 1;
   subgroup_id = subgroupBroadcastFirst(subgroup_id);
 
-  // Filter out texels outside the frame (possible helper invocations).
+  // Filter out possible helper invocations.
   var input = 0u;
-  if (u32(pos.x) >= 0 && u32(pos.x) < ${t.params.size[0]} &&
-      u32(pos.y) >= 0 && u32(pos.y) < ${t.params.size[1]}) {
-    input = inputs.data[u32(pos.y) * ${t.params.size[0]} + u32(pos.x)];
+  if (u32(pos.x) >= 0 && u32(pos.x) < (${t.params.size[0]} - 1) &&
+      u32(pos.y) >= 0 && u32(pos.y) < (${t.params.size[1]} - 1)) {
+    input = inputs[u32(pos.y) * ${t.params.size[0]} + u32(pos.x)];
   }
   let res = select(0u, 1u, subgroupAny(bool(input)));
   return vec2u(res, subgroup_id);

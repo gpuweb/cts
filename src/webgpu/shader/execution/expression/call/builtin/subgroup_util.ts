@@ -427,10 +427,10 @@ export const kFramebufferSizes = [
   [17, 17],
   [19, 13],
   [13, 10],
-  [111, 2],
-  [2, 111],
-  [35, 2],
-  [2, 35],
+  [111, 3],
+  [3, 111],
+  [35, 3],
+  [3, 35],
   [53, 13],
   [13, 53],
 ] as const;
@@ -467,6 +467,8 @@ fn vsMain(@builtin(vertex_index) index : u32) -> @builtin(position) vec4f {
   return vec4f(vec2f(vertices[index]), 0, 1);
 }`;
 
+  assert(width >= 3, 'Minimum width is 3');
+  assert(height >= 3, 'Minimum height is 3');
   const pipeline = t.device.createRenderPipeline({
     layout: 'auto',
     vertex: {
