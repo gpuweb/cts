@@ -231,7 +231,8 @@ fn((t) => {
   const isValid = !t.isCompatibility || entryPoint === 'vsWithoutStorageUsage';
   t.doCreateRenderPipelineTest(async, isValid, {
     layout: 'auto',
-    vertex: { module, entryPoint }
+    vertex: { module, entryPoint },
+    depthStencil: { format: 'depth32float', depthWriteEnabled: true, depthCompare: 'always' }
   });
 });
 
@@ -304,7 +305,8 @@ fn((t) => {
   const isValid = !t.isCompatibility || entryPoint === 'vsWithoutDepthUsage';
   t.doCreateRenderPipelineTest(async, isValid, {
     layout: 'auto',
-    vertex: { module, entryPoint }
+    vertex: { module, entryPoint },
+    depthStencil: { format: 'depth32float', depthWriteEnabled: true, depthCompare: 'always' }
   });
 });
 //# sourceMappingURL=unsupported_wgsl.spec.js.map
