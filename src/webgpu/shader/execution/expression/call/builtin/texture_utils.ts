@@ -1431,41 +1431,44 @@ export async function checkCallResults<T extends Dimensionality>(
 `);
 
       if (sampler) {
-        const expectedSamplePoints = [
-          'expected:',
-          ...(await identifySamplePoints(texture, call, (texels: TexelView[]) => {
-            return Promise.resolve(
-              softwareTextureReadLevel(
-                t,
-                call,
-                {
-                  texels,
-                  descriptor: texture.descriptor,
-                  viewDescriptor: texture.viewDescriptor,
-                },
-                sampler,
-                call.mipLevel ?? 0
-              )
-            );
-          })),
-        ];
-        const gotSamplePoints = [
-          'got:',
-          ...(await identifySamplePoints(texture, call, async (texels: TexelView[]) => {
-            const gpuTexture = createTextureFromTexelViewsLocal(t, texels, texture.descriptor);
-            const result = (await results.run(gpuTexture))[callIdx];
-            gpuTexture.destroy();
-            return result;
-          })),
-        ];
-        errs.push('  sample points:');
-        errs.push(layoutTwoColumns(expectedSamplePoints, gotSamplePoints).join('\n'));
-        errs.push('', '');
-
-        // This path is slow so if we took it, don't report the other errors. One is enough
-        // to fail the test.
-        break;
+        if (t.rec.debugging) {
+          const expectedSamplePoints = [
+            'expected:',
+            ...(await identifySamplePoints(texture, call, (texels: TexelView[]) => {
+              return Promise.resolve(
+                softwareTextureReadLevel(
+                  t,
+                  call,
+                  {
+                    texels,
+                    descriptor: texture.descriptor,
+                    viewDescriptor: texture.viewDescriptor,
+                  },
+                  sampler,
+                  call.mipLevel ?? 0
+                )
+              );
+            })),
+          ];
+          const gotSamplePoints = [
+            'got:',
+            ...(await identifySamplePoints(texture, call, async (texels: TexelView[]) => {
+              const gpuTexture = createTextureFromTexelViewsLocal(t, texels, texture.descriptor);
+              const result = (await results.run(gpuTexture))[callIdx];
+              gpuTexture.destroy();
+              return result;
+            })),
+          ];
+          errs.push('  sample points:');
+          errs.push(layoutTwoColumns(expectedSamplePoints, gotSamplePoints).join('\n'));
+          errs.push('', '');
+        }
       } // if (sampler)
+
+      // Don't report the other errors. There 50 sample points per subcase and
+      // 50-100 subcases so the log would get enormous if all 50 fail. One
+      // report per subcase is enough.
+      break;
     } // if (bad)
   } // for cellNdx
 
