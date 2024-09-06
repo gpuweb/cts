@@ -2,10 +2,21 @@ const builtin = 'refract';
 export const description = `
 Validation tests for the ${builtin}() builtin.
 `;
-import { QuantizeFunc, quantizeToF16, quantizeToF32, isSubnormalNumberF16, isSubnormalNumberF32 } from '../../../../../util/math.js';
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { keysOf, objectsToRecord } from '../../../../../../common/util/data_tables.js';
-import { Type, kConvertableToFloatVectors, scalarTypeOf, ScalarType } from '../../../../../util/conversion.js';
+import {
+  Type,
+  kConvertableToFloatVectors,
+  scalarTypeOf,
+  ScalarType,
+} from '../../../../../util/conversion.js';
+import {
+  QuantizeFunc,
+  quantizeToF16,
+  quantizeToF32,
+  isSubnormalNumberF16,
+  isSubnormalNumberF32,
+} from '../../../../../util/math.js';
 import { ShaderValidationTest } from '../../../shader_validation_test.js';
 
 import {
@@ -41,7 +52,6 @@ function isSubnormalFunctionForScalarType(type: ScalarType): (v: number) => bool
       return (v: number) => false;
   }
 }
-
 
 g.test('values')
   .desc(
@@ -89,12 +99,14 @@ where a the calculations result in a non-representable value for the given type.
 
     const quantizeFn = quantizeFunctionForScalarType(scalarType);
     const isSubnormalFn = isSubnormalFunctionForScalarType(scalarType);
-    // We skip tests with values that would involve subnormal computations in 
+    // We skip tests with values that would involve subnormal computations in
     // order to avoid defining a specific behavior (flush to zero).
-    t.skipIf(isSubnormalFn(quantizeFn(b_dot_a)) ||
-      isSubnormalFn(quantizeFn(b_dot_a_2)) ||
-      isSubnormalFn(quantizeFn(c2)) ||
-      isSubnormalFn(quantizeFn(k)));
+    t.skipIf(
+      isSubnormalFn(quantizeFn(b_dot_a)) ||
+        isSubnormalFn(quantizeFn(b_dot_a_2)) ||
+        isSubnormalFn(quantizeFn(c2)) ||
+        isSubnormalFn(quantizeFn(k))
+    );
 
     if (k >= 0) {
       // If the k is near zero it may fail on some implementations which implement sqrt as
