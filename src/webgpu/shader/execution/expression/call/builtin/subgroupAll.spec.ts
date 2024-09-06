@@ -10,14 +10,18 @@ local_invocation_index. Tests should avoid assuming there is.
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { keysOf } from '../../../../../../common/util/data_tables.js';
 import { iterRange } from '../../../../../../common/util/util.js';
+import { kTextureFormatInfo } from '../../../../../format_info.js';
+import { align } from '../../../../../util/math.js';
 import { PRNG } from '../../../../../util/prng.js';
 
 import {
   kWGSizes,
   kPredicateCases,
   SubgroupTest,
-  runComputeTest,
   kDataSentinel,
+  kFramebufferSizes,
+  runComputeTest,
+  runFragmentTest,
 } from './subgroup_util.js';
 
 export const g = makeTestGroup(SubgroupTest);
@@ -34,9 +38,8 @@ const kNumCases = 15;
  * Seeds 10+ generate all random data
  * @param seed The seed for the PRNG
  * @param num The number of data items to generate
- * @param addCounter If true, treats the first index as an atomic counter
  */
-function generateInputData(seed: number, num: number, addCounter: boolean): Uint32Array {
+function generateInputData(seed: number, num: number): Uint32Array {
   const prng = new PRNG(seed);
 
   const bound = Math.min(num, 32);
@@ -44,17 +47,12 @@ function generateInputData(seed: number, num: number, addCounter: boolean): Uint
 
   return new Uint32Array([
     ...iterRange(num, x => {
-      if (addCounter && x === 0) {
-        // Counter should start at 1 to avoid clear value.
-        return 1;
-      }
-
       if (seed === 0) {
         return 0;
       } else if (seed === 1) {
         return 1;
       } else if (seed < 10) {
-        const bounded = (addCounter ? x + 1 : x) % bound;
+        const bounded = x % bound;
         return bounded === index ? 0 : 1;
       }
       return prng.uniformInt(2);
@@ -174,8 +172,7 @@ fn main(
   outputs[lid] = res;
 }`;
 
-    const includeCounter = false;
-    const inputData = generateInputData(t.params.case, wgThreads, includeCounter);
+    const inputData = generateInputData(t.params.case, wgThreads);
 
     const uintsPerOutput = 2;
     await runComputeTest(
@@ -246,8 +243,7 @@ fn main(
   }
 }`;
 
-    const includeCounter = false;
-    const inputData = generateInputData(t.params.case, wgThreads, includeCounter);
+    const inputData = generateInputData(t.params.case, wgThreads);
 
     const uintsPerOutput = 2;
     await runComputeTest(
@@ -262,4 +258,133 @@ fn main(
     );
   });
 
-g.test('fragment').unimplemented();
+/**
+ * Checks subgroupAll results from a fragment shader.
+ *
+ * @param data Framebuffer output
+ *             * component 0 is result
+ *             * component 1 is generated subgroup id
+ * @param input An array of input data
+ * @param format The framebuffer format
+ * @param width Framebuffer width
+ * @param height Framebuffer height
+ */
+function checkFragmentAll(
+  data: Uint32Array,
+  input: Uint32Array,
+  format: GPUTextureFormat,
+  width: number,
+  height: number
+): Error | undefined {
+  const { blockWidth, blockHeight, bytesPerBlock } = kTextureFormatInfo[format];
+  const blocksPerRow = width / blockWidth;
+  // 256 minimum comes from image copy requirements.
+  const bytesPerRow = align(blocksPerRow * (bytesPerBlock ?? 1), 256);
+  const uintsPerRow = bytesPerRow / 4;
+  const uintsPerTexel = (bytesPerBlock ?? 1) / blockWidth / blockHeight / 4;
+
+  // Iteration skips last row and column to avoid helper invocations because it is not
+  // guaranteed whether or not they participate in the subgroup operation.
+  const expected = new Map<number, number>();
+  for (let row = 0; row < height - 1; row++) {
+    for (let col = 0; col < width - 1; col++) {
+      const offset = uintsPerRow * row + col * uintsPerTexel;
+      const subgroup_id = data[offset + 1];
+
+      if (subgroup_id === 0) {
+        return new Error(`Internal error: helper invocation at (${col}, ${row})`);
+      }
+
+      let v = expected.get(subgroup_id) ?? 1;
+      // First index of input is an atomic counter.
+      v &= input[row * width + col];
+      expected.set(subgroup_id, v);
+    }
+  }
+
+  for (let row = 0; row < height - 1; row++) {
+    for (let col = 0; col < width - 1; col++) {
+      const offset = uintsPerRow * row + col * uintsPerTexel;
+      const res = data[offset];
+      const subgroup_id = data[offset + 1];
+
+      if (subgroup_id === 0) {
+        // Inactive in the fragment.
+        continue;
+      }
+
+      const expected_v = expected.get(subgroup_id) ?? 0;
+      if (expected_v !== res) {
+        return new Error(`Row ${row}, col ${col}: incorrect results:
+- expected: ${expected_v}
+-      got: ${res}`);
+      }
+    }
+  }
+
+  return undefined;
+}
+
+g.test('fragment,all_active')
+  .desc('Tests subgroupAll in fragment shaders')
+  .params(u =>
+    u
+      .combine('size', kFramebufferSizes)
+      .beginSubcases()
+      .combine('case', [...iterRange(kNumCases, x => x)])
+      .combineWithParams([{ format: 'rg32uint' }] as const)
+  )
+  .beforeAllSubcases(t => {
+    t.selectDeviceOrSkipTestCase('subgroups' as GPUFeatureName);
+  })
+  .fn(async t => {
+    const numInputs = t.params.size[0] * t.params.size[1];
+    const inputData = generateInputData(t.params.case, numInputs);
+
+    const fsShader = `
+enable subgroups;
+
+@group(0) @binding(0)
+var<storage, read_write> inputs : array<u32>;
+
+@fragment
+fn main(
+  @builtin(position) pos : vec4f,
+) -> @location(0) vec2u {
+  // Generate a subgroup id based on linearized position, but avoid 0.
+  let linear = u32(pos.x) + u32(pos.y) * ${t.params.size[0]};
+  var subgroup_id = linear + 1;
+  subgroup_id = subgroupBroadcastFirst(subgroup_id);
+
+  // Filter out possible helper invocations.
+  let x_in_range = u32(pos.x) < (${t.params.size[0]} - 1);
+  let y_in_range = u32(pos.y) < (${t.params.size[1]} - 1);
+  let in_range = x_in_range && y_in_range;
+  let input = select(1u, inputs[linear], in_range);
+
+  let res = select(0u, 1u, subgroupAll(bool(input)));
+  return vec2u(res, subgroup_id);
+}`;
+
+    await runFragmentTest(
+      t,
+      t.params.format,
+      fsShader,
+      t.params.size[0],
+      t.params.size[1],
+      inputData,
+      (data: Uint32Array) => {
+        return checkFragmentAll(
+          data,
+          inputData,
+          t.params.format,
+          t.params.size[0],
+          t.params.size[1]
+        );
+      }
+    );
+  });
+
+// Using subgroup operations in control with fragment shaders
+// quickly leads to unportable behavior.
+g.test('fragment,split').unimplemented();
