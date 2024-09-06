@@ -133,9 +133,7 @@ fn((t) => {
     use_struct: t.params.use_struct
   });
 
-  const expectSuccess = t.isCompatibility ?
-  t.params.attribute === '@interpolate(flat, either)' :
-  t.params.attribute.startsWith('@interpolate(flat');
+  const expectSuccess = t.params.attribute.startsWith('@interpolate(flat');
   t.expectCompileResult(expectSuccess, code);
 });
 
@@ -164,8 +162,7 @@ const kValidationTests = {
   },
   trailing_comma_one_arg: {
     src: `@interpolate(flat,)`,
-    pass: true,
-    compatPass: false
+    pass: true
   },
   trailing_comma_two_arg: {
     src: `@interpolate(perspective, center,)`,
@@ -223,9 +220,6 @@ fn((t) => {
     @builtin(position) vec4<f32> {
   return vec4f(0);
 }`;
-  const expectSuccess =
-  kValidationTests[t.params.attr].pass && (
-  t.isCompatibility ? kValidationTests[t.params.attr].compatPass ?? true : true);
-
+  const expectSuccess = kValidationTests[t.params.attr].pass;
   t.expectCompileResult(expectSuccess, code);
 });
