@@ -38,9 +38,8 @@ const kNumCases = 15;
  * Seeds 10+ generate all random data
  * @param seed The seed for the PRNG
  * @param num The number of data items to generate
- * @param addCounter If true, treats the first index as an atomic counter
  */
-function generateInputData(seed: number, num: number, addCounter: boolean): Uint32Array {
+function generateInputData(seed: number, num: number): Uint32Array {
   const prng = new PRNG(seed);
 
   const bound = Math.min(num, 32);
@@ -48,17 +47,12 @@ function generateInputData(seed: number, num: number, addCounter: boolean): Uint
 
   return new Uint32Array([
     ...iterRange(num, x => {
-      if (addCounter && x === 0) {
-        // Counter should start at 1 to avoid clear value.
-        return 1;
-      }
-
       if (seed === 0) {
         return 0;
       } else if (seed === 1) {
         return 1;
       } else if (seed < 10) {
-        const bounded = (addCounter ? x + 1 : x) % bound;
+        const bounded = x % bound;
         return bounded === index ? 0 : 1;
       }
       return prng.uniformInt(2);
@@ -178,8 +172,7 @@ fn main(
   outputs[lid] = res;
 }`;
 
-    const includeCounter = false;
-    const inputData = generateInputData(t.params.case, wgThreads, includeCounter);
+    const inputData = generateInputData(t.params.case, wgThreads);
 
     const uintsPerOutput = 2;
     await runComputeTest(
@@ -250,8 +243,7 @@ fn main(
   }
 }`;
 
-    const includeCounter = false;
-    const inputData = generateInputData(t.params.case, wgThreads, includeCounter);
+    const inputData = generateInputData(t.params.case, wgThreads);
 
     const uintsPerOutput = 2;
     await runComputeTest(
@@ -333,7 +325,7 @@ function checkFragmentAll(
   return undefined;
 }
 
-g.test('fragment')
+g.test('fragment,all_active')
   .desc('Tests subgroupAll in fragment shaders')
   .params(u =>
     u
@@ -346,28 +338,8 @@ g.test('fragment')
     t.selectDeviceOrSkipTestCase('subgroups' as GPUFeatureName);
   })
   .fn(async t => {
-    t.skipIf(t.params.case !== 1, 'skip');
-
-    const prng = new PRNG(t.params.case);
-    // Case 0 is all 0s.
-    // Case 1 is all 1s.
-    // Other cases are filled with random 0s and 1s.
     const numInputs = t.params.size[0] * t.params.size[1];
-    const bounds = Math.min(32, t.params.size[0] * t.params.size[1]);
-    const index = prng.uniformInt(bounds);
-    const inputData = new Uint32Array([
-      ...iterRange(numInputs, x => {
-        if (t.params.case === 0) {
-          return 0;
-        } else if (t.params.case === 1) {
-          return 1;
-        } else if (t.params.case < 10) {
-          const bounded = x % bounds;
-          return bounded === index ? 0 : 1;
-        }
-        return prng.uniformInt(2);
-      }),
-    ]);
+    const inputData = generateInputData(t.params.case, numInputs);
 
     const fsShader = `
 enable subgroups;
@@ -380,15 +352,16 @@ fn main(
   @builtin(position) pos : vec4f,
 ) -> @location(0) vec2u {
   // Generate a subgroup id based on linearized position, but avoid 0.
-  var subgroup_id = u32(pos.x) + u32(pos.y) * ${t.params.size[0]} + 1;
+  let linear = u32(pos.x) + u32(pos.y) * ${t.params.size[0]};
+  var subgroup_id = linear + 1;
   subgroup_id = subgroupBroadcastFirst(subgroup_id);
 
   // Filter out possible helper invocations.
-  var input = 1u;
-  if (u32(pos.x) >= 0 && u32(pos.x) < ${t.params.size[0]} - 1 &&
-      u32(pos.y) >= 0 && u32(pos.y) < ${t.params.size[1]} - 1) {
-    input = inputs[u32(pos.y) * ${t.params.size[0]} + u32(pos.x)];
-  }
+  let x_in_range = u32(pos.x) < (${t.params.size[0]} - 1);
+  let y_in_range = u32(pos.y) < (${t.params.size[1]} - 1);
+  let in_range = x_in_range && y_in_range;
+  let input = select(1u, inputs[linear], in_range);
+
   let res = select(0u, 1u, subgroupAll(bool(input)));
   return vec2u(res, subgroup_id);
 }`;
@@ -411,3 +384,7 @@ fn main(
       }
     );
   });
+
+// Using subgroup operations in control with fragment shaders
+// quickly leads to unportable behavior.
+g.test('fragment,split').unimplemented();

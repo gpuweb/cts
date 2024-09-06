@@ -421,6 +421,7 @@ export async function runComputeTest(
   t.expectOK(checkFunction(metadata, output));
 }
 
+// Minimum size is [3, 3].
 export const kFramebufferSizes = [
   [15, 15],
   [16, 16],
@@ -433,12 +434,16 @@ export const kFramebufferSizes = [
   [3, 35],
   [53, 13],
   [13, 53],
+  [3, 3],
 ] as const;
 
 /**
  * Runs a subgroup builtin test for fragment shaders
  *
  * This test draws a full screen triangle.
+ * Tests should avoid checking the last row or column to avoid helper
+ * invocations. Underlying APIs do not consistently guarantee whether
+ * helper invocations participate in subgroup operations.
  * @param t The base test
  * @param format The framebuffer format
  * @param fsShader The fragment shader with the following interface:
