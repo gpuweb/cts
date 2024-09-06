@@ -85,7 +85,7 @@ Validates that constant evaluation and override evaluation of ${builtin}() rejec
     }
 
     // We skip tests with values that would involve subnormal computations in 
-    // order to avoid defining a specific behavior.
+    // order to avoid defining a specific behavior (flush to zero).
     const isSubnormalFn = isSubnormalFunctionForScalarType(scalarType);
     t.skipIf(isSubnormalFn(vv) || isSubnormalFn(dp) || isSubnormalFn(len));
 
