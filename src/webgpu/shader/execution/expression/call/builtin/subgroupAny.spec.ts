@@ -325,7 +325,7 @@ function checkFragmentAny(
   return undefined;
 }
 
-g.test('fragment')
+g.test('fragment,all_active')
   .desc('Tests subgroupAny in fragment shaders')
   .params(u =>
     u
