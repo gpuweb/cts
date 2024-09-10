@@ -975,6 +975,10 @@ export function scalarF32Range(
     0x80000000,
     // +0.0
     0,
+    // Largest float as signed integer 
+    0x4effffff,
+    // Largest float as unsigned integer
+    0x4f7fffff,
     ...linearRange(
       kBit.f32.positive.subnormal.min,
       kBit.f32.positive.subnormal.max,
