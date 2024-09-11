@@ -551,14 +551,13 @@ g.test('address_space_access_mode')
     let mdecl = ``;
     // Most address spaces do not accept an access mode, but should accept no
     // template argument or a trailing comma.
-    let shouldPass = t.params.access_mode === '';
+    const noModeSpecified = t.params.access_mode === '';
+    let shouldPass = noModeSpecified;
     let suffix = ``;
-    if (t.params.access_mode === '') {
-      suffix += t.params.trailing_comma ? ',' : '';
-    } else {
+    if (!noModeSpecified) {
       suffix += `,${t.params.access_mode}`;
-      suffix += t.params.trailing_comma ? ',' : '';
     }
+    suffix += t.params.trailing_comma ? ',' : '';
     // 'handle' unchecked since it is untypable.
     switch (t.params.address_space) {
       case 'private':
@@ -566,7 +565,9 @@ g.test('address_space_access_mode')
         break;
       case 'storage':
         mdecl = `@group(0) @binding(0) var<storage${suffix}> x : u32;`;
-        shouldPass = t.params.access_mode !== 'write';
+        // We can allow the trailing comma if there is no mode specified.
+        shouldPass =
+          t.params.access_mode !== 'write' && (!t.params.trailing_comma || noModeSpecified);
         break;
       case 'uniform':
         mdecl = `@group(0) @binding(0) var<uniform${suffix}> x : u32;`;
