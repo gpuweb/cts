@@ -10,16 +10,16 @@ function getPipelineDescriptor(
   sampleIndex: boolean,
   sampleMaskIn: boolean,
   sampleMaskOut: boolean
-): { pipelineDescriptor: GPURenderPipelineDescriptor; code: string } {
-  const success = testValue <= device.limits.maxInterStageShaderVariables;
+): GPURenderPipelineDescriptor {
+  const vertexOutputVariables = testValue - (pointList ? 1 : 0);
+  const fragmentInputVariables = testValue - (frontFacing || sampleIndex || sampleMaskIn ? 1 : 0);
+  const numInterStageVariables = Math.min(vertexOutputVariables, fragmentInputVariables);
 
   const maxVertexOutputVariables = device.limits.maxInterStageShaderVariables - (pointList ? 1 : 0);
   const maxFragmentInputVariables =
     device.limits.maxInterStageShaderVariables -
     (frontFacing || sampleIndex || sampleMaskIn ? 1 : 0);
   const maxInterStageVariables = Math.min(maxVertexOutputVariables, maxFragmentInputVariables);
-
-  const numInterStageVariables = success ? maxInterStageVariables : maxInterStageVariables + 1;
 
   const varyings = `
       ${range(numInterStageVariables, i => `@location(${i}) v4_${i}: vec4f,`).join('\n')}
@@ -28,10 +28,8 @@ function getPipelineDescriptor(
   const code = `
     // test value                        : ${testValue}
     // maxInterStageShaderVariables     : ${device.limits.maxInterStageShaderVariables}
-    // num variables in vertex shader : ${maxVertexOutputVariables}${
-      pointList ? ' + point-list' : ''
-    }
-    // num variables in fragment shader : ${maxFragmentInputVariables}${
+    // num variables in vertex shader : ${vertexOutputVariables}${pointList ? ' + point-list' : ''}
+    // num variables in fragment shader : ${fragmentInputVariables}${
       frontFacing ? ' + front-facing' : ''
     }${sampleIndex ? ' + sample_index' : ''}${sampleMaskIn ? ' + sample_mask' : ''}
     // maxInterStageVariables:           : ${maxInterStageVariables}
@@ -82,7 +80,7 @@ function getPipelineDescriptor(
       ],
     },
   };
-  return { pipelineDescriptor, code };
+  return pipelineDescriptor;
 }
 
 const limit = 'maxInterStageShaderVariables';
@@ -123,7 +121,7 @@ g.test('createRenderPipeline,at_over')
       limitTest,
       testValueName,
       async ({ device, testValue, shouldError }) => {
-        const { pipelineDescriptor, code } = getPipelineDescriptor(
+        const pipelineDescriptor = getPipelineDescriptor(
           device,
           testValue,
           pointList,
@@ -133,7 +131,7 @@ g.test('createRenderPipeline,at_over')
           sampleMaskOut
         );
 
-        await t.testCreateRenderPipeline(pipelineDescriptor, async, shouldError, code);
+        await t.testCreateRenderPipeline(pipelineDescriptor, async, shouldError);
       }
     );
   });
