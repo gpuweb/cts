@@ -5337,6 +5337,14 @@ export const listing = [
       "shader",
       "validation",
       "extension",
+      "clip_distances"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "extension",
       "dual_source_blending"
     ]
   },
