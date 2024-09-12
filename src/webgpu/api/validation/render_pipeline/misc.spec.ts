@@ -19,10 +19,24 @@ g.test('basic')
     t.doCreateRenderPipelineTest(isAsync, true, descriptor);
   });
 
+g.test('no_attachment')
+  .desc(`Test that createRenderPipeline fails without any attachment.`)
+  .params(u => u.combine('isAsync', [false, true]))
+  .fn(t => {
+    const { isAsync } = t.params;
+
+    const descriptor = t.getDescriptor({
+      noFragment: true,
+      depthStencil: undefined,
+    });
+
+    t.doCreateRenderPipelineTest(isAsync, false, descriptor);
+  });
+
 g.test('vertex_state_only')
   .desc(
     `Tests creating vertex-state-only render pipeline. A vertex-only render pipeline has no fragment
-state (and thus has no color state), and can be created with or without depth stencil state.`
+state (and thus has no color state), and must have a depth-stencil state as an attachment is required.`
   )
   .params(u =>
     u
@@ -35,6 +49,10 @@ state (and thus has no color state), and can be created with or without depth st
         '',
       ] as const)
       .combine('hasColor', [false, true])
+      .unless(({ depthStencilFormat, hasColor }) => {
+        // Render pipeline needs at least one attachement
+        return hasColor === false && depthStencilFormat === '';
+      })
   )
   .fn(t => {
     const { isAsync, depthStencilFormat, hasColor } = t.params;
@@ -58,7 +76,7 @@ state (and thus has no color state), and can be created with or without depth st
       targets: hasColor ? [{ format: 'rgba8unorm' }] : [],
     });
 
-    t.doCreateRenderPipelineTest(isAsync, true, descriptor);
+    t.doCreateRenderPipelineTest(isAsync, depthStencilState !== undefined, descriptor);
   });
 
 g.test('pipeline_layout,device_mismatch')

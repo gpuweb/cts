@@ -8,7 +8,7 @@ function usage(rc: number): void {
   console.error(`Usage: tools/gen_listings_and_webworkers [options] [OUT_DIR] [SUITE_DIRS...]
 
 For each suite in SUITE_DIRS, generate listings into OUT_DIR/{suite}/listing.js,
-and generate Web Worker proxies in OUT_DIR/{suite}/webworker/**/*.worker.js for
+and generate Web Worker proxies in OUT_DIR/{suite}/webworker/**/*.as_worker.js for
 every .spec.js file. (Note {suite}/webworker/ is reserved for this purpose.)
 
 Example:
@@ -58,7 +58,8 @@ export const listing = ${JSON.stringify(listing, undefined, 2)};
 `
     );
 
-    // Write suite/webworker/**/*.worker.js
+    // Write suite/webworker/**/*.as_worker.js
+    // (Note we avoid ".worker.js" because that conflicts with WPT test naming patterns.)
     for (const entry of listing) {
       if ('readme' in entry) continue;
 
@@ -68,7 +69,7 @@ export const listing = ${JSON.stringify(listing, undefined, 2)};
         'webworker',
         ...entry.file.slice(0, entry.file.length - 1)
       );
-      const outFile = path.join(outDir, suite, 'webworker', ...entry.file) + '.worker.js';
+      const outFile = path.join(outDir, suite, 'webworker', ...entry.file) + '.as_worker.js';
 
       const relPathToSuiteRoot = Array<string>(entry.file.length).fill('..').join('/');
 
@@ -78,7 +79,6 @@ export const listing = ${JSON.stringify(listing, undefined, 2)};
         `\
 // AUTO-GENERATED - DO NOT EDIT. See ${myself}.
 
-// g is a TestGroup<Fixture> object (defined in common/internal/test_group.ts).
 import { g } from '${relPathToSuiteRoot}/${entry.file.join('/')}.spec.js';
 import { wrapTestGroupForWorker } from '${relPathToSuiteRoot}/../common/runtime/helper/wrap_for_worker.js';
 

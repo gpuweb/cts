@@ -12,11 +12,11 @@ TODO: Test zero-sized copies from all sources (just make sure params cover it) (
 
 import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { kTextureFormatInfo, kValidTextureFormatsForCopyE2T } from '../../format_info.js';
-import { CopyToTextureUtils, kCopySubrectInfo } from '../../util/copy_to_texture.js';
+import { TextureUploadingUtils, kCopySubrectInfo } from '../../util/copy_to_texture.js';
 
 import { kTestColorsAll, kTestColorsOpaque, makeTestColorsTexelView } from './util.js';
 
-export const g = makeTestGroup(CopyToTextureUtils);
+export const g = makeTestGroup(TextureUploadingUtils);
 
 g.test('from_ImageData')
   .desc(
@@ -98,7 +98,7 @@ g.test('from_ImageData')
       colorSpaceConversion,
     });
 
-    const dst = t.device.createTexture({
+    const dst = t.createTextureTracked({
       size: { width, height },
       format: dstFormat,
       usage:
@@ -245,7 +245,7 @@ g.test('from_canvas')
       colorSpaceConversion,
     });
 
-    const dst = t.device.createTexture({
+    const dst = t.createTextureTracked({
       size: { width, height },
       format: dstFormat,
       usage:
@@ -363,7 +363,7 @@ g.test('copy_subrect_from_ImageData')
       colorSpaceConversion,
     });
 
-    const dst = t.device.createTexture({
+    const dst = t.createTextureTracked({
       size: dstSize,
       format: kColorFormat,
       usage:
@@ -502,7 +502,7 @@ g.test('copy_subrect_from_2D_Canvas')
       colorSpaceConversion,
     });
 
-    const dst = t.device.createTexture({
+    const dst = t.createTextureTracked({
       size: dstSize,
       format: kColorFormat,
       usage:

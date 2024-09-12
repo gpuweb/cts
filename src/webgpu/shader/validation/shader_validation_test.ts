@@ -30,9 +30,12 @@ export class ShaderValidationTest extends GPUTest {
       const compilationInfo = await shaderModule!.getCompilationInfo();
 
       // MAINTENANCE_TODO: Pretty-print error messages with source context.
-      const messagesLog = compilationInfo.messages
-        .map(m => `${m.lineNum}:${m.linePos}: ${m.type}: ${m.message}`)
-        .join('\n');
+      const messagesLog =
+        compilationInfo.messages
+          .map(m => `${m.lineNum}:${m.linePos}: ${m.type}: ${m.message}`)
+          .join('\n') +
+        '\n\n---- shader ----\n' +
+        code;
       error.extra.compilationInfo = compilationInfo;
 
       if (compilationInfo.messages.some(m => m.type === 'error')) {
@@ -116,9 +119,14 @@ export class ShaderValidationTest extends GPUTest {
     constants?: Record<string, GPUPipelineConstantValue>;
     // List of additional module-scope variable the entrypoint needs to reference
     reference?: string[];
+    // List of additional statements to insert in the entry point.
+    statements?: string[];
   }) {
     const phonies: Array<string> = [];
 
+    if (args.statements !== undefined) {
+      phonies.push(...args.statements);
+    }
     if (args.constants !== undefined) {
       phonies.push(...keysOf(args.constants).map(c => `_ = ${c};`));
     }

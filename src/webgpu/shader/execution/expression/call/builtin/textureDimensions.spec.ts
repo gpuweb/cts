@@ -245,7 +245,7 @@ output = ${
     compute: { module },
     layout: 'auto',
   });
-  const outputBuffer = t.device.createBuffer({
+  const outputBuffer = t.createBufferTracked({
     size: 32,
     usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE,
   });
@@ -325,10 +325,12 @@ Parameters:
     t.selectDeviceOrSkipTestCase(info.feature);
   })
   .fn(t => {
+    t.skipIfTextureViewDimensionNotSupported(t.params.dimensions);
     const values = testValues(t.params);
-    const texture = t.device.createTexture({
+    const texture = t.createTextureTracked({
       size: values.size,
       dimension: textureDimensionsForViewDimensions(t.params.dimensions),
+      ...(t.isCompatibility && { textureBindingViewDimension: t.params.dimensions }),
       usage:
         t.params.samples === 1
           ? GPUTextureUsage.TEXTURE_BINDING
@@ -403,10 +405,12 @@ Parameters:
     t.selectDeviceOrSkipTestCase(info.feature);
   })
   .fn(t => {
+    t.skipIfTextureViewDimensionNotSupported(t.params.dimensions);
     const values = testValues(t.params);
-    const texture = t.device.createTexture({
+    const texture = t.createTextureTracked({
       size: values.size,
       dimension: textureDimensionsForViewDimensions(t.params.dimensions),
+      ...(t.isCompatibility && { textureBindingViewDimension: t.params.dimensions }),
       usage:
         t.params.samples === 1
           ? GPUTextureUsage.TEXTURE_BINDING
@@ -474,11 +478,12 @@ Parameters:
   .beforeAllSubcases(t => {
     const info = kTextureFormatInfo[t.params.format];
     t.skipIfTextureFormatNotSupported(t.params.format);
+    t.skipIfTextureFormatNotUsableAsStorageTexture(t.params.format);
     t.selectDeviceOrSkipTestCase(info.feature);
   })
   .fn(t => {
     const values = testValues(t.params);
-    const texture = t.device.createTexture({
+    const texture = t.createTextureTracked({
       size: values.size,
       dimension: textureDimensionsForViewDimensions(t.params.dimensions),
       usage: GPUTextureUsage.STORAGE_BINDING,

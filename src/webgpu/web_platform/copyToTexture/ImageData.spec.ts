@@ -4,11 +4,11 @@ copyExternalImageToTexture from ImageData source.
 
 import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { kTextureFormatInfo, kValidTextureFormatsForCopyE2T } from '../../format_info.js';
-import { CopyToTextureUtils, kCopySubrectInfo } from '../../util/copy_to_texture.js';
+import { TextureUploadingUtils, kCopySubrectInfo } from '../../util/copy_to_texture.js';
 
 import { kTestColorsAll, makeTestColorsTexelView } from './util.js';
 
-export const g = makeTestGroup(CopyToTextureUtils);
+export const g = makeTestGroup(TextureUploadingUtils);
 
 g.test('from_ImageData')
   .desc(
@@ -71,7 +71,7 @@ g.test('from_ImageData')
       subrectSize: { width, height },
     });
 
-    const dst = t.device.createTexture({
+    const dst = t.createTextureTracked({
       size: { width, height },
       format: dstColorFormat,
       usage:
@@ -176,7 +176,7 @@ g.test('copy_subrect_from_ImageData')
       subrectSize: srcSize,
     });
 
-    const dst = t.device.createTexture({
+    const dst = t.createTextureTracked({
       size: dstSize,
       format: kColorFormat,
       usage:

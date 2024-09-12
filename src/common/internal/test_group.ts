@@ -294,9 +294,11 @@ class TestBuilder<S extends SubcaseBatchState, F extends Fixture> {
       (this.description ? this.description + '\n\n' : '') + 'TODO: .unimplemented()';
     this.isUnimplemented = true;
 
-    this.testFn = () => {
+    // Use the beforeFn to skip the test, so we don't have to iterate the subcases.
+    this.beforeFn = () => {
       throw new SkipTestCase('test unimplemented');
     };
+    this.testFn = () => {};
   }
 
   /** Perform various validation/"lint" chenks. */
@@ -618,7 +620,7 @@ class RunCaseSpecific implements RunCase {
             const subcasePrefix = 'subcase: ' + stringifyPublicParams(subParams);
             const subRec = new Proxy(rec, {
               get: (target, k: keyof TestCaseRecorder) => {
-                const prop = TestCaseRecorder.prototype[k];
+                const prop = rec[k] ?? TestCaseRecorder.prototype[k];
                 if (typeof prop === 'function') {
                   testHeartbeatCallback();
                   return function (...args: Parameters<typeof prop>) {
