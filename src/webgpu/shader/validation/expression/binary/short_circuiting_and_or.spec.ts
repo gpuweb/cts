@@ -155,7 +155,8 @@ const kLhsForShortCircuit: Record<string, boolean> = {
 // A list of expressions that are invalid unless guarded by a short-circuiting expression.
 const kInvalidRhsExpressions: Record<string, string> = {
   overflow: 'i32(1<<thirty_one) < 0',
-  binary: '(one_f32 / 0) == 0',
+  div_zero_i32: '(1 / zero_i32) == 0',
+  div_zero_f32: '(one_f32 / 0) == 0',
   builtin: 'sqrt(-one_f32) == 0',
 };
 
@@ -179,6 +180,7 @@ g.test('invalid_rhs_const')
     }
     const code = `
 const thirty_one = 31u;
+const zero_i32 = 0i;
 const one_f32 = 1.0f;
 
 @compute @workgroup_size(1)
@@ -210,6 +212,7 @@ g.test('invalid_rhs_override')
     }
     const code = `
 override cond : bool;
+override zero_i32 = 0i;
 override one_f32 = 1.0f;
 override thirty_one = 31u;
 override foo = cond ${t.params.op} ${kInvalidRhsExpressions[t.params.rhs]};
