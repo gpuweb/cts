@@ -87,6 +87,8 @@ const kRenderPassEncoderCommandInfo: {
   drawIndexed: {},
   drawIndexedIndirect: {},
   drawIndirect: {},
+  multiDrawIndexedIndirect: {},
+  multiDrawIndirect: {},
   setIndexBuffer: {},
   setBindGroup: {},
   setVertexBuffer: {},
@@ -334,6 +336,16 @@ g.test('render_pass_commands')
         case 'drawIndirect':
           {
             renderPass.drawIndirect(buffer, 1);
+          }
+          break;
+        case 'multiDrawIndirect':
+          {
+            renderPass.multiDrawIndirect(buffer, 0, 0);
+          }
+          break;
+        case 'multiDrawIndexedIndirect':
+          {
+            renderPass.multiDrawIndexedIndirect(buffer, 0, 0);
           }
           break;
         case 'setIndexBuffer':
