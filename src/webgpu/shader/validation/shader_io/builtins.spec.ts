@@ -332,13 +332,6 @@ g.test('reuse_builtin_name')
       .combineWithParams(kBuiltins)
       .combine('use', ['alias', 'struct', 'function', 'module-var', 'function-var'])
   )
-  .beforeAllSubcases(t => {
-    if (t.params.name.includes('subgroup')) {
-      t.selectDeviceOrSkipTestCase('subgroups' as GPUFeatureName);
-    } else if (t.params.name === 'clip_distances') {
-      t.selectDeviceOrSkipTestCase('clip-distances' as GPUFeatureName);
-    }
-  })
   .fn(t => {
     let code = '';
     if (t.params.use === 'alias') {
