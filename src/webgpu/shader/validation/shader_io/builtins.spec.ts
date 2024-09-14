@@ -331,9 +331,30 @@ g.test('reuse_builtin_name')
     u
       .combineWithParams(kBuiltins)
       .combine('use', ['alias', 'struct', 'function', 'module-var', 'function-var'])
+      .combine('enable_extension', [true, false])
+      .unless(
+        t => t.enable_extension && !(t.name.includes('subgroup') || t.name === 'clip_distances')
+      )
   )
+  .beforeAllSubcases(t => {
+    if (!t.params.enable_extension) {
+      return;
+    }
+    if (t.params.name.includes('subgroup')) {
+      t.selectDeviceOrSkipTestCase('subgroups' as GPUFeatureName);
+    } else if (t.params.name === 'clip_distances') {
+      t.selectDeviceOrSkipTestCase('clip-distances' as GPUFeatureName);
+    }
+  })
   .fn(t => {
     let code = '';
+    if (t.params.enable_extension) {
+      if (t.params.name.includes('subgroups')) {
+        code += 'enable subgroup;\n';
+      } else if (t.params.name === 'clip_distances') {
+        code += 'enable clip_distances;\n';
+      }
+    }
     if (t.params.use === 'alias') {
       code += `alias ${t.params.name} = i32;`;
     } else if (t.params.use === `struct`) {
