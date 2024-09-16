@@ -4083,6 +4083,15 @@ export const listing = [
       "shader",
       "validation",
       "expression",
+      "binary",
+      "short_circuiting_and_or"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
       "call",
       "builtin",
       "abs"
