@@ -10,6 +10,9 @@ import {
   kTextureBindingTypes,
   IsReadOnlyTextureBindingType,
 } from '../texture/in_render_common.spec.js';
+import {
+  kTextureUsages,
+} from '../../../../capability_info.js';
 
 class F extends ValidationTest {
   createBindGroupLayoutForTest(
@@ -570,4 +573,82 @@ g.test('subresources,texture_usages_in_copy_and_render_pass')
     t.expectValidationError(() => {
       encoder.finish();
     }, false);
+  });
+
+g.test('subresources,texture_view_usages')
+  .desc(
+    `
+  Test that the usages of the texture view are used to validate compatibility in command encoding
+  instead of the usages of the base texture.`
+  )
+  .params(u =>
+    u
+      .combine('usage', [
+        'color-attachment',
+        ...kTextureBindingTypes,
+      ] as const)
+      .combine('viewUsage', [0, ...kTextureUsages])
+  )
+  .fn(t => {
+    const { usage, viewUsage } = t.params;
+
+    const texture = t.createTextureTracked({
+      format: 'r32float',
+      usage:
+        GPUTextureUsage.COPY_SRC |
+        GPUTextureUsage.COPY_DST |
+        GPUTextureUsage.TEXTURE_BINDING |
+        GPUTextureUsage.STORAGE_BINDING |
+        GPUTextureUsage.RENDER_ATTACHMENT,
+      size: [kTextureSize, kTextureSize, 1],
+      ...(t.isCompatibility && {
+        textureBindingViewDimension: '2d-array',
+      }),
+    });
+
+
+    let validViewUsage = 0;
+    switch (usage) {
+      case 'color-attachment': {
+        const encoder = t.device.createCommandEncoder();
+        const renderPassEncoder = encoder.beginRenderPass({
+          colorAttachments: [{ view: texture.createView({usage:viewUsage}), loadOp: 'load', storeOp: 'store' }],
+        });
+        renderPassEncoder.end();
+
+        const success = (viewUsage == 0) || (viewUsage & GPUTextureUsage.RENDER_ATTACHMENT);
+
+        t.expectValidationError(() => {
+          encoder.finish();
+        }, !success);
+        break;
+      }
+      case 'sampled-texture':
+      case 'readonly-storage-texture':
+      case 'writeonly-storage-texture':
+      case 'readwrite-storage-texture': {
+        let success = true;
+        if (viewUsage != 0) {
+          if (usage == 'sampled-texture') {
+            if ((viewUsage & GPUTextureUsage.TEXTURE_BINDING) == 0) success = false;
+          } else {
+            if ((viewUsage & GPUTextureUsage.STORAGE_BINDING) == 0) success = false;
+          }
+        }
+
+        t.expectValidationError(() => {
+          const bindGroup = t.createBindGroupForTest(
+            texture.createView({
+              dimension: '2d-array',
+              usage:viewUsage
+            }),
+            usage,
+            'unfilterable-float'
+          );
+        }, !success);
+      }
+      break;
+    default:
+      unreachable();
+    }
   });
