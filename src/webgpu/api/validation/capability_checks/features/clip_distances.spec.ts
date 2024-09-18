@@ -4,11 +4,12 @@ import { kMaximumLimitBaseParams, makeLimitTestGroup } from '../limits/limit_uti
 
 function getPipelineDescriptorWithClipDistances(
   device: GPUDevice,
-  testValue: number,
+  interStageShaderVariables: number,
   pointList: boolean,
   clipDistances: number
 ): GPURenderPipelineDescriptor {
-  const vertexOutputVariables = testValue - (pointList ? 1 : 0) - align(clipDistances, 4) / 4;
+  const vertexOutputVariables =
+    interStageShaderVariables - (pointList ? 1 : 0) - align(clipDistances, 4) / 4;
   const maxVertexOutputVariables =
     device.limits.maxInterStageShaderVariables - (pointList ? 1 : 0) - align(clipDistances, 4) / 4;
 
@@ -17,7 +18,7 @@ function getPipelineDescriptorWithClipDistances(
   `;
 
   const code = `
-    // test value                        : ${testValue}
+    // test value                        : ${interStageShaderVariables}
     // maxInterStageShaderVariables     : ${device.limits.maxInterStageShaderVariables}
     // num variables in vertex shader : ${vertexOutputVariables}${
       pointList ? ' + point-list' : ''
@@ -65,11 +66,9 @@ function getPipelineDescriptorWithClipDistances(
     },
     vertex: {
       module,
-      entryPoint: 'vs',
     },
     fragment: {
       module,
-      entryPoint: 'fs',
       targets: [
         {
           format: 'rgba8unorm',
