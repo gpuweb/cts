@@ -975,16 +975,18 @@ export function scalarF32Range(
     0x80000000,
     // +0.0
     0,
-    // Largest float as signed integer 
-    0x4effffff,
-    // Largest float as unsigned integer
-    0x4f7fffff,
     ...linearRange(
       kBit.f32.positive.subnormal.min,
       kBit.f32.positive.subnormal.max,
       counts.pos_sub
     ),
-    ...linearRange(kBit.f32.positive.min, kBit.f32.positive.max, counts.pos_norm),
+    ...[
+      ...linearRange(kBit.f32.positive.min, kBit.f32.positive.max, counts.pos_norm),
+      // Largest float as signed integer
+      0x4effffff,
+      // Largest float as unsigned integer
+      0x4f7fffff,
+    ].sort((n1, n2) => n1 - n2),
   ].map(Math.trunc);
   return bit_fields.map(reinterpretU32AsF32);
 }
