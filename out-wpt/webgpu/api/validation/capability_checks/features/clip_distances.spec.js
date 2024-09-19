@@ -6,7 +6,8 @@ function getPipelineDescriptorWithClipDistances(
 device,
 interStageShaderVariables,
 pointList,
-clipDistances)
+clipDistances,
+startLocation = 0)
 {
   const vertexOutputVariables =
   interStageShaderVariables - (pointList ? 1 : 0) - align(clipDistances, 4) / 4;
@@ -14,7 +15,10 @@ clipDistances)
   device.limits.maxInterStageShaderVariables - (pointList ? 1 : 0) - align(clipDistances, 4) / 4;
 
   const varyings = `
-      ${range(vertexOutputVariables, (i) => `@location(${i}) v4_${i}: vec4f,`).join('\n')}
+      ${range(
+    vertexOutputVariables,
+    (i) => `@location(${i + startLocation}) v4_${i + startLocation}: vec4f,`
+  ).join('\n')}
   `;
 
   const code = `
@@ -29,6 +33,7 @@ clipDistances)
   }
     // maxInterStageVariables:           : ${maxVertexOutputVariables}
     // num used inter stage variables    : ${vertexOutputVariables}
+    // vertex output start location      : ${startLocation}
 
     enable clip_distances;
 
@@ -111,4 +116,46 @@ fn(async (t) => {
     undefined,
     ['clip-distances']
   );
+});
+
+g.test('createRenderPipeline,max_vertex_output_location').
+desc(`Test using clip_distances will limit the maximum value of vertex output location`).
+params((u) =>
+u.
+combine('pointList', [false, true]).
+combine('clipDistances', [1, 2, 3, 4, 5, 6, 7, 8]).
+combine('startLocation', [0, 1, 2])
+).
+beforeAllSubcases((t) => {
+  t.selectDeviceOrSkipTestCase('clip-distances');
+}).
+fn(async (t) => {
+  const { pointList, clipDistances, startLocation } = t.params;
+
+  const maxInterStageShaderVariables = t.adapter.limits.maxInterStageShaderVariables;
+  const deviceInTest = await t.requestDeviceTracked(t.adapter, {
+    requiredFeatures: ['clip-distances'],
+    requiredLimits: {
+      maxInterStageShaderVariables: t.adapter.limits.maxInterStageShaderVariables
+    }
+  });
+  const pipelineDescriptor = getPipelineDescriptorWithClipDistances(
+    deviceInTest,
+    maxInterStageShaderVariables,
+    pointList,
+    clipDistances,
+    startLocation
+  );
+  const vertexOutputVariables =
+  maxInterStageShaderVariables - (pointList ? 1 : 0) - align(clipDistances, 4) / 4;
+  const maxLocationInTest = startLocation + vertexOutputVariables - 1;
+  const maxAllowedLocation = maxInterStageShaderVariables - 1 - align(clipDistances, 4) / 4;
+  const shouldError = maxLocationInTest > maxAllowedLocation;
+
+  deviceInTest.pushErrorScope('validation');
+  deviceInTest.createRenderPipeline(pipelineDescriptor);
+  const error = await deviceInTest.popErrorScope();
+  t.expect(!!error === shouldError, `${error?.message || 'no error when one was expected'}`);
+
+  deviceInTest.destroy();
 });
