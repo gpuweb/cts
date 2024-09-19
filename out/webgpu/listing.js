@@ -3864,6 +3864,14 @@ export const listing = [
       "shader",
       "execution",
       "shader_io",
+      "vertex_builtins"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "shader_io",
       "workgroup_size"
     ]
   },
