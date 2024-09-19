@@ -283,6 +283,7 @@
   "webgpu:api,validation,capability_checks,features,texture_formats:texture_descriptor:*": { "subcaseMS": 3.830 },
   "webgpu:api,validation,capability_checks,features,texture_formats:texture_descriptor_view_formats:*": { "subcaseMS": 5.734 },
   "webgpu:api,validation,capability_checks,features,texture_formats:texture_view_descriptor:*": { "subcaseMS": 4.113 },
+  "webgpu:api,validation,capability_checks,features,clip_distances:createRenderPipeline,at_over:*": { "subcaseMS": 13.7 },
   "webgpu:api,validation,capability_checks,limits,maxBindGroups:createPipeline,at_over:*": { "subcaseMS": 10.990 },
   "webgpu:api,validation,capability_checks,limits,maxBindGroups:createPipelineLayout,at_over:*": { "subcaseMS": 9.310 },
   "webgpu:api,validation,capability_checks,limits,maxBindGroups:setBindGroup,at_over:*": { "subcaseMS": 9.984 },
