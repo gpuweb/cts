@@ -644,6 +644,15 @@ export const listing = [
       "validation",
       "capability_checks",
       "features",
+      "clip_distances"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
+      "capability_checks",
+      "features",
       "query_types"
     ]
   },
