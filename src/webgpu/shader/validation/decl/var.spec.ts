@@ -578,7 +578,6 @@ g.test('address_space_access_mode')
         fdecl = `var<function${suffix}> x : u32;`;
         break;
     }
-
     const code = `${mdecl}
     fn foo() {
       ${fdecl}
