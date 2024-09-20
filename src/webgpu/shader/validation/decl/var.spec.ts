@@ -578,6 +578,7 @@ g.test('address_space_access_mode')
         fdecl = `var<function${suffix}> x : u32;`;
         break;
     }
+
     const code = `${mdecl}
     fn foo() {
       ${fdecl}
@@ -749,7 +750,8 @@ g.test('var_access_mode_bad_other_template_contents')
   .fn(t => {
     const prog = `@group(0) @binding(0)
                   var<${t.params.prefix}${t.params.accessMode}${t.params.suffix}> x: i32;`;
-    const ok = t.params.prefix === 'storage,' && t.params.suffix === '';
+    const ok =
+      t.params.prefix === 'storage,' && (t.params.suffix === '' || t.params.suffix === ',');
     t.expectCompileResult(ok, prog);
   });
 
