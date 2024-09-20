@@ -158,7 +158,7 @@ export function skipIfTextureFormatNotSupportedNotAvailableOrNotFilterable(
 }
 
 /**
- * Splits in array into multiple arrays were every Nth value goes to a different array
+ * Splits in array into multiple arrays where every Nth value goes to a different array
  */
 function unzip<T>(array: T[], num: number) {
   const arrays: T[][] = range(num, () => []);
@@ -193,31 +193,6 @@ function validateWeights(weights: number[]) {
     `expected more unique weights\n${showWeights()}`
   );
 
-  // Note: for 16 steps, these are the AMD weights
-  //
-  //                 standard
-  // step  mipLevel    gpu        AMD
-  // ----  --------  --------  ----------
-  //  0:   0         0           0
-  //  1:   0.0625    0.0625      0
-  //  2:   0.125     0.125       0.03125
-  //  3:   0.1875    0.1875      0.109375
-  //  4:   0.25      0.25        0.1875
-  //  5:   0.3125    0.3125      0.265625
-  //  6:   0.375     0.375       0.34375
-  //  7:   0.4375    0.4375      0.421875
-  //  8:   0.5       0.5         0.5
-  //  9:   0.5625    0.5625      0.578125
-  // 10:   0.625     0.625       0.65625
-  // 11:   0.6875    0.6875      0.734375
-  // 12:   0.75      0.75        0.8125
-  // 13:   0.8125    0.8125      0.890625
-  // 14:   0.875     0.875       0.96875
-  // 15:   0.9375    0.9375      1
-  // 16:   1         1           1
-  //
-  // notice step 1 is 0 and step 15 is 1.
-  // so we only check the 1 through 14.
   for (let i = 0; i < kMipGradientSteps; ++i) {
     assert(
       weights[i] <= weights[i + 1],
@@ -407,7 +382,6 @@ async function queryMipGradientValuesForDevice(t: GPUTest) {
       @fragment fn fs(v: VSOutput) -> @location(0) vec4f {
         let mipLevel = f32(v.ndx) / ${kMipGradientSteps};
         let size = textureDimensions(tex);
-        let d = mix(0.125, 0.25, mipLevel) * 4.;
         let u = f32(v.pos.x) * pow(2.0, mipLevel) / f32(size.x);
         let g = mix(0.5, 1.0, mipLevel);
 
