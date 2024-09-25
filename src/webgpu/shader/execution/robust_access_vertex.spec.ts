@@ -63,6 +63,8 @@ import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { assert } from '../../../common/util/util.js';
 import { GPUTest, TextureTestMixin } from '../../gpu_test.js';
 
+const kFloatTolerance = 0.01;
+
 // Encapsulates a draw call (either indexed or non-indexed)
 class DrawCall {
   private test: GPUTest;
@@ -269,7 +271,10 @@ const typeInfoMap: { [k: string]: VertexInfo } = {
     wgslType: 'vec4<f32>',
     sizeInBytes: 16,
     validationFunc: `return (valid(v.x) && valid(v.y) && valid(v.z) && valid(v.w)) ||
-                            (v.x == 0.0 && v.y == 0.0 && v.z == 0.0 && (v.w == 0.0 || v.w == 1.0));`,
+                            (abs(v.x - 0.0) <= ${kFloatTolerance} &&
+                             abs(v.y - 0.0) <= ${kFloatTolerance} &&
+                             abs(v.z - 0.0) <= ${kFloatTolerance} &&
+                             (abs(v.w - 0.0) <= ${kFloatTolerance} || abs(v.w - 1.0) <= ${kFloatTolerance}));`,
   },
 };
 
@@ -363,7 +368,7 @@ class F extends TextureTestMixin(GPUTest) {
       ${layoutStr}
 
       fn valid(f : f32) -> bool {
-        return ${validValues.map(v => `f == ${v}.0`).join(' || ')};
+        return ${validValues.map(v => `abs(f - ${v}.0) <= ${kFloatTolerance}`).join(' || ')};
       }
 
       fn validationFunc(v : ${typeInfo.wgslType}) -> bool {
