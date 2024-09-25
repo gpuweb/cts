@@ -4,15 +4,13 @@ Texture Usages Validation Tests on All Kinds of WebGPU Subresource Usage Scopes.
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { unreachable } from '../../../../../common/util/util.js';
+import { kTextureUsages } from '../../../../capability_info.js';
 import { ValidationTest } from '../../validation_test.js';
 import {
   TextureBindingType,
   kTextureBindingTypes,
   IsReadOnlyTextureBindingType,
 } from '../texture/in_render_common.spec.js';
-import {
-  kTextureUsages,
-} from '../../../../capability_info.js';
 
 class F extends ValidationTest {
   createBindGroupLayoutForTest(
@@ -583,10 +581,7 @@ g.test('subresources,texture_view_usages')
   )
   .params(u =>
     u
-      .combine('usage', [
-        'color-attachment',
-        ...kTextureBindingTypes,
-      ] as const)
+      .combine('usage', ['color-attachment', ...kTextureBindingTypes] as const)
       .combine('viewUsage', [0, ...kTextureUsages])
   )
   .fn(t => {
@@ -606,17 +601,17 @@ g.test('subresources,texture_view_usages')
       }),
     });
 
-
-    let validViewUsage = 0;
     switch (usage) {
       case 'color-attachment': {
         const encoder = t.device.createCommandEncoder();
         const renderPassEncoder = encoder.beginRenderPass({
-          colorAttachments: [{ view: texture.createView({usage:viewUsage}), loadOp: 'load', storeOp: 'store' }],
+          colorAttachments: [
+            { view: texture.createView({ usage: viewUsage }), loadOp: 'load', storeOp: 'store' },
+          ],
         });
         renderPassEncoder.end();
 
-        const success = (viewUsage == 0) || (viewUsage & GPUTextureUsage.RENDER_ATTACHMENT);
+        const success = viewUsage === 0 || viewUsage & GPUTextureUsage.RENDER_ATTACHMENT;
 
         t.expectValidationError(() => {
           encoder.finish();
@@ -626,29 +621,30 @@ g.test('subresources,texture_view_usages')
       case 'sampled-texture':
       case 'readonly-storage-texture':
       case 'writeonly-storage-texture':
-      case 'readwrite-storage-texture': {
-        let success = true;
-        if (viewUsage != 0) {
-          if (usage == 'sampled-texture') {
-            if ((viewUsage & GPUTextureUsage.TEXTURE_BINDING) == 0) success = false;
-          } else {
-            if ((viewUsage & GPUTextureUsage.STORAGE_BINDING) == 0) success = false;
+      case 'readwrite-storage-texture':
+        {
+          let success = true;
+          if (viewUsage !== 0) {
+            if (usage === 'sampled-texture') {
+              if ((viewUsage & GPUTextureUsage.TEXTURE_BINDING) === 0) success = false;
+            } else {
+              if ((viewUsage & GPUTextureUsage.STORAGE_BINDING) === 0) success = false;
+            }
           }
-        }
 
-        t.expectValidationError(() => {
-          const bindGroup = t.createBindGroupForTest(
-            texture.createView({
-              dimension: '2d-array',
-              usage:viewUsage
-            }),
-            usage,
-            'unfilterable-float'
-          );
-        }, !success);
-      }
-      break;
-    default:
-      unreachable();
+          t.expectValidationError(() => {
+            t.createBindGroupForTest(
+              texture.createView({
+                dimension: '2d-array',
+                usage: viewUsage,
+              }),
+              usage,
+              'unfilterable-float'
+            );
+          }, !success);
+        }
+        break;
+      default:
+        unreachable();
     }
   });

@@ -36,10 +36,7 @@ const kTextureViewWriteMethods = [
 ] as const;
 type TextureViewWriteMethod = (typeof kTextureViewWriteMethods)[number];
 
-const kTextureViewUsageMethods = [
-  'inherit',
-  'minimal',
-] as const;
+const kTextureViewUsageMethods = ['inherit', 'minimal'] as const;
 type TextureViewUsageMethod = (typeof kTextureViewUsageMethods)[number];
 
 // Src color values to read from a shader array.
@@ -278,18 +275,19 @@ function writeTextureAndGetExpectedTexelView(
 }
 
 function getTextureViewUsage(
-    viewUsageMethod : TextureViewUsageMethod,
-    minimalUsageForTest : GPUTextureUsageFlags) {
-    switch (viewUsageMethod) {
-      case 'inherit':
-        return 0;
+  viewUsageMethod: TextureViewUsageMethod,
+  minimalUsageForTest: GPUTextureUsageFlags
+) {
+  switch (viewUsageMethod) {
+    case 'inherit':
+      return 0;
 
-      case 'minimal':
-        return minimalUsageForTest;
+    case 'minimal':
+      return minimalUsageForTest;
 
-      default:
-        unreachable();
-    }
+    default:
+      unreachable();
+  }
 }
 
 g.test('format')
@@ -358,10 +356,9 @@ TODO: Test rgb10a2uint when TexelRepresentation.numericRange is made per-compone
     const { format, method, sampleCount, viewUsageMethod } = t.params;
 
     const textureUsageForMethod = method.includes('storage')
-        ? GPUTextureUsage.STORAGE_BINDING
-        : GPUTextureUsage.RENDER_ATTACHMENT;
-    const usage =
-      GPUTextureUsage.COPY_SRC | textureUsageForMethod;
+      ? GPUTextureUsage.STORAGE_BINDING
+      : GPUTextureUsage.RENDER_ATTACHMENT;
+    const usage = GPUTextureUsage.COPY_SRC | textureUsageForMethod;
 
     const texture = t.createTextureTracked({
       format,
@@ -371,7 +368,7 @@ TODO: Test rgb10a2uint when TexelRepresentation.numericRange is made per-compone
     });
 
     const view = texture.createView({
-      usage : getTextureViewUsage(viewUsageMethod, textureUsageForMethod),
+      usage: getTextureViewUsage(viewUsageMethod, textureUsageForMethod),
     });
     const expectedTexelView = writeTextureAndGetExpectedTexelView(
       t,

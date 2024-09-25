@@ -363,7 +363,7 @@ g.test('texture_view_usage')
     if (textureUsage & GPUTextureUsage.STORAGE_BINDING) {
       t.skipIfTextureFormatNotUsableAsStorageTexture(format);
     }
-    if ((textureUsage & GPUTextureUsage.RENDER_ATTACHMENT) && info.color && !info.colorRender) {
+    if (textureUsage & GPUTextureUsage.RENDER_ATTACHMENT && info.color && !info.colorRender) {
       t.skip(`Texture with ${format} is not usable as a render attachment`);
     }
   })
@@ -374,9 +374,9 @@ g.test('texture_view_usage')
     const size = [info.blockWidth, info.blockHeight, 1];
     const dimension = '2d';
     const mipLevelCount = 1;
-    const usage = textureUsage0 | textureUsage0;
+    const usage = textureUsage0 | textureUsage1;
 
-    const textureDescriptor : GPUTextureDescriptor = {
+    const textureDescriptor: GPUTextureDescriptor = {
       size,
       mipLevelCount,
       dimension,
@@ -391,11 +391,11 @@ g.test('texture_view_usage')
     const textureViewUsage = textureViewUsage0 | textureViewUsage1;
 
     // Texture view usage must be a subset of texture usage
-    if ((~usage & textureViewUsage) != 0) success = false;
+    if ((~usage & textureViewUsage) !== 0) success = false;
 
-     t.expectValidationError(() => {
-       texture.createView({
-         usage : textureViewUsage,
-       });
-     }, !success);
+    t.expectValidationError(() => {
+      texture.createView({
+        usage: textureViewUsage,
+      });
+    }, !success);
   });
