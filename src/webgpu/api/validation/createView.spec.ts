@@ -376,7 +376,7 @@ g.test('texture_view_usage')
     const mipLevelCount = 1;
     const usage = textureUsage0 | textureUsage0;
 
-    const textureDescriptor = {
+    const textureDescriptor : GPUTextureDescriptor = {
       size,
       mipLevelCount,
       dimension,
