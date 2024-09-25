@@ -293,14 +293,12 @@ function checkPredicatedMultiplication(
       const valueModFun = function (id: number) {
         return (id % 4) + 1;
       };
-      const bound = operation === 'subgroupMul' ? size : id;
+      const bound =
+        operation === 'subgroupInclusiveMul' ? id + 1 : operation === 'subgroupMul' ? size : id;
       for (let j = 0; j < bound; j++) {
         if (filter(j, size)) {
           expected *= valueModFun(j);
         }
-      }
-      if (operation === 'subgroupInclusiveMul') {
-        expected *= valueModFun(id);
       }
     } else {
       expected = 999;

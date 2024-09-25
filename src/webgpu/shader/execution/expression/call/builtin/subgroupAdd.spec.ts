@@ -270,15 +270,12 @@ function checkPredicatedAddition(
     const id = metadata[output.length + i];
     let expected = 0;
     if (filter(id, size)) {
-      const bound = operation === 'subgroupAdd' ? size : id;
+      const bound =
+        operation === 'subgroupInclusiveAdd' ? id + 1 : operation === 'subgroupAdd' ? size : id;
       for (let j = 0; j < bound; j++) {
         if (filter(j, size)) {
           expected += j;
         }
-      }
-
-      if (operation === 'subgroupInclusiveAdd') {
-        expected += id;
       }
     } else {
       expected = 999;
