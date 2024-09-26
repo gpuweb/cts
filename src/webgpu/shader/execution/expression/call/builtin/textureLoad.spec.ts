@@ -167,8 +167,7 @@ Parameters:
   .params(u =>
     u
       .combine('format', kTestableColorFormats)
-      // MAINTENANCE_TODO: Update createTextureFromTexelViews to support stencil8 and remove this filter.
-      .filter(t => t.format !== 'stencil8' && !isCompressedFloatTextureFormat(t.format))
+      .filter(t => !isCompressedFloatTextureFormat(t.format))
       .beginSubcases()
       .combine('samplePoints', kSamplePointMethods)
       .combine('C', ['i32', 'u32'] as const)
@@ -188,10 +187,7 @@ Parameters:
     const descriptor: GPUTextureDescriptor = {
       format,
       size,
-      usage:
-        GPUTextureUsage.COPY_DST |
-        GPUTextureUsage.TEXTURE_BINDING |
-        (canUseAsRenderTarget(format) ? GPUTextureUsage.RENDER_ATTACHMENT : 0),
+      usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
       mipLevelCount: maxMipLevelCount({ size }),
     };
     const { texels, texture } = await createTextureWithRandomDataAndGetTexels(t, descriptor);
@@ -422,10 +418,7 @@ Parameters:
     const descriptor: GPUTextureDescriptor = {
       format,
       size,
-      usage:
-        GPUTextureUsage.COPY_DST |
-        GPUTextureUsage.TEXTURE_BINDING |
-        GPUTextureUsage.RENDER_ATTACHMENT,
+      usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
       mipLevelCount: maxMipLevelCount({ size }),
     };
     const { texels, texture } = await createTextureWithRandomDataAndGetTexels(t, descriptor);
@@ -478,6 +471,9 @@ Parameters:
       .combine('C', ['i32', 'u32'] as const)
       .combine('L', ['i32', 'u32'] as const)
   )
+  .beforeAllSubcases(t =>
+    t.skipIf(typeof VideoFrame === 'undefined', 'VideoFrames are not supported')
+  )
   .fn(async t => {
     const { samplePoints, C, L } = t.params;
 
@@ -490,6 +486,7 @@ Parameters:
       size,
       usage: GPUTextureUsage.COPY_DST,
     };
+
     const { texels, videoFrame } = createVideoFrameWithRandomDataAndGetTexels(descriptor.size);
     const texture = t.device.importExternalTexture({ source: videoFrame });
 
