@@ -144,6 +144,7 @@ Params:
   .params(u =>
     u
       .combine('isIndexed', [true, false])
+      .combine('isMultiDraw', [true, false])
       .beginSubcases()
       .expand('indirectOffset', p => {
         const indirectDrawParametersSize = p.isIndexed
@@ -161,8 +162,14 @@ Params:
         ] as const;
       })
   )
+  .beforeAllSubcases(t => {
+    if(!t.params.isMultiDraw)
+      return;
+    const features: GPUFeatureName[] = ['multi-draw-indirect' as GPUFeatureName];
+    t.selectDeviceOrSkipTestCase(features);
+  })
   .fn(t => {
-    const { isIndexed, indirectOffset } = t.params;
+    const { isIndexed, isMultiDraw, indirectOffset } = t.params;
 
     const vertexBuffer = t.MakeVertexBuffer(isIndexed);
     const indirectBuffer = t.MakeIndirectBuffer(isIndexed, indirectOffset);
@@ -226,9 +233,19 @@ Params:
 
     if (isIndexed) {
       renderPass.setIndexBuffer(t.MakeIndexBuffer(), 'uint32', 0);
-      renderPass.drawIndexedIndirect(indirectBuffer, indirectOffset);
+      if(isMultiDraw) {
+        renderPass.multiDrawIndexedIndirect(indirectBuffer, indirectOffset, 1);
+      }
+      else {
+        renderPass.drawIndexedIndirect(indirectBuffer, indirectOffset);
+      }
     } else {
-      renderPass.drawIndirect(indirectBuffer, indirectOffset);
+      if(isMultiDraw) {
+        renderPass.multiDrawIndirect(indirectBuffer, indirectOffset, 1);
+      }
+      else {
+        renderPass.drawIndirect(indirectBuffer, indirectOffset);
+      }
     }
     renderPass.end();
     t.queue.submit([commandEncoder.finish()]);

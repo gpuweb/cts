@@ -11,6 +11,7 @@ import {
   TypedArrayBufferView,
   TypedArrayBufferViewConstructor,
 } from '../../../../common/util/util.js';
+import { kFeatureNames } from '../../../capability_info.js';
 import { GPUTest, TextureTestMixin } from '../../../gpu_test.js';
 import { PerPixelComparison } from '../../../util/texture/texture_ok.js';
 
@@ -22,6 +23,7 @@ class DrawTest extends TextureTestMixin(GPUTest) {
     instanceCount: number | undefined;
     indexed: boolean;
     indirect: boolean;
+    multiDraw: boolean;
     vertexBufferOffset: number;
     indexBufferOffset: number | undefined;
     baseVertex: number | undefined;
@@ -34,6 +36,7 @@ class DrawTest extends TextureTestMixin(GPUTest) {
       instanceCount: opts.instanceCount ?? 1,
       indexed: opts.indexed,
       indirect: opts.indirect,
+      multiDraw: opts.multiDraw,
       vertexBufferOffset: opts.vertexBufferOffset,
       indexBufferOffset: opts.indexBufferOffset ?? 0,
       baseVertex: opts.baseVertex ?? 0,
@@ -221,10 +224,14 @@ struct Output {
           defaulted.baseVertex,
           defaulted.firstInstance,
         ] as const;
-        renderPass.drawIndexedIndirect(
-          this.makeBufferWithContents(new Uint32Array(args), GPUBufferUsage.INDIRECT),
-          0
-        );
+        const drawArgsBuffer = this.makeBufferWithContents(new Uint32Array(args), GPUBufferUsage.INDIRECT);
+
+        if (defaulted.multiDraw) {
+          renderPass.multiDrawIndexedIndirect(drawArgsBuffer, 0, 1);
+        }
+        else {
+          renderPass.drawIndexedIndirect(drawArgsBuffer, 0);
+        }
       } else {
         const args = [
           opts.count,
@@ -261,10 +268,15 @@ struct Output {
           defaulted.firstIndex,
           defaulted.firstInstance,
         ] as const;
-        renderPass.drawIndirect(
-          this.makeBufferWithContents(new Uint32Array(args), GPUBufferUsage.INDIRECT),
-          0
-        );
+
+        const drawArgsBuffer = this.makeBufferWithContents(new Uint32Array(args), GPUBufferUsage.INDIRECT);
+
+        if(defaulted.multiDraw) {
+          renderPass.multiDrawIndirect(drawArgsBuffer, 0, 1);
+        } else {
+          renderPass.drawIndirect(drawArgsBuffer, 0);
+        }
+
       } else {
         const args = [opts.count, opts.instanceCount, opts.firstIndex, opts.firstInstance] as const;
         renderPass.draw.apply(renderPass, [...args]);
@@ -343,14 +355,21 @@ Params:
       .combine('instance_count', [0, 1, 4] as const)
       .combine('indexed', [false, true])
       .combine('indirect', [false, true])
+      .combine('multiDraw', [false, true])
       .combine('vertex_buffer_offset', [0, 32] as const)
       .expand('index_buffer_offset', p => (p.indexed ? ([0, 16] as const) : [undefined]))
       .expand('base_vertex', p => (p.indexed ? ([0, 9] as const) : [undefined]))
   )
   .beforeAllSubcases(t => {
+    const features : GPUFeatureName[] = [];
     if (t.params.first_instance > 0 && t.params.indirect) {
-      t.selectDeviceOrSkipTestCase('indirect-first-instance');
+      features.push('indirect-first-instance');
     }
+    if(t.params.multiDraw) {
+      features.push('multi-draw-indirect' as GPUFeatureName);
+    }
+
+    t.selectDeviceOrSkipTestCase(features);
   })
   .fn(t => {
     t.checkTriangleDraw({
@@ -360,6 +379,7 @@ Params:
       instanceCount: t.params.instance_count,
       indexed: t.params.indexed,
       indirect: t.params.indirect,
+      multiDraw: t.params.multiDraw,
       vertexBufferOffset: t.params.vertex_buffer_offset,
       indexBufferOffset: t.params.index_buffer_offset,
       baseVertex: t.params.base_vertex,
@@ -398,6 +418,7 @@ g.test('default_arguments')
       instanceCount: t.params.instance_count,
       indexed: t.params.mode === 'drawIndexed',
       indirect: false, // indirect
+      multiDraw: false, // multiDraw
       vertexBufferOffset: kVertexBufferOffset,
       indexBufferOffset: kIndexBufferOffset,
       baseVertex: t.params.base_vertex,
