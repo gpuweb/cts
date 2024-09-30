@@ -9,6 +9,7 @@ import {
   kTextureUsages,
   kTextureViewDimensions,
 } from '../../capability_info.js';
+import { GPUConst } from '../../constants.js';
 import {
   kTextureFormatInfo,
   kAllTextureFormats,
@@ -350,6 +351,20 @@ g.test('texture_view_usage')
       .combine('format', kAllTextureFormats)
       .combine('textureUsage0', kTextureUsages)
       .combine('textureUsage1', kTextureUsages)
+      .filter(({ format, textureUsage0, textureUsage1 }) => {
+        const info = kTextureFormatInfo[format];
+        const textureUsage = textureUsage0 | textureUsage1;
+
+        if (
+          (textureUsage & GPUConst.TextureUsage.RENDER_ATTACHMENT) !== 0 &&
+          info.color &&
+          !info.colorRender
+        ) {
+          return false;
+        }
+
+        return true;
+      })
       .beginSubcases()
       .combine('textureViewUsage0', [0, ...kTextureUsages])
       .combine('textureViewUsage1', [0, ...kTextureUsages])
@@ -362,9 +377,6 @@ g.test('texture_view_usage')
     t.selectDeviceOrSkipTestCase(info.feature);
     if (textureUsage & GPUTextureUsage.STORAGE_BINDING) {
       t.skipIfTextureFormatNotUsableAsStorageTexture(format);
-    }
-    if (textureUsage & GPUTextureUsage.RENDER_ATTACHMENT && info.color && !info.colorRender) {
-      t.skip(`Texture with ${format} is not usable as a render attachment`);
     }
   })
   .fn(t => {

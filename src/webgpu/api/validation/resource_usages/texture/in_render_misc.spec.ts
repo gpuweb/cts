@@ -581,11 +581,11 @@ g.test('subresources,texture_view_usages')
   )
   .params(u =>
     u
-      .combine('usage', ['color-attachment', ...kTextureBindingTypes] as const)
+      .combine('bindingType', ['color-attachment', ...kTextureBindingTypes] as const)
       .combine('viewUsage', [0, ...kTextureUsages])
   )
   .fn(t => {
-    const { usage, viewUsage } = t.params;
+    const { bindingType, viewUsage } = t.params;
 
     const texture = t.createTextureTracked({
       format: 'r32float',
@@ -601,7 +601,7 @@ g.test('subresources,texture_view_usages')
       }),
     });
 
-    switch (usage) {
+    switch (bindingType) {
       case 'color-attachment': {
         const encoder = t.device.createCommandEncoder();
         const renderPassEncoder = encoder.beginRenderPass({
@@ -611,7 +611,7 @@ g.test('subresources,texture_view_usages')
         });
         renderPassEncoder.end();
 
-        const success = viewUsage === 0 || viewUsage & GPUTextureUsage.RENDER_ATTACHMENT;
+        const success = viewUsage === 0 || (viewUsage & GPUTextureUsage.RENDER_ATTACHMENT) !== 0;
 
         t.expectValidationError(() => {
           encoder.finish();
@@ -625,7 +625,7 @@ g.test('subresources,texture_view_usages')
         {
           let success = true;
           if (viewUsage !== 0) {
-            if (usage === 'sampled-texture') {
+            if (bindingType === 'sampled-texture') {
               if ((viewUsage & GPUTextureUsage.TEXTURE_BINDING) === 0) success = false;
             } else {
               if ((viewUsage & GPUTextureUsage.STORAGE_BINDING) === 0) success = false;
@@ -638,7 +638,7 @@ g.test('subresources,texture_view_usages')
                 dimension: '2d-array',
                 usage: viewUsage,
               }),
-              usage,
+              bindingType,
               'unfilterable-float'
             );
           }, !success);

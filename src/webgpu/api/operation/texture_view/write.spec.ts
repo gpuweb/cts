@@ -299,7 +299,7 @@ Read values from color array in the shader, and write it to the texture view via
 - x= every texture format
 - x= sampleCount {1, 4} if valid
 - x= every possible view write method (see above)
-- x= inherited or minal texture view usage
+- x= inherited or minimal texture view usage
 
 TODO: Test sampleCount > 1 for 'render-pass-store' after extending copySinglePixelTextureToBufferUsingComputePass
       to read multiple pixels from multisampled textures. [1]
@@ -311,8 +311,7 @@ TODO: Test rgb10a2uint when TexelRepresentation.numericRange is made per-compone
       .combine('method', kTextureViewWriteMethods)
       .combine('format', kRegularTextureFormats)
       .combine('sampleCount', [1, 4])
-      .combine('viewUsageMethod', kTextureViewUsageMethods)
-      .filter(({ format, method, sampleCount, viewUsageMethod }) => {
+      .filter(({ format, method, sampleCount }) => {
         const info = kTextureFormatInfo[format];
 
         if (sampleCount > 1 && !info.multisample) {
@@ -339,6 +338,7 @@ TODO: Test rgb10a2uint when TexelRepresentation.numericRange is made per-compone
         }
         return true;
       })
+      .combine('viewUsageMethod', kTextureViewUsageMethods)
   )
   .beforeAllSubcases(t => {
     const { format, method } = t.params;
