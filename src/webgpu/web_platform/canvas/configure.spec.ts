@@ -43,13 +43,14 @@ g.test('defaults')
     });
 
     const configuration = ctx.getConfiguration();
-    t.expect(configuration.device === t.device);
-    t.expect(configuration.format === 'rgba8unorm');
-    t.expect(configuration.usage === GPUTextureUsage.RENDER_ATTACHMENT);
-    t.expect(configuration.viewFormats?.length === 0);
-    t.expect(configuration.colorSpace === 'srgb');
-    t.expect(configuration.toneMapping.mode === 'standard');
-    t.expect(configuration.alphaMode === 'opaque');
+    t.expect(configuration !== null);
+    t.expect(configuration!.device === t.device);
+    t.expect(configuration!.format === 'rgba8unorm');
+    t.expect(configuration!.usage === GPUTextureUsage.RENDER_ATTACHMENT);
+    t.expect(Array.from(configuration!.viewFormats!).length === 0);
+    t.expect(configuration!.colorSpace === 'srgb');
+    t.expect(configuration!.toneMapping!.mode === 'standard');
+    t.expect(configuration!.alphaMode === 'opaque');
 
     const currentTexture = ctx.getCurrentTexture();
     t.expect(currentTexture.format === 'rgba8unorm');
@@ -102,13 +103,14 @@ g.test('device')
 
     // getConfiguration will succeed after configure.
     const configuration = ctx.getConfiguration();
-    t.expect(configuration.device === t.device);
-    t.expect(configuration.format === 'rgba8unorm');
-    t.expect(configuration.usage === GPUTextureUsage.RENDER_ATTACHMENT);
-    t.expect(configuration.viewFormats?.length === 0);
-    t.expect(configuration.colorSpace === 'srgb');
-    t.expect(configuration.toneMapping.mode === 'standard');
-    t.expect(configuration.alphaMode === 'opaque');
+    t.expect(configuration !== null);
+    t.expect(configuration!.device === t.device);
+    t.expect(configuration!.format === 'rgba8unorm');
+    t.expect(configuration!.usage === GPUTextureUsage.RENDER_ATTACHMENT);
+    t.expect(Array.from(configuration!.viewFormats!).length === 0);
+    t.expect(configuration!.colorSpace === 'srgb');
+    t.expect(configuration!.toneMapping!.mode === 'standard');
+    t.expect(configuration!.alphaMode === 'opaque');
 
     // getCurrentTexture will succeed with a valid device.
     ctx.getCurrentTexture();
@@ -132,13 +134,14 @@ g.test('device')
 
     // getConfiguration will succeed after configure.
     const newConfiguration = ctx.getConfiguration();
-    t.expect(newConfiguration.device === t.device);
-    t.expect(newConfiguration.format === 'rgba8unorm');
-    t.expect(newConfiguration.usage === GPUTextureUsage.RENDER_ATTACHMENT);
-    t.expect(newConfiguration.viewFormats?.length === 0);
-    t.expect(newConfiguration.colorSpace === 'srgb');
-    t.expect(newConfiguration.toneMapping.mode === 'standard');
-    t.expect(newConfiguration.alphaMode === 'premultiplied');
+    t.expect(newConfiguration !== null);
+    t.expect(newConfiguration!.device === t.device);
+    t.expect(newConfiguration!.format === 'rgba8unorm');
+    t.expect(newConfiguration!.usage === GPUTextureUsage.RENDER_ATTACHMENT);
+    t.expect(Array.from(newConfiguration!.viewFormats!).length === 0);
+    t.expect(newConfiguration!.colorSpace === 'srgb');
+    t.expect(newConfiguration!.toneMapping!.mode === 'standard');
+    t.expect(newConfiguration!.alphaMode === 'premultiplied');
   });
 
 g.test('format')
@@ -178,7 +181,7 @@ g.test('format')
     }, !validFormat);
 
     const configuration = ctx.getConfiguration();
-    t.expect(configuration.format === format);
+    t.expect(configuration!.format === format);
 
     t.expectValidationError(() => {
       // Should always return a texture, whether the configured format was valid or not.
@@ -220,7 +223,7 @@ g.test('usage')
     });
 
     const configuration = ctx.getConfiguration();
-    t.expect(configuration.usage === usage);
+    t.expect(configuration!.usage === usage);
 
     const currentTexture = ctx.getCurrentTexture();
     t.expect(currentTexture instanceof GPUTexture);
@@ -333,7 +336,7 @@ g.test('alpha_mode')
     });
 
     const configuration = ctx.getConfiguration();
-    t.expect(configuration.alphaMode === alphaMode);
+    t.expect(configuration!.alphaMode === alphaMode);
 
     const currentTexture = ctx.getCurrentTexture();
     t.expect(currentTexture instanceof GPUTexture);
@@ -459,8 +462,9 @@ g.test('viewFormats')
     }, !compatible);
 
     const configuration = ctx.getConfiguration();
-    t.expect(configuration.viewFormats?.length === 1);
-    t.expect(configuration.viewFormats[0] === viewFormat);
+    const viewFormats = Array.from(configuration!.viewFormats!);
+    t.expect(viewFormats.length === 1);
+    t.expect(viewFormats[0] === viewFormat);
 
     // Likewise for getCurrentTexture().
     let currentTexture: GPUTexture;
