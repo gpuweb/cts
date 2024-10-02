@@ -561,17 +561,17 @@ fn vsMain(@builtin(vertex_index) index : u32) -> @builtin(position) vec4f {
   });
   const data: Uint32Array = readback.data;
 
-  const dataReadback = await t.readGPUBufferRangeTyped(dataBuffer, {
-    srcByteOffset: 0,
-    type: Uint32Array,
-    typedLength: 64 * 5,
-    method: 'copy',
-  });
-  const otherData = dataReadback.data;
-  console.log(`readback data`);
-  for (let i = 0; i < 64; i++) {
-    console.log(`${i}: id count = ${otherData[i]}, pos.x = ${otherData[i + 64]}, pos.y = ${otherData[i + 128]}, sgid = ${otherData[i + 192]}, input = ${otherData[i + 256]}`);
-  }
+  //const dataReadback = await t.readGPUBufferRangeTyped(dataBuffer, {
+  //  srcByteOffset: 0,
+  //  type: Uint32Array,
+  //  typedLength: 64 * 5,
+  //  method: 'copy',
+  //});
+  //const otherData = dataReadback.data;
+  //console.log(`readback data`);
+  //for (let i = 0; i < 64; i++) {
+  //  console.log(`${i}: id count = ${otherData[i]}, pos.x = ${otherData[i + 64]}, pos.y = ${otherData[i + 128]}, sgid = ${otherData[i + 192]}, input = ${otherData[i + 256]}`);
+  //}
 
   t.expectOK(checker(data));
 }

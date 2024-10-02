@@ -465,12 +465,12 @@ function checkBitwiseFragment(
   const uintsPerRow = bytesPerRow / 4;
   const uintsPerTexel = (bytesPerBlock ?? 1) / blockWidth / blockHeight / 4;
 
-  console.log(`fragment check`);
+  //console.log(`fragment check`);
   // Iteration skips last row and column to avoid helper invocations because it is not
   // guaranteed whether or not they participate in the subgroup operation.
   const expected = new Map<number, number>();
   for (let row = 0; row < height - 1; row++) {
-    console.log(`row = ${row}`);
+    //console.log(`row = ${row}`);
     for (let col = 0; col < width - 1; col++) {
       const offset = uintsPerRow * row + col * uintsPerTexel;
       const subgroup_id = data[offset + 1];
@@ -483,7 +483,7 @@ function checkBitwiseFragment(
       // First index of input is an atomic counter.
       v = bitwise(op, v, input[row * width + col]);
       expected.set(subgroup_id, v);
-      console.log(` col = ${col}, sgid = ${subgroup_id}, input = ${input[row * width + col]}, output = ${data[offset]}, seen input = ${data[offset + 2]}, linearpos = ${data[offset + 3]}`);
+      //console.log(` col = ${col}, sgid = ${subgroup_id}, input = ${input[row * width + col]}, output = ${data[offset]}, seen input = ${data[offset + 2]}, linearpos = ${data[offset + 3]}`);
     }
   }
 
@@ -507,7 +507,7 @@ function checkBitwiseFragment(
     }
   }
 
-  return new Error('error');
+  //return new Error('error');
   return undefined;
 }
 
