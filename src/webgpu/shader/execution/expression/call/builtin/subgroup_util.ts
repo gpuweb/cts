@@ -423,7 +423,7 @@ export async function runComputeTest(
 
 // Minimum size is [3, 3].
 export const kFramebufferSizes = [
-  /*[15, 15],
+  [15, 15],
   [16, 16],
   [17, 17],
   [19, 13],
@@ -433,7 +433,7 @@ export const kFramebufferSizes = [
   [35, 3],
   [3, 35],
   [53, 13],
-  [13, 53],*/
+  [13, 53],
   [3, 3],
 ] as const;
 
