@@ -34,7 +34,7 @@ import {
 export const g = makeTestGroup(SubgroupTest);
 
 const kNumCases = 15;
-const kOps = [/*'subgroupAnd', 'subgroupOr',*/ 'subgroupXor'] as const;
+const kOps = ['subgroupAnd', 'subgroupOr', 'subgroupXor'] as const;
 const kTypes = objectsToRecord([...kConcreteSignedIntegerScalarsAndVectors, ...kConcreteUnsignedIntegerScalarsAndVectors]);
 
 /**
@@ -525,7 +525,6 @@ g.test('fragment,all_active')
     t.selectDeviceOrSkipTestCase('subgroups' as GPUFeatureName);
   })
   .fn(async t => {
-    t.skipIf(t.params.case !== 11);
     const numInputs = t.params.size[0] * t.params.size[1];
     const inputData = generateInputData(t.params.case, numInputs, identity(t.params.op));
 
