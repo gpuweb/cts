@@ -505,7 +505,7 @@ g.test('fragment,all_active')
       .beginSubcases()
       .combine('case', [...iterRange(kNumCases, x => x)])
       .combine('op', kOps)
-      .combineWithParams([{ format: 'rgba32uint' }] as const)
+      .combineWithParams([{ format: 'rg32uint' }] as const)
   )
   .beforeAllSubcases(t => {
     t.selectDeviceOrSkipTestCase('subgroups' as GPUFeatureName);
@@ -524,8 +524,7 @@ var<storage, read_write> inputs : array<u32>;
 @fragment
 fn main(
   @builtin(position) pos : vec4f,
-  @builtin(subgroup_invocation_id) id : u32,
-) -> @location(0) vec4u {
+) -> @location(0) vec2u {
   // Generate a subgroup id based on linearized position, avoid 0.
   let linear = u32(pos.x) + u32(pos.y) * ${t.params.size[0]};
   let subgroup_id = subgroupBroadcastFirst(linear + 1);
@@ -537,7 +536,7 @@ fn main(
   let input = select(${ident}, inputs[linear], in_range);
 
   let res = ${t.params.op}(input);
-  return vec4u(res, subgroup_id, input, id);
+  return vec2u(res, subgroup_id);
 }`;
 
     await runFragmentTest(
