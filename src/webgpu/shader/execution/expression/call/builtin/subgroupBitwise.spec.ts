@@ -16,7 +16,7 @@ import {
   kConcreteUnsignedIntegerScalarsAndVectors,
   scalarTypeOf,
   Type,
-  VectorType
+  VectorType,
 } from '../../../../../util/conversion.js';
 import { align } from '../../../../../util/math.js';
 import { PRNG } from '../../../../../util/prng.js';
@@ -35,7 +35,10 @@ export const g = makeTestGroup(SubgroupTest);
 
 const kNumCases = 15;
 const kOps = ['subgroupAnd', 'subgroupOr', 'subgroupXor'] as const;
-const kTypes = objectsToRecord([...kConcreteSignedIntegerScalarsAndVectors, ...kConcreteUnsignedIntegerScalarsAndVectors]);
+const kTypes = objectsToRecord([
+  ...kConcreteSignedIntegerScalarsAndVectors,
+  ...kConcreteUnsignedIntegerScalarsAndVectors,
+]);
 
 /**
  * Performs the appropriate bitwise operation on v1 and v2.
@@ -44,11 +47,7 @@ const kTypes = objectsToRecord([...kConcreteSignedIntegerScalarsAndVectors, ...k
  * @param v1 The first value
  * @param v2 The second value
  */
-function bitwise(
-  op: 'subgroupAnd' | 'subgroupOr' | 'subgroupXor',
-  v1: number,
-  v2: number
-): number {
+function bitwise(op: 'subgroupAnd' | 'subgroupOr' | 'subgroupXor', v1: number, v2: number): number {
   switch (op) {
     case 'subgroupAnd':
       return v1 & v2;
@@ -94,18 +93,16 @@ function checkDataTypes(
   output: Uint32Array,
   type: Type,
   op: 'subgroupAnd' | 'subgroupOr' | 'subgroupXor',
-  offset: number,
+  offset: number
 ): undefined | Error {
-  console.log(`checking: offset = ${offset}`);
-  let expected = new Map<number, number>();
+  const expected = new Map<number, number>();
   for (let i = 0; i < Math.floor(metadata.length / 2); i++) {
     const group_id = metadata[i + Math.floor(metadata.length / 2)];
     let expect = expected.get(group_id) ?? identity(op);
     expect = bitwise(op, expect, i + offset);
     expected.set(group_id, expect);
-    console.log(`inv ${i}: group_id = ${group_id}, val = ${i + offset}, expected = ${expect}`);
   }
-  
+
   let numEles = 1;
   let stride = 1;
   if (type instanceof VectorType) {
@@ -115,10 +112,8 @@ function checkDataTypes(
   for (let inv = 0; inv < Math.floor(output.length / stride); inv++) {
     const group_id = metadata[inv + Math.floor(metadata.length / 2)];
     const expect = expected.get(group_id) ?? 0;
-    console.log(`inv = ${inv}, group_id = ${group_id}`);
     for (let ele = 0; ele < numEles; ele++) {
       const res = output[inv * stride + ele];
-      console.log(` ele = ${ele}, expect = ${expect}, res = ${res}`);
       if (res !== expect) {
         return new Error(`Invocation ${inv}, component ${ele}: incorrect result
 - expected: ${expect}
@@ -225,7 +220,7 @@ function generateInputData(seed: number, num: number, identity: number): Uint32A
         return 0xffff;
       } else if (seed < 10) {
         const bounded = x % bound;
-        let val = bounded === x ? ~identity : identity;
+        let val = bounded === index ? ~identity : identity;
         val &= 0xffff;
         return val;
       }
@@ -255,7 +250,7 @@ function checkBitwiseCompute(
   op: 'subgroupAnd' | 'subgroupOr' | 'subgroupXor',
   filter: (id: number, size: number) => boolean
 ): undefined | Error {
-  let expected = new Map<number, number>();
+  const expected = new Map<number, number>();
   for (let i = 0; i < output.length; i++) {
     const group_id = metadata[i + output.length];
     const combo = metadata[i];
@@ -281,7 +276,7 @@ function checkBitwiseCompute(
 - expected: ${expect}
 -      got: ${res}`);
       }
-} else {
+    } else {
       if (res !== kDataSentinel) {
         return new Error(`Invocation ${i}: unexpected write`);
       }
@@ -355,10 +350,11 @@ fn main(
           output,
           inputData,
           t.params.op,
-(id: number, size: number) => {
+          (id: number, size: number) => {
             return true;
-          });
-      },
+          }
+        );
+      }
     );
   });
 
@@ -427,20 +423,15 @@ fn main(
       uintsPerOutput,
       inputData,
       (metadata: Uint32Array, output: Uint32Array) => {
-        return checkBitwiseCompute(
-          metadata,
-          output,
-          inputData,
-          t.params.op,
-          testcase.filter
-        );
-      },
+        return checkBitwiseCompute(metadata, output, inputData, t.params.op, testcase.filter);
+      }
     );
   });
 
 /**
  * Checks bitwise ops results from a fragment shader.
  *
+ * Avoids the last row and column to skip potential helper invocations.
  * @param data Framebuffer output
  *             * component 0 is result
  *             * component 1 is generated subgroup id
@@ -465,12 +456,10 @@ function checkBitwiseFragment(
   const uintsPerRow = bytesPerRow / 4;
   const uintsPerTexel = (bytesPerBlock ?? 1) / blockWidth / blockHeight / 4;
 
-  //console.log(`fragment check`);
   // Iteration skips last row and column to avoid helper invocations because it is not
   // guaranteed whether or not they participate in the subgroup operation.
   const expected = new Map<number, number>();
   for (let row = 0; row < height - 1; row++) {
-    //console.log(`row = ${row}`);
     for (let col = 0; col < width - 1; col++) {
       const offset = uintsPerRow * row + col * uintsPerTexel;
       const subgroup_id = data[offset + 1];
@@ -480,10 +469,8 @@ function checkBitwiseFragment(
       }
 
       let v = expected.get(subgroup_id) ?? identity(op);
-      // First index of input is an atomic counter.
       v = bitwise(op, v, input[row * width + col]);
       expected.set(subgroup_id, v);
-      //console.log(` col = ${col}, sgid = ${subgroup_id}, input = ${input[row * width + col]}, output = ${data[offset]}, seen input = ${data[offset + 2]}, linearpos = ${data[offset + 3]}`);
     }
   }
 
@@ -507,7 +494,6 @@ function checkBitwiseFragment(
     }
   }
 
-  //return new Error('error');
   return undefined;
 }
 
@@ -535,9 +521,6 @@ enable subgroups;
 @group(0) @binding(0)
 var<storage, read_write> inputs : array<u32>;
 
-@group(0) @binding(1)
-var<storage, read_write> data : array<atomic<u32>>;
-
 @fragment
 fn main(
   @builtin(position) pos : vec4f,
@@ -552,13 +535,6 @@ fn main(
   let y_in_range = u32(pos.y) < (${t.params.size[1]} - 1);
   let in_range = x_in_range && y_in_range;
   let input = select(${ident}, inputs[linear], in_range);
-
-  let p = &data[0];
-  //_ = atomicAdd(&data[id], 1u);
-  //_ = atomicAdd(&data[id + 64], u32(pos.x));
-  //_ = atomicAdd(&data[id + 128], u32(pos.y));
-  //_ = atomicAdd(&data[id + 192], subgroup_id);
-  //_ = atomicAdd(&data[id + 256], input);
 
   let res = ${t.params.op}(input);
   return vec4u(res, subgroup_id, input, id);
@@ -584,4 +560,4 @@ fn main(
     );
   });
 
-g.test('fragment,split').unimplemented()
+g.test('fragment,split').unimplemented();
