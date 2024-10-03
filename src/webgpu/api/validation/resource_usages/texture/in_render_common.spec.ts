@@ -188,10 +188,7 @@ g.test('subresources,color_attachment_and_bind_group')
   )
   .beforeAllSubcases(t => {
     if (t.isCompatibility) {
-      t.skipIf(
-        t.params.bgLayer !== 0,
-        'view base array layer must equal 0 in compatibility mode'
-      );
+      t.skipIf(t.params.bgLayer !== 0, 'view base array layer must equal 0 in compatibility mode');
       t.skipIf(
         t.params.bgLayerCount !== kTextureLayers,
         'view array layers must equal texture array layers in compatibility mode'
@@ -311,10 +308,7 @@ g.test('subresources,depth_stencil_attachment_and_bind_group')
   )
   .beforeAllSubcases(t => {
     if (t.isCompatibility) {
-      t.skipIf(
-        t.params.bgLayer !== 0,
-        'view base array layer must equal 0 in compatibility mode'
-      );
+      t.skipIf(t.params.bgLayer !== 0, 'view base array layer must equal 0 in compatibility mode');
       t.skipIf(
         t.params.bgLayerCount !== kTextureLayers,
         'view array layers must equal texture array layers in compatibility mode'
@@ -588,7 +582,8 @@ g.test('subresources,depth_stencil_texture_in_bind_groups')
         'view base array layer must equal 0 in compatibility mode'
       );
       t.skipIf(
-        t.params.view0Layers.count !== kTextureLayers || t.params.view1Layers.count !== kTextureLayers,
+        t.params.view0Layers.count !== kTextureLayers ||
+          t.params.view1Layers.count !== kTextureLayers,
         'view array layers must equal texture array layers in compatibility mode'
       );
     }
