@@ -1,10 +1,12 @@
 import { assert, range, unreachable } from '../../../../../../common/util/util.js';
+import { Float16Array } from '../../../../../../external/petamoriken/float16/float16.js';
 import {
   EncodableTextureFormat,
   isCompressedFloatTextureFormat,
   isCompressedTextureFormat,
   isDepthOrStencilTextureFormat,
   isDepthTextureFormat,
+  isEncodableTextureFormat,
   isStencilTextureFormat,
   kEncodableTextureFormats,
   kTextureFormatInfo,
@@ -25,6 +27,7 @@ import {
 } from '../../../../../util/math.js';
 import {
   effectiveViewDimensionForDimension,
+  physicalMipSize,
   physicalMipSizeFromTexture,
   reifyTextureDescriptor,
   SampleCoord,
@@ -421,17 +424,16 @@ function getLimitValue(v: number) {
   }
 }
 
-function getValueBetweenMinAndMaxTexelValueInclusive(
+function getMinAndMaxTexelValueForComponent(
   rep: TexelRepresentationInfo,
-  component: TexelComponent,
-  normalized: number
+  component: TexelComponent
 ) {
   assert(!!rep.numericRange);
   const perComponentRanges = rep.numericRange as PerComponentNumericRange;
   const perComponentRange = perComponentRanges[component];
   const range = rep.numericRange as NumericRange;
   const { min, max } = perComponentRange ? perComponentRange : range;
-  return lerp(getLimitValue(min), getLimitValue(max), normalized);
+  return { min: getLimitValue(min), max: getLimitValue(max) };
 }
 
 /**
@@ -489,16 +491,19 @@ export function appendComponentTypeForFormatToTextureType(base: string, format: 
     : `${base}<${getTextureFormatTypeInfo(format).componentType}>`;
 }
 
-/**
- * Creates a TexelView filled with random values.
- */
-export function createRandomTexelView(info: {
+function createRandomTexelViewViaColors(info: {
   format: GPUTextureFormat;
   size: GPUExtent3D;
   mipLevel: number;
 }): TexelView {
   const rep = kTexelRepresentationInfo[info.format as EncodableTextureFormat];
   const size = reifyExtent3D(info.size);
+  const minMax = Object.fromEntries(
+    rep.componentOrder.map(component => [
+      component,
+      getMinAndMaxTexelValueForComponent(rep, component),
+    ])
+  );
   const generator = (coords: SampleCoord): Readonly<PerTexelComponent<number>> => {
     const texel: PerTexelComponent<number> = {};
     for (const component of rep.componentOrder) {
@@ -514,21 +519,102 @@ export function createRandomTexelView(info: {
         size.depthOrArrayLayers
       );
       const normalized = clamp(rnd / 0xffffffff, { min: 0, max: 1 });
-      texel[component] = getValueBetweenMinAndMaxTexelValueInclusive(rep, component, normalized);
+      const { min, max } = minMax[component];
+      texel[component] = lerp(min, max, normalized);
     }
     return quantize(texel, rep);
   };
   return TexelView.fromTexelsAsColors(info.format as EncodableTextureFormat, generator);
 }
 
+function createRandomTexelViewViaBytes(info: {
+  format: GPUTextureFormat;
+  size: GPUExtent3D;
+  mipLevel: number;
+  sampleCount: number;
+}): TexelView {
+  const { format } = info;
+  const formatInfo = kTextureFormatInfo[format];
+  const rep = kTexelRepresentationInfo[info.format as EncodableTextureFormat];
+  assert(!!rep);
+  const bytesPerBlock = (formatInfo.color?.bytes ?? formatInfo.stencil?.bytes)!;
+  assert(bytesPerBlock > 0);
+  const size = physicalMipSize(reifyExtent3D(info.size), info.format, '2d', 0);
+  const blocksAcross = Math.ceil(size.width / formatInfo.blockWidth);
+  const blocksDown = Math.ceil(size.height / formatInfo.blockHeight);
+  const bytesPerRow = blocksAcross * bytesPerBlock * info.sampleCount;
+  const bytesNeeded = bytesPerRow * blocksDown * size.depthOrArrayLayers;
+  const data = new Uint8Array(bytesNeeded);
+
+  const hashBase =
+    sumOfCharCodesOfString(info.format) +
+    size.width +
+    size.height +
+    size.depthOrArrayLayers +
+    info.mipLevel +
+    info.sampleCount;
+
+  if (info.format.includes('32float') || info.format.includes('16float')) {
+    const { min, max } = getMinAndMaxTexelValueForComponent(rep, TexelComponent.R);
+    const asFloat = info.format.includes('32float')
+      ? new Float32Array(data.buffer)
+      : new Float16Array(data.buffer);
+    for (let i = 0; i < asFloat.length; ++i) {
+      asFloat[i] = lerp(min, max, hashU32(hashBase + i) / 0xffff_ffff);
+    }
+  } else if (bytesNeeded % 4 === 0) {
+    const asU32 = new Uint32Array(data.buffer);
+    for (let i = 0; i < asU32.length; ++i) {
+      asU32[i] = hashU32(hashBase + i);
+    }
+  } else {
+    for (let i = 0; i < bytesNeeded; ++i) {
+      data[i] = hashU32(hashBase + i);
+    }
+  }
+
+  return TexelView.fromTextureDataByReference(info.format as EncodableTextureFormat, data, {
+    bytesPerRow,
+    rowsPerImage: size.height,
+    subrectOrigin: [0, 0, 0],
+    subrectSize: size,
+  });
+}
+
+/**
+ * Creates a TexelView filled with random values.
+ */
+function createRandomTexelView(info: {
+  format: GPUTextureFormat;
+  size: GPUExtent3D;
+  mipLevel: number;
+  sampleCount: number;
+}): TexelView {
+  assert(!isCompressedTextureFormat(info.format));
+  const formatInfo = kTextureFormatInfo[info.format];
+  const type = formatInfo.color?.type ?? formatInfo.depth?.type ?? formatInfo.stencil?.type;
+  const canFillWithRandomTypedData =
+    isEncodableTextureFormat(info.format) &&
+    ((info.format.includes('norm') && type !== 'depth') ||
+      info.format.includes('16float') ||
+      info.format.includes('32float') ||
+      type === 'sint' ||
+      type === 'uint');
+
+  return canFillWithRandomTypedData
+    ? createRandomTexelViewViaBytes(info)
+    : createRandomTexelViewViaColors(info);
+}
+
 /**
  * Creates a mip chain of TexelViews filled with random values
  */
-export function createRandomTexelViewMipmap(info: {
+function createRandomTexelViewMipmap(info: {
   format: GPUTextureFormat;
   size: GPUExtent3D;
   mipLevelCount?: number;
   dimension?: GPUTextureDimension;
+  sampleCount?: number;
 }): TexelView[] {
   const mipLevelCount = info.mipLevelCount ?? 1;
   const dimension = info.dimension ?? '2d';
@@ -537,6 +623,7 @@ export function createRandomTexelViewMipmap(info: {
       format: info.format,
       size: virtualMipSize(dimension, info.size, i),
       mipLevel: i,
+      sampleCount: info.sampleCount ?? 1,
     })
   );
 }
