@@ -462,7 +462,6 @@ fn((t) => {
   }, !compatible);
 
   const viewFormats = ctx.getConfiguration().viewFormats;
-  assert(Array.isArray(viewFormats));
   t.expect(viewFormats[0] === viewFormat);
 
   // Likewise for getCurrentTexture().
