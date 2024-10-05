@@ -206,8 +206,8 @@ g.test('non_const_index')
   .desc(`Test indexing of a matrix using non-const index`)
   .params(u => u.combine('columns', [2, 3, 4] as const).combine('rows', [2, 3, 4] as const))
   .fn(t => {
-    let cols = t.params.columns;
-    let rows = t.params.rows;
+    const cols = t.params.columns;
+    const rows = t.params.rows;
     const values = Array.from(Array(cols * rows).keys());
     const wgsl = `
 @group(0) @binding(0) var<storage, read_write> output : array<f32, ${cols * rows}>;
