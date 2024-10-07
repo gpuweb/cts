@@ -274,6 +274,16 @@ Parameters:
       mipmapFilter: minFilter,
     };
 
+    const hashInputs = [
+      format,
+      viewDimension,
+      samplePoints,
+      addressModeU,
+      addressModeV,
+      addressModeW,
+      minFilter,
+      offset,
+    ];
     const calls: TextureCall<vec3>[] = (
       viewDimension === '3d'
         ? generateTextureBuiltinInputs3D(50, {
@@ -281,31 +291,14 @@ Parameters:
             sampler,
             descriptor,
             derivatives: true,
-            hashInputs: [
-              format,
-              viewDimension,
-              samplePoints,
-              addressModeU,
-              addressModeV,
-              addressModeW,
-              minFilter,
-              offset,
-            ],
+            hashInputs,
           })
         : generateSamplePointsCube(50, {
             method: samplePoints,
             sampler,
             descriptor,
             derivatives: true,
-            hashInputs: [
-              format,
-              viewDimension,
-              samplePoints,
-              addressModeU,
-              addressModeV,
-              addressModeW,
-              minFilter,
-            ],
+            hashInputs,
           })
     ).map(({ coords, derivativeMult, offset }) => {
       return {
