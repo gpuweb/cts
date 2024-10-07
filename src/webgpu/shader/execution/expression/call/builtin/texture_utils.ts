@@ -37,7 +37,7 @@ import {
   TexelComponent,
   TexelRepresentationInfo,
 } from '../../../../../util/texture/texel_data.js';
-import { TexelView } from '../../../../../util/texture/texel_view.js';
+import { PerPixelAtLevel, TexelView } from '../../../../../util/texture/texel_view.js';
 import { createTextureFromTexelViews } from '../../../../../util/texture.js';
 import { reifyExtent3D } from '../../../../../util/unions.js';
 
@@ -732,11 +732,64 @@ export function appendComponentTypeForFormatToTextureType(base: string, format: 
     : `${base}<${getTextureFormatTypeInfo(format).componentType}>`;
 }
 
-function createRandomTexelViewViaColors(info: {
-  format: GPUTextureFormat;
-  size: GPUExtent3D;
-  mipLevel: number;
-}): TexelView {
+type RandomTextureOptions = {
+  generator: PerPixelAtLevel<PerTexelComponent<number>>;
+};
+
+/**
+ * Make a generator for texels for depth comparison tests.
+ */
+export function makeRandomDepthComparisonTexelGenerator(
+  info: {
+    format: GPUTextureFormat;
+    size: GPUExtent3D;
+  },
+  comparison: GPUCompareFunction
+) {
+  const rep = kTexelRepresentationInfo[info.format as EncodableTextureFormat];
+  const size = reifyExtent3D(info.size);
+
+  const comparisonIsEqualOrNotEqual = comparison === 'equal' || comparison === 'not-equal';
+
+  // for equal and not-equal we just want to test 0, 0.6, and 1
+  // for everything else we want 0 to 1
+  // Note: 0.6 is chosen because we'll never choose 0.6 as our depth reference
+  // value. (see generateTextureBuiltinInputsImpl and generateSamplePointsCube)
+  // The problem with comparing equal is other than 0.0 and 1.0, no other
+  // values are guaranteed to be equal.
+  const fixedValues = [0, 0.6, 1, 1];
+  const format = comparisonIsEqualOrNotEqual
+    ? (norm: number) => fixedValues[(norm * (fixedValues.length - 1)) | 0]
+    : (norm: number) => norm;
+
+  return (coords: SampleCoord): Readonly<PerTexelComponent<number>> => {
+    const texel: PerTexelComponent<number> = {};
+    for (const component of rep.componentOrder) {
+      const rnd = hashU32(
+        coords.x,
+        coords.y,
+        coords.z,
+        coords.sampleIndex ?? 0,
+        component.charCodeAt(0),
+        size.width,
+        size.height,
+        size.depthOrArrayLayers
+      );
+      const normalized = clamp(rnd / 0xffffffff, { min: 0, max: 1 });
+      texel[component] = format(normalized);
+    }
+    return quantize(texel, rep);
+  };
+}
+
+function createRandomTexelViewViaColors(
+  info: {
+    format: GPUTextureFormat;
+    size: GPUExtent3D;
+    mipLevel: number;
+  },
+  options?: RandomTextureOptions | undefined
+): TexelView {
   const rep = kTexelRepresentationInfo[info.format as EncodableTextureFormat];
   const size = reifyExtent3D(info.size);
   const minMax = Object.fromEntries(
@@ -765,7 +818,10 @@ function createRandomTexelViewViaColors(info: {
     }
     return quantize(texel, rep);
   };
-  return TexelView.fromTexelsAsColors(info.format as EncodableTextureFormat, generator);
+  return TexelView.fromTexelsAsColors(
+    info.format as EncodableTextureFormat,
+    options?.generator ?? generator
+  );
 }
 
 function createRandomTexelViewViaBytes(info: {
@@ -825,16 +881,20 @@ function createRandomTexelViewViaBytes(info: {
 /**
  * Creates a TexelView filled with random values.
  */
-function createRandomTexelView(info: {
-  format: GPUTextureFormat;
-  size: GPUExtent3D;
-  mipLevel: number;
-  sampleCount: number;
-}): TexelView {
+function createRandomTexelView(
+  info: {
+    format: GPUTextureFormat;
+    size: GPUExtent3D;
+    mipLevel: number;
+    sampleCount: number;
+  },
+  options?: RandomTextureOptions | undefined
+): TexelView {
   assert(!isCompressedTextureFormat(info.format));
   const formatInfo = kTextureFormatInfo[info.format];
   const type = formatInfo.color?.type ?? formatInfo.depth?.type ?? formatInfo.stencil?.type;
   const canFillWithRandomTypedData =
+    !options &&
     isEncodableTextureFormat(info.format) &&
     ((info.format.includes('norm') && type !== 'depth') ||
       info.format.includes('16float') ||
@@ -844,28 +904,34 @@ function createRandomTexelView(info: {
 
   return canFillWithRandomTypedData
     ? createRandomTexelViewViaBytes(info)
-    : createRandomTexelViewViaColors(info);
+    : createRandomTexelViewViaColors(info, options);
 }
 
 /**
  * Creates a mip chain of TexelViews filled with random values
  */
-function createRandomTexelViewMipmap(info: {
-  format: GPUTextureFormat;
-  size: GPUExtent3D;
-  mipLevelCount?: number;
-  dimension?: GPUTextureDimension;
-  sampleCount?: number;
-}): TexelView[] {
+function createRandomTexelViewMipmap(
+  info: {
+    format: GPUTextureFormat;
+    size: GPUExtent3D;
+    mipLevelCount?: number;
+    dimension?: GPUTextureDimension;
+    sampleCount?: number;
+  },
+  options?: RandomTextureOptions | undefined
+): TexelView[] {
   const mipLevelCount = info.mipLevelCount ?? 1;
   const dimension = info.dimension ?? '2d';
   return range(mipLevelCount, i =>
-    createRandomTexelView({
-      format: info.format,
-      size: virtualMipSize(dimension, info.size, i),
-      mipLevel: i,
-      sampleCount: info.sampleCount ?? 1,
-    })
+    createRandomTexelView(
+      {
+        format: info.format,
+        size: virtualMipSize(dimension, info.size, i),
+        mipLevel: i,
+        sampleCount: info.sampleCount ?? 1,
+      },
+      options
+    )
   );
 }
 
@@ -911,6 +977,8 @@ export type TextureBuiltin =
   | 'textureSample'
   | 'textureSampleBaseClampToEdge'
   | 'textureSampleBias'
+  | 'textureSampleCompare'
+  | 'textureSampleCompareLevel'
   | 'textureSampleGrad'
   | 'textureSampleLevel';
 
@@ -923,13 +991,18 @@ export interface TextureCall<T extends Dimensionality> extends TextureCallArgs<T
   componentType?: 'i' | 'u';
 }
 
-const isBuiltinComparison = (builtin: TextureBuiltin) => builtin === 'textureGatherCompare';
+const isBuiltinComparison = (builtin: TextureBuiltin) =>
+  builtin === 'textureGatherCompare' ||
+  builtin === 'textureSampleCompare' ||
+  builtin === 'textureSampleCompareLevel';
 const isBuiltinGather = (builtin: TextureBuiltin | undefined) =>
   builtin === 'textureGather' || builtin === 'textureGatherCompare';
 const builtinNeedsSampler = (builtin: TextureBuiltin) =>
   builtin.startsWith('textureSample') || builtin.startsWith('textureGather');
 const builtinNeedsDerivatives = (builtin: TextureBuiltin) =>
-  builtin === 'textureSample' || builtin === 'textureSampleBias';
+  builtin === 'textureSample' ||
+  builtin === 'textureSampleBias' ||
+  builtin === 'textureSampleCompare';
 
 const isCubeViewDimension = (viewDescriptor?: GPUTextureViewDescriptor) =>
   viewDescriptor?.dimension === 'cube' || viewDescriptor?.dimension === 'cube-array';
@@ -1173,6 +1246,8 @@ function softwareTextureReadMipLevel<T extends Dimensionality>(
     case 'textureSample':
     case 'textureSampleBias':
     case 'textureSampleBaseClampToEdge':
+    case 'textureSampleCompare':
+    case 'textureSampleCompareLevel':
     case 'textureSampleGrad':
     case 'textureSampleLevel': {
       let coords = toArray(call.coords!);
@@ -1924,6 +1999,11 @@ export async function checkCallResults<T extends Dimensionality>(
           errs.push(layoutTwoColumns(expectedSamplePoints, gotSamplePoints).join('\n'));
           errs.push('', '');
         }
+
+        // this is not an else because it's common to comment out the previous `if` for running on a CQ.
+        if (!t.rec.debugging) {
+          errs.push('### turn on debugging to see sample points ###');
+        }
       } // if (sampler)
 
       // Don't report the other errors. There 50 sample points per subcase and
@@ -2330,9 +2410,11 @@ function createTextureFromTexelViewsLocal(
  */
 export async function createTextureWithRandomDataAndGetTexels(
   t: GPUTest,
-  descriptor: GPUTextureDescriptor
+  descriptor: GPUTextureDescriptor,
+  options?: RandomTextureOptions
 ) {
   if (isCompressedTextureFormat(descriptor.format)) {
+    assert(!options, 'options not supported for compressed textures');
     const texture = t.createTextureTracked(descriptor);
 
     fillTextureWithRandomData(t.device, texture);
@@ -2344,7 +2426,7 @@ export async function createTextureWithRandomDataAndGetTexels(
     );
     return { texture, texels };
   } else {
-    const texels = createRandomTexelViewMipmap(descriptor);
+    const texels = createRandomTexelViewMipmap(descriptor, options);
     const texture = createTextureFromTexelViewsLocal(t, texels, descriptor);
     return { texture, texels };
   }
@@ -3031,7 +3113,12 @@ function generateTextureBuiltinInputsImpl<T extends Dimensionality>(
       mipLevel,
       sampleIndex: args.sampleIndex ? makeRangeValue(args.sampleIndex, i, 1) : undefined,
       arrayIndex: args.arrayIndex ? makeRangeValue(args.arrayIndex, i, 2) : undefined,
-      depthRef: args.depthRef ? makeRangeValue({ num: 1, type: 'f32' }, i, 5) : undefined,
+      // use 0.0, 0.5, or 1.0 for depthRef. We can't test for equality except for values 0 and 1
+      // The texture will be filled with random values unless our comparison is 'equal' or 'not-equal'
+      // in which case the texture will be filled with only 0, 0.6, 1. Choosing 0.0, 0.5, 1.0 here
+      // means we can test 'equal' and 'not-equal'. For other comparisons, the fact that the texture's
+      // contents is random seems enough to test all the comparison modes.
+      depthRef: args.depthRef ? makeRandValue({ num: 3, type: 'u32' }, i, 5) / 2 : undefined,
       ddx: args.grad ? makeGradient(7) : undefined,
       ddy: args.grad ? makeGradient(8) : undefined,
       bias,
@@ -3562,7 +3649,12 @@ export function generateSamplePointsCube(
       mipLevel,
       arrayIndex: args.arrayIndex ? makeRangeValue(args.arrayIndex, i, 2) : undefined,
       bias,
-      depthRef: args.depthRef ? makeRangeValue({ num: 1, type: 'f32' }, i, 5) : undefined,
+      // use 0.0, 0.5, or 1.0 for depthRef. We can't test for equality except for values 0 and 1
+      // The texture will be filled with random values unless our comparison is 'equal' or 'not-equal'
+      // in which case the texture will be filled with only 0, 0.6, 1. Choosing 0.0, 0.5, 1.0 here
+      // means we can test 'equal' and 'not-equal'. For other comparisons, the fact that the texture's
+      // contents is random seems enough to test all the comparison modes.
+      depthRef: args.depthRef ? makeRandValue({ num: 3, type: 'u32' }, i, 5) / 2 : undefined,
       component: args.component ? makeIntHashValue(0, 4, i, 4) : undefined,
     };
   });
