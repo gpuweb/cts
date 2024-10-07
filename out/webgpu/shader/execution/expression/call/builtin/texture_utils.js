@@ -11,11 +11,7 @@
   kEncodableTextureFormats,
   kTextureFormatInfo } from
 '../../../../../format_info.js';
-import {
-  GPUTest } from
-
-
-'../../../../../gpu_test.js';
+import { GPUTest } from '../../../../../gpu_test.js';
 import {
   align,
   clamp,
@@ -45,8 +41,6 @@ import { TexelView } from '../../../../../util/texture/texel_view.js';
 import { createTextureFromTexelViews } from '../../../../../util/texture.js';
 import { reifyExtent3D } from '../../../../../util/unions.js';
 
-
-
 export const kSampleTypeInfo = {
   f32: {
     format: 'rgba8unorm'
@@ -58,6 +52,14 @@ export const kSampleTypeInfo = {
     format: 'rgba8uint'
   }
 };
+
+// MAINTENANCE_TODO: Stop excluding sliced compressed 3d formats.
+export function isSupportedViewFormatCombo(
+format,
+viewDimension)
+{
+  return !(isCompressedTextureFormat(format) && viewDimension === '3d');
+}
 
 /**
  * Return the texture type for a given view dimension
@@ -145,25 +147,209 @@ format)
   }
 }
 
+/**
+ * Splits in array into multiple arrays where every Nth value goes to a different array
+ */
+function unzip(array, num) {
+  const arrays = range(num, () => []);
+  array.forEach((v, i) => {
+    arrays[i % num].push(v);
+  });
+  return arrays;
+}
+
+
+
+
+
+
+
+/**
+ * Validates the weights go from 0 to 1 in increasing order.
+ */
+function validateWeights(weights) {
+  const showWeights = () => weights.map((v, i) => `${i.toString().padStart(2)}: ${v}`).join('\n');
+
+  // Validate the weights
+  assert(weights[0] === 0, `weight 0 expected 0 but was ${weights[0]}\n${showWeights()}`);
+  assert(
+    weights[kMipGradientSteps] === 1,
+    `top weight expected 1 but was ${weights[kMipGradientSteps]}\n${showWeights()}`
+  );
+
+  assert(
+    new Set(weights).size >= (weights.length * 0.66 | 0),
+    `expected more unique weights\n${showWeights()}`
+  );
+
+  // Note: for 16 steps, these are the AMD weights
+  //
+  //                 standard
+  // step  mipLevel    gpu        AMD
+  // ----  --------  --------  ----------
+  //  0:   0         0           0
+  //  1:   0.0625    0.0625      0
+  //  2:   0.125     0.125       0.03125
+  //  3:   0.1875    0.1875      0.109375
+  //  4:   0.25      0.25        0.1875
+  //  5:   0.3125    0.3125      0.265625
+  //  6:   0.375     0.375       0.34375
+  //  7:   0.4375    0.4375      0.421875
+  //  8:   0.5       0.5         0.5
+  //  9:   0.5625    0.5625      0.578125
+  // 10:   0.625     0.625       0.65625
+  // 11:   0.6875    0.6875      0.734375
+  // 12:   0.75      0.75        0.8125
+  // 13:   0.8125    0.8125      0.890625
+  // 14:   0.875     0.875       0.96875
+  // 15:   0.9375    0.9375      1
+  // 16:   1         1           1
+  //
+  // notice step 1 is 0 and step 15 is 1.
+  // so we only check the 1 through 14.
+  for (let i = 0; i < kMipGradientSteps; ++i) {
+    assert(
+      weights[i] <= weights[i + 1],
+      `weight[${i}] was not <= weight[${i + 1}]\n${showWeights()}`
+    );
+  }
+}
+
+/**
+ * In an attempt to pass on more devices without lowering the tolerances
+ * so low they are meaningless, we ask the hardware to tell us, for a given
+ * gradient, level, what mix weights are being used.
+ *
+ * This is done by drawing instanced quads and using instance_index to
+ * write out results into an array. We sample a 2x2 pixel texture with
+ * 2 mip levels and set the 2nd mip level to white. This means the value
+ * we get back represents the weight used to mix the 2 mip levels.
+ *
+ * Just as a record of some differences across GPUs
+ *
+ * level weights: mapping from the mip level
+ * parameter of `textureSampleLevel` to
+ * the mix weight used by the GPU
+ *
+ * +--------+--------+--------+--------+
+ * |        |        | intel  | amd    |
+ * |        |  m1    | gen-9  | rna-1  |
+ * | level  |  mac   | mac    | mac    |
+ * +--------+--------+--------+--------+
+ * | 0.0000 | 0.0000 | 0.0000 | 0.0000 |
+ * | 0.0313 | 0.0314 | 0.0313 | 0.0000 |
+ * | 0.0625 | 0.0625 | 0.0625 | 0.0000 |
+ * | 0.0938 | 0.0939 | 0.0938 | 0.0000 |
+ * | 0.1250 | 0.1250 | 0.1250 | 0.0313 |
+ * | 0.1563 | 0.1564 | 0.1563 | 0.0703 |
+ * | 0.1875 | 0.1875 | 0.1875 | 0.1094 |
+ * | 0.2188 | 0.2189 | 0.2188 | 0.1484 |
+ * | 0.2500 | 0.2500 | 0.2500 | 0.1875 |
+ * | 0.2813 | 0.2814 | 0.2813 | 0.2266 |
+ * | 0.3125 | 0.3125 | 0.3125 | 0.2656 |
+ * | 0.3438 | 0.3439 | 0.3438 | 0.3047 |
+ * | 0.3750 | 0.3750 | 0.3750 | 0.3438 |
+ * | 0.4063 | 0.4064 | 0.4063 | 0.3828 |
+ * | 0.4375 | 0.4375 | 0.4375 | 0.4219 |
+ * | 0.4688 | 0.4689 | 0.4688 | 0.4609 |
+ * | 0.5000 | 0.5000 | 0.5000 | 0.5000 |
+ * | 0.5313 | 0.5314 | 0.5313 | 0.5391 |
+ * | 0.5625 | 0.5625 | 0.5625 | 0.5781 |
+ * | 0.5938 | 0.5939 | 0.5938 | 0.6172 |
+ * | 0.6250 | 0.6250 | 0.6250 | 0.6563 |
+ * | 0.6563 | 0.6564 | 0.6563 | 0.6953 |
+ * | 0.6875 | 0.6875 | 0.6875 | 0.7344 |
+ * | 0.7188 | 0.7189 | 0.7188 | 0.7734 |
+ * | 0.7500 | 0.7500 | 0.7500 | 0.8125 |
+ * | 0.7813 | 0.7814 | 0.7813 | 0.8516 |
+ * | 0.8125 | 0.8125 | 0.8125 | 0.8906 |
+ * | 0.8438 | 0.8439 | 0.8438 | 0.9297 |
+ * | 0.8750 | 0.8750 | 0.8750 | 0.9688 |
+ * | 0.9063 | 0.9064 | 0.9063 | 1.0000 |
+ * | 0.9375 | 0.9375 | 0.9375 | 1.0000 |
+ * | 0.9688 | 0.9689 | 0.9688 | 1.0000 |
+ * | 1.0000 | 1.0000 | 1.0000 | 1.0000 |
+ * +--------+--------+--------+--------+
+ *
+ * grad weights: mapping from ddx value
+ * passed into `textureSampleGrad` to
+ * the mix weight used by the GPU
+ *
+ * +--------+--------+--------+--------+
+ * |        |        | intel  | amd    |
+ * |        |  m1    | gen-9  | rna-1  |
+ * |  ddx   |  mac   | mac    | mac    |
+ * +--------+--------+--------+--------+
+ * | 0.5000 | 0.0000 | 0.0000 | 0.0000 |
+ * | 0.5109 | 0.0390 | 0.0430 | 0.0000 |
+ * | 0.5221 | 0.0821 | 0.0859 | 0.0000 |
+ * | 0.5336 | 0.1211 | 0.1289 | 0.0352 |
+ * | 0.5453 | 0.1600 | 0.1719 | 0.0898 |
+ * | 0.5572 | 0.2032 | 0.2109 | 0.1328 |
+ * | 0.5694 | 0.2422 | 0.2461 | 0.1797 |
+ * | 0.5819 | 0.2814 | 0.2852 | 0.2305 |
+ * | 0.5946 | 0.3203 | 0.3203 | 0.2773 |
+ * | 0.6076 | 0.3554 | 0.3594 | 0.3164 |
+ * | 0.6209 | 0.3868 | 0.3906 | 0.3633 |
+ * | 0.6345 | 0.4218 | 0.4258 | 0.4063 |
+ * | 0.6484 | 0.4532 | 0.4609 | 0.4492 |
+ * | 0.6626 | 0.4882 | 0.4922 | 0.4883 |
+ * | 0.6771 | 0.5196 | 0.5234 | 0.5273 |
+ * | 0.6920 | 0.5507 | 0.5547 | 0.5664 |
+ * | 0.7071 | 0.5860 | 0.5859 | 0.6055 |
+ * | 0.7226 | 0.6132 | 0.6133 | 0.6406 |
+ * | 0.7384 | 0.6407 | 0.6445 | 0.6797 |
+ * | 0.7546 | 0.6679 | 0.6719 | 0.7148 |
+ * | 0.7711 | 0.6953 | 0.6992 | 0.7461 |
+ * | 0.7880 | 0.7225 | 0.7266 | 0.7813 |
+ * | 0.8052 | 0.7500 | 0.7539 | 0.8164 |
+ * | 0.8229 | 0.7814 | 0.7813 | 0.8516 |
+ * | 0.8409 | 0.8086 | 0.8086 | 0.8828 |
+ * | 0.8593 | 0.8321 | 0.8320 | 0.9141 |
+ * | 0.8781 | 0.8554 | 0.8594 | 0.9492 |
+ * | 0.8974 | 0.8789 | 0.8828 | 0.9766 |
+ * | 0.9170 | 0.9025 | 0.9063 | 1.0000 |
+ * | 0.9371 | 0.9297 | 0.9297 | 1.0000 |
+ * | 0.9576 | 0.9532 | 0.9531 | 1.0000 |
+ * | 0.9786 | 0.9765 | 0.9766 | 1.0000 |
+ * | 1.0000 | 1.0000 | 1.0000 | 1.0000 |
+ * +--------+--------+--------+--------+
+ */
+
 async function queryMipGradientValuesForDevice(t) {
   const { device } = t;
+  const kNumWeightTypes = 2;
   const module = device.createShaderModule({
     code: `
       @group(0) @binding(0) var tex: texture_2d<f32>;
       @group(0) @binding(1) var smp: sampler;
       @group(0) @binding(2) var<storage, read_write> result: array<f32>;
 
-      @vertex fn vs(@builtin(vertex_index) vNdx: u32) -> @builtin(position) vec4f {
+      struct VSOutput {
+        @builtin(position) pos: vec4f,
+        @location(0) @interpolate(flat, either) ndx: u32,
+      };
+
+      @vertex fn vs(@builtin(vertex_index) vNdx: u32, @builtin(instance_index) iNdx: u32) -> VSOutput {
         let pos = array(
           vec2f(-1,  3),
           vec2f( 3, -1),
           vec2f(-1, -1),
         );
-        return vec4f(pos[vNdx], 0, 1);
+        let p = pos[vNdx];
+        return VSOutput(vec4f(p, 0, 1), iNdx);
       }
-      @fragment fn fs(@builtin(position) pos: vec4f) -> @location(0) vec4f {
-        let mipLevel = floor(pos.x) / ${kMipGradientSteps};
-        result[u32(pos.x)] = textureSampleLevel(tex, smp, vec2f(0.5), mipLevel).r;
+
+      @fragment fn fs(v: VSOutput) -> @location(0) vec4f {
+        let mipLevel = f32(v.ndx) / ${kMipGradientSteps};
+        let size = textureDimensions(tex);
+        let g = mix(1.0, 2.0, mipLevel) / f32(size.x);
+        let ddx = vec2f(g, 0);
+
+        let ndx = v.ndx * ${kNumWeightTypes};
+        result[ndx + 0] = textureSampleLevel(tex, smp, vec2f(0.5), mipLevel).r;
+        result[ndx + 1] = textureSampleGrad(tex, smp, vec2f(0.5), ddx, vec2f(0)).r;
+
         return vec4f(0);
       }
     `
@@ -176,7 +362,7 @@ async function queryMipGradientValuesForDevice(t) {
   });
 
   const target = t.createTextureTracked({
-    size: [kMipGradientSteps + 1, 1, 1],
+    size: [1, 1],
     format: 'rgba8unorm',
     usage: GPUTextureUsage.RENDER_ATTACHMENT
   });
@@ -202,7 +388,7 @@ async function queryMipGradientValuesForDevice(t) {
   });
 
   const storageBuffer = t.createBufferTracked({
-    size: 4 * (kMipGradientSteps + 1),
+    size: 4 * (kMipGradientSteps + 1) * kNumWeightTypes,
     usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
   });
 
@@ -232,68 +418,107 @@ async function queryMipGradientValuesForDevice(t) {
   });
   pass.setPipeline(pipeline);
   pass.setBindGroup(0, bindGroup);
-  pass.draw(3);
+  pass.draw(3, kMipGradientSteps + 1);
   pass.end();
   encoder.copyBufferToBuffer(storageBuffer, 0, resultBuffer, 0, resultBuffer.size);
   device.queue.submit([encoder.finish()]);
 
   await resultBuffer.mapAsync(GPUMapMode.READ);
-  const weights = Array.from(new Float32Array(resultBuffer.getMappedRange()));
+  const result = Array.from(new Float32Array(resultBuffer.getMappedRange()));
   resultBuffer.unmap();
+
+  const [sampleLevelWeights, gradWeights] = unzip(result, kNumWeightTypes);
+
+  validateWeights(sampleLevelWeights);
+  validateWeights(gradWeights);
+
+  s_deviceToMipGradientValues.set(device, {
+    sampleLevelWeights,
+    softwareMixToGPUMixGradWeights: generateSoftwareMixToGPUMixGradWeights(gradWeights, texture)
+  });
 
   texture.destroy();
   storageBuffer.destroy();
   resultBuffer.destroy();
-
-  const showWeights = () => weights.map((v, i) => `${i.toString().padStart(2)}: ${v}`).join('\n');
-
-  // Validate the weights
-  assert(weights[0] === 0, `weight 0 expected 0 but was ${weights[0]}\n${showWeights()}`);
-  assert(
-    weights[kMipGradientSteps] === 1,
-    `top weight expected 1 but was ${weights[kMipGradientSteps]}\n${showWeights()}`
-  );
-  assert(
-    Math.abs(weights[kMipGradientSteps / 2] - 0.5) < 0.0001,
-    `middle weight expected approximately 0.5 but was ${
-    weights[kMipGradientSteps / 2]
-    }\n${showWeights()}`
-  );
-
-  // Note: for 16 steps, these are the AMD weights
-  //
-  //                 standard
-  // step  mipLevel    gpu        AMD
-  // ----  --------  --------  ----------
-  //  0:   0         0           0
-  //  1:   0.0625    0.0625      0
-  //  2:   0.125     0.125       0.03125
-  //  3:   0.1875    0.1875      0.109375
-  //  4:   0.25      0.25        0.1875
-  //  5:   0.3125    0.3125      0.265625
-  //  6:   0.375     0.375       0.34375
-  //  7:   0.4375    0.4375      0.421875
-  //  8:   0.5       0.5         0.5
-  //  9:   0.5625    0.5625      0.578125
-  // 10:   0.625     0.625       0.65625
-  // 11:   0.6875    0.6875      0.734375
-  // 12:   0.75      0.75        0.8125
-  // 13:   0.8125    0.8125      0.890625
-  // 14:   0.875     0.875       0.96875
-  // 15:   0.9375    0.9375      1
-  // 16:   1         1           1
-  //
-  // notice step 1 is 0 and step 15 is 1.
-  // so we only check the 1 through 14.
-  for (let i = 1; i < kMipGradientSteps - 1; ++i) {
-    assert(
-      weights[i] < weights[i + 1],
-      `weight[${i}] was not less than < weight[${i + 1}]\n${showWeights()}`
-    );
-  }
-
-  s_deviceToMipGradientValues.set(device, weights);
 }
+
+// Given an array of ascending values and a value v, finds
+// which indices in the array v is between. Returns the lower
+// index and the mix weight between the 2 indices for v.
+//
+// In other words, if values = [10, 20, 30, 40, 50]
+//
+//    getIndexAndWeight(values, 38)  -> [2, 0.8]
+//
+// Example:
+//
+//    values = [10, 20, 30, 40, 50]
+//    v = 38
+//    [ndx, weight] = getIndexAndWeight(values, v);
+//    v2 = lerp(values[ndx], values[ndx + 1], weight);
+//    assert(v === v2)
+function getIndexAndWeight(values, v) {
+  assert(v >= values[0] && v <= values[values.length - 1]);
+  let lo = 0;
+  let hi = values.length - 1;
+  for (;;) {
+    const i = lo + (hi - lo) / 2 | 0;
+    const w0 = values[i];
+    const w1 = values[i + 1];
+    if (lo === hi || v >= w0 && v <= w1) {
+      const weight = (v - w0) / (w1 - w0);
+      return [i, weight];
+    }
+    if (v < w0) {
+      hi = i;
+    } else {
+      lo = i + 1;
+    }
+  }
+}
+
+/**
+ * Given a fractional number between 0 and values.length returns the value between
+ * 2 values. Effectively lerp(values[ndx], values[ndx + 1], weight)
+ */
+function bilinearFilter(values, ndx, weight) {
+  const v0 = values[ndx];
+  const v1 = values[ndx + 1] ?? 0;
+  assert(ndx < values.length - 1 || ndx === values.length - 1 && weight === 0);
+  return lerp(v0, v1, weight);
+}
+
+/**
+ * Generates an array of values that maps between the software renderer's gradient computed
+ * mip level and the GPUs gradient computed mip level for mip level 0 to 1.
+ */
+function generateSoftwareMixToGPUMixGradWeights(gpuWeights, texture) {
+  const numSteps = gpuWeights.length - 1;
+  const size = [texture.width, texture.height, texture.depthOrArrayLayers];
+  const softwareWeights = range(numSteps + 1, (i) => {
+    // u goes from 0 to 1
+    const u = i / numSteps;
+    const g = lerp(1, 2, u) / texture.width;
+    const mipLevel = computeMipLevelFromGradients([g], [0], size);
+    assert(mipLevel >= 0 && mipLevel <= 1);
+    return mipLevel;
+  });
+  const softwareMixToGPUMixMap = range(numSteps + 1, (i) => {
+    const mix = i / numSteps;
+    const [ndx, weight] = getIndexAndWeight(softwareWeights, mix);
+    return bilinearFilter(gpuWeights, ndx, weight);
+  });
+  return softwareMixToGPUMixMap;
+}
+
+function mapSoftwareMipLevelToGPUMipLevel(t, mipLevel) {
+  const baseLevel = Math.floor(mipLevel);
+  const softwareMix = mipLevel - baseLevel;
+  const gpuMix = getMixWeightByTypeForMipLevel(t, 'softwareMixToGPUMixGradWeights', softwareMix);
+  return baseLevel + gpuMix;
+}
+
+const euclideanModulo = (n, m) => (n % m + m) % m;
 
 /**
  * Gets the mip gradient values for the current device.
@@ -322,7 +547,7 @@ async function queryMipGradientValuesForDevice(t) {
  * for subcase 1's "query the weights" step. Otherwise, all subcases would do the
  * "get the weights" step separately.
  */
-const kMipGradientSteps = 16;
+const kMipGradientSteps = 64;
 const s_deviceToMipGradientValuesPromise = new WeakMap();
 const s_deviceToMipGradientValues = new WeakMap();
 async function initMipGradientValuesForDevice(t) {
@@ -335,22 +560,38 @@ async function initMipGradientValuesForDevice(t) {
   return await weightsP;
 }
 
-function getWeightForMipLevel(t, mipLevelCount, mipLevel) {
-  if (mipLevel < 0 || mipLevel >= mipLevelCount) {
-    return 1;
+function getMixWeightByTypeForMipLevel(
+t,
+weightType,
+mipLevel)
+{
+  if (weightType === 'identity') {
+    return euclideanModulo(mipLevel, 1);
   }
   // linear interpolate between weights
-  const weights = s_deviceToMipGradientValues.get(t.device);
+  const weights = s_deviceToMipGradientValues.get(t.device)[weightType];
   assert(
     !!weights,
     'you must use WGSLTextureSampleTest or call initializeDeviceMipWeights before calling this function'
   );
   const steps = weights.length - 1;
-  const w = mipLevel % 1 * steps;
+  const w = euclideanModulo(mipLevel, 1) * steps;
   const lowerNdx = Math.floor(w);
   const upperNdx = Math.ceil(w);
   const mix = w % 1;
   return lerp(weights[lowerNdx], weights[upperNdx], mix);
+}
+
+function getWeightForMipLevel(
+t,
+weightType,
+mipLevelCount,
+mipLevel)
+{
+  if (mipLevel < 0 || mipLevel >= mipLevelCount) {
+    return 1;
+  }
+  return getMixWeightByTypeForMipLevel(t, weightType, mipLevel);
 }
 
 /**
@@ -638,7 +879,9 @@ function createRandomTexelViewMipmap(info)
 const kTextureCallArgNames = [
 'component',
 'coords',
+'derivativeMult', // NOTE: derivativeMult not an argument but is used with coords for implicit derivatives.
 'arrayIndex',
+'bias',
 'sampleIndex',
 'mipLevel',
 'ddx',
@@ -676,11 +919,17 @@ const kTextureCallArgNames = [
 
 
 
+
+
+
+
 const isBuiltinComparison = (builtin) => builtin === 'textureGatherCompare';
 const isBuiltinGather = (builtin) =>
 builtin === 'textureGather' || builtin === 'textureGatherCompare';
 const builtinNeedsSampler = (builtin) =>
 builtin.startsWith('textureSample') || builtin.startsWith('textureGather');
+const builtinNeedsDerivatives = (builtin) =>
+builtin === 'textureSample' || builtin === 'textureSampleBias';
 
 const isCubeViewDimension = (viewDescriptor) =>
 viewDescriptor?.dimension === 'cube' || viewDescriptor?.dimension === 'cube-array';
@@ -712,6 +961,7 @@ argName)
 {
   switch (argName) {
     case 'coords':
+    case 'derivativeMult':
       return call.coordType;
     case 'component':
       assert(call.componentType !== undefined);
@@ -725,6 +975,7 @@ argName)
     case 'sampleIndex':
       assert(call.sampleIndexType !== undefined);
       return call.sampleIndexType;
+    case 'bias':
     case 'depthRef':
     case 'ddx':
     case 'ddy':
@@ -874,7 +1125,7 @@ src)
  * Returns the expect value for a WGSL builtin texture function for a single
  * mip level
  */
-export function softwareTextureReadMipLevel(
+function softwareTextureReadMipLevel(
 call,
 texture,
 sampler,
@@ -920,7 +1171,9 @@ mipLevel)
     case 'textureGather':
     case 'textureGatherCompare':
     case 'textureSample':
+    case 'textureSampleBias':
     case 'textureSampleBaseClampToEdge':
+    case 'textureSampleGrad':
     case 'textureSampleLevel':{
         let coords = toArray(call.coords);
 
@@ -1105,7 +1358,7 @@ mipLevel)
 /**
  * Reads a texture, optionally sampling between 2 mipLevels
  */
-export function softwareTextureReadLevel(
+function softwareTextureReadLevel(
 t,
 call,
 texture,
@@ -1127,7 +1380,9 @@ mipLevel)
         const nextMipLevel = Math.ceil(clampedMipLevel);
         const t0 = softwareTextureReadMipLevel(call, texture, sampler, baseMipLevel);
         const t1 = softwareTextureReadMipLevel(call, texture, sampler, nextMipLevel);
-        const mix = getWeightForMipLevel(t, mipLevelCount, mipLevel);
+        const weightType = call.builtin === 'textureSampleLevel' ? 'sampleLevelWeights' : 'identity';
+        const mix = getWeightForMipLevel(t, weightType, mipLevelCount, clampedMipLevel);
+        assert(mix >= 0 && mix <= 1);
         const values = [
         { v: t0, weight: 1 - mix },
         { v: t1, weight: mix }];
@@ -1149,22 +1404,30 @@ mipLevel)
   }
 }
 
-/**
- * The software version of a texture builtin (eg: textureSample)
- * Note that this is not a complete implementation. Rather it's only
- * what's needed to generate the correct expected value for the tests.
- */
-export function softwareTextureRead(
-t,
-call,
-texture,
-sampler)
+function computeMipLevelFromGradients(
+ddx,
+ddy,
+size)
 {
-  assert(call.ddx !== undefined);
-  assert(call.ddy !== undefined);
-  const texSize = reifyExtent3D(texture.descriptor.size);
-  const textureSize = [texSize.width, texSize.height];
+  const texSize = reifyExtent3D(size);
+  const textureSize = [texSize.width, texSize.height, texSize.depthOrArrayLayers];
 
+  // Compute the mip level the same way textureSampleGrad does according to the spec.
+  const scaledDdx = ddx.map((v, i) => v * textureSize[i]);
+  const scaledDdy = ddy.map((v, i) => v * textureSize[i]);
+  const dotDDX = dotProduct(scaledDdx, scaledDdx);
+  const dotDDY = dotProduct(scaledDdy, scaledDdy);
+  const deltaMax = Math.max(dotDDX, dotDDY);
+  const mipLevel = 0.5 * Math.log2(deltaMax);
+  return mipLevel;
+}
+
+function computeMipLevelFromGradientsForCall(
+call,
+size)
+{
+  assert(!!call.ddx);
+  assert(!!call.ddy);
   // ddx and ddy are the values that would be passed to textureSampleGrad
   // If we're emulating textureSample then they're the computed derivatives
   // such that if we passed them to textureSampleGrad they'd produce the
@@ -1172,16 +1435,112 @@ sampler)
   const ddx = typeof call.ddx === 'number' ? [call.ddx] : call.ddx;
   const ddy = typeof call.ddy === 'number' ? [call.ddy] : call.ddy;
 
-  // Compute the mip level the same way textureSampleGrad does
-  const scaledDdx = ddx.map((v, i) => v * textureSize[i]);
-  const scaledDdy = ddy.map((v, i) => v * textureSize[i]);
-  const dotDDX = dotProduct(scaledDdx, scaledDdx);
-  const dotDDY = dotProduct(scaledDdy, scaledDdy);
-  const deltaMax = Math.max(dotDDX, dotDDY);
-  // MAINTENANCE_TODO: handle texture view baseMipLevel and mipLevelCount?
-  const mipLevel = 0.5 * Math.log2(deltaMax);
-  return softwareTextureReadLevel(t, call, texture, sampler, mipLevel);
+  return computeMipLevelFromGradients(ddx, ddy, size);
 }
+
+/**
+ * The software version of textureSampleGrad except with optional level.
+ */
+function softwareTextureReadGrad(
+t,
+call,
+texture,
+sampler)
+{
+  const bias = call.bias === undefined ? 0 : clamp(call.bias, { min: -16.0, max: 15.99 });
+  if (call.ddx) {
+    const mipLevel = computeMipLevelFromGradientsForCall(call, texture.descriptor.size);
+    const weightMipLevel = mapSoftwareMipLevelToGPUMipLevel(t, mipLevel + bias);
+    return softwareTextureReadLevel(t, call, texture, sampler, weightMipLevel);
+  } else {
+    return softwareTextureReadLevel(t, call, texture, sampler, (call.mipLevel ?? 0) + bias);
+  }
+}
+
+/**
+ * This must match the code in doTextureCalls for derivativeBase
+ *
+ * Note: normal implicit derivatives are computed like this
+ *
+ * fn textureSample(T, S, coord) -> vec4f {
+ *    return textureSampleGrad(T, S, dpdx(coord), dpdy(coord));
+ * }
+ *
+ * dpdx and dpdy are effectively computed by,
+ * getting the values of coord for 2x2 adjacent texels.
+ *
+ *   p0 = coord value at x, y
+ *   p1 = coord value at x + 1, y
+ *   p2 = coord value at x, y + 1
+ *   p3 = coord value at x + 1, y + 1
+ *
+ * dpdx is the average delta in x and dpdy is the average delta in y
+ *
+ *   dpdx = (p1 - p0 + p3 - p2) / 2   // average of horizontal change
+ *   dpdy = (p2 - p0 + p3 - p1) / 2   // average of vertical change
+ *
+ * derivativeBase is
+ *
+ *       '1d'    '2d'     '3d'
+ *   p0 = [0]   [0, 0]  [0, 0, 0]
+ *   p1 = [1]   [1, 0]  [1, 0, 0]
+ *   p2 = [0]   [0, 1]  [0, 1, 0]
+ *   p3 = [1]   [1, 1]  [1, 1, 0]
+ *
+ * But, these values are normalized texels coords so if the src texture
+ * is 8x8 these would be * 0.125
+ *
+ * Note: to test other derivatives we add in a multiplier but,
+ * this base gives us something to add that starts at 0,0 at the call
+ * but who's derivatives we can easily set. We need the default
+ * derivativeBase to be 1 otherwise it's 0 which makes the computed mip level
+ * be -Infinity which means bias in `textureSampleBias` has no meaning.
+ */
+function derivativeBaseForCall(texture, isDDX) {
+  const texSize = reifyExtent3D(texture.descriptor.size);
+  const textureSize = [texSize.width, texSize.height, texSize.depthOrArrayLayers];
+  if (isCubeViewDimension(texture.viewDescriptor)) {
+    return isDDX ? [1 / textureSize[0], 0, 1] : [0, 1 / textureSize[1], 1];
+  } else if (texture.descriptor.dimension === '3d') {
+    return isDDX ? [1 / textureSize[0], 0, 0] : [0, 1 / textureSize[1], 0];
+  } else if (texture.descriptor.dimension === '1d') {
+    return [1 / textureSize[0]];
+  } else {
+    return isDDX ? [1 / textureSize[0], 0] : [0, 1 / textureSize[1]];
+  }
+}
+
+/**
+ * Multiplies derivativeBase by derivativeMult or 1
+ */
+function derivativeForCall(
+texture,
+call,
+isDDX)
+{
+  const dd = derivativeBaseForCall(texture, isDDX);
+  return dd.map((v, i) => v * (call.derivativeMult?.[i] ?? 1));
+}
+
+function softwareTextureRead(
+t,
+call,
+texture,
+sampler)
+{
+  // add the implicit derivatives that we use from WGSL in doTextureCalls
+  if (builtinNeedsDerivatives(call.builtin) && !call.ddx) {
+    const newCall = {
+      ...call,
+      ddx: call.ddx ?? derivativeForCall(texture, call, true),
+      ddy: call.ddy ?? derivativeForCall(texture, call, false)
+    };
+    call = newCall;
+  }
+  return softwareTextureReadGrad(t, call, texture, sampler);
+}
+
+
 
 
 
@@ -1422,7 +1781,7 @@ results)
   for (let callIdx = 0; callIdx < calls.length; callIdx++) {
     const call = calls[callIdx];
     const gotRGBA = results.results[callIdx];
-    const expectRGBA = softwareTextureReadLevel(t, call, texture, sampler, call.mipLevel ?? 0);
+    const expectRGBA = softwareTextureRead(t, call, texture, sampler);
 
     // The spec says depth and stencil have implementation defined values for G, B, and A
     // so if this is `textureGather` and component > 0 then there's nothing to check.
@@ -1508,6 +1867,22 @@ results)
           errs.push(`          : as texel coord @ mip level[${mipLevel}]: (${t.join(', ')})`);
         }
       }
+      if (builtinNeedsDerivatives(call.builtin)) {
+        const ddx = derivativeForCall(texture, call, true);
+        const ddy = derivativeForCall(texture, call, false);
+        const mipLevel = computeMipLevelFromGradients(ddx, ddy, size);
+        const biasStr = call.bias === undefined ? '' : ' (without bias)';
+        errs.push(`implicit derivative based mip level: ${fix5(mipLevel)}${biasStr}`);
+        if (call.bias) {
+          const clampedBias = clamp(call.bias ?? 0, { min: -16.0, max: 15.99 });
+          errs.push(`\
+                       clamped bias: ${fix5(clampedBias)}
+                mip level with bias: ${fix5(mipLevel + clampedBias)}`);
+        }
+      } else if (call.ddx) {
+        const mipLevel = computeMipLevelFromGradientsForCall(call, size);
+        errs.push(`gradient based mip level: ${mipLevel}`);
+      }
       errs.push(`\
        got: ${fix5v(rgbaToArray(gotRGBA))}
   expected: ${fix5v(rgbaToArray(expectRGBA))}
@@ -1523,7 +1898,7 @@ results)
           'expected:',
           ...(await identifySamplePoints(texture, call, (texels) => {
             return Promise.resolve(
-              softwareTextureReadLevel(
+              softwareTextureRead(
                 t,
                 call,
                 {
@@ -1531,8 +1906,7 @@ results)
                   descriptor: texture.descriptor,
                   viewDescriptor: texture.viewDescriptor
                 },
-                sampler,
-                call.mipLevel ?? 0
+                sampler
               )
             );
           }))];
@@ -1562,173 +1936,6 @@ results)
   results.destroy();
 
   return errs.length > 0 ? new Error(errs.join('\n')) : undefined;
-}
-
-/**
- * "Renders a quad" to a TexelView with the given parameters,
- * sampling from the given Texture.
- */
-export function softwareRasterize(
-t,
-texture,
-sampler,
-targetSize,
-options)
-{
-  const [width, height] = targetSize;
-  const { ddx = 1, ddy = 1, uvwStart = [0, 0] } = options;
-  const format = 'rgba32float';
-
-  const textureSize = reifyExtent3D(texture.descriptor.size);
-
-  // MAINTENANCE_TODO: Consider passing these in as a similar computation
-  // happens in putDataInTextureThenDrawAndCheckResultsComparedToSoftwareRasterizer.
-  // The issue is there, the calculation is "what do we need to multiply the unitQuad
-  // by to get the derivatives we want". The calculation here is "what coordinate
-  // will we get for a given frag coordinate". It turns out to be the same calculation
-  // but needs rephrasing them so they are more obviously the same would help
-  // consolidate them into one calculation.
-  const screenSpaceUMult = ddx * width / textureSize.width;
-  const screenSpaceVMult = ddy * height / textureSize.height;
-
-  const rep = kTexelRepresentationInfo[format];
-
-  const expData = new Float32Array(width * height * 4);
-  for (let y = 0; y < height; ++y) {
-    const fragY = height - y - 1 + 0.5;
-    for (let x = 0; x < width; ++x) {
-      const fragX = x + 0.5;
-      // This code calculates the same value that will be passed to
-      // `textureSample` in the fragment shader for a given frag coord (see the
-      // WGSL code which uses the same formula, but using interpolation). That
-      // shader renders a clip space quad and includes a inter-stage "uv"
-      // coordinates that start with a unit quad (0,0) to (1,1) and is
-      // multiplied by ddx,ddy and as added in uStart and vStart
-      //
-      // uv = unitQuad * vec2(ddx, ddy) + vec2(vStart, uStart);
-      //
-      // softwareTextureRead<T> simulates a single call to `textureSample` so
-      // here we're computing the `uv` value that will be passed for a
-      // particular fragment coordinate. fragX / width, fragY / height provides
-      // the unitQuad value.
-      //
-      // ddx and ddy in this case are the derivative values we want to test. We
-      // pass those into the softwareTextureRead<T> as they would normally be
-      // derived from the change in coord.
-      const coords = [
-      fragX / width * screenSpaceUMult + uvwStart[0],
-      fragY / height * screenSpaceVMult + uvwStart[1]];
-
-      const call = {
-        builtin: 'textureSample',
-        coordType: 'f',
-        coords,
-        ddx: [ddx / textureSize.width, 0],
-        ddy: [0, ddy / textureSize.height],
-        offset: options.offset
-      };
-      const sample = softwareTextureRead(t, call, texture, sampler);
-      const rgba = { R: 0, G: 0, B: 0, A: 1, ...sample };
-      const asRgba32Float = new Float32Array(rep.pack(rgba));
-      expData.set(asRgba32Float, (y * width + x) * 4);
-    }
-  }
-
-  return TexelView.fromTextureDataByReference(format, new Uint8Array(expData.buffer), {
-    bytesPerRow: width * 4 * 4,
-    rowsPerImage: height,
-    subrectOrigin: [0, 0, 0],
-    subrectSize: targetSize
-  });
-}
-
-/**
- * Render textured quad to an rgba32float texture.
- */
-export function drawTexture(
-t,
-texture,
-samplerDesc,
-options)
-{
-  const device = t.device;
-  const { ddx = 1, ddy = 1, uvwStart = [0, 0, 0], offset } = options;
-
-  const format = 'rgba32float';
-  const renderTarget = t.createTextureTracked({
-    format,
-    size: [32, 32],
-    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT
-  });
-
-  // Compute the amount we need to multiply the unitQuad by get the
-  // derivatives we want.
-  const uMult = ddx * renderTarget.width / texture.width;
-  const vMult = ddy * renderTarget.height / texture.height;
-
-  const offsetWGSL = offset ? `, vec2i(${offset[0]},${offset[1]})` : '';
-
-  const code = `
-struct InOut {
-  @builtin(position) pos: vec4f,
-  @location(0) uv: vec2f,
-};
-
-@vertex fn vs(@builtin(vertex_index) vertex_index : u32) -> InOut {
-  let positions = array(
-    vec2f(-1,  1), vec2f( 1,  1),
-    vec2f(-1, -1), vec2f( 1, -1),
-  );
-  let pos = positions[vertex_index];
-  return InOut(
-    vec4f(pos, 0, 1),
-    (pos * 0.5 + 0.5) * vec2f(${uMult}, ${vMult}) + vec2f(${uvwStart[0]}, ${uvwStart[1]}),
-  );
-}
-
-@group(0) @binding(0) var          T    : texture_2d<f32>;
-@group(0) @binding(1) var          S    : sampler;
-
-@fragment fn fs(v: InOut) -> @location(0) vec4f {
-  return textureSample(T, S, v.uv${offsetWGSL});
-}
-`;
-
-  const shaderModule = device.createShaderModule({ code });
-
-  const pipeline = device.createRenderPipeline({
-    layout: 'auto',
-    vertex: { module: shaderModule },
-    fragment: {
-      module: shaderModule,
-      targets: [{ format }]
-    },
-    primitive: { topology: 'triangle-strip' }
-  });
-
-  const sampler = device.createSampler(samplerDesc);
-
-  const bindGroup = device.createBindGroup({
-    layout: pipeline.getBindGroupLayout(0),
-    entries: [
-    { binding: 0, resource: texture.createView() },
-    { binding: 1, resource: sampler }]
-
-  });
-
-  const encoder = device.createCommandEncoder();
-
-  const renderPass = encoder.beginRenderPass({
-    colorAttachments: [{ view: renderTarget.createView(), loadOp: 'clear', storeOp: 'store' }]
-  });
-
-  renderPass.setPipeline(pipeline);
-  renderPass.setBindGroup(0, bindGroup);
-  renderPass.draw(4);
-  renderPass.end();
-  device.queue.submit([encoder.finish()]);
-
-  return renderTarget;
 }
 
 function getMaxFractionalDiffForTextureFormat(format) {
@@ -1772,11 +1979,11 @@ function getMaxFractionalDiffForTextureFormat(format) {
   // tolerances if possible.
 
   if (format.includes('depth')) {
-    return 3 / 65536;
+    return 3 / 100;
   } else if (format.includes('8unorm')) {
     return 7 / 255;
   } else if (format.includes('2unorm')) {
-    return 9 / 512;
+    return 13 / 512;
   } else if (format.includes('unorm')) {
     return 7 / 255;
   } else if (format.includes('8snorm')) {
@@ -1793,53 +2000,14 @@ function getMaxFractionalDiffForTextureFormat(format) {
   }
 }
 
-export function checkTextureMatchesExpectedTexelView(
-t,
-format,
-actualTexture,
-expectedTexelView)
-{
-  const maxFractionalDiff = getMaxFractionalDiffForTextureFormat(format);
-  t.expectTexelViewComparisonIsOkInTexture(
-    { texture: actualTexture },
-    expectedTexelView,
-    [actualTexture.width, actualTexture.height],
-    { maxFractionalDiff }
-  );
-}
-
-/**
- * Puts data in a texture. Renders a quad to a rgba32float. Then "software renders"
- * to a TexelView the expected result and compares the rendered texture to the
- * expected TexelView.
- */
-export async function putDataInTextureThenDrawAndCheckResultsComparedToSoftwareRasterizer(
-
-
-t,
-descriptor,
-viewDescriptor,
-samplerDesc,
-options)
-{
-  const { texture, texels } = await createTextureWithRandomDataAndGetTexels(t, descriptor);
-
-  const actualTexture = drawTexture(t, texture, samplerDesc, options);
-  const expectedTexelView = softwareRasterize(
-    t,
-    { descriptor, texels, viewDescriptor },
-    samplerDesc,
-    [actualTexture.width, actualTexture.height],
-    options
-  );
-
-  checkTextureMatchesExpectedTexelView(t, texture.format, actualTexture, expectedTexelView);
-}
-
 const sumOfCharCodesOfString = (s) =>
 String(s).
 split('').
 reduce((sum, c) => sum + c.charCodeAt(0), 0);
+
+function roundDownToMultipleOf(v, multiple) {
+  return Math.floor(v / multiple) * multiple;
+}
 
 /**
  * Makes a function that fills a block portion of a Uint8Array with random valid data
@@ -1906,7 +2074,7 @@ function getBlockFiller(format) {
 /**
  * Fills a texture with random data.
  */
-export function fillTextureWithRandomData(device, texture) {
+function fillTextureWithRandomData(device, texture) {
   assert(!isCompressedFloatTextureFormat(texture.format));
   const info = kTextureFormatInfo[texture.format];
   const hashBase =
@@ -2301,6 +2469,27 @@ run)
   })();
   const numTexels = numTexelsPerLevel.reduce((sum, v) => sum + v);
 
+  const getMipLevelFromTexelId = (texelId) => {
+    for (let mipLevel = mipLevelCount - 1; mipLevel > 0; --mipLevel) {
+      if (texelId - numTexelsOfPrecedingLevels[mipLevel] >= 0) {
+        return mipLevel;
+      }
+    }
+    return 0;
+  };
+
+  const getTexelCoordFromTexelId = (texelId) => {
+    const mipLevel = getMipLevelFromTexelId(texelId);
+    const size = mipLevelSize[mipLevel];
+    const texelsPerSlice = size[0] * size[1];
+    const id = texelId - numTexelsOfPrecedingLevels[mipLevel];
+    const layer = Math.floor(id / texelsPerSlice);
+    const xyId = id - layer * texelsPerSlice;
+    const y = xyId / size[0] | 0;
+    const x = xyId % size[0];
+    return { x, y, z: layer, mipLevel, xyId };
+  };
+
   // This isn't perfect. We already know there was an error. We're just
   // generating info so it seems okay it's not perfect. This format will
   // be used to generate weights by drawing with a texture of this format
@@ -2383,28 +2572,14 @@ run)
     }
   }
 
-  const getMipLevelFromTexelId = (texelId) => {
-    for (let mipLevel = mipLevelCount - 1; mipLevel > 0; --mipLevel) {
-      if (texelId - numTexelsOfPrecedingLevels[mipLevel] >= 0) {
-        return mipLevel;
-      }
-    }
-    return 0;
-  };
-
   // separate the sampledTexelWeights by mipLevel, then by layer, within a layer the texelId only includes x and y
   const levels = [];
   for (const [texelId, weight] of sampledTexelWeights.entries()) {
-    const mipLevel = getMipLevelFromTexelId(texelId);
+    const { xyId, z, mipLevel } = getTexelCoordFromTexelId(texelId);
     const level = levels[mipLevel] ?? [];
     levels[mipLevel] = level;
-    const size = mipLevelSize[mipLevel];
-    const texelsPerSlice = size[0] * size[1];
-    const id = texelId - numTexelsOfPrecedingLevels[mipLevel];
-    const layer = Math.floor(id / texelsPerSlice);
-    const layerEntries = level[layer] ?? new Map();
-    level[layer] = layerEntries;
-    const xyId = id - layer * texelsPerSlice;
+    const layerEntries = level[z] ?? new Map();
+    level[z] = layerEntries;
     layerEntries.set(xyId, weight);
   }
 
@@ -2440,7 +2615,7 @@ run)
         const face = kFaceNames[layer % 6];
         lines.push(`layer: ${layer}, cube-layer: ${layer / 6 | 0} (${face}) ${unSampled}`);
       } else {
-        lines.push(`layer: ${unSampled}`);
+        lines.push(`layer: ${layer} ${unSampled}`);
       }
 
       if (!layerEntries) {
@@ -2494,11 +2669,13 @@ run)
 
       const pad2 = (n) => n.toString().padStart(2);
       const fix5 = (n) => n.toFixed(5);
+      let levelWeight = 0;
       orderedTexelIndices.forEach((texelIdx, i) => {
         const weights = layerEntries.get(texelIdx);
         const y = Math.floor(texelIdx / texelsPerRow);
         const x = texelIdx % texelsPerRow;
         const singleWeight = valueIfAllComponentsAreEqual(weights, components);
+        levelWeight += singleWeight;
         const w =
         singleWeight !== undefined ?
         `weight: ${fix5(singleWeight)}` :
@@ -2506,6 +2683,9 @@ run)
         const coord = `${pad2(x)}, ${pad2(y)}, ${pad2(layer)}`;
         lines.push(`${letter(idCount + i)}: mip(${mipLevel}) at: [${coord}], ${w}`);
       });
+      if (!isNaN(levelWeight)) {
+        lines.push(`level weight: ${fix5(levelWeight)}`);
+      }
       idCount += orderedTexelIndices.length;
     }
   }
@@ -2530,9 +2710,13 @@ function layoutTwoColumns(columnA, columnB) {
  */
 export function getDepthOrArrayLayersForViewDimension(viewDimension) {
   switch (viewDimension) {
+    case '1d':
+      return 1;
     case undefined:
     case '2d':
       return 1;
+    case '2d-array':
+      return 4;
     case '3d':
       return 8;
     case 'cube':
@@ -2560,7 +2744,8 @@ export function chooseTextureSize({
 }) {
   const { blockWidth, blockHeight } = kTextureFormatInfo[format];
   const width = align(Math.max(minSize, blockWidth * minBlocks), blockWidth);
-  const height = align(Math.max(minSize, blockHeight * minBlocks), blockHeight);
+  const height =
+  viewDimension === '1d' ? 1 : align(Math.max(minSize, blockHeight * minBlocks), blockHeight);
   if (viewDimension === 'cube' || viewDimension === 'cube-array') {
     const blockLCM = lcm(blockWidth, blockHeight);
     const largest = Math.max(width, height);
@@ -2590,6 +2775,9 @@ export const kCubeSamplePointMethods = ['cube-edges', 'texel-centre', 'spiral'];
 
 
 
+
+
+
 /**
  * Generates an array of coordinates at which to sample a texture.
  */
@@ -2597,6 +2785,10 @@ function generateTextureBuiltinInputsImpl(
 makeValue,
 n,
 args)
+
+
+
+
 
 
 
@@ -2645,12 +2837,23 @@ args)
   const _hashInputs = args.hashInputs.map((v) =>
   typeof v === 'string' ? sumOfCharCodesOfString(v) : typeof v === 'boolean' ? v ? 1 : 0 : v
   );
+
+  // returns a number between [0 and N)
+  const makeRandValue = ({ num, type }, ...hashInputs) => {
+    const range = num;
+    const number = hashU32(..._hashInputs, ...hashInputs) / 0x1_0000_0000 * range;
+    return type === 'f32' ? number : Math.floor(number);
+  };
+
+  // for signed and float values returns [-1 to num]
+  // for unsigned values returns [0 to num]
   const makeRangeValue = ({ num, type }, ...hashInputs) => {
     const range = num + (type === 'u32' ? 1 : 2);
     const number =
     hashU32(..._hashInputs, ...hashInputs) / 0x1_0000_0000 * range - (type === 'u32' ? 0 : 1);
     return type === 'f32' ? number : Math.floor(number);
   };
+
   // Generates the same values per coord instead of using all the extra `_hashInputs`.
   const makeIntHashValueRepeatable = (min, max, ...hashInputs) => {
     const range = max - min;
@@ -2757,12 +2960,81 @@ args)
       return v3 / q[i];
     });
 
+    const makeGradient = (hashInput) => {
+      return coords.map((_, i) => {
+        // a value between -4 and 4 integer then add +/- 0.25
+        // We want to be able to choose levels but we want to avoid the area where the
+        // gpu might choose 2 different levels than the software renderer.
+        const intPart = makeRangeValue({ num: 8, type: 'u32' }, i, hashInput) - 4;
+        const fractPart = makeRangeValue({ num: 0, type: 'f32' }, i, hashInput + 1) * 0.25;
+        assert(fractPart >= -0.25 && fractPart <= 0.25);
+        return intPart + fractPart;
+      });
+    };
+
+    // choose a derivative value that will select a mipLevel.
+    const makeDerivativeMult = (coords, mipLevel) => {
+      // Make an identity vec (all 1s).
+      const mult = new Array(coords.length).fill(1);
+      // choose one axis to set
+      const ndx = makeRangeValue({ num: coords.length - 1, type: 'u32' }, i, 8);
+      assert(ndx < coords.length);
+      // Align to 3rds to avoid edge cases.
+      mult[ndx] = Math.pow(2, roundDownToMultipleOf(mipLevel, 1 / 3));
+      return mult;
+    };
+
+    // Choose a mip level. If mipmapFilter is 'nearest' then avoid centers of levels
+    // else avoid edges.
+    const chooseMipLevel = () => {
+      const innerLevelR = makeRandValue({ num: 9, type: 'u32' }, i, 11);
+      const innerLevel =
+      args?.sampler?.mipmapFilter === 'linear' ?
+      innerLevelR + 1 :
+      innerLevelR < 5 ?
+      innerLevelR :
+      innerLevelR + 1;
+      const outerLevel = makeRangeValue({ num: mipLevelCount - 1, type: 'i32' }, i, 11);
+      return outerLevel + innerLevel / 10;
+    };
+
+    // for textureSample, choose a derivative value that will select a mipLevel near
+    // the range of mip levels.
+    const makeDerivativeMultForTextureSample = (coords) => {
+      const mipLevel = chooseMipLevel();
+      return makeDerivativeMult(coords, mipLevel);
+    };
+
+    // for textureSampleBias we choose a mipLevel we want to sample, then a bias between -17 and 17.
+    // and then a derivative that, given the chosen bias will arrive at the chosen mipLevel.
+    // The GPU is supposed to clamp between -16.0 and 15.99.
+    const makeBiasAndDerivativeMult = (coords) => {
+      const mipLevel = chooseMipLevel();
+      const bias = makeRangeValue({ num: 34, type: 'f32' }, i, 9) - 17;
+      const clampedBias = clamp(bias, { min: -16, max: 15.99 });
+      const derivativeBasedMipLevel = mipLevel - clampedBias;
+      const derivativeMult = makeDerivativeMult(coords, derivativeBasedMipLevel);
+      return [bias, derivativeMult];
+    };
+
+    // If bias is set this is textureSampleBias. If bias is not set but derivatives
+    // is then this is one of the other functions that needs implicit derivatives.
+    const [bias, derivativeMult] = args.bias ?
+    makeBiasAndDerivativeMult(coords) :
+    args.derivatives ?
+    [undefined, makeDerivativeMultForTextureSample(coords)] :
+    [];
+
     return {
       coords,
+      derivativeMult,
       mipLevel,
       sampleIndex: args.sampleIndex ? makeRangeValue(args.sampleIndex, i, 1) : undefined,
       arrayIndex: args.arrayIndex ? makeRangeValue(args.arrayIndex, i, 2) : undefined,
       depthRef: args.depthRef ? makeRangeValue({ num: 1, type: 'f32' }, i, 5) : undefined,
+      ddx: args.grad ? makeGradient(7) : undefined,
+      ddy: args.grad ? makeGradient(8) : undefined,
+      bias,
       offset: args.offset ?
       coords.map((_, j) => makeIntHashValueRepeatable(-8, 8, i, 3 + j)) :
       undefined,
@@ -2858,7 +3130,7 @@ function normalize(v) {
 /**
  * Converts a cube map coordinate to a uv coordinate (0 to 1) and layer (0.5/6.0 to 5.5/6.0).
  */
-export function convertCubeCoordToNormalized3DTextureCoord(v) {
+function convertCubeCoordToNormalized3DTextureCoord(v) {
   let uvw;
   let layer;
   // normalize the coord.
@@ -2887,7 +3159,7 @@ export function convertCubeCoordToNormalized3DTextureCoord(v) {
 /**
  * Convert a 3d texcoord into a cube map coordinate.
  */
-export function convertNormalized3DTexCoordToCubeCoord(uvLayer) {
+function convertNormalized3DTexCoordToCubeCoord(uvLayer) {
   const [u, v, faceLayer] = uvLayer;
   return normalize(transformMat3([u, v, 1], kFaceUVMatrices[Math.min(5, faceLayer * 6) | 0]));
 }
@@ -2952,6 +3224,10 @@ coord)
 export function generateSamplePointsCube(
 n,
 args)
+
+
+
+
 
 
 
@@ -3061,12 +3337,23 @@ args)
   const _hashInputs = args.hashInputs.map((v) =>
   typeof v === 'string' ? sumOfCharCodesOfString(v) : typeof v === 'boolean' ? v ? 1 : 0 : v
   );
+
+  // returns a number between [0 and N)
+  const makeRandValue = ({ num, type }, ...hashInputs) => {
+    const range = num;
+    const number = hashU32(..._hashInputs, ...hashInputs) / 0x1_0000_0000 * range;
+    return type === 'f32' ? number : Math.floor(number);
+  };
+
+  // for signed and float values returns [-1 to num]
+  // for unsigned values returns [0 to num]
   const makeRangeValue = ({ num, type }, ...hashInputs) => {
     const range = num + (type === 'u32' ? 1 : 2);
     const number =
     hashU32(..._hashInputs, ...hashInputs) / 0x1_0000_0000 * range - (type === 'u32' ? 0 : 1);
     return type === 'f32' ? number : Math.floor(number);
   };
+
   const makeIntHashValue = (min, max, ...hashInputs) => {
     const range = max - min;
     return min + Math.floor(hashU32(..._hashInputs, ...hashInputs) / 0x1_0000_0000 * range);
@@ -3203,11 +3490,78 @@ args)
       return (v2 + 1 / 16) / q[i];
     });
 
+    const quantize = (v, units) => Math.floor(v * units) * units;
+
+    const makeGradient = (hashInput) => {
+      return coords.map((_, i) =>
+      // a value between -4 and 4, quantized to 1/3rd.
+      quantize(makeRangeValue({ num: 8, type: 'f32' }, i, hashInput) - 4, 1 / 3)
+      );
+    };
+
     const coords = convertNormalized3DTexCoordToCubeCoord(quantizedUVW);
+
+    // choose a derivative value that will select a mipLevel.
+    const makeDerivativeMult = (coords, mipLevel) => {
+      // Make an identity vec (all 1s).
+      const mult = new Array(coords.length).fill(1);
+      // choose one axis to set
+      const ndx = makeRangeValue({ num: coords.length - 1, type: 'u32' }, i, 8);
+      assert(ndx < coords.length);
+      // Align to 3rds to avoid edge cases.
+      mult[ndx] = Math.pow(2, roundDownToMultipleOf(mipLevel, 1 / 3));
+      return mult;
+    };
+
+    // Choose a mip level. If mipmapFilter is 'nearest' then avoid centers of levels
+    // else avoid edges.
+    const chooseMipLevel = () => {
+      const innerLevelR = makeRandValue({ num: 9, type: 'u32' }, i, 11);
+      const innerLevel =
+      args?.sampler?.mipmapFilter === 'linear' ?
+      innerLevelR + 1 :
+      innerLevelR < 4 ?
+      innerLevelR :
+      innerLevelR + 1;
+      const outerLevel = makeRangeValue({ num: mipLevelCount - 1, type: 'i32' }, i, 11);
+      return outerLevel + innerLevel / 10;
+    };
+
+    // for textureSample, choose a derivative value that will select a mipLevel near
+    // the range of mip levels.
+    const makeDerivativeMultForTextureSample = (coords) => {
+      const mipLevel = chooseMipLevel();
+      return makeDerivativeMult(coords, mipLevel);
+    };
+
+    // for textureSampleBias we choose a mipLevel we want to sample, then a bias between -17 and 17.
+    // and then a derivative that, given the chosen bias will arrive at the chosen mipLevel.
+    // The GPU is supposed to clamp between -16.0 and 15.99.
+    const makeBiasAndDerivativeMult = (coords) => {
+      const mipLevel = chooseMipLevel();
+      const bias = makeRangeValue({ num: 34, type: 'f32' }, i, 9) - 17;
+      const clampedBias = clamp(bias, { min: -16, max: 15.99 });
+      const derivativeBasedMipLevel = mipLevel - clampedBias;
+      const derivativeMult = makeDerivativeMult(coords, derivativeBasedMipLevel);
+      return [bias, derivativeMult];
+    };
+
+    // If bias is set this is textureSampleBias. If bias is not set but derivatives
+    // is then this is one of the other functions that needs implicit derivatives.
+    const [bias, derivativeMult] = args.bias ?
+    makeBiasAndDerivativeMult(coords) :
+    args.derivatives ?
+    [undefined, makeDerivativeMultForTextureSample(coords)] :
+    [];
+
     return {
       coords,
+      derivativeMult,
+      ddx: args.grad ? makeGradient(7) : undefined,
+      ddy: args.grad ? makeGradient(8) : undefined,
       mipLevel,
       arrayIndex: args.arrayIndex ? makeRangeValue(args.arrayIndex, i, 2) : undefined,
+      bias,
       depthRef: args.depthRef ? makeRangeValue({ num: 1, type: 'f32' }, i, 5) : undefined,
       component: args.component ? makeIntHashValue(0, 4, i, 4) : undefined
     };
@@ -3230,7 +3584,9 @@ function wgslTypeFor(data, type) {
   return `${type}32`;
 }
 
-function wgslExpr(data) {
+function wgslExpr(
+data)
+{
   if (Array.isArray(data)) {
     switch (data.length) {
       case 1:
@@ -3311,10 +3667,18 @@ function buildBinnedCalls(calls) {
         prototype.arrayIndexType :
         name === 'sampleIndex' ?
         prototype.sampleIndexType :
-        name === 'depthRef' ?
+        name === 'bias' || name === 'depthRef' || name === 'ddx' || name === 'ddy' ?
         'f' :
         prototype.coordType;
-        args.push(`args.${name}`);
+        if (name !== 'derivativeMult') {
+          args.push(
+            `args.${name}${
+            name === 'coords' && builtinNeedsDerivatives(prototype.builtin) ?
+            ' + derivativeBase * args.derivativeMult' :
+            ''
+            }`
+          );
+        }
         fields.push(`@align(16) ${name} : ${wgslTypeFor(value, type)}`);
       }
     }
@@ -3366,7 +3730,7 @@ function binCalls(calls) {
   return bins;
 }
 
-export function describeTextureCall(call) {
+function describeTextureCall(call) {
   const args = [];
   if (isBuiltinGather(call.builtin) && call.componentType) {
     args.push(`component: ${wgslExprFor(call.component, call.componentType)}`);
@@ -3379,11 +3743,22 @@ export function describeTextureCall(call) {
     const value = call[name];
     if (value !== undefined && name !== 'component') {
       if (name === 'coords') {
-        args.push(`${name}: ${wgslExprFor(value, call.coordType)}`);
+        const derivativeWGSL = builtinNeedsDerivatives(call.builtin) ?
+        ` + derivativeBase * derivativeMult(${
+        call.derivativeMult ? wgslExprFor(call.derivativeMult, call.coordType) : '1'
+        })` :
+        '';
+        args.push(`${name}: ${wgslExprFor(value, call.coordType)}${derivativeWGSL}`);
+      } else if (name === 'derivativeMult') {
+
+        // skip this - it's covered in 'coords'
+      } else if (name === 'ddx' || name === 'ddy') {args.push(`${name}: ${wgslExprFor(value, call.coordType)}`);
       } else if (name === 'mipLevel') {
         args.push(`${name}: ${wgslExprFor(value, call.levelType)}`);
       } else if (name === 'arrayIndex') {
         args.push(`${name}: ${wgslExprFor(value, call.arrayIndexType)}`);
+      } else if (name === 'bias') {
+        args.push(`${name}: ${wgslExprFor(value, 'f')}`);
       } else if (name === 'sampleIndex') {
         args.push(`${name}: ${wgslExprFor(value, call.sampleIndexType)}`);
       } else if (name === 'depthRef') {
@@ -3400,11 +3775,53 @@ const s_deviceToPipelines = new WeakMap();
 
 /**
  * Given a list of "calls", each one of which has a texture coordinate,
- * generates a fragment shader that uses the fragment position as an index
- * (position.y * 256 + position.x) That index is then used to look up a
- * coordinate from a storage buffer which is used to call the WGSL texture
- * function to read/sample the texture, and then write to an rgba32float
- * texture.  We then read the rgba32float texture for the per "call" results.
+ * generates a fragment shader that uses the instance_index as an index. That
+ * index is then used to look up a coordinate from a storage buffer which is
+ * used to call the WGSL texture function to read/sample the texture, and then
+ * write to a storage buffer. We then read the storage buffer for the per "call"
+ * results.
+ *
+ * We use a 1x1 target and use instance drawing, once instance per call.
+ * This allows use to more easily adjust derivatives per call.
+ *
+ * An issue we ran into before this "one draw call per instance" change;
+ * Before we had a single draw call and wrote the result of one call per
+ * pixel rendered.
+ *
+ * Imagine we have code like this:
+ *
+ * ```
+ * @group(0) @binding(0) var T: texture_2d<f32>;
+ * @group(0) @binding(1) var S: sampler;
+ * @group(0) @binding(2) var<storage> coords: array<vec4f>;
+ * @fragment fn fs(@builtin(position) pos: vec4f) -> vec4f {
+ *   let ndx = u32(pos.x) * u32(pos.y) * targetWidth;
+ *   return textureSample(T, S, coords[ndx].xy);
+ * }
+ * ```
+ *
+ * T points to 8x8 pixel texture with 3 mip levels
+ * S is 'nearest'
+ * coords: is a storage buffer, 16 bytes long [0,0,0,0], one vec4f.
+ * our render target is 1x1 pixels
+ *
+ * Looking above it appears `ndx` will only ever be 0 but that's
+ * not what happens. Instead, the GPU will run the fragment shader for
+ * a 2x2 area. It does this to compute derivatives by running the code
+ * above and looking at what values it gets passed as coords to
+ * textureSample. When it does this it ends up with
+ *
+ * ndx = 0 for invocation 0
+ * ndx = 1 for invocation 1
+ * ndx = 0 + 1 * targetWidth for invocation 2
+ * ndx = 1 + 1 * targetWidth for invocation 3
+ *
+ * In 3 of those cases `ndx` is out of bounds with respect to `coords`.
+ * Out of bounds access is indeterminate. That means the derivatives are
+ * indeterminate so what lod it tries to read is indeterminate.
+ *
+ * By using instance_index for ndx we avoid this issue. ndx is the same
+ * on all 4 executions.
  *
  * Calls are "binned" by call parameters. Each bin has its own structure and
  * field in the storage buffer. This allows the calls to be non-homogenous and
@@ -3454,15 +3871,15 @@ calls)
   binned.forEach((binCalls, binIdx) => {
     const b = buildBinnedCalls(binCalls.map((callIdx) => calls[callIdx]));
     structs += `struct Args${binIdx} {
-  ${b.fields.join(',  \n')}
+  ${b.fields.join(',\n  ')}
 }
 `;
     dataFields += `  args${binIdx} : array<Args${binIdx}, ${binCalls.length}>,
 `;
     body += `
   {
-    let is_active = (frag_idx >= ${callCount}) & (frag_idx < ${callCount + binCalls.length});
-    let args = data.args${binIdx}[frag_idx - ${callCount}];
+    let is_active = (idx >= ${callCount}) & (idx < ${callCount + binCalls.length});
+    let args = data.args${binIdx}[idx - ${callCount}];
     let call = ${b.expr};
     result = select(result, call, is_active);
   }
@@ -3491,12 +3908,27 @@ calls)
 
   const samplerType = isCompare ? 'sampler_comparison' : 'sampler';
 
-  const rtWidth = 256;
   const renderTarget = t.createTextureTracked({
-    format: resultFormat,
-    size: { width: rtWidth, height: Math.ceil(calls.length / rtWidth) },
+    format: 'rgba8unorm',
+    size: [1, 1],
     usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT
   });
+
+  // derivativeBase is a number that starts at (0, 0, 0) and advances by 1 in x, y
+  // for each fragment shader iteration in texel space. It is then converted to normalized
+  // texture space by dividing by the textureDimensions.
+  // Since it's moving by 1 texel unit we can multiply it to get any specific lod value we want.
+  // Because it starts at (0, 0, 0) it will not affect our texture coordinate.
+  const derivativeBaseWGSL = `
+  let derivativeBase = ${
+  isCubeViewDimension(viewDescriptor) ?
+  '(v.pos.xyx - 0.5) / vec3f(vec2f(textureDimensions(T)), 1.0)' :
+  dimension === '1d' ?
+  'f32(v.pos.x - 0.5) / f32(textureDimensions(T))' :
+  dimension === '3d' ?
+  'vec3f(v.pos.xy - 0.5, 0) / vec3f(textureDimensions(T))' :
+  '(v.pos.xy - 0.5) / vec2f(textureDimensions(T))'
+  };`;
 
   const code = `
 ${structs}
@@ -3505,25 +3937,32 @@ struct Data {
 ${dataFields}
 }
 
+struct VOut {
+  @builtin(position) pos: vec4f,
+  @location(0) @interpolate(flat, either) ndx: u32,
+};
+
 @vertex
-fn vs_main(@builtin(vertex_index) vertex_index : u32) -> @builtin(position) vec4f {
-  let positions = array(
-    vec4f(-1,  1, 0, 1), vec4f( 1,  1, 0, 1),
-    vec4f(-1, -1, 0, 1), vec4f( 1, -1, 0, 1),
-  );
-  return positions[vertex_index];
+fn vs_main(
+    @builtin(vertex_index) vertex_index : u32,
+    @builtin(instance_index) instance_index : u32) -> VOut {
+  let positions = array(vec2f(-1, 3), vec2f(3, -1), vec2f(-1, -1));
+  return VOut(vec4f(positions[vertex_index], 0, 1), instance_index);
 }
 
 @group(0) @binding(0) var          T    : ${textureType};
 ${sampler ? `@group(0) @binding(1) var          S    : ${samplerType}` : ''};
 @group(0) @binding(2) var<storage> data : Data;
+@group(0) @binding(3) var<storage, read_write> results: array<${returnType}>;
 
 @fragment
-fn fs_main(@builtin(position) frag_pos : vec4f) -> @location(0) ${returnType} {
-  let frag_idx = u32(frag_pos.x) + u32(frag_pos.y) * ${renderTarget.width};
+fn fs_main(v: VOut) -> @location(0) vec4f {
+  ${derivativeBaseWGSL}
+  let idx = v.ndx;
   var result : ${resultType};
 ${body}
-  return ${returnType}(result);
+  results[idx] = ${returnType}(result);
+  return vec4f(0);
 }
 `;
 
@@ -3563,6 +4002,13 @@ ${body}
     visibility: GPUShaderStage.FRAGMENT,
     buffer: {
       type: 'read-only-storage'
+    }
+  },
+  {
+    binding: 3,
+    visibility: GPUShaderStage.FRAGMENT,
+    buffer: {
+      type: 'storage'
     }
   }];
 
@@ -3611,7 +4057,7 @@ ${body}
     });
   }
 
-  const id = `${renderTarget.format}:${JSON.stringify(entries)}:${code}`;
+  const id = `${resultType}:${JSON.stringify(entries)}:${code}`;
   let pipeline = pipelines.get(id);
   if (!pipeline) {
     const shaderModule = t.device.createShaderModule({ code });
@@ -3626,8 +4072,7 @@ ${body}
       fragment: {
         module: shaderModule,
         targets: [{ format: renderTarget.format }]
-      },
-      primitive: { topology: 'triangle-strip' }
+      }
     });
 
     pipelines.set(id, pipeline);
@@ -3636,6 +4081,11 @@ ${body}
   const gpuSampler = sampler ? t.device.createSampler(sampler) : undefined;
 
   const run = async (gpuTexture) => {
+    const storageBuffer = t.createBufferTracked({
+      size: calls.length * 16,
+      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
+    });
+
     const bindGroup = t.device.createBindGroup({
       layout: pipeline.getBindGroupLayout(0),
       entries: [
@@ -3647,13 +4097,13 @@ ${body}
         gpuTexture.createView(viewDescriptor)
       },
       ...(sampler ? [{ binding: 1, resource: gpuSampler }] : []),
-      { binding: 2, resource: { buffer: dataBuffer } }]
+      { binding: 2, resource: { buffer: dataBuffer } },
+      { binding: 3, resource: { buffer: storageBuffer } }]
 
     });
 
-    const bytesPerRow = align(16 * renderTarget.width, 256);
     const resultBuffer = t.createBufferTracked({
-      size: renderTarget.height * bytesPerRow,
+      size: storageBuffer.size,
       usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
     });
 
@@ -3671,25 +4121,21 @@ ${body}
 
     renderPass.setPipeline(pipeline);
     renderPass.setBindGroup(0, bindGroup);
-    renderPass.draw(4);
+    renderPass.draw(3, calls.length);
     renderPass.end();
-    encoder.copyTextureToBuffer(
-      { texture: renderTarget },
-      { buffer: resultBuffer, bytesPerRow },
-      { width: renderTarget.width, height: renderTarget.height }
-    );
+    encoder.copyBufferToBuffer(storageBuffer, 0, resultBuffer, 0, storageBuffer.size);
     t.device.queue.submit([encoder.finish()]);
 
     await resultBuffer.mapAsync(GPUMapMode.READ);
 
     const view = TexelView.fromTextureDataByReference(
-      renderTarget.format,
+      resultFormat,
       new Uint8Array(resultBuffer.getMappedRange()),
       {
-        bytesPerRow,
-        rowsPerImage: renderTarget.height,
+        bytesPerRow: calls.length * 16,
+        rowsPerImage: 1,
         subrectOrigin: [0, 0, 0],
-        subrectSize: [renderTarget.width, renderTarget.height]
+        subrectSize: [calls.length, 1]
       }
     );
 
@@ -3697,13 +4143,13 @@ ${body}
     const out = new Array(calls.length);
     for (const bin of binned) {
       for (const callIdx of bin) {
-        const x = outIdx % rtWidth;
-        const y = Math.floor(outIdx / rtWidth);
-        out[callIdx] = view.color({ x, y, z: 0 });
+        const x = outIdx;
+        out[callIdx] = view.color({ x, y: 0, z: 0 });
         outIdx++;
       }
     }
 
+    storageBuffer.destroy();
     resultBuffer.destroy();
 
     return out;
