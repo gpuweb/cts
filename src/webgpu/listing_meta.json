@@ -1863,6 +1863,8 @@
   "webgpu:shader,execution,padding:array_of_matCx3:*": { "subcaseMS": 8.650 },
   "webgpu:shader,execution,padding:array_of_struct:*": { "subcaseMS": 5.801 },
   "webgpu:shader,execution,padding:array_of_vec3:*": { "subcaseMS": 10.500 },
+  "webgpu:shader,execution,padding:array_of_vec3h,elementwise:*": { "subcaseMS": 24.607 },
+  "webgpu:shader,execution,padding:array_of_vec3h:*": { "subcaseMS": 26.941 },
   "webgpu:shader,execution,padding:matCx3:*": { "subcaseMS": 10.050 },
   "webgpu:shader,execution,padding:struct_explicit:*": { "subcaseMS": 12.000 },
   "webgpu:shader,execution,padding:struct_implicit:*": { "subcaseMS": 33.201 },
