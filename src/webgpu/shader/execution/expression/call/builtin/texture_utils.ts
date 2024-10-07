@@ -838,7 +838,7 @@ function createRandomTexelView(info: {
     isEncodableTextureFormat(info.format) &&
     ((info.format.includes('norm') && type !== 'depth') ||
       info.format.includes('16float') ||
-      info.format.includes('32float') ||
+      (info.format.includes('32float') && type !== 'depth') ||
       type === 'sint' ||
       type === 'uint');
 
