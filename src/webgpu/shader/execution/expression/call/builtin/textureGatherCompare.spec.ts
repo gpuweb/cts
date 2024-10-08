@@ -33,6 +33,7 @@ import {
   generateTextureBuiltinInputs2D,
   kCubeSamplePointMethods,
   kSamplePointMethods,
+  makeRandomDepthComparisonTexelGenerator,
   TextureCall,
   vec2,
   vec3,
@@ -87,15 +88,17 @@ Parameters:
     const { format, samplePoints, A, addressModeU, addressModeV, minFilter, compare, offset } =
       t.params;
 
-    const [width, height] = chooseTextureSize({ minSize: 8, minBlocks: 4, format });
-    const depthOrArrayLayers = 4;
+    const viewDimension = '2d-array';
+    const size = chooseTextureSize({ minSize: 8, minBlocks: 4, format, viewDimension });
 
     const descriptor: GPUTextureDescriptor = {
       format,
-      size: { width, height, depthOrArrayLayers },
+      size,
       usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
     };
-    const { texels, texture } = await createTextureWithRandomDataAndGetTexels(t, descriptor);
+    const { texels, texture } = await createTextureWithRandomDataAndGetTexels(t, descriptor, {
+      generator: makeRandomDepthComparisonTexelGenerator(descriptor, compare),
+    });
     const sampler: GPUSamplerDescriptor = {
       addressModeU,
       addressModeV,
@@ -184,7 +187,9 @@ Parameters:
       size,
       usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
     };
-    const { texels, texture } = await createTextureWithRandomDataAndGetTexels(t, descriptor);
+    const { texels, texture } = await createTextureWithRandomDataAndGetTexels(t, descriptor, {
+      generator: makeRandomDepthComparisonTexelGenerator(descriptor, compare),
+    });
     const sampler: GPUSamplerDescriptor = {
       addressModeU: addressMode,
       addressModeV: addressMode,
@@ -267,13 +272,15 @@ Parameters:
   .fn(async t => {
     const { format, C, samplePoints, addressMode, compare, minFilter, offset } = t.params;
 
-    const [width, height] = chooseTextureSize({ minSize: 8, minBlocks: 4, format });
+    const size = chooseTextureSize({ minSize: 8, minBlocks: 4, format });
     const descriptor: GPUTextureDescriptor = {
       format,
-      size: { width, height },
+      size,
       usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
     };
-    const { texels, texture } = await createTextureWithRandomDataAndGetTexels(t, descriptor);
+    const { texels, texture } = await createTextureWithRandomDataAndGetTexels(t, descriptor, {
+      generator: makeRandomDepthComparisonTexelGenerator(descriptor, compare),
+    });
     const sampler: GPUSamplerDescriptor = {
       addressModeU: addressMode,
       addressModeV: addressMode,
@@ -344,16 +351,17 @@ Parameters:
     const { format, samplePoints, addressMode, minFilter, compare } = t.params;
 
     const viewDimension: GPUTextureViewDimension = 'cube';
-    const [width, height] = chooseTextureSize({ minSize: 8, minBlocks: 2, format, viewDimension });
-    const depthOrArrayLayers = 6;
+    const size = chooseTextureSize({ minSize: 8, minBlocks: 2, format, viewDimension });
 
     const descriptor: GPUTextureDescriptor = {
       format,
       ...(t.isCompatibility && { textureBindingViewDimension: viewDimension }),
-      size: { width, height, depthOrArrayLayers },
+      size,
       usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
     };
-    const { texels, texture } = await createTextureWithRandomDataAndGetTexels(t, descriptor);
+    const { texels, texture } = await createTextureWithRandomDataAndGetTexels(t, descriptor, {
+      generator: makeRandomDepthComparisonTexelGenerator(descriptor, compare),
+    });
     const sampler: GPUSamplerDescriptor = {
       addressModeU: addressMode,
       addressModeV: addressMode,
