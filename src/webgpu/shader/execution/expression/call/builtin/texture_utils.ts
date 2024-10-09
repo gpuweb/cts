@@ -1742,7 +1742,9 @@ function softwareTextureReadGrad<T extends Dimensionality>(
   const bias = call.bias === undefined ? 0 : clamp(call.bias, { min: -16.0, max: 15.99 });
   if (call.ddx) {
     const mipLevel = computeMipLevelFromGradientsForCall(call, texture.descriptor.size);
-    const weightMipLevel = mapSoftwareMipLevelToGPUMipLevel(t, stage, mipLevel + bias);
+    const mipLevelCount = texture.descriptor.mipLevelCount ?? 1;
+    const clampedMipLevel = clamp(mipLevel + bias, { min: 0, max: mipLevelCount - 1 });
+    const weightMipLevel = mapSoftwareMipLevelToGPUMipLevel(t, stage, clampedMipLevel);
     return softwareTextureReadLevel(t, stage, call, texture, sampler, weightMipLevel);
   } else {
     return softwareTextureReadLevel(t, stage, call, texture, sampler, (call.mipLevel ?? 0) + bias);
@@ -3273,7 +3275,7 @@ function generateTextureBuiltinInputsImpl<T extends Dimensionality>(
     // choose a derivative value that will select a mipLevel.
     const makeDerivativeMult = (coords: T, mipLevel: number): T => {
       // Make an identity vec (all 1s).
-      const mult = new Array(coords.length).fill(1);
+      const mult = new Array(coords.length).fill(0);
       // choose one axis to set
       const ndx = makeRangeValue({ num: coords.length - 1, type: 'u32' }, i, 8);
       assert(ndx < coords.length);
@@ -3806,7 +3808,7 @@ export function generateSamplePointsCube(
     // choose a derivative value that will select a mipLevel.
     const makeDerivativeMult = (coords: vec3, mipLevel: number): vec3 => {
       // Make an identity vec (all 1s).
-      const mult = new Array(coords.length).fill(1);
+      const mult = new Array(coords.length).fill(0);
       // choose one axis to set
       const ndx = makeRangeValue({ num: coords.length - 1, type: 'u32' }, i, 8);
       assert(ndx < coords.length);
