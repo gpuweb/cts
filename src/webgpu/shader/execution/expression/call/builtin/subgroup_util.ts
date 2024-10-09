@@ -303,7 +303,7 @@ fn main(
   t.expectOK(checkAccuracy(metadata, output, [idx1, idx2], [val1, val2], identity, intervalGen));
 }
 
-export const kDataSentinel = 999;
+export const kDataSentinel = 999 | (999 << 16);
 
 /**
  * Runs compute shader subgroup test
