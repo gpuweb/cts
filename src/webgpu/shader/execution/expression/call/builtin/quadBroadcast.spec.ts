@@ -416,7 +416,7 @@ fn main(
 
 g.test('compute,split')
   .desc(
-    `Tests broadcast with all active invocations
+    `Tests broadcast with predicated invocations
 
 Quad operations require a full quad so workgroup sizes are limited to multiples of 4.
 Quad operations require a fully active quad to operate correctly so several of the
