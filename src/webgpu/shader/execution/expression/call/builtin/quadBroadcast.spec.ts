@@ -142,6 +142,17 @@ function generateTypedInputs(type: Type): Uint32Array {
   }
 }
 
+/**
+ * Checks results from data types test
+ *
+ * The output is expected to match the input values corresponding to the
+ * id being broadcast (assuming a linear mapping).
+ * @param metadata An unused parameter
+ * @param output The output data
+ * @param input The input data
+ * @param broadcast The id being broadcast
+ * @param type The data type being tested
+ */
 function checkDataTypes(
   metadata: Uint32Array, // unused
   output: Uint32Array,
@@ -183,10 +194,11 @@ function checkDataTypes(
     for (let i = 0; i < 4; i++) {
       for (let j = 0; j < uints; j++) {
         const expect = input[broadcast * uints + j];
-        if (output[i * uints + j] !== expect) {
-          return new Error(`${4 * i + j}: incorrect result
+        const res = output[i * uints + j];
+        if (res !== expect) {
+          return new Error(`${i * uints + j}: incorrect result
 - expected: ${expect}
--      got: ${output[4 * i + j]}`);
+-      got: ${res}`);
         }
       }
     }
