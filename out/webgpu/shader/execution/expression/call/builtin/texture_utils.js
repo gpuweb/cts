@@ -2305,10 +2305,6 @@ String(s).
 split('').
 reduce((sum, c) => sum + c.charCodeAt(0), 0);
 
-function roundDownToMultipleOf(v, multiple) {
-  return Math.floor(v / multiple) * multiple;
-}
-
 /**
  * Makes a function that fills a block portion of a Uint8Array with random valid data
  * for an astc block.
@@ -3281,8 +3277,7 @@ args)
       // choose one axis to set
       const ndx = makeRangeValue({ num: coords.length - 1, type: 'u32' }, i, 8);
       assert(ndx < coords.length);
-      // Align to 3rds to avoid edge cases.
-      mult[ndx] = Math.pow(2, roundDownToMultipleOf(mipLevel, 1 / 3));
+      mult[ndx] = Math.pow(2, mipLevel);
       return mult;
     };
 
@@ -3815,8 +3810,7 @@ args)
       // choose one axis to set
       const ndx = makeRangeValue({ num: coords.length - 1, type: 'u32' }, i, 8);
       assert(ndx < coords.length);
-      // Align to 3rds to avoid edge cases.
-      mult[ndx] = Math.pow(2, roundDownToMultipleOf(mipLevel, 1 / 3));
+      mult[ndx] = Math.pow(2, mipLevel);
       return mult;
     };
 
