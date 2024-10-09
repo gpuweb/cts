@@ -5,6 +5,7 @@ Execution tests for textureSampleBaseClampToEdge
 `;import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 
 
+import { kShaderStages } from '../../../../validation/decl/util.js';
 
 import {
   checkCallResults,
@@ -54,6 +55,7 @@ Parameters:
 ).
 params((u) =>
 u.
+combine('stage', kShaderStages).
 combine('textureType', ['texture_2d<f32>', 'texture_external']).
 beginSubcases().
 combine('samplePoints', kSamplePointMethods).
@@ -68,7 +70,7 @@ t.skipIf(
 )
 ).
 fn(async (t) => {
-  const { textureType, samplePoints, addressModeU, addressModeV, minFilter } = t.params;
+  const { textureType, stage, samplePoints, addressModeU, addressModeV, minFilter } = t.params;
 
   const descriptor = {
     format: 'rgba8unorm',
@@ -105,14 +107,23 @@ fn(async (t) => {
       };
     });
     const viewDescriptor = {};
-    const results = await doTextureCalls(t, texture, viewDescriptor, textureType, sampler, calls);
+    const results = await doTextureCalls(
+      t,
+      texture,
+      viewDescriptor,
+      textureType,
+      sampler,
+      calls,
+      stage
+    );
     const res = await checkCallResults(
       t,
       { texels, descriptor, viewDescriptor },
       textureType,
       sampler,
       calls,
-      results
+      results,
+      stage
     );
     t.expectOK(res);
   } finally {

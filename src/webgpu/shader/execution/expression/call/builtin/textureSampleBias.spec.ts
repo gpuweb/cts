@@ -193,6 +193,16 @@ Parameters:
       magFilter: minFilter,
     };
 
+    const hashInputs = [
+      format,
+      viewDimension,
+      samplePoints,
+      addressModeU,
+      addressModeV,
+      addressModeW,
+      minFilter,
+      offset,
+    ];
     const calls: TextureCall<vec3>[] = (
       viewDimension === '3d'
         ? generateTextureBuiltinInputs3D(50, {
@@ -201,31 +211,14 @@ Parameters:
             descriptor,
             bias: true,
             offset,
-            hashInputs: [
-              format,
-              viewDimension,
-              samplePoints,
-              addressModeU,
-              addressModeV,
-              addressModeW,
-              minFilter,
-              offset,
-            ],
+            hashInputs,
           })
         : generateSamplePointsCube(50, {
             method: samplePoints,
             sampler,
             descriptor,
             bias: true,
-            hashInputs: [
-              format,
-              viewDimension,
-              samplePoints,
-              addressModeU,
-              addressModeV,
-              addressModeW,
-              minFilter,
-            ],
+            hashInputs,
           })
     ).map(({ coords, derivativeMult, offset, bias }) => {
       return {

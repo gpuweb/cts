@@ -41,6 +41,7 @@ import { TexelView } from '../../../../../util/texture/texel_view.js';
 import { createTextureFromTexelViews } from '../../../../../util/texture.js';
 import { reifyExtent3D } from '../../../../../util/unions.js';
 
+
 export const kSampleTypeInfo = {
   f32: {
     format: 'rgba8unorm'
@@ -164,22 +165,66 @@ function unzip(array, num) {
 
 
 
+function makeGraph(width, height) {
+  const data = new Uint8Array(width * height);
+
+  return {
+    plot(norm, x, c) {
+      const y = clamp(Math.round(norm * height), { min: 0, max: height - 1 });
+      const offset = (height - y - 1) * width + x;
+      data[offset] = c;
+    },
+    plotValues(values, c) {
+      let i = 0;
+      for (const v of values) {
+        this.plot(v, i, c);
+        ++i;
+      }
+    },
+    toString(conversion = ['.', 'e', 'A']) {
+      const lines = [];
+      for (let y = 0; y < height; ++y) {
+        const offset = y * width;
+        lines.push([...data.subarray(offset, offset + width)].map((v) => conversion[v]).join(''));
+      }
+      return lines.join('\n');
+    }
+  };
+}
+
+function* linear0to1OverN(n) {
+  for (let i = 0; i <= n; ++i) {
+    yield i / n;
+  }
+}
+
+function graphWeights(height, weights) {
+  const graph = makeGraph(weights.length, height);
+  graph.plotValues(linear0to1OverN(weights.length - 1), 1);
+  graph.plotValues(weights, 2);
+  return graph.toString();
+}
+
 /**
  * Validates the weights go from 0 to 1 in increasing order.
  */
-function validateWeights(weights) {
-  const showWeights = () => weights.map((v, i) => `${i.toString().padStart(2)}: ${v}`).join('\n');
+function validateWeights(stage, weights) {
+  const showWeights = () => `
+${weights.map((v, i) => `${i.toString().padStart(2)}: ${v}`).join('\n')}
+
+e = expected
+A = actual
+${graphWeights(32, weights)}
+`;
 
   // Validate the weights
-  assert(weights[0] === 0, `weight 0 expected 0 but was ${weights[0]}\n${showWeights()}`);
+  assert(
+    weights[0] === 0,
+    `stage: ${stage}, weight 0 expected 0 but was ${weights[0]}\n${showWeights()}`
+  );
   assert(
     weights[kMipGradientSteps] === 1,
-    `top weight expected 1 but was ${weights[kMipGradientSteps]}\n${showWeights()}`
-  );
-
-  assert(
-    new Set(weights).size >= (weights.length * 0.66 | 0),
-    `expected more unique weights\n${showWeights()}`
+    `stage: ${stage}, top weight expected 1 but was ${weights[kMipGradientSteps]}\n${showWeights()}`
   );
 
   // Note: for 16 steps, these are the AMD weights
@@ -207,12 +252,68 @@ function validateWeights(weights) {
   //
   // notice step 1 is 0 and step 15 is 1.
   // so we only check the 1 through 14.
+  //
+  // Note: these 2 changes are effectively here to catch Intel Mac
+  // issues and require implementations to work around them.
+  //
+  // Ideally the weights should form a straight line
+  //
+  // +----------------+
+  // |              **|
+  // |            **  |
+  // |          **    |
+  // |        **      |
+  // |      **        |
+  // |    **          |
+  // |  **            |
+  // |**              |
+  // +----------------+
+  //
+  // AMD Mac goes like this: Not great but we allow it
+  //
+  // +----------------+
+  // |             ***|
+  // |           **   |
+  // |          *     |
+  // |        **      |
+  // |      **        |
+  // |     *          |
+  // |   **           |
+  // |***             |
+  // +----------------+
+  //
+  // Intel Mac goes like this: Unacceptable
+  //
+  // +----------------+
+  // |         *******|
+  // |         *      |
+  // |        *       |
+  // |        *       |
+  // |       *        |
+  // |       *        |
+  // |      *         |
+  // |*******         |
+  // +----------------+
+  //
+  const dx = 1 / kMipGradientSteps;
   for (let i = 0; i < kMipGradientSteps; ++i) {
+    const dy = weights[i + 1] - weights[i];
+    // dy / dx because dy might be 0
+    const slope = dy / dx;
     assert(
-      weights[i] <= weights[i + 1],
-      `weight[${i}] was not <= weight[${i + 1}]\n${showWeights()}`
+      slope >= 0,
+      `stage: ${stage}, weight[${i}] was not <= weight[${i + 1}]\n${showWeights()}`
+    );
+    assert(
+      slope <= 2,
+      `stage: ${stage}, slope from weight[${i}] to weight[${i + 1}] is > 2.\n${showWeights()}`
     );
   }
+
+  assert(
+    new Set(weights).size >= (weights.length * 0.66 | 0),
+    `stage: ${stage}, expected more unique weights\n${showWeights()}`
+  );
 }
 
 /**
@@ -328,43 +429,78 @@ async function queryMipGradientValuesForDevice(t) {
       struct VSOutput {
         @builtin(position) pos: vec4f,
         @location(0) @interpolate(flat, either) ndx: u32,
+        @location(1) @interpolate(flat, either) result: vec4f,
       };
 
-      @vertex fn vs(@builtin(vertex_index) vNdx: u32, @builtin(instance_index) iNdx: u32) -> VSOutput {
+      fn getMixLevels(wNdx: u32) -> vec4f {
+        let mipLevel = f32(wNdx) / ${kMipGradientSteps};
+        let size = textureDimensions(tex);
+        let g = mix(1.0, 2.0, mipLevel) / f32(size.x);
+        let ddx = vec2f(g, 0);
+        return vec4f(
+          textureSampleLevel(tex, smp, vec2f(0.5), mipLevel).r,
+          textureSampleGrad(tex, smp, vec2f(0.5), ddx, vec2f(0)).r,
+          0,
+          0);
+      }
+
+      fn recordMixLevels(wNdx: u32, r: vec4f) {
+        let ndx = wNdx * ${kNumWeightTypes};
+        for (var i: u32 = 0; i < ${kNumWeightTypes}; i++) {
+          result[ndx + i] = r[i];
+        }
+      }
+
+      fn getPosition(vNdx: u32) -> vec4f {
         let pos = array(
           vec2f(-1,  3),
           vec2f( 3, -1),
           vec2f(-1, -1),
         );
         let p = pos[vNdx];
-        return VSOutput(vec4f(p, 0, 1), iNdx);
+        return vec4f(p, 0, 1);
       }
 
-      @fragment fn fs(v: VSOutput) -> @location(0) vec4f {
-        let mipLevel = f32(v.ndx) / ${kMipGradientSteps};
-        let size = textureDimensions(tex);
-        let g = mix(1.0, 2.0, mipLevel) / f32(size.x);
-        let ddx = vec2f(g, 0);
+      @vertex fn vs(@builtin(vertex_index) vNdx: u32, @builtin(instance_index) iNdx: u32) -> VSOutput {
+        return VSOutput(getPosition(vNdx), iNdx, vec4f(0));
+      }
 
-        let ndx = v.ndx * ${kNumWeightTypes};
-        result[ndx + 0] = textureSampleLevel(tex, smp, vec2f(0.5), mipLevel).r;
-        result[ndx + 1] = textureSampleGrad(tex, smp, vec2f(0.5), ddx, vec2f(0)).r;
+      @fragment fn fsRecord(v: VSOutput) -> @location(0) vec4f {
+        recordMixLevels(v.ndx, getMixLevels(v.ndx));
+        return vec4f(0);
+      }
 
+      @compute @workgroup_size(1) fn csRecord(@builtin(global_invocation_id) id: vec3u) {
+        recordMixLevels(id.x, getMixLevels(id.x));
+      }
+
+      @vertex fn vsRecord(@builtin(vertex_index) vNdx: u32, @builtin(instance_index) iNdx: u32) -> VSOutput {
+        return VSOutput(getPosition(vNdx), iNdx, getMixLevels(iNdx));
+
+      }
+
+      @fragment fn fsSaveVs(v: VSOutput) -> @location(0) vec4f {
+        recordMixLevels(v.ndx, v.result);
         return vec4f(0);
       }
     `
   });
 
-  const pipeline = device.createRenderPipeline({
+  const vertexPipeline = device.createRenderPipeline({
     layout: 'auto',
-    vertex: { module },
-    fragment: { module, targets: [{ format: 'rgba8unorm' }] }
+    vertex: { module, entryPoint: 'vsRecord' },
+    fragment: { module, entryPoint: 'fsSaveVs', targets: [{ format: 'rgba8unorm' }] }
   });
 
-  const target = t.createTextureTracked({
-    size: [1, 1],
-    format: 'rgba8unorm',
-    usage: GPUTextureUsage.RENDER_ATTACHMENT
+  const fragmentPipeline = device.createRenderPipeline({
+    layout: 'auto',
+    vertex: { module, entryPoint: 'vs' },
+    fragment: { module, entryPoint: 'fsRecord', targets: [{ format: 'rgba8unorm' }] }
+  });
+
+  const computePipeline = device.createComputePipeline({
+    layout: 'auto',
+    compute: { module }
   });
 
   const texture = t.createTextureTracked({
@@ -387,59 +523,131 @@ async function queryMipGradientValuesForDevice(t) {
     mipmapFilter: 'linear'
   });
 
+  const target = t.createTextureTracked({
+    size: [1, 1],
+    format: 'rgba8unorm',
+    usage: GPUTextureUsage.RENDER_ATTACHMENT
+  });
+
   const storageBuffer = t.createBufferTracked({
     size: 4 * (kMipGradientSteps + 1) * kNumWeightTypes,
     usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
   });
 
-  const resultBuffer = t.createBufferTracked({
-    size: storageBuffer.size,
-    usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
-  });
 
-  const bindGroup = device.createBindGroup({
-    layout: pipeline.getBindGroupLayout(0),
-    entries: [
-    { binding: 0, resource: texture.createView() },
-    { binding: 1, resource: sampler },
-    { binding: 2, resource: { buffer: storageBuffer } }]
 
-  });
+
+
+
+
+  const getMixWeightForStage = (
+  encoder,
+  pipeline,
+  passFn) =>
+  {
+    const resultBuffer = t.createBufferTracked({
+      size: storageBuffer.size,
+      usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
+    });
+
+    const bindGroup = device.createBindGroup({
+      layout: pipeline.getBindGroupLayout(0),
+      entries: [
+      { binding: 0, resource: texture.createView() },
+      { binding: 1, resource: sampler },
+      { binding: 2, resource: { buffer: storageBuffer } }]
+
+    });
+
+    passFn(encoder, bindGroup, resultBuffer);
+    encoder.copyBufferToBuffer(storageBuffer, 0, resultBuffer, 0, resultBuffer.size);
+    return resultBuffer;
+  };
 
   const encoder = device.createCommandEncoder();
-  const pass = encoder.beginRenderPass({
-    colorAttachments: [
-    {
-      view: target.createView(),
-      loadOp: 'clear',
-      storeOp: 'store'
-    }]
+  const stageBuffers = {
+    compute: getMixWeightForStage(
+      encoder,
+      computePipeline,
+      (encoder, bindGroup, resultBuffer) => {
+        const pass = encoder.beginComputePass();
+        pass.setPipeline(computePipeline);
+        pass.setBindGroup(0, bindGroup);
+        pass.dispatchWorkgroups(kMipGradientSteps + 1);
+        pass.end();
+      }
+    ),
+    fragment: getMixWeightForStage(
+      encoder,
+      fragmentPipeline,
+      (encoder, bindGroup, resultBuffer) => {
+        const pass = encoder.beginRenderPass({
+          colorAttachments: [
+          {
+            view: target.createView(),
+            loadOp: 'clear',
+            storeOp: 'store'
+          }]
 
-  });
-  pass.setPipeline(pipeline);
-  pass.setBindGroup(0, bindGroup);
-  pass.draw(3, kMipGradientSteps + 1);
-  pass.end();
-  encoder.copyBufferToBuffer(storageBuffer, 0, resultBuffer, 0, resultBuffer.size);
+        });
+        pass.setPipeline(fragmentPipeline);
+        pass.setBindGroup(0, bindGroup);
+        pass.draw(3, kMipGradientSteps + 1);
+        pass.end();
+      }
+    ),
+    vertex: getMixWeightForStage(
+      encoder,
+      vertexPipeline,
+      (encoder, bindGroup, resultBuffer) => {
+        const pass = encoder.beginRenderPass({
+          colorAttachments: [
+          {
+            view: target.createView(),
+            loadOp: 'clear',
+            storeOp: 'store'
+          }]
+
+        });
+        pass.setPipeline(vertexPipeline);
+        pass.setBindGroup(0, bindGroup);
+        pass.draw(kMipGradientSteps + 1);
+        pass.end();
+      }
+    )
+  };
   device.queue.submit([encoder.finish()]);
 
-  await resultBuffer.mapAsync(GPUMapMode.READ);
-  const result = Array.from(new Float32Array(resultBuffer.getMappedRange()));
-  resultBuffer.unmap();
+  await Promise.all(Object.values(stageBuffers).map((b) => b.mapAsync(GPUMapMode.READ)));
 
-  const [sampleLevelWeights, gradWeights] = unzip(result, kNumWeightTypes);
+  const mixWeightsByStage = Object.fromEntries(
+    Object.entries(stageBuffers).map(([stage, resultBuffer]) => {
+      const result = Array.from(new Float32Array(resultBuffer.getMappedRange()));
+      resultBuffer.unmap();
+      resultBuffer.destroy();
 
-  validateWeights(sampleLevelWeights);
-  validateWeights(gradWeights);
+      const [sampleLevelWeights, gradWeights] = unzip(result, kNumWeightTypes);
 
-  s_deviceToMipGradientValues.set(device, {
-    sampleLevelWeights,
-    softwareMixToGPUMixGradWeights: generateSoftwareMixToGPUMixGradWeights(gradWeights, texture)
-  });
+      validateWeights(stage, sampleLevelWeights);
+      validateWeights(stage, gradWeights);
+
+      return [
+      stage,
+      {
+        sampleLevelWeights,
+        softwareMixToGPUMixGradWeights: generateSoftwareMixToGPUMixGradWeights(
+          gradWeights,
+          texture
+        )
+      }];
+
+    })
+  );
+
+  s_deviceToMipGradientValues.set(device, mixWeightsByStage);
 
   texture.destroy();
   storageBuffer.destroy();
-  resultBuffer.destroy();
 }
 
 // Given an array of ascending values and a value v, finds
@@ -511,10 +719,15 @@ function generateSoftwareMixToGPUMixGradWeights(gpuWeights, texture) {
   return softwareMixToGPUMixMap;
 }
 
-function mapSoftwareMipLevelToGPUMipLevel(t, mipLevel) {
+function mapSoftwareMipLevelToGPUMipLevel(t, stage, mipLevel) {
   const baseLevel = Math.floor(mipLevel);
   const softwareMix = mipLevel - baseLevel;
-  const gpuMix = getMixWeightByTypeForMipLevel(t, 'softwareMixToGPUMixGradWeights', softwareMix);
+  const gpuMix = getMixWeightByTypeForMipLevel(
+    t,
+    stage,
+    'softwareMixToGPUMixGradWeights',
+    softwareMix
+  );
   return baseLevel + gpuMix;
 }
 
@@ -562,6 +775,7 @@ async function initMipGradientValuesForDevice(t) {
 
 function getMixWeightByTypeForMipLevel(
 t,
+stage,
 weightType,
 mipLevel)
 {
@@ -569,7 +783,7 @@ mipLevel)
     return euclideanModulo(mipLevel, 1);
   }
   // linear interpolate between weights
-  const weights = s_deviceToMipGradientValues.get(t.device)[weightType];
+  const weights = s_deviceToMipGradientValues.get(t.device)[stage][weightType];
   assert(
     !!weights,
     'you must use WGSLTextureSampleTest or call initializeDeviceMipWeights before calling this function'
@@ -584,6 +798,7 @@ mipLevel)
 
 function getWeightForMipLevel(
 t,
+stage,
 weightType,
 mipLevelCount,
 mipLevel)
@@ -591,7 +806,7 @@ mipLevel)
   if (mipLevel < 0 || mipLevel >= mipLevelCount) {
     return 1;
   }
-  return getMixWeightByTypeForMipLevel(t, weightType, mipLevel);
+  return getMixWeightByTypeForMipLevel(t, stage, weightType, mipLevel);
 }
 
 /**
@@ -1435,6 +1650,7 @@ mipLevel)
  */
 function softwareTextureReadLevel(
 t,
+stage,
 call,
 texture,
 sampler,
@@ -1456,7 +1672,7 @@ mipLevel)
         const t0 = softwareTextureReadMipLevel(call, texture, sampler, baseMipLevel);
         const t1 = softwareTextureReadMipLevel(call, texture, sampler, nextMipLevel);
         const weightType = call.builtin === 'textureSampleLevel' ? 'sampleLevelWeights' : 'identity';
-        const mix = getWeightForMipLevel(t, weightType, mipLevelCount, clampedMipLevel);
+        const mix = getWeightForMipLevel(t, stage, weightType, mipLevelCount, clampedMipLevel);
         assert(mix >= 0 && mix <= 1);
         const values = [
         { v: t0, weight: 1 - mix },
@@ -1518,6 +1734,7 @@ size)
  */
 function softwareTextureReadGrad(
 t,
+stage,
 call,
 texture,
 sampler)
@@ -1525,10 +1742,10 @@ sampler)
   const bias = call.bias === undefined ? 0 : clamp(call.bias, { min: -16.0, max: 15.99 });
   if (call.ddx) {
     const mipLevel = computeMipLevelFromGradientsForCall(call, texture.descriptor.size);
-    const weightMipLevel = mapSoftwareMipLevelToGPUMipLevel(t, mipLevel + bias);
-    return softwareTextureReadLevel(t, call, texture, sampler, weightMipLevel);
+    const weightMipLevel = mapSoftwareMipLevelToGPUMipLevel(t, stage, mipLevel + bias);
+    return softwareTextureReadLevel(t, stage, call, texture, sampler, weightMipLevel);
   } else {
-    return softwareTextureReadLevel(t, call, texture, sampler, (call.mipLevel ?? 0) + bias);
+    return softwareTextureReadLevel(t, stage, call, texture, sampler, (call.mipLevel ?? 0) + bias);
   }
 }
 
@@ -1599,6 +1816,7 @@ isDDX)
 
 function softwareTextureRead(
 t,
+stage,
 call,
 texture,
 sampler)
@@ -1612,7 +1830,7 @@ sampler)
     };
     call = newCall;
   }
-  return softwareTextureReadGrad(t, call, texture, sampler);
+  return softwareTextureReadGrad(t, stage, call, texture, sampler);
 }
 
 
@@ -1841,8 +2059,9 @@ texture,
 textureType,
 sampler,
 calls,
-results)
-{
+results,
+stage = 'fragment' // MAINTENANCE_TODO: remove default
+) {
   const errs = [];
   const format = texture.texels[0].format;
   const size = reifyExtent3D(texture.descriptor.size);
@@ -1856,7 +2075,7 @@ results)
   for (let callIdx = 0; callIdx < calls.length; callIdx++) {
     const call = calls[callIdx];
     const gotRGBA = results.results[callIdx];
-    const expectRGBA = softwareTextureRead(t, call, texture, sampler);
+    const expectRGBA = softwareTextureRead(t, stage, call, texture, sampler);
 
     // The spec says depth and stencil have implementation defined values for G, B, and A
     // so if this is `textureGather` and component > 0 then there's nothing to check.
@@ -1975,6 +2194,7 @@ results)
             return Promise.resolve(
               softwareTextureRead(
                 t,
+                stage,
                 call,
                 {
                   texels,
@@ -3863,7 +4083,10 @@ function describeTextureCall(call) {
   return `${call.builtin}(${args.join(', ')})`;
 }
 
-const s_deviceToPipelines = new WeakMap();
+const s_deviceToPipelines = new WeakMap(
+
+
+);
 
 /**
  * Given a list of "calls", each one of which has a texture coordinate,
@@ -3937,8 +4160,9 @@ gpuTexture,
 viewDescriptor,
 textureType,
 sampler,
-calls)
-{
+calls,
+stage = 'fragment' // MAINTENANCE_TODO: remove default
+) {
   const {
     format,
     dimension,
@@ -4021,6 +4245,53 @@ calls)
   'vec3f(v.pos.xy - 0.5, 0) / vec3f(textureDimensions(T))' :
   '(v.pos.xy - 0.5) / vec2f(textureDimensions(T))'
   };`;
+  const derivativeType =
+  isCubeViewDimension(viewDescriptor) || dimension === '3d' ?
+  'vec3f' :
+  dimension === '1d' ?
+  'f32' :
+  'vec2f';
+
+  const stageWGSL =
+  stage === 'vertex' ?
+  `
+// --------------------------- vertex stage shaders --------------------------------
+@vertex fn vsVertex(
+    @builtin(vertex_index) vertex_index : u32,
+    @builtin(instance_index) instance_index : u32) -> VOut {
+  let positions = array(vec2f(-1, 3), vec2f(3, -1), vec2f(-1, -1));
+  return VOut(vec4f(positions[vertex_index], 0, 1),
+              instance_index,
+              getResult(instance_index, ${derivativeType}(0)));
+}
+
+@fragment fn fsVertex(v: VOut) -> @location(0) vec4f {
+  results[v.ndx] = v.result;
+  return vec4f(0);
+}
+` :
+  stage === 'fragment' ?
+  `
+// --------------------------- fragment stage shaders --------------------------------
+@vertex fn vsFragment(
+    @builtin(vertex_index) vertex_index : u32,
+    @builtin(instance_index) instance_index : u32) -> VOut {
+  let positions = array(vec2f(-1, 3), vec2f(3, -1), vec2f(-1, -1));
+  return VOut(vec4f(positions[vertex_index], 0, 1), instance_index, ${returnType}(0));
+}
+
+@fragment fn fsFragment(v: VOut) -> @location(0) vec4f {
+  ${derivativeBaseWGSL}
+  results[v.ndx] = getResult(v.ndx, derivativeBase);
+  return vec4f(0);
+}
+` :
+  `
+// --------------------------- compute stage shaders --------------------------------
+@compute @workgroup_size(1) fn csCompute(@builtin(global_invocation_id) id: vec3u) {
+  results[id.x] = getResult(id.x, ${derivativeType}(0));
+}
+`;
 
   const code = `
 ${structs}
@@ -4032,33 +4303,25 @@ ${dataFields}
 struct VOut {
   @builtin(position) pos: vec4f,
   @location(0) @interpolate(flat, either) ndx: u32,
+  @location(1) @interpolate(flat, either) result: ${returnType},
 };
-
-@vertex
-fn vs_main(
-    @builtin(vertex_index) vertex_index : u32,
-    @builtin(instance_index) instance_index : u32) -> VOut {
-  let positions = array(vec2f(-1, 3), vec2f(3, -1), vec2f(-1, -1));
-  return VOut(vec4f(positions[vertex_index], 0, 1), instance_index);
-}
 
 @group(0) @binding(0) var          T    : ${textureType};
 ${sampler ? `@group(0) @binding(1) var          S    : ${samplerType}` : ''};
 @group(0) @binding(2) var<storage> data : Data;
-@group(0) @binding(3) var<storage, read_write> results: array<${returnType}>;
+@group(1) @binding(0) var<storage, read_write> results: array<${returnType}>;
 
-@fragment
-fn fs_main(v: VOut) -> @location(0) vec4f {
-  ${derivativeBaseWGSL}
-  let idx = v.ndx;
+fn getResult(idx: u32, derivativeBase: ${derivativeType}) -> ${returnType} {
   var result : ${resultType};
 ${body}
-  results[idx] = ${returnType}(result);
-  return vec4f(0);
+  return ${returnType}(result);
 }
+
+${stageWGSL}
 `;
 
-  const pipelines = s_deviceToPipelines.get(t.device) ?? new Map();
+  const pipelines =
+  s_deviceToPipelines.get(t.device) ?? new Map();
   s_deviceToPipelines.set(t.device, pipelines);
 
   // unfilterable-float textures can only be used with manually created bindGroupLayouts
@@ -4088,19 +4351,19 @@ ${body}
     sampleType = 'unfilterable-float';
   }
 
+  const visibility =
+  stage === 'compute' ?
+  GPUShaderStage.COMPUTE :
+  stage === 'fragment' ?
+  GPUShaderStage.FRAGMENT :
+  GPUShaderStage.VERTEX;
+
   const entries = [
   {
     binding: 2,
-    visibility: GPUShaderStage.FRAGMENT,
+    visibility,
     buffer: {
       type: 'read-only-storage'
-    }
-  },
-  {
-    binding: 3,
-    visibility: GPUShaderStage.FRAGMENT,
-    buffer: {
-      type: 'storage'
     }
   }];
 
@@ -4114,7 +4377,7 @@ ${body}
   if (textureType.includes('storage')) {
     entries.push({
       binding: 0,
-      visibility: GPUShaderStage.FRAGMENT,
+      visibility,
       storageTexture: {
         access: 'read-only',
         viewDimension,
@@ -4124,13 +4387,13 @@ ${body}
   } else if (gpuTexture instanceof GPUExternalTexture) {
     entries.push({
       binding: 0,
-      visibility: GPUShaderStage.FRAGMENT,
+      visibility,
       externalTexture: {}
     });
   } else {
     entries.push({
       binding: 0,
-      visibility: GPUShaderStage.FRAGMENT,
+      visibility,
       texture: {
         sampleType,
         viewDimension,
@@ -4142,31 +4405,53 @@ ${body}
   if (sampler) {
     entries.push({
       binding: 1,
-      visibility: GPUShaderStage.FRAGMENT,
+      visibility,
       sampler: {
         type: isCompare ? 'comparison' : isFiltering ? 'filtering' : 'non-filtering'
       }
     });
   }
 
-  const id = `${resultType}:${JSON.stringify(entries)}:${code}`;
+  const id = `${resultType}:${stage}:${JSON.stringify(entries)}:${code}`;
   let pipeline = pipelines.get(id);
   if (!pipeline) {
-    const shaderModule = t.device.createShaderModule({ code });
-    const bindGroupLayout = t.device.createBindGroupLayout({ entries });
+    const module = t.device.createShaderModule({ code });
+    const bindGroupLayout0 = t.device.createBindGroupLayout({ entries });
+    const bindGroupLayout1 = t.device.createBindGroupLayout({
+      entries: [
+      {
+        binding: 0,
+        visibility: GPUShaderStage.FRAGMENT | GPUShaderStage.COMPUTE,
+        buffer: {
+          type: 'storage'
+        }
+      }]
+
+    });
+
     const layout = t.device.createPipelineLayout({
-      bindGroupLayouts: [bindGroupLayout]
+      bindGroupLayouts: [bindGroupLayout0, bindGroupLayout1]
     });
 
-    pipeline = t.device.createRenderPipeline({
-      layout,
-      vertex: { module: shaderModule },
-      fragment: {
-        module: shaderModule,
-        targets: [{ format: renderTarget.format }]
-      }
-    });
-
+    switch (stage) {
+      case 'compute':
+        pipeline = t.device.createComputePipeline({
+          layout,
+          compute: { module }
+        });
+        break;
+      case 'fragment':
+      case 'vertex':
+        pipeline = t.device.createRenderPipeline({
+          layout,
+          vertex: { module },
+          fragment: {
+            module,
+            targets: [{ format: renderTarget.format }]
+          }
+        });
+        break;
+    }
     pipelines.set(id, pipeline);
   }
 
@@ -4178,7 +4463,7 @@ ${body}
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
     });
 
-    const bindGroup = t.device.createBindGroup({
+    const bindGroup0 = t.device.createBindGroup({
       layout: pipeline.getBindGroupLayout(0),
       entries: [
       {
@@ -4189,9 +4474,13 @@ ${body}
         gpuTexture.createView(viewDescriptor)
       },
       ...(sampler ? [{ binding: 1, resource: gpuSampler }] : []),
-      { binding: 2, resource: { buffer: dataBuffer } },
-      { binding: 3, resource: { buffer: storageBuffer } }]
+      { binding: 2, resource: { buffer: dataBuffer } }]
 
+    });
+
+    const bindGroup1 = t.device.createBindGroup({
+      layout: pipeline.getBindGroupLayout(1),
+      entries: [{ binding: 0, resource: { buffer: storageBuffer } }]
     });
 
     const resultBuffer = t.createBufferTracked({
@@ -4201,20 +4490,30 @@ ${body}
 
     const encoder = t.device.createCommandEncoder();
 
-    const renderPass = encoder.beginRenderPass({
-      colorAttachments: [
-      {
-        view: renderTarget.createView(),
-        loadOp: 'clear',
-        storeOp: 'store'
-      }]
+    if (stage === 'compute') {
+      const pass = encoder.beginComputePass();
+      pass.setPipeline(pipeline);
+      pass.setBindGroup(0, bindGroup0);
+      pass.setBindGroup(1, bindGroup1);
+      pass.dispatchWorkgroups(calls.length);
+      pass.end();
+    } else {
+      const pass = encoder.beginRenderPass({
+        colorAttachments: [
+        {
+          view: renderTarget.createView(),
+          loadOp: 'clear',
+          storeOp: 'store'
+        }]
 
-    });
+      });
 
-    renderPass.setPipeline(pipeline);
-    renderPass.setBindGroup(0, bindGroup);
-    renderPass.draw(3, calls.length);
-    renderPass.end();
+      pass.setPipeline(pipeline);
+      pass.setBindGroup(0, bindGroup0);
+      pass.setBindGroup(1, bindGroup1);
+      pass.draw(3, calls.length);
+      pass.end();
+    }
     encoder.copyBufferToBuffer(storageBuffer, 0, resultBuffer, 0, storageBuffer.size);
     t.device.queue.submit([encoder.finish()]);
 

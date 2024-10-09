@@ -18,6 +18,7 @@ import {
   isEncodableTextureFormat,
   kDepthStencilFormats } from
 '../../../../../format_info.js';
+import { kShaderStages } from '../../../../validation/decl/util.js';
 
 import {
   checkCallResults,
@@ -59,6 +60,7 @@ Parameters:
 ).
 params((u) =>
 u.
+combine('stage', kShaderStages).
 combine('format', kDepthStencilFormats)
 // filter out stencil only formats
 .filter((t) => isDepthTextureFormat(t.format))
@@ -73,7 +75,7 @@ combine('compare', kCompareFunctions).
 combine('offset', [false, true])
 ).
 fn(async (t) => {
-  const { format, samplePoints, addressModeU, addressModeV, minFilter, compare, offset } =
+  const { format, stage, samplePoints, addressModeU, addressModeV, minFilter, compare, offset } =
   t.params;
 
   const size = chooseTextureSize({ minSize: 16, minBlocks: 4, format });
@@ -104,7 +106,7 @@ fn(async (t) => {
     derivatives: true,
     depthRef: true,
     offset,
-    hashInputs: [format, samplePoints, addressModeU, addressModeV, minFilter, offset]
+    hashInputs: [stage, format, samplePoints, addressModeU, addressModeV, minFilter, offset]
   }).map(({ coords, derivativeMult, arrayIndex, depthRef, offset }) => {
     return {
       builtin: 'textureSampleCompareLevel',
@@ -117,14 +119,23 @@ fn(async (t) => {
   });
   const textureType = 'texture_depth_2d';
   const viewDescriptor = {};
-  const results = await doTextureCalls(t, texture, viewDescriptor, textureType, sampler, calls);
+  const results = await doTextureCalls(
+    t,
+    texture,
+    viewDescriptor,
+    textureType,
+    sampler,
+    calls,
+    stage
+  );
   const res = await checkCallResults(
     t,
     { texels, descriptor, viewDescriptor },
     textureType,
     sampler,
     calls,
-    results
+    results,
+    stage
   );
   t.expectOK(res);
 });
@@ -144,6 +155,7 @@ Parameters:
 ).
 params((u) =>
 u.
+combine('stage', kShaderStages).
 combine('format', kDepthStencilFormats)
 // filter out stencil only formats
 .filter((t) => isDepthTextureFormat(t.format))
@@ -156,7 +168,7 @@ combine('addressMode', ['clamp-to-edge', 'repeat', 'mirror-repeat']).
 combine('compare', kCompareFunctions)
 ).
 fn(async (t) => {
-  const { format, samplePoints, addressMode, minFilter, compare } = t.params;
+  const { format, stage, samplePoints, addressMode, minFilter, compare } = t.params;
 
   const viewDimension = 'cube';
   const size = chooseTextureSize({ minSize: 16, minBlocks: 2, format, viewDimension });
@@ -189,7 +201,7 @@ fn(async (t) => {
     derivatives: true,
     depthRef: true,
     textureBuiltin: 'textureSampleCompareLevel',
-    hashInputs: [format, samplePoints, addressMode, minFilter, compare]
+    hashInputs: [stage, format, samplePoints, addressMode, minFilter, compare]
   }).map(({ coords, derivativeMult, depthRef }) => {
     return {
       builtin: 'textureSampleCompareLevel',
@@ -203,14 +215,23 @@ fn(async (t) => {
     dimension: viewDimension
   };
   const textureType = 'texture_depth_cube';
-  const results = await doTextureCalls(t, texture, viewDescriptor, textureType, sampler, calls);
+  const results = await doTextureCalls(
+    t,
+    texture,
+    viewDescriptor,
+    textureType,
+    sampler,
+    calls,
+    stage
+  );
   const res = await checkCallResults(
     t,
     { texels, descriptor, viewDescriptor },
     textureType,
     sampler,
     calls,
-    results
+    results,
+    stage
   );
   t.expectOK(res);
 });
@@ -240,6 +261,7 @@ Parameters:
 ).
 params((u) =>
 u.
+combine('stage', kShaderStages).
 combine('format', kDepthStencilFormats)
 // filter out stencil only formats
 .filter((t) => isDepthTextureFormat(t.format))
@@ -258,8 +280,17 @@ beforeAllSubcases((t) => {
   t.skipIfTextureFormatNotSupported(t.params.format);
 }).
 fn(async (t) => {
-  const { format, samplePoints, A, addressModeU, addressModeV, minFilter, compare, offset } =
-  t.params;
+  const {
+    format,
+    stage,
+    samplePoints,
+    A,
+    addressModeU,
+    addressModeV,
+    minFilter,
+    compare,
+    offset
+  } = t.params;
 
   const viewDimension = '2d-array';
   const size = chooseTextureSize({ minSize: 16, minBlocks: 4, format, viewDimension });
@@ -291,7 +322,7 @@ fn(async (t) => {
     arrayIndex: { num: texture.depthOrArrayLayers, type: A },
     depthRef: true,
     offset,
-    hashInputs: [format, samplePoints, A, addressModeU, addressModeV, minFilter, offset]
+    hashInputs: [stage, format, samplePoints, A, addressModeU, addressModeV, minFilter, offset]
   }).map(({ coords, derivativeMult, arrayIndex, depthRef, offset }) => {
     return {
       builtin: 'textureSampleCompareLevel',
@@ -306,14 +337,23 @@ fn(async (t) => {
   });
   const textureType = 'texture_depth_2d_array';
   const viewDescriptor = {};
-  const results = await doTextureCalls(t, texture, viewDescriptor, textureType, sampler, calls);
+  const results = await doTextureCalls(
+    t,
+    texture,
+    viewDescriptor,
+    textureType,
+    sampler,
+    calls,
+    stage
+  );
   const res = await checkCallResults(
     t,
     { texels, descriptor, viewDescriptor },
     textureType,
     sampler,
     calls,
-    results
+    results,
+    stage
   );
   t.expectOK(res);
 });
@@ -336,6 +376,7 @@ Parameters:
 ).
 params((u) =>
 u.
+combine('stage', kShaderStages).
 combine('format', kDepthStencilFormats)
 // filter out stencil only formats
 .filter((t) => isDepthTextureFormat(t.format))
@@ -352,7 +393,7 @@ beforeAllSubcases((t) => {
   t.skipIfTextureViewDimensionNotSupported('cube-array');
 }).
 fn(async (t) => {
-  const { format, A, samplePoints, addressMode, minFilter, compare } = t.params;
+  const { format, A, stage, samplePoints, addressMode, minFilter, compare } = t.params;
 
   const viewDimension = 'cube-array';
   const size = chooseTextureSize({ minSize: 8, minBlocks: 2, format, viewDimension });
@@ -384,7 +425,7 @@ fn(async (t) => {
     textureBuiltin: 'textureSampleCompareLevel',
     arrayIndex: { num: texture.depthOrArrayLayers / 6, type: A },
     depthRef: true,
-    hashInputs: [format, samplePoints, addressMode, minFilter]
+    hashInputs: [stage, format, samplePoints, addressMode, minFilter]
   }).map(({ coords, derivativeMult, depthRef, arrayIndex }) => {
     return {
       builtin: 'textureSampleCompareLevel',
@@ -400,14 +441,23 @@ fn(async (t) => {
     dimension: viewDimension
   };
   const textureType = 'texture_depth_cube_array';
-  const results = await doTextureCalls(t, texture, viewDescriptor, textureType, sampler, calls);
+  const results = await doTextureCalls(
+    t,
+    texture,
+    viewDescriptor,
+    textureType,
+    sampler,
+    calls,
+    stage
+  );
   const res = await checkCallResults(
     t,
     { texels, descriptor, viewDescriptor },
     textureType,
     sampler,
     calls,
-    results
+    results,
+    stage
   );
   t.expectOK(res);
 });
