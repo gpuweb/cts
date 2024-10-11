@@ -4187,7 +4187,7 @@ export async function doTextureCalls<T extends Dimensionality>(
 
   const dataBuffer = t.createBufferTracked({
     size: data.length * 4,
-    usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE,
+    usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.UNIFORM,
   });
   t.device.queue.writeBuffer(dataBuffer, 0, new Uint32Array(data));
 
@@ -4206,8 +4206,8 @@ export async function doTextureCalls<T extends Dimensionality>(
   const samplerType = isCompare ? 'sampler_comparison' : 'sampler';
 
   const renderTarget = t.createTextureTracked({
-    format: 'rgba8unorm',
-    size: [1, 1],
+    format: resultFormat,
+    size: [calls.length, 1],
     usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
   });
 
@@ -4219,12 +4219,12 @@ export async function doTextureCalls<T extends Dimensionality>(
   const derivativeBaseWGSL = `
   let derivativeBase = ${
     isCubeViewDimension(viewDescriptor)
-      ? '(v.pos.xyx - 0.5) / vec3f(vec2f(textureDimensions(T)), 1.0)'
+      ? '(v.pos.xyx - 0.5 - vec3f(f32(v.ndx), 0, f32(v.ndx))) / vec3f(vec2f(textureDimensions(T)), 1.0)'
       : dimension === '1d'
-      ? 'f32(v.pos.x - 0.5) / f32(textureDimensions(T))'
+      ? 'f32(v.pos.x - 0.5 - f32(v.ndx)) / f32(textureDimensions(T))'
       : dimension === '3d'
-      ? 'vec3f(v.pos.xy - 0.5, 0) / vec3f(textureDimensions(T))'
-      : '(v.pos.xy - 0.5) / vec2f(textureDimensions(T))'
+      ? 'vec3f(v.pos.xy - 0.5 - vec2f(f32(v.ndx), 0), 0) / vec3f(textureDimensions(T))'
+      : '(v.pos.xy - 0.5 - vec2f(f32(v.ndx), 0)) / vec2f(textureDimensions(T))'
   };`;
   const derivativeType =
     isCubeViewDimension(viewDescriptor) || dimension === '3d'
@@ -4246,9 +4246,8 @@ export async function doTextureCalls<T extends Dimensionality>(
               getResult(instance_index, ${derivativeType}(0)));
 }
 
-@fragment fn fsVertex(v: VOut) -> @location(0) vec4f {
-  results[v.ndx] = v.result;
-  return vec4f(0);
+@fragment fn fsVertex(v: VOut) -> @location(0) ${returnType} {
+  return v.result;
 }
 `
       : stage === 'fragment'
@@ -4261,14 +4260,15 @@ export async function doTextureCalls<T extends Dimensionality>(
   return VOut(vec4f(positions[vertex_index], 0, 1), instance_index, ${returnType}(0));
 }
 
-@fragment fn fsFragment(v: VOut) -> @location(0) vec4f {
+@fragment fn fsFragment(v: VOut) -> @location(0) ${returnType} {
   ${derivativeBaseWGSL}
-  results[v.ndx] = getResult(v.ndx, derivativeBase);
-  return vec4f(0);
+  return getResult(v.ndx, derivativeBase);
 }
 `
       : `
 // --------------------------- compute stage shaders --------------------------------
+@group(1) @binding(0) var<storage, read_write> results: array<${returnType}>;
+
 @compute @workgroup_size(1) fn csCompute(@builtin(global_invocation_id) id: vec3u) {
   results[id.x] = getResult(id.x, ${derivativeType}(0));
 }
@@ -4289,8 +4289,7 @@ struct VOut {
 
 @group(0) @binding(0) var          T    : ${textureType};
 ${sampler ? `@group(0) @binding(1) var          S    : ${samplerType}` : ''};
-@group(0) @binding(2) var<storage> data : Data;
-@group(1) @binding(0) var<storage, read_write> results: array<${returnType}>;
+@group(0) @binding(2) var<uniform> data : Data;
 
 fn getResult(idx: u32, derivativeBase: ${derivativeType}) -> ${returnType} {
   var result : ${resultType};
@@ -4344,7 +4343,7 @@ ${stageWGSL}
       binding: 2,
       visibility,
       buffer: {
-        type: 'read-only-storage',
+        type: 'uniform',
       },
     },
   ];
@@ -4398,20 +4397,25 @@ ${stageWGSL}
   if (!pipeline) {
     const module = t.device.createShaderModule({ code });
     const bindGroupLayout0 = t.device.createBindGroupLayout({ entries });
-    const bindGroupLayout1 = t.device.createBindGroupLayout({
-      entries: [
-        {
-          binding: 0,
-          visibility: GPUShaderStage.FRAGMENT | GPUShaderStage.COMPUTE,
-          buffer: {
-            type: 'storage',
+    const bindGroupLayouts = [bindGroupLayout0];
+
+    if (stage === 'compute') {
+      const bindGroupLayout1 = t.device.createBindGroupLayout({
+        entries: [
+          {
+            binding: 0,
+            visibility: GPUShaderStage.FRAGMENT | GPUShaderStage.COMPUTE,
+            buffer: {
+              type: 'storage',
+            },
           },
-        },
-      ],
-    });
+        ],
+      });
+      bindGroupLayouts.push(bindGroupLayout1);
+    }
 
     const layout = t.device.createPipelineLayout({
-      bindGroupLayouts: [bindGroupLayout0, bindGroupLayout1],
+      bindGroupLayouts,
     });
 
     switch (stage) {
@@ -4439,9 +4443,9 @@ ${stageWGSL}
   const gpuSampler = sampler ? t.device.createSampler(sampler) : undefined;
 
   const run = async (gpuTexture: GPUTexture | GPUExternalTexture) => {
-    const storageBuffer = t.createBufferTracked({
-      size: calls.length * 16,
-      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
+    const resultBuffer = t.createBufferTracked({
+      size: align(calls.length * 16, 256),
+      usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
     });
 
     const bindGroup0 = t.device.createBindGroup({
@@ -4459,25 +4463,27 @@ ${stageWGSL}
       ],
     });
 
-    const bindGroup1 = t.device.createBindGroup({
-      layout: pipeline!.getBindGroupLayout(1),
-      entries: [{ binding: 0, resource: { buffer: storageBuffer } }],
-    });
-
-    const resultBuffer = t.createBufferTracked({
-      size: storageBuffer.size,
-      usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
-    });
-
+    let storageBuffer: GPUBuffer | undefined;
     const encoder = t.device.createCommandEncoder();
 
     if (stage === 'compute') {
+      storageBuffer = t.createBufferTracked({
+        size: resultBuffer.size,
+        usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
+      });
+
+      const bindGroup1 = t.device.createBindGroup({
+        layout: pipeline!.getBindGroupLayout(1),
+        entries: [{ binding: 0, resource: { buffer: storageBuffer } }],
+      });
+
       const pass = encoder.beginComputePass();
       pass.setPipeline(pipeline! as GPUComputePipeline);
       pass.setBindGroup(0, bindGroup0);
       pass.setBindGroup(1, bindGroup1);
       pass.dispatchWorkgroups(calls.length);
       pass.end();
+      encoder.copyBufferToBuffer(storageBuffer, 0, resultBuffer, 0, storageBuffer.size);
     } else {
       const pass = encoder.beginRenderPass({
         colorAttachments: [
@@ -4491,11 +4497,20 @@ ${stageWGSL}
 
       pass.setPipeline(pipeline! as GPURenderPipeline);
       pass.setBindGroup(0, bindGroup0);
-      pass.setBindGroup(1, bindGroup1);
-      pass.draw(3, calls.length);
+      for (let i = 0; i < calls.length; ++i) {
+        pass.setViewport(i, 0, 1, 1, 0, 1);
+        pass.draw(3, 1, 0, i);
+      }
       pass.end();
+      encoder.copyTextureToBuffer(
+        { texture: renderTarget },
+        {
+          buffer: resultBuffer,
+          bytesPerRow: resultBuffer.size,
+        },
+        [renderTarget.width, 1]
+      );
     }
-    encoder.copyBufferToBuffer(storageBuffer, 0, resultBuffer, 0, storageBuffer.size);
     t.device.queue.submit([encoder.finish()]);
 
     await resultBuffer.mapAsync(GPUMapMode.READ);
@@ -4521,7 +4536,7 @@ ${stageWGSL}
       }
     }
 
-    storageBuffer.destroy();
+    storageBuffer?.destroy();
     resultBuffer.destroy();
 
     return out;
