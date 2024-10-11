@@ -156,7 +156,8 @@ Parameters:
       sampler,
       calls,
       results,
-      stage
+      stage,
+      texture
     );
     t.expectOK(res);
   });
@@ -254,7 +255,8 @@ Parameters:
       sampler,
       calls,
       results,
-      stage
+      stage,
+      texture
     );
     t.expectOK(res);
   });
@@ -376,7 +378,8 @@ Parameters:
       sampler,
       calls,
       results,
-      stage
+      stage,
+      texture
     );
     t.expectOK(res);
   });
@@ -481,7 +484,8 @@ Parameters:
       sampler,
       calls,
       results,
-      stage
+      stage,
+      texture
     );
     t.expectOK(res);
   });
@@ -573,7 +577,8 @@ Parameters:
       sampler,
       calls,
       results,
-      stage
+      stage,
+      texture
     );
     t.expectOK(res);
   });
@@ -660,7 +665,8 @@ Parameters:
       sampler,
       calls,
       results,
-      stage
+      stage,
+      texture
     );
     t.expectOK(res);
   });
@@ -766,7 +772,8 @@ Parameters:
       sampler,
       calls,
       results,
-      stage
+      stage,
+      texture
     );
     t.expectOK(res);
   });
@@ -862,7 +869,8 @@ Parameters:
       sampler,
       calls,
       results,
-      stage
+      stage,
+      texture
     );
     t.expectOK(res);
   });
