@@ -160,8 +160,8 @@ function unzip<T>(array: T[], num: number) {
 }
 
 type MipWeights = {
-  sampleLevelWeights: number[];
-  softwareMixToGPUMixGradWeights: number[];
+  sampleLevelWeights?: number[];
+  softwareMixToGPUMixGradWeights?: number[];
 };
 type MipWeightType = keyof MipWeights;
 
@@ -170,7 +170,7 @@ function makeGraph(width: number, height: number) {
 
   return {
     plot(norm: number, x: number, c: number) {
-      const y = clamp(Math.round(norm * height), { min: 0, max: height - 1 });
+      const y = clamp(Math.floor(norm * height), { min: 0, max: height - 1 });
       const offset = (height - y - 1) * width + x;
       data[offset] = c;
     },
@@ -417,7 +417,7 @@ ${graphWeights(32, weights)}
  * +--------+--------+--------+--------+
  */
 
-async function queryMipGradientValuesForDevice(t: GPUTest) {
+async function queryMipGradientValuesForDevice(t: GPUTest, stage: ShaderStage) {
   const { device } = t;
   const kNumWeightTypes = 2;
   const module = device.createShaderModule({
@@ -476,7 +476,6 @@ async function queryMipGradientValuesForDevice(t: GPUTest) {
 
       @vertex fn vsRecord(@builtin(vertex_index) vNdx: u32, @builtin(instance_index) iNdx: u32) -> VSOutput {
         return VSOutput(getPosition(vNdx), iNdx, getMixLevels(iNdx));
-
       }
 
       @fragment fn fsSaveVs(v: VSOutput) -> @location(0) vec4f {
@@ -484,23 +483,6 @@ async function queryMipGradientValuesForDevice(t: GPUTest) {
         return vec4f(0);
       }
     `,
-  });
-
-  const vertexPipeline = device.createRenderPipeline({
-    layout: 'auto',
-    vertex: { module, entryPoint: 'vsRecord' },
-    fragment: { module, entryPoint: 'fsSaveVs', targets: [{ format: 'rgba8unorm' }] },
-  });
-
-  const fragmentPipeline = device.createRenderPipeline({
-    layout: 'auto',
-    vertex: { module, entryPoint: 'vs' },
-    fragment: { module, entryPoint: 'fsRecord', targets: [{ format: 'rgba8unorm' }] },
-  });
-
-  const computePipeline = device.createComputePipeline({
-    layout: 'auto',
-    compute: { module },
   });
 
   const texture = t.createTextureTracked({
@@ -534,23 +516,13 @@ async function queryMipGradientValuesForDevice(t: GPUTest) {
     usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
   });
 
-  type PassFn = (
-    encoder: GPUCommandEncoder,
-    bindGroup: GPUBindGroup,
-    resultBuffer: GPUBuffer
-  ) => void;
+  const resultBuffer = t.createBufferTracked({
+    size: storageBuffer.size,
+    usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
+  });
 
-  const getMixWeightForStage = (
-    encoder: GPUCommandEncoder,
-    pipeline: GPUComputePipeline | GPURenderPipeline,
-    passFn: PassFn
-  ) => {
-    const resultBuffer = t.createBufferTracked({
-      size: storageBuffer.size,
-      usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
-    });
-
-    const bindGroup = device.createBindGroup({
+  const createBindGroup = (pipeline: GPUComputePipeline | GPURenderPipeline) =>
+    device.createBindGroup({
       layout: pipeline.getBindGroupLayout(0),
       entries: [
         { binding: 0, resource: texture.createView() },
@@ -559,95 +531,83 @@ async function queryMipGradientValuesForDevice(t: GPUTest) {
       ],
     });
 
-    passFn(encoder, bindGroup, resultBuffer);
-    encoder.copyBufferToBuffer(storageBuffer, 0, resultBuffer, 0, resultBuffer.size);
-    return resultBuffer;
-  };
-
   const encoder = device.createCommandEncoder();
-  const stageBuffers: Record<ShaderStage, GPUBuffer> = {
-    compute: getMixWeightForStage(
-      encoder,
-      computePipeline,
-      (encoder: GPUCommandEncoder, bindGroup: GPUBindGroup, resultBuffer: GPUBuffer) => {
-        const pass = encoder.beginComputePass();
-        pass.setPipeline(computePipeline);
-        pass.setBindGroup(0, bindGroup);
-        pass.dispatchWorkgroups(kMipGradientSteps + 1);
-        pass.end();
-      }
-    ),
-    fragment: getMixWeightForStage(
-      encoder,
-      fragmentPipeline,
-      (encoder: GPUCommandEncoder, bindGroup: GPUBindGroup, resultBuffer: GPUBuffer) => {
-        const pass = encoder.beginRenderPass({
-          colorAttachments: [
-            {
-              view: target.createView(),
-              loadOp: 'clear',
-              storeOp: 'store',
-            },
-          ],
-        });
-        pass.setPipeline(fragmentPipeline);
-        pass.setBindGroup(0, bindGroup);
-        pass.draw(3, kMipGradientSteps + 1);
-        pass.end();
-      }
-    ),
-    vertex: getMixWeightForStage(
-      encoder,
-      vertexPipeline,
-      (encoder: GPUCommandEncoder, bindGroup: GPUBindGroup, resultBuffer: GPUBuffer) => {
-        const pass = encoder.beginRenderPass({
-          colorAttachments: [
-            {
-              view: target.createView(),
-              loadOp: 'clear',
-              storeOp: 'store',
-            },
-          ],
-        });
-        pass.setPipeline(vertexPipeline);
-        pass.setBindGroup(0, bindGroup);
-        pass.draw(kMipGradientSteps + 1);
-        pass.end();
-      }
-    ),
-  };
+  switch (stage) {
+    case 'compute': {
+      const pipeline = device.createComputePipeline({
+        layout: 'auto',
+        compute: { module },
+      });
+      const pass = encoder.beginComputePass();
+      pass.setPipeline(pipeline);
+      pass.setBindGroup(0, createBindGroup(pipeline));
+      pass.dispatchWorkgroups(kMipGradientSteps + 1);
+      pass.end();
+      break;
+    }
+    case 'fragment': {
+      const pipeline = device.createRenderPipeline({
+        layout: 'auto',
+        vertex: { module, entryPoint: 'vs' },
+        fragment: { module, entryPoint: 'fsRecord', targets: [{ format: 'rgba8unorm' }] },
+      });
+      const pass = encoder.beginRenderPass({
+        colorAttachments: [
+          {
+            view: target.createView(),
+            loadOp: 'clear',
+            storeOp: 'store',
+          },
+        ],
+      });
+      pass.setPipeline(pipeline);
+      pass.setBindGroup(0, createBindGroup(pipeline));
+      pass.draw(3, kMipGradientSteps + 1);
+      pass.end();
+      break;
+    }
+    case 'vertex': {
+      const pipeline = device.createRenderPipeline({
+        layout: 'auto',
+        vertex: { module, entryPoint: 'vsRecord' },
+        fragment: { module, entryPoint: 'fsSaveVs', targets: [{ format: 'rgba8unorm' }] },
+      });
+      const pass = encoder.beginRenderPass({
+        colorAttachments: [
+          {
+            view: target.createView(),
+            loadOp: 'clear',
+            storeOp: 'store',
+          },
+        ],
+      });
+      pass.setPipeline(pipeline);
+      pass.setBindGroup(0, createBindGroup(pipeline));
+      pass.draw(3, kMipGradientSteps + 1);
+      pass.end();
+      break;
+    }
+  }
+  encoder.copyBufferToBuffer(storageBuffer, 0, resultBuffer, 0, resultBuffer.size);
   device.queue.submit([encoder.finish()]);
 
-  await Promise.all(Object.values(stageBuffers).map(b => b.mapAsync(GPUMapMode.READ)));
+  await resultBuffer.mapAsync(GPUMapMode.READ);
+  const result = Array.from(new Float32Array(resultBuffer.getMappedRange()));
+  resultBuffer.unmap();
+  resultBuffer.destroy();
 
-  const mixWeightsByStage = Object.fromEntries(
-    Object.entries(stageBuffers).map(([stage, resultBuffer]) => {
-      const result = Array.from(new Float32Array(resultBuffer.getMappedRange()));
-      resultBuffer.unmap();
-      resultBuffer.destroy();
+  const [sampleLevelWeights, gradWeights] = unzip(result, kNumWeightTypes);
 
-      const [sampleLevelWeights, gradWeights] = unzip(result, kNumWeightTypes);
-
-      validateWeights(stage, sampleLevelWeights);
-      validateWeights(stage, gradWeights);
-
-      return [
-        stage,
-        {
-          sampleLevelWeights,
-          softwareMixToGPUMixGradWeights: generateSoftwareMixToGPUMixGradWeights(
-            gradWeights,
-            texture
-          ),
-        },
-      ];
-    })
-  ) as Record<ShaderStage, MipWeights>;
-
-  s_deviceToMipGradientValues.set(device, mixWeightsByStage);
+  validateWeights(stage, sampleLevelWeights);
+  validateWeights(stage, gradWeights);
 
   texture.destroy();
   storageBuffer.destroy();
+
+  return {
+    sampleLevelWeights,
+    softwareMixToGPUMixGradWeights: generateSoftwareMixToGPUMixGradWeights(gradWeights, texture),
+  };
 }
 
 // Given an array of ascending values and a value v, finds
@@ -761,14 +721,38 @@ const euclideanModulo = (n: number, m: number) => ((n % m) + m) % m;
  * "get the weights" step separately.
  */
 const kMipGradientSteps = 64;
-const s_deviceToMipGradientValuesPromise = new WeakMap<GPUDevice, Promise<void>>();
+const s_deviceToMipGradientValuesPromise = new WeakMap<
+  GPUDevice,
+  Record<ShaderStage, Promise<MipWeights>>
+>();
 const s_deviceToMipGradientValues = new WeakMap<GPUDevice, Record<ShaderStage, MipWeights>>();
-async function initMipGradientValuesForDevice(t: GPUTest) {
+
+async function initMipGradientValuesForDevice(t: GPUTest, stage: ShaderStage) {
   const { device } = t;
-  let weightsP = s_deviceToMipGradientValuesPromise.get(device);
+  // Get the per stage promises (or make them)
+  const stageWeightsP =
+    s_deviceToMipGradientValuesPromise.get(device) ??
+    ({} as Record<ShaderStage, Promise<MipWeights>>);
+  s_deviceToMipGradientValuesPromise.set(device, stageWeightsP);
+
+  let weightsP = stageWeightsP[stage];
   if (!weightsP) {
-    weightsP = queryMipGradientValuesForDevice(t);
-    s_deviceToMipGradientValuesPromise.set(device, weightsP);
+    // There was no promise for this weight so request it
+    // and add a then clause so the first thing that will happen
+    // when the promise resolves is that we'll record the weights for
+    // that stage.
+    weightsP = queryMipGradientValuesForDevice(t, stage);
+    weightsP
+      .then(weights => {
+        const stageWeights =
+          s_deviceToMipGradientValues.get(device) ?? ({} as Record<ShaderStage, MipWeights>);
+        s_deviceToMipGradientValues.set(device, stageWeights);
+        stageWeights[stage] = weights;
+      })
+      .catch(e => {
+        throw e;
+      });
+    stageWeightsP[stage] = weightsP;
   }
   return await weightsP;
 }
@@ -856,7 +840,6 @@ export class WGSLTextureQueryTest extends GPUTest {
 export class WGSLTextureSampleTest extends GPUTest {
   override async init(): Promise<void> {
     await super.init();
-    await initMipGradientValuesForDevice(this);
   }
 }
 
@@ -2064,6 +2047,8 @@ export async function checkCallResults<T extends Dimensionality>(
   results: Awaited<ReturnType<typeof doTextureCalls<T>>>,
   stage: ShaderStage = 'fragment' // MAINTENANCE_TODO: remove default
 ) {
+  await initMipGradientValuesForDevice(t, stage);
+
   const errs: string[] = [];
   const format = texture.texels[0].format;
   const size = reifyExtent3D(texture.descriptor.size);
