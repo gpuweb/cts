@@ -173,21 +173,21 @@ g.test('format')
       }
     }
 
-    t.expectValidationError(() => {
+    if (validFormat) {
       ctx.configure({
         device: t.device,
         format,
       });
-    }, !validFormat);
-
-    const configuration = ctx.getConfiguration();
-    t.expect(configuration!.format === format);
-
-    t.expectValidationError(() => {
-      // Should always return a texture, whether the configured format was valid or not.
-      const currentTexture = ctx.getCurrentTexture();
-      t.expect(currentTexture instanceof GPUTexture);
-    }, !validFormat);
+      const configuration = ctx.getConfiguration();
+      t.expect(configuration!.format === format);
+    } else {
+      t.shouldThrow('TypeError', () => {
+        ctx.configure({
+          device: t.device,
+          format,
+        });
+      });
+    }
   });
 
 g.test('usage')
