@@ -75,13 +75,13 @@ Parameters:
       // MAINTENANCE_TODO: Remove when support for depth24plus, depth24plus-stencil8, and depth32float-stencil8 is added.
       .filter(t => isEncodableTextureFormat(t.format))
       .combine('minFilter', ['nearest', 'linear'] as const)
+      .combine('offset', [false, true] as const)
       .beginSubcases()
       .combine('samplePoints', kSamplePointMethods)
       .combine('A', ['i32', 'u32'] as const)
       .combine('addressModeU', ['clamp-to-edge', 'repeat', 'mirror-repeat'] as const)
       .combine('addressModeV', ['clamp-to-edge', 'repeat', 'mirror-repeat'] as const)
       .combine('compare', kCompareFunctions)
-      .combine('offset', [false, true] as const)
   )
   .beforeAllSubcases(t => {
     t.skipIfTextureFormatNotSupported(t.params.format);
@@ -293,12 +293,12 @@ Parameters:
       // MAINTENANCE_TODO: Remove when support for depth24plus, depth24plus-stencil8, and depth32float-stencil8 is added.
       .filter(t => isEncodableTextureFormat(t.format))
       .combine('minFilter', ['nearest', 'linear'] as const)
+      .combine('offset', [false, true] as const)
       .beginSubcases()
       .combine('C', ['i32', 'u32'] as const)
       .combine('samplePoints', kSamplePointMethods)
       .combine('addressMode', ['clamp-to-edge', 'repeat', 'mirror-repeat'] as const)
       .combine('compare', kCompareFunctions)
-      .combine('offset', [false, true] as const)
   )
   .fn(async t => {
     const { format, C, stage, samplePoints, addressMode, compare, minFilter, offset } = t.params;

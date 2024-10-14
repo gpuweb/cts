@@ -140,12 +140,12 @@ Parameters:
     u
       .combine('format', kTestableColorFormats)
       .filter(t => isPotentiallyFilterableAndFillable(t.format))
-      .combine('samplePoints', kSamplePointMethods)
+      .combine('offset', [false, true] as const)
       .beginSubcases()
+      .combine('samplePoints', kSamplePointMethods)
       .combine('addressModeU', ['clamp-to-edge', 'repeat', 'mirror-repeat'] as const)
       .combine('addressModeV', ['clamp-to-edge', 'repeat', 'mirror-repeat'] as const)
       .combine('minFilter', ['nearest', 'linear'] as const)
-      .combine('offset', [false, true] as const)
   )
   .beforeAllSubcases(t =>
     skipIfTextureFormatNotSupportedNotAvailableOrNotFilterable(t, t.params.format)
@@ -229,15 +229,15 @@ Parameters:
       .filter(t => isPotentiallyFilterableAndFillable(t.format))
       .combine('viewDimension', ['3d', 'cube'] as const)
       .filter(t => isSupportedViewFormatCombo(t.format, t.viewDimension))
+      .combine('offset', [false, true] as const)
+      .filter(t => t.viewDimension !== 'cube' || t.offset !== true)
+      .beginSubcases()
       .combine('samplePoints', kCubeSamplePointMethods)
       .filter(t => t.samplePoints !== 'cube-edges' || t.viewDimension !== '3d')
-      .beginSubcases()
       .combine('addressModeU', ['clamp-to-edge', 'repeat', 'mirror-repeat'] as const)
       .combine('addressModeV', ['clamp-to-edge', 'repeat', 'mirror-repeat'] as const)
       .combine('addressModeW', ['clamp-to-edge', 'repeat', 'mirror-repeat'] as const)
       .combine('minFilter', ['nearest', 'linear'] as const)
-      .combine('offset', [false, true] as const)
-      .filter(t => t.viewDimension !== 'cube' || t.offset !== true)
   )
   .beforeAllSubcases(t =>
     skipIfTextureFormatNotSupportedNotAvailableOrNotFilterable(t, t.params.format)
@@ -351,12 +351,12 @@ Parameters:
       .filter(t => isDepthTextureFormat(t.format))
       // MAINTENANCE_TODO: Remove when support for depth24plus, depth24plus-stencil8, and depth32float-stencil8 is added.
       .filter(t => isEncodableTextureFormat(t.format))
+      .combine('offset', [false, true] as const)
       .beginSubcases()
       .combine('samplePoints', kSamplePointMethods)
       .combine('addressModeU', ['clamp-to-edge', 'repeat', 'mirror-repeat'] as const)
       .combine('addressModeV', ['clamp-to-edge', 'repeat', 'mirror-repeat'] as const)
       .combine('minFilter', ['nearest', 'linear'] as const)
-      .combine('offset', [false, true] as const)
   )
   .fn(async t => {
     const { format, samplePoints, addressModeU, addressModeV, minFilter, offset } = t.params;
@@ -435,13 +435,13 @@ Parameters:
     u
       .combine('format', kTestableColorFormats)
       .filter(t => isPotentiallyFilterableAndFillable(t.format))
+      .combine('offset', [false, true] as const)
       .beginSubcases()
       .combine('samplePoints', kSamplePointMethods)
       .combine('A', ['i32', 'u32'] as const)
       .combine('addressModeU', ['clamp-to-edge', 'repeat', 'mirror-repeat'] as const)
       .combine('addressModeV', ['clamp-to-edge', 'repeat', 'mirror-repeat'] as const)
       .combine('minFilter', ['nearest', 'linear'] as const)
-      .combine('offset', [false, true] as const)
   )
   .beforeAllSubcases(t =>
     skipIfTextureFormatNotSupportedNotAvailableOrNotFilterable(t, t.params.format)
@@ -714,12 +714,12 @@ Parameters:
       // MAINTENANCE_TODO: Remove when support for depth24plus, depth24plus-stencil8, and depth32float-stencil8 is added.
       .filter(t => isEncodableTextureFormat(t.format))
       .beginSubcases()
+      .combine('offset', [false, true] as const)
       .combine('samplePoints', kSamplePointMethods)
       .combine('addressMode', ['clamp-to-edge', 'repeat', 'mirror-repeat'] as const)
       .combine('minFilter', ['nearest', 'linear'] as const)
       .combine('A', ['i32', 'u32'] as const)
       .combine('L', ['i32', 'u32'] as const)
-      .combine('offset', [false, true] as const)
   )
   .fn(async t => {
     const { format, samplePoints, addressMode, minFilter, A, L, offset } = t.params;
