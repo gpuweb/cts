@@ -70,12 +70,12 @@ u.
 combine('stage', kShaderStages).
 combine('format', kTestableColorFormats).
 filter((t) => isPotentiallyFilterableAndFillable(t.format)).
+combine('offset', [false, true]).
 beginSubcases().
 combine('samplePoints', kSamplePointMethods).
 combine('addressModeU', ['clamp-to-edge', 'repeat', 'mirror-repeat']).
 combine('addressModeV', ['clamp-to-edge', 'repeat', 'mirror-repeat']).
-combine('minFilter', ['nearest', 'linear']).
-combine('offset', [false, true])
+combine('minFilter', ['nearest', 'linear'])
 ).
 beforeAllSubcases((t) =>
 skipIfTextureFormatNotSupportedNotAvailableOrNotFilterable(t, t.params.format)
@@ -172,13 +172,13 @@ u.
 combine('stage', kShaderStages).
 combine('format', kTestableColorFormats).
 filter((t) => isPotentiallyFilterableAndFillable(t.format)).
+combine('offset', [false, true]).
 beginSubcases().
 combine('samplePoints', kSamplePointMethods).
 combine('A', ['i32', 'u32']).
 combine('addressModeU', ['clamp-to-edge', 'repeat', 'mirror-repeat']).
 combine('addressModeV', ['clamp-to-edge', 'repeat', 'mirror-repeat']).
-combine('minFilter', ['nearest', 'linear']).
-combine('offset', [false, true])
+combine('minFilter', ['nearest', 'linear'])
 ).
 beforeAllSubcases((t) =>
 skipIfTextureFormatNotSupportedNotAvailableOrNotFilterable(t, t.params.format)
@@ -281,13 +281,13 @@ combine('format', kTestableColorFormats).
 filter((t) => isPotentiallyFilterableAndFillable(t.format)).
 combine('viewDimension', ['3d', 'cube']).
 filter((t) => !isCompressedTextureFormat(t.format) || t.viewDimension === 'cube').
+combine('offset', [false, true]).
+filter((t) => t.viewDimension !== 'cube' || t.offset !== true).
 beginSubcases().
 combine('samplePoints', kCubeSamplePointMethods).
 filter((t) => t.samplePoints !== 'cube-edges' || t.viewDimension !== '3d').
 combine('addressMode', ['clamp-to-edge', 'repeat', 'mirror-repeat']).
-combine('minFilter', ['nearest', 'linear']).
-combine('offset', [false, true]).
-filter((t) => t.viewDimension !== 'cube' || t.offset !== true)
+combine('minFilter', ['nearest', 'linear'])
 ).
 beforeAllSubcases((t) =>
 skipIfTextureFormatNotSupportedNotAvailableOrNotFilterable(t, t.params.format)
@@ -515,12 +515,12 @@ combine('format', kDepthStencilFormats)
 .filter((t) => isDepthTextureFormat(t.format))
 // MAINTENANCE_TODO: Remove when support for depth24plus, depth24plus-stencil8, and depth32float-stencil8 is added.
 .filter((t) => isEncodableTextureFormat(t.format)).
+combine('offset', [false, true]).
 beginSubcases().
 combine('samplePoints', kSamplePointMethods).
 combine('addressMode', ['clamp-to-edge', 'repeat', 'mirror-repeat']).
 combine('minFilter', ['nearest', 'linear']).
-combine('L', ['i32', 'u32']).
-combine('offset', [false, true])
+combine('L', ['i32', 'u32'])
 ).
 beforeAllSubcases((t) =>
 skipIfTextureFormatNotSupportedNotAvailableOrNotFilterable(t, t.params.format)
@@ -621,13 +621,13 @@ combine('format', kDepthStencilFormats)
 .filter((t) => isDepthTextureFormat(t.format))
 // MAINTENANCE_TODO: Remove when support for depth24plus, depth24plus-stencil8, and depth32float-stencil8 is added.
 .filter((t) => isEncodableTextureFormat(t.format)).
+combine('offset', [false, true]).
 beginSubcases().
 combine('samplePoints', kSamplePointMethods).
 combine('addressMode', ['clamp-to-edge', 'repeat', 'mirror-repeat']).
 combine('minFilter', ['nearest', 'linear']).
 combine('A', ['i32', 'u32']).
-combine('L', ['i32', 'u32']).
-combine('offset', [false, true])
+combine('L', ['i32', 'u32'])
 ).
 beforeAllSubcases((t) =>
 skipIfTextureFormatNotSupportedNotAvailableOrNotFilterable(t, t.params.format)

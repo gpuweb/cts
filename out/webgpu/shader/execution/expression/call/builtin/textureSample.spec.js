@@ -140,12 +140,12 @@ params((u) =>
 u.
 combine('format', kTestableColorFormats).
 filter((t) => isPotentiallyFilterableAndFillable(t.format)).
-combine('samplePoints', kSamplePointMethods).
+combine('offset', [false, true]).
 beginSubcases().
+combine('samplePoints', kSamplePointMethods).
 combine('addressModeU', ['clamp-to-edge', 'repeat', 'mirror-repeat']).
 combine('addressModeV', ['clamp-to-edge', 'repeat', 'mirror-repeat']).
-combine('minFilter', ['nearest', 'linear']).
-combine('offset', [false, true])
+combine('minFilter', ['nearest', 'linear'])
 ).
 beforeAllSubcases((t) =>
 skipIfTextureFormatNotSupportedNotAvailableOrNotFilterable(t, t.params.format)
@@ -229,15 +229,15 @@ combine('format', kTestableColorFormats).
 filter((t) => isPotentiallyFilterableAndFillable(t.format)).
 combine('viewDimension', ['3d', 'cube']).
 filter((t) => isSupportedViewFormatCombo(t.format, t.viewDimension)).
+combine('offset', [false, true]).
+filter((t) => t.viewDimension !== 'cube' || t.offset !== true).
+beginSubcases().
 combine('samplePoints', kCubeSamplePointMethods).
 filter((t) => t.samplePoints !== 'cube-edges' || t.viewDimension !== '3d').
-beginSubcases().
 combine('addressModeU', ['clamp-to-edge', 'repeat', 'mirror-repeat']).
 combine('addressModeV', ['clamp-to-edge', 'repeat', 'mirror-repeat']).
 combine('addressModeW', ['clamp-to-edge', 'repeat', 'mirror-repeat']).
-combine('minFilter', ['nearest', 'linear']).
-combine('offset', [false, true]).
-filter((t) => t.viewDimension !== 'cube' || t.offset !== true)
+combine('minFilter', ['nearest', 'linear'])
 ).
 beforeAllSubcases((t) =>
 skipIfTextureFormatNotSupportedNotAvailableOrNotFilterable(t, t.params.format)
@@ -351,12 +351,12 @@ combine('format', kDepthStencilFormats)
 .filter((t) => isDepthTextureFormat(t.format))
 // MAINTENANCE_TODO: Remove when support for depth24plus, depth24plus-stencil8, and depth32float-stencil8 is added.
 .filter((t) => isEncodableTextureFormat(t.format)).
+combine('offset', [false, true]).
 beginSubcases().
 combine('samplePoints', kSamplePointMethods).
 combine('addressModeU', ['clamp-to-edge', 'repeat', 'mirror-repeat']).
 combine('addressModeV', ['clamp-to-edge', 'repeat', 'mirror-repeat']).
-combine('minFilter', ['nearest', 'linear']).
-combine('offset', [false, true])
+combine('minFilter', ['nearest', 'linear'])
 ).
 fn(async (t) => {
   const { format, samplePoints, addressModeU, addressModeV, minFilter, offset } = t.params;
@@ -435,13 +435,13 @@ params((u) =>
 u.
 combine('format', kTestableColorFormats).
 filter((t) => isPotentiallyFilterableAndFillable(t.format)).
+combine('offset', [false, true]).
 beginSubcases().
 combine('samplePoints', kSamplePointMethods).
 combine('A', ['i32', 'u32']).
 combine('addressModeU', ['clamp-to-edge', 'repeat', 'mirror-repeat']).
 combine('addressModeV', ['clamp-to-edge', 'repeat', 'mirror-repeat']).
-combine('minFilter', ['nearest', 'linear']).
-combine('offset', [false, true])
+combine('minFilter', ['nearest', 'linear'])
 ).
 beforeAllSubcases((t) =>
 skipIfTextureFormatNotSupportedNotAvailableOrNotFilterable(t, t.params.format)
@@ -714,12 +714,12 @@ combine('format', kDepthStencilFormats)
 // MAINTENANCE_TODO: Remove when support for depth24plus, depth24plus-stencil8, and depth32float-stencil8 is added.
 .filter((t) => isEncodableTextureFormat(t.format)).
 beginSubcases().
+combine('offset', [false, true]).
 combine('samplePoints', kSamplePointMethods).
 combine('addressMode', ['clamp-to-edge', 'repeat', 'mirror-repeat']).
 combine('minFilter', ['nearest', 'linear']).
 combine('A', ['i32', 'u32']).
-combine('L', ['i32', 'u32']).
-combine('offset', [false, true])
+combine('L', ['i32', 'u32'])
 ).
 fn(async (t) => {
   const { format, samplePoints, addressMode, minFilter, A, L, offset } = t.params;

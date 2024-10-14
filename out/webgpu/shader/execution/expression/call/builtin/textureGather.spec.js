@@ -88,12 +88,12 @@ combine('stage', kShaderStages).
 combine('format', kTestableColorFormats).
 filter((t) => isFillable(t.format)).
 combine('minFilter', ['nearest', 'linear']).
+combine('offset', [false, true]).
 beginSubcases().
 combine('C', ['i32', 'u32']).
 combine('samplePoints', kSamplePointMethods).
 combine('addressModeU', ['clamp-to-edge', 'repeat', 'mirror-repeat']).
-combine('addressModeV', ['clamp-to-edge', 'repeat', 'mirror-repeat']).
-combine('offset', [false, true])
+combine('addressModeV', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
 ).
 beforeAllSubcases((t) => {
   t.skipIfTextureFormatNotSupported(t.params.format);
@@ -514,11 +514,11 @@ combine('format', kDepthStencilFormats)
 // MAINTENANCE_TODO: Remove when support for depth24plus, depth24plus-stencil8, and depth32float-stencil8 is added.
 .filter((t) => isEncodableTextureFormat(t.format)).
 combine('minFilter', ['nearest', 'linear']).
+combine('offset', [false, true]).
 beginSubcases().
 combine('samplePoints', kSamplePointMethods).
 combine('addressModeU', ['clamp-to-edge', 'repeat', 'mirror-repeat']).
-combine('addressModeV', ['clamp-to-edge', 'repeat', 'mirror-repeat']).
-combine('offset', [false, true])
+combine('addressModeV', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
 ).
 fn(async (t) => {
   const { format, stage, samplePoints, addressModeU, addressModeV, minFilter, offset } = t.params;
@@ -696,12 +696,12 @@ combine('format', kDepthStencilFormats)
 // MAINTENANCE_TODO: Remove when support for depth24plus, depth24plus-stencil8, and depth32float-stencil8 is added.
 .filter((t) => isEncodableTextureFormat(t.format)).
 combine('minFilter', ['nearest', 'linear']).
+combine('offset', [false, true]).
 beginSubcases().
 combine('samplePoints', kSamplePointMethods).
 combine('A', ['i32', 'u32']).
 combine('addressModeU', ['clamp-to-edge', 'repeat', 'mirror-repeat']).
-combine('addressModeV', ['clamp-to-edge', 'repeat', 'mirror-repeat']).
-combine('offset', [false, true])
+combine('addressModeV', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
 ).
 beforeAllSubcases((t) => {
   t.skipIfTextureFormatNotSupported(t.params.format);

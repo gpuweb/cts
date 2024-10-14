@@ -61,12 +61,12 @@ u.
 combine('stage', kShaderStages).
 combine('format', kTestableColorFormats).
 filter((t) => isPotentiallyFilterableAndFillable(t.format)).
+combine('offset', [false, true]).
 beginSubcases().
 combine('samplePoints', kSamplePointMethods).
 combine('addressModeU', ['clamp-to-edge', 'repeat', 'mirror-repeat']).
 combine('addressModeV', ['clamp-to-edge', 'repeat', 'mirror-repeat']).
-combine('minFilter', ['nearest', 'linear']).
-combine('offset', [false, true])
+combine('minFilter', ['nearest', 'linear'])
 ).
 beforeAllSubcases((t) =>
 skipIfTextureFormatNotSupportedNotAvailableOrNotFilterable(t, t.params.format)
@@ -160,15 +160,15 @@ combine('format', kTestableColorFormats).
 filter((t) => isPotentiallyFilterableAndFillable(t.format)).
 combine('viewDimension', ['3d', 'cube']).
 filter((t) => isSupportedViewFormatCombo(t.format, t.viewDimension)).
+combine('offset', [false, true]).
+filter((t) => t.viewDimension !== 'cube' || t.offset !== true).
+beginSubcases().
 combine('samplePoints', kCubeSamplePointMethods).
 filter((t) => t.samplePoints !== 'cube-edges' || t.viewDimension !== '3d').
-beginSubcases().
 combine('addressModeU', ['clamp-to-edge', 'repeat', 'mirror-repeat']).
 combine('addressModeV', ['clamp-to-edge', 'repeat', 'mirror-repeat']).
 combine('addressModeW', ['clamp-to-edge', 'repeat', 'mirror-repeat']).
-combine('minFilter', ['nearest', 'linear']).
-combine('offset', [false, true]).
-filter((t) => t.viewDimension !== 'cube' || t.offset !== true)
+combine('minFilter', ['nearest', 'linear'])
 ).
 beforeAllSubcases((t) =>
 skipIfTextureFormatNotSupportedNotAvailableOrNotFilterable(t, t.params.format)
@@ -296,13 +296,13 @@ u.
 combine('stage', kShaderStages).
 combine('format', kTestableColorFormats).
 filter((t) => isPotentiallyFilterableAndFillable(t.format)).
+combine('offset', [false, true]).
 beginSubcases().
 combine('samplePoints', kSamplePointMethods).
 combine('A', ['i32', 'u32']).
 combine('addressModeU', ['clamp-to-edge', 'repeat', 'mirror-repeat']).
 combine('addressModeV', ['clamp-to-edge', 'repeat', 'mirror-repeat']).
-combine('minFilter', ['nearest', 'linear']).
-combine('offset', [false, true])
+combine('minFilter', ['nearest', 'linear'])
 ).
 beforeAllSubcases((t) =>
 skipIfTextureFormatNotSupportedNotAvailableOrNotFilterable(t, t.params.format)
