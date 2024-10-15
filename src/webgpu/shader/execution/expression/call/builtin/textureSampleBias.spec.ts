@@ -119,7 +119,9 @@ Parameters:
       textureType,
       sampler,
       calls,
-      results
+      results,
+      'fragment',
+      texture
     );
     t.expectOK(res);
   });
@@ -244,7 +246,9 @@ Parameters:
       textureType,
       sampler,
       calls,
-      results
+      results,
+      'fragment',
+      texture
     );
     t.expectOK(res);
   });
@@ -339,7 +343,9 @@ Parameters:
       textureType,
       sampler,
       calls,
-      results
+      results,
+      'fragment',
+      texture
     );
     t.expectOK(res);
   });
@@ -437,7 +443,9 @@ Parameters:
       textureType,
       sampler,
       calls,
-      results
+      results,
+      'fragment',
+      texture
     );
     t.expectOK(res);
   });

@@ -1356,6 +1356,35 @@ format)
 }
 
 /**
+ * Convert RGBA result format to texel view format.
+ * Example, converts
+ *   { R: 0.1, G: 0, B: 0, A: 1 } to { Depth: 0.1 }
+ *   { R: 0.1 } to { R: 0.1, G: 0, B: 0, A: 1 }
+ */
+function convertToTexelViewFormat(src, format) {
+  const componentOrder = isDepthTextureFormat(format) ?
+  [TexelComponent.Depth] :
+  isStencilTextureFormat(format) ?
+  [TexelComponent.Stencil] :
+  [TexelComponent.R, TexelComponent.G, TexelComponent.B, TexelComponent.A];
+  const out = {};
+  for (const component of componentOrder) {
+    let v = src[component];
+    if (v === undefined) {
+      if (component === 'Depth' || component === 'Stencil') {
+        v = src.R;
+      } else if (component === 'G' || component === 'B') {
+        v = 0;
+      } else {
+        v = 1;
+      }
+    }
+    out[component] = v;
+  }
+  return out;
+}
+
+/**
  * Convert RGBA result format to texel view format of src texture.
  * Effectively this converts something like { R: 0.1, G: 0, B: 0, A: 1 }
  * to { Depth: 0.1 }
@@ -2064,10 +2093,20 @@ textureType,
 sampler,
 calls,
 results,
-stage = 'fragment' // MAINTENANCE_TODO: remove default
-) {
+stage,
+gpuTexture)
+{
   await initMipGradientValuesForDevice(t, stage);
 
+  let haveComparisonCheckInfo = false;
+  let checkInfo = {
+    runner: results.runner,
+    calls,
+    sampler
+  };
+  // These are only read if the tests fail. They are used to get the values from the
+  // GPU texture for displaying in diagnostics.
+  let gpuTexels;
   const errs = [];
   const format = texture.texels[0].format;
   const size = reifyExtent3D(texture.descriptor.size);
@@ -2194,32 +2233,118 @@ stage = 'fragment' // MAINTENANCE_TODO: remove default
 
       if (sampler) {
         if (t.rec.debugging) {
+          // For compares, we can't use the builtin (textureXXXCompareXXX) because it only
+          // returns 0 or 1 or the average of 0 and 1 for multiple samples. And, for example,
+          // if the comparison is `always` then every sample returns 1. So we need to use the
+          // corresponding sample function to get the actual values from the textures
+          //
+          // textureSampleCompare -> textureSample
+          // textureSampleCompareLevel -> textureSampleLevel
+          // textureGatherCompare -> textureGather
+          if (isBuiltinComparison(call.builtin)) {
+            if (!haveComparisonCheckInfo) {
+              // Convert the comparison calls to their corresponding non-comparison call
+              const debugCalls = calls.map((call) => {
+                const debugCall = { ...call };
+                debugCall.depthRef = undefined;
+                switch (call.builtin) {
+                  case 'textureGatherCompare':
+                    debugCall.builtin = 'textureGather';
+                    break;
+                  case 'textureSampleCompare':
+                    debugCall.builtin = 'textureSample';
+                    break;
+                  case 'textureSampleCompareLevel':
+                    debugCall.builtin = 'textureSampleLevel';
+                    debugCall.levelType = 'f';
+                    debugCall.mipLevel = 0;
+                    break;
+                  default:
+                    unreachable();
+                }
+                return debugCall;
+              });
+
+              // Convert the comparison sampler to a non-comparison sampler
+              const debugSampler = { ...sampler };
+              delete debugSampler.compare;
+
+              // Make a runner for these changed calls.
+              const debugRunner = createTextureCallsRunner(
+                t,
+                {
+                  format,
+                  dimension: texture.descriptor.dimension ?? '2d',
+                  sampleCount: texture.descriptor.sampleCount ?? 1,
+                  depthOrArrayLayers: size.depthOrArrayLayers
+                },
+                texture.viewDescriptor,
+                textureType,
+                debugSampler,
+                debugCalls
+              );
+              checkInfo = {
+                runner: debugRunner,
+                sampler: debugSampler,
+                calls: debugCalls
+              };
+              haveComparisonCheckInfo = true;
+            }
+          }
+
+          if (!gpuTexels && gpuTexture) {
+            // Read the texture back if we haven't yet. We'll use this
+            // to get values for each sample point.
+            gpuTexels = await readTextureToTexelViews(
+              t,
+              gpuTexture,
+              texture.descriptor,
+              getTexelViewFormatForTextureFormat(gpuTexture.format)
+            );
+          }
+
+          const callForSamplePoints = checkInfo.calls[callIdx];
+
           const expectedSamplePoints = [
           'expected:',
-          ...(await identifySamplePoints(texture, call, (texels) => {
-            return Promise.resolve(
-              softwareTextureRead(
-                t,
-                stage,
-                call,
-                {
-                  texels,
-                  descriptor: texture.descriptor,
-                  viewDescriptor: texture.viewDescriptor
-                },
-                sampler
-              )
-            );
-          }))];
+          ...(await identifySamplePoints(
+            texture,
+            sampler,
+            callForSamplePoints,
+            call,
+            texture.texels,
+            (texels) => {
+              return Promise.resolve(
+                softwareTextureRead(
+                  t,
+                  stage,
+                  callForSamplePoints,
+                  {
+                    texels,
+                    descriptor: texture.descriptor,
+                    viewDescriptor: texture.viewDescriptor
+                  },
+                  checkInfo.sampler
+                )
+              );
+            }
+          ))];
 
           const gotSamplePoints = [
           'got:',
-          ...(await identifySamplePoints(texture, call, async (texels) => {
-            const gpuTexture = createTextureFromTexelViewsLocal(t, texels, texture.descriptor);
-            const result = (await results.run(gpuTexture))[callIdx];
-            gpuTexture.destroy();
-            return result;
-          }))];
+          ...(await identifySamplePoints(
+            texture,
+            sampler,
+            callForSamplePoints,
+            call,
+            gpuTexels,
+            async (texels) => {
+              const gpuTexture = createTextureFromTexelViewsLocal(t, texels, texture.descriptor);
+              const result = (await checkInfo.runner.run(gpuTexture))[callIdx];
+              gpuTexture.destroy();
+              return result;
+            }
+          ))];
 
           errs.push('  sample points:');
           errs.push(layoutTwoColumns(expectedSamplePoints, gotSamplePoints).join('\n'));
@@ -2239,7 +2364,8 @@ stage = 'fragment' // MAINTENANCE_TODO: remove default
     } // if (bad)
   } // for cellNdx
 
-  results.destroy();
+  results.runner.destroy();
+  checkInfo.runner.destroy();
 
   return errs.length > 0 ? new Error(errs.join('\n')) : undefined;
 }
@@ -2753,7 +2879,10 @@ const kFaceNames = ['+x', '-x', '+y', '-y', '+z', '-z'];
  */
 async function identifySamplePoints(
 texture,
-call,
+sampler,
+callForSamples,
+originalCall,
+texels,
 run)
 {
   const info = texture.descriptor;
@@ -2814,8 +2943,8 @@ run)
 
   const rep = kTexelRepresentationInfo[format];
 
-  const components = isBuiltinGather(call.builtin) ? kRGBAComponents : rep.componentOrder;
-  const convertResultAsAppropriate = isBuiltinGather(call.builtin) ?
+  const components = isBuiltinGather(callForSamples.builtin) ? kRGBAComponents : rep.componentOrder;
+  const convertResultAsAppropriate = isBuiltinGather(callForSamples.builtin) ?
   (v) => v :
   convertResultFormatToTexelViewFormat;
 
@@ -2973,6 +3102,15 @@ run)
 
       const pad2 = (n) => n.toString().padStart(2);
       const fix5 = (n) => n.toFixed(5);
+      const formatTexel = (texel) =>
+      texel ?
+      Object.entries(texel).
+      map(([k, v]) => `${k}: ${fix5(v)}`).
+      join(', ') :
+      '*texel values unavailable*';
+
+      const colorLines = [];
+      const compareLines = [];
       let levelWeight = 0;
       orderedTexelIndices.forEach((texelIdx, i) => {
         const weights = layerEntries.get(texelIdx);
@@ -2985,8 +3123,29 @@ run)
         `weight: ${fix5(singleWeight)}` :
         `weights: [${components.map((c) => `${c}: ${fix5(weights[c])}`).join(', ')}]`;
         const coord = `${pad2(x)}, ${pad2(y)}, ${pad2(layer)}`;
-        lines.push(`${letter(idCount + i)}: mip(${mipLevel}) at: [${coord}], ${w}`);
+        const texel =
+        texels &&
+        convertToTexelViewFormat(
+          texels[mipLevel].color({ x, y, z: layer }),
+          texture.descriptor.format
+        );
+
+        const texelStr = formatTexel(texel);
+        const id = letter(idCount + i);
+        lines.push(`${id}: mip(${mipLevel}) at: [${coord}], ${w}`);
+        colorLines.push(`${id}: value: ${texelStr}`);
+        if (isBuiltinComparison(originalCall.builtin)) {
+          assert(!!texel);
+          const compareTexel = applyCompare(originalCall, sampler, [TexelComponent.Depth], texel);
+          compareLines.push(
+            `${id}: compare(${sampler.compare}) result with depthRef(${fix5(
+              originalCall.depthRef
+            )}): ${fix5(compareTexel.Depth)}`
+          );
+        }
       });
+      lines.push(...colorLines);
+      lines.push(...compareLines);
       if (!isNaN(levelWeight)) {
         lines.push(`level weight: ${fix5(levelWeight)}`);
       }
@@ -4154,30 +4313,25 @@ const s_deviceToPipelines = new WeakMap(
  *
  * 'destroy': a function that cleans up the buffers used by `run`.
  */
-export async function doTextureCalls(
+function createTextureCallsRunner(
 t,
-gpuTexture,
+{
+  format,
+  dimension,
+  sampleCount,
+  depthOrArrayLayers
+
+
+
+
+
+},
 viewDescriptor,
 textureType,
 sampler,
 calls,
 stage = 'fragment' // MAINTENANCE_TODO: remove default
 ) {
-  const {
-    format,
-    dimension,
-    depthOrArrayLayers,
-    sampleCount
-
-
-
-
-
-  } =
-  gpuTexture instanceof GPUExternalTexture ?
-  { format: 'rgba8unorm', dimension: '2d', depthOrArrayLayers: 1, sampleCount: 1 } :
-  gpuTexture;
-
   let structs = '';
   let body = '';
   let dataFields = '';
@@ -4215,7 +4369,7 @@ stage = 'fragment' // MAINTENANCE_TODO: remove default
 
   const { resultType, resultFormat, componentType } = isBuiltinGather(builtin) ?
   getTextureFormatTypeInfo(format) :
-  gpuTexture instanceof GPUExternalTexture ?
+  textureType === 'texture_external' ?
   { resultType: 'vec4f', resultFormat: 'rgba32float', componentType: 'f32' } :
   textureType.includes('depth') ?
   { resultType: 'f32', resultFormat: 'rgba32float', componentType: 'f32' } :
@@ -4383,7 +4537,7 @@ ${stageWGSL}
         format
       }
     });
-  } else if (gpuTexture instanceof GPUExternalTexture) {
+  } else if (textureType === 'texture_external') {
     entries.push({
       binding: 0,
       visibility,
@@ -4561,14 +4715,39 @@ ${stageWGSL}
     return out;
   };
 
-  const results = await run(gpuTexture);
-
   return {
     run,
-    results,
     destroy() {
       dataBuffer.destroy();
       renderTarget.destroy();
     }
+  };
+}
+
+export async function doTextureCalls(
+t,
+gpuTexture,
+viewDescriptor,
+textureType,
+sampler,
+calls,
+stage = 'fragment' // MAINTENANCE_TODO: remove default
+) {
+  const runner = createTextureCallsRunner(
+    t,
+    gpuTexture instanceof GPUExternalTexture ?
+    { format: 'rgba8unorm', dimension: '2d', depthOrArrayLayers: 1, sampleCount: 1 } :
+    gpuTexture,
+    viewDescriptor,
+    textureType,
+    sampler,
+    calls,
+    stage
+  );
+  const results = await runner.run(gpuTexture);
+
+  return {
+    runner,
+    results
   };
 }

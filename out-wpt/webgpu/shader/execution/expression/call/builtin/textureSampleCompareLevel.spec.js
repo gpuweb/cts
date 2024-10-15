@@ -135,7 +135,8 @@ fn(async (t) => {
     sampler,
     calls,
     results,
-    stage
+    stage,
+    texture
   );
   t.expectOK(res);
 });
@@ -231,7 +232,8 @@ fn(async (t) => {
     sampler,
     calls,
     results,
-    stage
+    stage,
+    texture
   );
   t.expectOK(res);
 });
@@ -353,7 +355,8 @@ fn(async (t) => {
     sampler,
     calls,
     results,
-    stage
+    stage,
+    texture
   );
   t.expectOK(res);
 });
@@ -457,7 +460,8 @@ fn(async (t) => {
     sampler,
     calls,
     results,
-    stage
+    stage,
+    texture
   );
   t.expectOK(res);
 });
