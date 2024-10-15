@@ -39,6 +39,7 @@ import {
   isSupportedViewFormatCombo,
   vec1,
   generateTextureBuiltinInputs1D,
+  skipIfNeedsFilteringAndIsUnfilterable,
 } from './texture_utils.js';
 
 const kTestableColorFormats = [...kEncodableTextureFormats, ...kCompressedTextureFormats] as const;
@@ -147,11 +148,12 @@ Parameters:
       .combine('addressModeV', ['clamp-to-edge', 'repeat', 'mirror-repeat'] as const)
       .combine('minFilter', ['nearest', 'linear'] as const)
   )
-  .beforeAllSubcases(t =>
-    skipIfTextureFormatNotSupportedNotAvailableOrNotFilterable(t, t.params.format)
-  )
+  .beforeAllSubcases(t => {
+    skipIfTextureFormatNotSupportedNotAvailableOrNotFilterable(t, t.params.format);
+  })
   .fn(async t => {
     const { format, samplePoints, addressModeU, addressModeV, minFilter, offset } = t.params;
+    skipIfNeedsFilteringAndIsUnfilterable(t, minFilter, format);
 
     // We want at least 4 blocks or something wide enough for 3 mip levels.
     const [width, height] = chooseTextureSize({ minSize: 8, minBlocks: 4, format });
@@ -253,6 +255,7 @@ Parameters:
       minFilter,
       offset,
     } = t.params;
+    skipIfNeedsFilteringAndIsUnfilterable(t, minFilter, format);
 
     const size = chooseTextureSize({ minSize: 8, minBlocks: 2, format, viewDimension });
     const descriptor: GPUTextureDescriptor = {
@@ -448,6 +451,7 @@ Parameters:
   )
   .fn(async t => {
     const { format, samplePoints, A, addressModeU, addressModeV, minFilter, offset } = t.params;
+    skipIfNeedsFilteringAndIsUnfilterable(t, minFilter, format);
 
     // We want at least 4 blocks or something wide enough for 3 mip levels.
     const [width, height] = chooseTextureSize({ minSize: 8, minBlocks: 4, format });
@@ -532,6 +536,7 @@ Parameters:
   })
   .fn(async t => {
     const { format, samplePoints, A, addressMode, minFilter } = t.params;
+    skipIfNeedsFilteringAndIsUnfilterable(t, minFilter, format);
 
     const viewDimension: GPUTextureViewDimension = 'cube-array';
     const size = chooseTextureSize({

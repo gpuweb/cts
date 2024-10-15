@@ -6,7 +6,6 @@ Samples a texture.
 - TODO: Test un-encodable formats.
 `;import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import {
-  isCompressedTextureFormat,
   isDepthTextureFormat,
   isEncodableTextureFormat,
   kCompressedTextureFormats,
@@ -27,9 +26,11 @@ import {
   getDepthOrArrayLayersForViewDimension,
   getTextureTypeForTextureViewDimension,
   isPotentiallyFilterableAndFillable,
+  isSupportedViewFormatCombo,
   kCubeSamplePointMethods,
   kSamplePointMethods,
 
+  skipIfNeedsFilteringAndIsUnfilterable,
   skipIfTextureFormatNotSupportedNotAvailableOrNotFilterable,
 
 
@@ -82,6 +83,7 @@ skipIfTextureFormatNotSupportedNotAvailableOrNotFilterable(t, t.params.format)
 ).
 fn(async (t) => {
   const { format, stage, samplePoints, addressModeU, addressModeV, minFilter, offset } = t.params;
+  skipIfNeedsFilteringAndIsUnfilterable(t, minFilter, format);
 
   // We want at least 4 blocks or something wide enough for 3 mip levels.
   const [width, height] = chooseTextureSize({ minSize: 8, minBlocks: 4, format });
@@ -186,6 +188,7 @@ skipIfTextureFormatNotSupportedNotAvailableOrNotFilterable(t, t.params.format)
 fn(async (t) => {
   const { format, stage, samplePoints, A, addressModeU, addressModeV, minFilter, offset } =
   t.params;
+  skipIfNeedsFilteringAndIsUnfilterable(t, minFilter, format);
 
   // We want at least 4 blocks or something wide enough for 3 mip levels.
   const [width, height] = chooseTextureSize({ minSize: 8, minBlocks: 4, format });
@@ -280,7 +283,7 @@ combine('stage', kShaderStages).
 combine('format', kTestableColorFormats).
 filter((t) => isPotentiallyFilterableAndFillable(t.format)).
 combine('viewDimension', ['3d', 'cube']).
-filter((t) => !isCompressedTextureFormat(t.format) || t.viewDimension === 'cube').
+filter((t) => isSupportedViewFormatCombo(t.format, t.viewDimension)).
 combine('offset', [false, true]).
 filter((t) => t.viewDimension !== 'cube' || t.offset !== true).
 beginSubcases().
@@ -294,6 +297,7 @@ skipIfTextureFormatNotSupportedNotAvailableOrNotFilterable(t, t.params.format)
 ).
 fn(async (t) => {
   const { format, viewDimension, stage, samplePoints, addressMode, minFilter, offset } = t.params;
+  skipIfNeedsFilteringAndIsUnfilterable(t, minFilter, format);
 
   const [width, height] = chooseTextureSize({ minSize: 32, minBlocks: 2, format, viewDimension });
   const depthOrArrayLayers = getDepthOrArrayLayersForViewDimension(viewDimension);
@@ -414,6 +418,7 @@ beforeAllSubcases((t) => {
 }).
 fn(async (t) => {
   const { format, stage, samplePoints, A, addressMode, minFilter } = t.params;
+  skipIfNeedsFilteringAndIsUnfilterable(t, minFilter, format);
 
   const viewDimension = 'cube-array';
   const size = chooseTextureSize({

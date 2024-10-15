@@ -59,7 +59,10 @@ export function isSupportedViewFormatCombo(
 format,
 viewDimension)
 {
-  return !(isCompressedTextureFormat(format) && viewDimension === '3d');
+  return !(
+  (isCompressedTextureFormat(format) || isDepthTextureFormat(format)) &&
+  viewDimension === '3d');
+
 }
 
 /**
@@ -115,6 +118,19 @@ format)
 }
 
 /**
+ * Skips a test if filter === 'linear' and the format is not filterable
+ */
+export function skipIfNeedsFilteringAndIsUnfilterable(
+t,
+filter,
+format)
+{
+  if (filter === 'linear') {
+    t.skipIf(isDepthTextureFormat(format), 'depth textures are unfilterable');
+  }
+}
+
+/**
  * Returns if a texture format can be filled with random data.
  */
 export function isFillable(format) {
@@ -127,9 +143,12 @@ export function isFillable(format) {
  * Returns if a texture format can potentially be filtered and can be filled with random data.
  */
 export function isPotentiallyFilterableAndFillable(format) {
-  const type = kTextureFormatInfo[format].color?.type;
-  const canPotentiallyFilter = type === 'float' || type === 'unfilterable-float';
-  return canPotentiallyFilter && isFillable(format);
+  const info = kTextureFormatInfo[format];
+  const type = info.color?.type ?? info.depth?.type;
+  const canPotentiallyFilter =
+  type === 'float' || type === 'unfilterable-float' || type === 'depth';
+  const result = canPotentiallyFilter && isFillable(format);
+  return result;
 }
 
 /**
