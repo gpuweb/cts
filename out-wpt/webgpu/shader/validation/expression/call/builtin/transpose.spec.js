@@ -26,6 +26,7 @@ export const g = makeTestGroup(ShaderValidationTest);
 const kValidArgumentTypes = objectsToRecord(kAllMatrices);
 
 g.test('values').
+batch(125).
 desc(
   `
 Validates that constant evaluation and override evaluation of ${builtin}() accept valid inputs.

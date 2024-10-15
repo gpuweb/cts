@@ -47,6 +47,7 @@ const kArgCases = {
 export const g = makeTestGroup(ShaderValidationTest);
 
 g.test('values').
+batch(125).
 desc(
   `
 Validates that constant evaluation and override evaluation of ${builtin} rejects invalid values.
