@@ -3116,7 +3116,7 @@ async function identifySamplePoints<T extends Dimensionality>(
         const weights = layerEntries.get(texelIdx)!;
         const y = Math.floor(texelIdx / texelsPerRow);
         const x = texelIdx % texelsPerRow;
-        const singleWeight = valueIfAllComponentsAreEqual(weights, components);
+        const singleWeight = valueIfAllComponentsAreEqual(weights, components)!;
         levelWeight += singleWeight;
         const w =
           singleWeight !== undefined
