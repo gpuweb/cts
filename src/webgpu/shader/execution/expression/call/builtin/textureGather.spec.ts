@@ -294,13 +294,13 @@ Parameters:
       .combine('format', kTestableColorFormats)
       .filter(t => isFillable(t.format))
       .combine('minFilter', ['nearest', 'linear'] as const)
+      .combine('offset', [false, true] as const)
       .beginSubcases()
       .combine('samplePoints', kSamplePointMethods)
       .combine('C', ['i32', 'u32'] as const)
       .combine('A', ['i32', 'u32'] as const)
       .combine('addressModeU', ['clamp-to-edge', 'repeat', 'mirror-repeat'] as const)
       .combine('addressModeV', ['clamp-to-edge', 'repeat', 'mirror-repeat'] as const)
-      .combine('offset', [false, true] as const)
   )
   .beforeAllSubcases(t => {
     t.skipIfTextureFormatNotSupported(t.params.format);
