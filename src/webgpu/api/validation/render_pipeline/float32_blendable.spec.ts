@@ -14,7 +14,8 @@ const kFloat32Formats: ColorTextureFormat[] = ['r32float', 'rg32float', 'rgba32f
 g.test('create_render_pipeline')
   .desc(
     `
-Tests that the float32-blendable feature is required if blend is not undefined.
+Tests that the float32-blendable feature is required to create a render
+pipeline that uses blending with any float32-format attachment.
 `
   )
   .params(u =>
