@@ -54,7 +54,6 @@ function isSubnormalFunctionForScalarType(type) {
 }
 
 g.test('values').
-batch(125).
 desc(
   `
 Validates that constant evaluation and override evaluation of ${builtin}() only errors in cases

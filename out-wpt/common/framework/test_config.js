@@ -40,7 +40,7 @@
 
 export const globalTestConfig = {
   enableDebugLogs: false,
-  maxSubcasesInFlight: 500,
+  maxSubcasesInFlight: 100,
   testHeartbeatCallback: () => {},
   noRaceWithRejectOnTimeout: false,
   unrollConstEvalLoops: false,

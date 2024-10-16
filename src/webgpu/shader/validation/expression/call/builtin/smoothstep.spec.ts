@@ -29,7 +29,6 @@ const kValuesTypes = objectsToRecord(kConvertableToFloatScalarsAndVectors);
 const kArgumentTypes = objectsToRecord(kAllScalarsAndVectors);
 
 g.test('values')
-  .batch(125)
   .desc(
     `
 Validates that constant evaluation and override evaluation of ${builtin}() rejects invalid values
