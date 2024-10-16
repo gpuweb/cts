@@ -732,8 +732,8 @@ combine('format', kDepthStencilFormats)
 .filter((t) => isDepthTextureFormat(t.format))
 // MAINTENANCE_TODO: Remove when support for depth24plus, depth24plus-stencil8, and depth32float-stencil8 is added.
 .filter((t) => isEncodableTextureFormat(t.format)).
-beginSubcases().
 combine('offset', [false, true]).
+beginSubcases().
 combine('samplePoints', kSamplePointMethods).
 combine('addressMode', ['clamp-to-edge', 'repeat', 'mirror-repeat']).
 combine('minFilter', ['nearest', 'linear']).

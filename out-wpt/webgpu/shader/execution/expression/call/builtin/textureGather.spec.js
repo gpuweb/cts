@@ -294,13 +294,13 @@ combine('stage', kShaderStages).
 combine('format', kTestableColorFormats).
 filter((t) => isFillable(t.format)).
 combine('minFilter', ['nearest', 'linear']).
+combine('offset', [false, true]).
 beginSubcases().
 combine('samplePoints', kSamplePointMethods).
 combine('C', ['i32', 'u32']).
 combine('A', ['i32', 'u32']).
 combine('addressModeU', ['clamp-to-edge', 'repeat', 'mirror-repeat']).
-combine('addressModeV', ['clamp-to-edge', 'repeat', 'mirror-repeat']).
-combine('offset', [false, true])
+combine('addressModeV', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
 ).
 beforeAllSubcases((t) => {
   t.skipIfTextureFormatNotSupported(t.params.format);
