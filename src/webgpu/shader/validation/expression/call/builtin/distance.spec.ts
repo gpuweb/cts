@@ -25,7 +25,6 @@ export const g = makeTestGroup(ShaderValidationTest);
 const kValidArgumentTypes = objectsToRecord(kConvertableToFloatScalarsAndVectors);
 
 g.test('values')
-  .batch(125)
   .desc(
     `
 Validates that constant evaluation and override evaluation of ${builtin}() never errors
