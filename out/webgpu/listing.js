@@ -1440,6 +1440,14 @@ export const listing = [
       "api",
       "validation",
       "render_pipeline",
+      "float32_blendable"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
+      "render_pipeline",
       "fragment_state"
     ]
   },
