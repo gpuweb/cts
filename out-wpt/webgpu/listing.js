@@ -2993,6 +2993,16 @@ export const listing = [
       "expression",
       "call",
       "builtin",
+      "quadBroadcast"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "call",
+      "builtin",
       "quantizeToF16"
     ]
   },
