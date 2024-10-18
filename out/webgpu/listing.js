@@ -3183,6 +3183,16 @@ export const listing = [
       "expression",
       "call",
       "builtin",
+      "subgroupBitwise"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "call",
+      "builtin",
       "subgroupBroadcast"
     ]
   },
