@@ -4,8 +4,20 @@ export type TestConfig = {
    */
   enableDebugLogs: boolean;
 
+  /**
+   * Maximum number of subcases in flight at once, within a case. Once this many
+   * are in flight, wait for a subcase to finish before starting the next one.
+   */
   maxSubcasesInFlight: number;
+
+  /**
+   * Every `subcasesBetweenAttemptingGC` subcases, run `attemptGarbageCollection()`.
+   * Setting to `Infinity` disables this. Setting to 1 attempts GC every time (slow!).
+   */
+  subcasesBetweenAttemptingGC: number;
+
   testHeartbeatCallback: () => void;
+
   noRaceWithRejectOnTimeout: boolean;
 
   /**
@@ -41,6 +53,7 @@ export type TestConfig = {
 export const globalTestConfig: TestConfig = {
   enableDebugLogs: false,
   maxSubcasesInFlight: 100,
+  subcasesBetweenAttemptingGC: 5000,
   testHeartbeatCallback: () => {},
   noRaceWithRejectOnTimeout: false,
   unrollConstEvalLoops: false,
