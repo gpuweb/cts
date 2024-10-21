@@ -1,6 +1,7 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
-**/import { assert, range, unreachable } from '../../../../../../common/util/util.js';import { Float16Array } from '../../../../../../external/petamoriken/float16/float16.js';import {
+**/import { keysOf } from '../../../../../../common/util/data_tables.js';import { assert, range, unreachable } from '../../../../../../common/util/util.js';import { Float16Array } from '../../../../../../external/petamoriken/float16/float16.js';
+import {
 
   isCompressedFloatTextureFormat,
   isCompressedTextureFormat,
@@ -41,6 +42,24 @@ import { TexelView } from '../../../../../util/texture/texel_view.js';
 import { createTextureFromTexelViews } from '../../../../../util/texture.js';
 import { reifyExtent3D } from '../../../../../util/unions.js';
 
+
+// These are needed because the list of parameters was too long when converted to a filename.
+export const kShortShaderStageToShaderStage = {
+  c: 'compute',
+  f: 'fragment',
+  v: 'vertex'
+};
+export const kShortShaderStages = keysOf(kShortShaderStageToShaderStage);
+
+
+// These are needed because the list of parameters was too long when converted to a filename.
+export const kShortAddressModeToAddressMode = {
+  c: 'clamp-to-edge',
+  r: 'repeat',
+  m: 'mirror-repeat'
+};
+
+export const kShortAddressModes = keysOf(kShortAddressModeToAddressMode);
 
 export const kSampleTypeInfo = {
   f32: {
@@ -2093,9 +2112,10 @@ textureType,
 sampler,
 calls,
 results,
-stage,
+shortShaderStage,
 gpuTexture)
 {
+  const stage = kShortShaderStageToShaderStage[shortShaderStage];
   await initMipGradientValuesForDevice(t, stage);
 
   let haveComparisonCheckInfo = false;
@@ -2281,7 +2301,8 @@ gpuTexture)
                 texture.viewDescriptor,
                 textureType,
                 debugSampler,
-                debugCalls
+                debugCalls,
+                stage
               );
               checkInfo = {
                 runner: debugRunner,
@@ -4330,8 +4351,8 @@ viewDescriptor,
 textureType,
 sampler,
 calls,
-stage = 'fragment' // MAINTENANCE_TODO: remove default
-) {
+stage)
+{
   let structs = '';
   let body = '';
   let dataFields = '';
@@ -4731,8 +4752,9 @@ viewDescriptor,
 textureType,
 sampler,
 calls,
-stage = 'fragment' // MAINTENANCE_TODO: remove default
-) {
+shortShaderStage)
+{
+  const stage = kShortShaderStageToShaderStage[shortShaderStage];
   const runner = createTextureCallsRunner(
     t,
     gpuTexture instanceof GPUExternalTexture ?

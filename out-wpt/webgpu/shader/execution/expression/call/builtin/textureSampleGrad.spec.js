@@ -7,7 +7,6 @@ Samples a texture using explicit gradients.
 - TODO: Test un-encodable formats.
 `;import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { kCompressedTextureFormats, kEncodableTextureFormats } from '../../../../../format_info.js';
-import { kShaderStages } from '../../../../validation/decl/util.js';
 
 import {
   appendComponentTypeForFormatToTextureType,
@@ -23,6 +22,9 @@ import {
   isSupportedViewFormatCombo,
   kCubeSamplePointMethods,
   kSamplePointMethods,
+  kShortAddressModes,
+  kShortAddressModeToAddressMode,
+  kShortShaderStages,
 
   skipIfNeedsFilteringAndIsUnfilterable,
   skipIfTextureFormatNotSupportedNotAvailableOrNotFilterable,
@@ -59,21 +61,21 @@ Parameters:
 ).
 params((u) =>
 u.
-combine('stage', kShaderStages).
+combine('stage', kShortShaderStages).
 combine('format', kTestableColorFormats).
 filter((t) => isPotentiallyFilterableAndFillable(t.format)).
+combine('filt', ['nearest', 'linear']).
+combine('modeU', kShortAddressModes).
+combine('modeV', kShortAddressModes).
 combine('offset', [false, true]).
 beginSubcases().
-combine('samplePoints', kSamplePointMethods).
-combine('addressModeU', ['clamp-to-edge', 'repeat', 'mirror-repeat']).
-combine('addressModeV', ['clamp-to-edge', 'repeat', 'mirror-repeat']).
-combine('minFilter', ['nearest', 'linear'])
+combine('samplePoints', kSamplePointMethods)
 ).
 beforeAllSubcases((t) =>
 skipIfTextureFormatNotSupportedNotAvailableOrNotFilterable(t, t.params.format)
 ).
 fn(async (t) => {
-  const { format, stage, samplePoints, addressModeU, addressModeV, minFilter, offset } = t.params;
+  const { format, stage, samplePoints, modeU, modeV, filt: minFilter, offset } = t.params;
   skipIfNeedsFilteringAndIsUnfilterable(t, minFilter, format);
 
   // We want at least 4 blocks or something wide enough for 3 mip levels.
@@ -86,8 +88,8 @@ fn(async (t) => {
   };
   const { texels, texture } = await createTextureWithRandomDataAndGetTexels(t, descriptor);
   const sampler = {
-    addressModeU,
-    addressModeV,
+    addressModeU: kShortAddressModeToAddressMode[modeU],
+    addressModeV: kShortAddressModeToAddressMode[modeV],
     minFilter,
     magFilter: minFilter,
     mipmapFilter: minFilter
@@ -99,7 +101,7 @@ fn(async (t) => {
     descriptor,
     grad: true,
     offset,
-    hashInputs: [stage, format, samplePoints, addressModeU, addressModeV, minFilter, offset]
+    hashInputs: [stage, format, samplePoints, modeU, modeV, minFilter, offset]
   }).map(({ coords, offset, ddx, ddy }) => {
     return {
       builtin: 'textureSampleGrad',
@@ -158,20 +160,20 @@ Parameters:
 ).
 params((u) =>
 u.
-combine('stage', kShaderStages).
+combine('stage', kShortShaderStages).
 combine('format', kTestableColorFormats).
 filter((t) => isPotentiallyFilterableAndFillable(t.format)).
-combine('viewDimension', ['3d', 'cube']).
-filter((t) => isSupportedViewFormatCombo(t.format, t.viewDimension)).
+combine('dim', ['3d', 'cube']).
+filter((t) => isSupportedViewFormatCombo(t.format, t.dim)).
+combine('filt', ['nearest', 'linear']).
+combine('modeU', kShortAddressModes).
+combine('modeV', kShortAddressModes).
+combine('modeW', kShortAddressModes).
 combine('offset', [false, true]).
-filter((t) => t.viewDimension !== 'cube' || t.offset !== true).
+filter((t) => t.dim !== 'cube' || t.offset !== true).
 beginSubcases().
 combine('samplePoints', kCubeSamplePointMethods).
-filter((t) => t.samplePoints !== 'cube-edges' || t.viewDimension !== '3d').
-combine('addressModeU', ['clamp-to-edge', 'repeat', 'mirror-repeat']).
-combine('addressModeV', ['clamp-to-edge', 'repeat', 'mirror-repeat']).
-combine('addressModeW', ['clamp-to-edge', 'repeat', 'mirror-repeat']).
-combine('minFilter', ['nearest', 'linear'])
+filter((t) => t.samplePoints !== 'cube-edges' || t.dim !== '3d')
 ).
 beforeAllSubcases((t) =>
 skipIfTextureFormatNotSupportedNotAvailableOrNotFilterable(t, t.params.format)
@@ -179,13 +181,13 @@ skipIfTextureFormatNotSupportedNotAvailableOrNotFilterable(t, t.params.format)
 fn(async (t) => {
   const {
     format,
-    viewDimension,
+    dim: viewDimension,
     stage,
     samplePoints,
-    addressModeU,
-    addressModeV,
-    addressModeW,
-    minFilter,
+    modeU,
+    modeV,
+    modeW,
+    filt: minFilter,
     offset
   } = t.params;
   skipIfNeedsFilteringAndIsUnfilterable(t, minFilter, format);
@@ -202,9 +204,9 @@ fn(async (t) => {
   };
   const { texels, texture } = await createTextureWithRandomDataAndGetTexels(t, descriptor);
   const sampler = {
-    addressModeU,
-    addressModeV,
-    addressModeW,
+    addressModeU: kShortAddressModeToAddressMode[modeU],
+    addressModeV: kShortAddressModeToAddressMode[modeV],
+    addressModeW: kShortAddressModeToAddressMode[modeW],
     minFilter,
     magFilter: minFilter
   };
@@ -213,9 +215,9 @@ fn(async (t) => {
   format,
   viewDimension,
   samplePoints,
-  addressModeU,
-  addressModeV,
-  addressModeW,
+  modeU,
+  modeV,
+  modeW,
   minFilter,
   offset];
 
@@ -298,23 +300,22 @@ Parameters:
 ).
 params((u) =>
 u.
-combine('stage', kShaderStages).
+combine('stage', kShortShaderStages).
 combine('format', kTestableColorFormats).
 filter((t) => isPotentiallyFilterableAndFillable(t.format)).
+combine('filt', ['nearest', 'linear']).
+combine('modeU', kShortAddressModes).
+combine('modeV', kShortAddressModes).
 combine('offset', [false, true]).
 beginSubcases().
 combine('samplePoints', kSamplePointMethods).
-combine('A', ['i32', 'u32']).
-combine('addressModeU', ['clamp-to-edge', 'repeat', 'mirror-repeat']).
-combine('addressModeV', ['clamp-to-edge', 'repeat', 'mirror-repeat']).
-combine('minFilter', ['nearest', 'linear'])
+combine('A', ['i32', 'u32'])
 ).
 beforeAllSubcases((t) =>
 skipIfTextureFormatNotSupportedNotAvailableOrNotFilterable(t, t.params.format)
 ).
 fn(async (t) => {
-  const { format, stage, samplePoints, A, addressModeU, addressModeV, minFilter, offset } =
-  t.params;
+  const { format, stage, samplePoints, A, modeU, modeV, filt: minFilter, offset } = t.params;
   skipIfNeedsFilteringAndIsUnfilterable(t, minFilter, format);
 
   // We want at least 4 blocks or something wide enough for 3 mip levels.
@@ -329,8 +330,8 @@ fn(async (t) => {
   };
   const { texels, texture } = await createTextureWithRandomDataAndGetTexels(t, descriptor);
   const sampler = {
-    addressModeU,
-    addressModeV,
+    addressModeU: kShortAddressModeToAddressMode[modeU],
+    addressModeV: kShortAddressModeToAddressMode[modeV],
     minFilter,
     magFilter: minFilter,
     mipmapFilter: minFilter
@@ -343,7 +344,7 @@ fn(async (t) => {
     arrayIndex: { num: texture.depthOrArrayLayers, type: A },
     grad: true,
     offset,
-    hashInputs: [stage, format, samplePoints, A, addressModeU, addressModeV, minFilter, offset]
+    hashInputs: [stage, format, samplePoints, A, modeU, modeV, minFilter, offset]
   }).map(({ coords, ddx, ddy, arrayIndex, offset }) => {
     return {
       builtin: 'textureSampleGrad',
@@ -405,21 +406,21 @@ Parameters:
 ).
 params((u) =>
 u.
-combine('stage', kShaderStages).
+combine('stage', kShortShaderStages).
 combine('format', kTestableColorFormats).
 filter((t) => isPotentiallyFilterableAndFillable(t.format)).
+combine('filt', ['nearest', 'linear']).
+combine('mode', kShortAddressModes).
 beginSubcases().
 combine('samplePoints', kCubeSamplePointMethods).
-combine('A', ['i32', 'u32']).
-combine('addressMode', ['clamp-to-edge', 'repeat', 'mirror-repeat']).
-combine('minFilter', ['nearest', 'linear'])
+combine('A', ['i32', 'u32'])
 ).
 beforeAllSubcases((t) => {
   skipIfTextureFormatNotSupportedNotAvailableOrNotFilterable(t, t.params.format);
   t.skipIfTextureViewDimensionNotSupported('cube-array');
 }).
 fn(async (t) => {
-  const { format, stage, samplePoints, A, addressMode, minFilter } = t.params;
+  const { format, stage, samplePoints, A, mode, filt: minFilter } = t.params;
   skipIfNeedsFilteringAndIsUnfilterable(t, minFilter, format);
 
   const viewDimension = 'cube-array';
@@ -438,9 +439,9 @@ fn(async (t) => {
   };
   const { texels, texture } = await createTextureWithRandomDataAndGetTexels(t, descriptor);
   const sampler = {
-    addressModeU: addressMode,
-    addressModeV: addressMode,
-    addressModeW: addressMode,
+    addressModeU: kShortAddressModeToAddressMode[mode],
+    addressModeV: kShortAddressModeToAddressMode[mode],
+    addressModeW: kShortAddressModeToAddressMode[mode],
     minFilter,
     magFilter: minFilter,
     mipmapFilter: minFilter
@@ -452,7 +453,7 @@ fn(async (t) => {
     descriptor,
     grad: true,
     arrayIndex: { num: texture.depthOrArrayLayers / 6, type: A },
-    hashInputs: [stage, format, viewDimension, A, samplePoints, addressMode, minFilter]
+    hashInputs: [stage, format, viewDimension, A, samplePoints, mode, minFilter]
   }).map(({ coords, ddx, ddy, arrayIndex }) => {
     return {
       builtin: 'textureSampleGrad',
