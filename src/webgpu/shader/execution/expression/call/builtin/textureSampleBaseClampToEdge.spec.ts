@@ -5,7 +5,6 @@ Execution tests for textureSampleBaseClampToEdge
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
 import { TexelView } from '../../../../../util/texture/texel_view.js';
-import { kShaderStages } from '../../../../validation/decl/util.js';
 
 import {
   checkCallResults,
@@ -14,6 +13,9 @@ import {
   doTextureCalls,
   generateTextureBuiltinInputs2D,
   kSamplePointMethods,
+  kShortAddressModes,
+  kShortAddressModeToAddressMode,
+  kShortShaderStages,
   TextureCall,
   vec2,
   WGSLTextureSampleTest,
@@ -55,13 +57,13 @@ Parameters:
   )
   .params(u =>
     u
-      .combine('stage', kShaderStages)
+      .combine('stage', kShortShaderStages)
       .combine('textureType', ['texture_2d<f32>', 'texture_external'] as const)
+      .combine('filt', ['nearest', 'linear'] as const)
+      .combine('modeU', kShortAddressModes)
+      .combine('modeV', kShortAddressModes)
       .beginSubcases()
       .combine('samplePoints', kSamplePointMethods)
-      .combine('addressModeU', ['clamp-to-edge', 'repeat', 'mirror-repeat'] as const)
-      .combine('addressModeV', ['clamp-to-edge', 'repeat', 'mirror-repeat'] as const)
-      .combine('minFilter', ['nearest', 'linear'] as const)
   )
   .beforeAllSubcases(t =>
     t.skipIf(
@@ -70,7 +72,7 @@ Parameters:
     )
   )
   .fn(async t => {
-    const { textureType, stage, samplePoints, addressModeU, addressModeV, minFilter } = t.params;
+    const { textureType, stage, samplePoints, modeU, modeV, filt: minFilter } = t.params;
 
     const descriptor: GPUTextureDescriptor = {
       format: 'rgba8unorm',
@@ -87,8 +89,8 @@ Parameters:
     );
     try {
       const sampler: GPUSamplerDescriptor = {
-        addressModeU,
-        addressModeV,
+        addressModeU: kShortAddressModeToAddressMode[modeU],
+        addressModeV: kShortAddressModeToAddressMode[modeV],
         minFilter,
         magFilter: minFilter,
         mipmapFilter: minFilter,
@@ -98,7 +100,7 @@ Parameters:
         method: samplePoints,
         sampler,
         descriptor,
-        hashInputs: [samplePoints, addressModeU, addressModeV, minFilter],
+        hashInputs: [samplePoints, modeU, modeV, minFilter],
       }).map(({ coords }) => {
         return {
           builtin: 'textureSampleBaseClampToEdge',

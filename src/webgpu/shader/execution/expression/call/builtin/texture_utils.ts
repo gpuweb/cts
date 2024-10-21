@@ -1,3 +1,4 @@
+import { keysOf } from '../../../../../../common/util/data_tables.js';
 import { assert, range, unreachable } from '../../../../../../common/util/util.js';
 import { Float16Array } from '../../../../../../external/petamoriken/float16/float16.js';
 import {
@@ -41,6 +42,24 @@ import { PerPixelAtLevel, TexelView } from '../../../../../util/texture/texel_vi
 import { createTextureFromTexelViews } from '../../../../../util/texture.js';
 import { reifyExtent3D } from '../../../../../util/unions.js';
 import { ShaderStage } from '../../../../validation/decl/util.js';
+
+// These are needed because the list of parameters was too long when converted to a filename.
+export const kShortShaderStageToShaderStage = {
+  c: 'compute' as ShaderStage,
+  f: 'fragment' as ShaderStage,
+  v: 'vertex' as ShaderStage,
+} as const;
+export const kShortShaderStages = keysOf(kShortShaderStageToShaderStage);
+export type ShortShaderStage = (typeof kShortShaderStages)[number];
+
+// These are needed because the list of parameters was too long when converted to a filename.
+export const kShortAddressModeToAddressMode: Record<string, GPUAddressMode> = {
+  c: 'clamp-to-edge',
+  r: 'repeat',
+  m: 'mirror-repeat',
+};
+
+export const kShortAddressModes = keysOf(kShortAddressModeToAddressMode);
 
 export const kSampleTypeInfo = {
   f32: {
@@ -2093,9 +2112,10 @@ export async function checkCallResults<T extends Dimensionality>(
   sampler: GPUSamplerDescriptor | undefined,
   calls: TextureCall<T>[],
   results: Awaited<ReturnType<typeof doTextureCalls<T>>>,
-  stage: ShaderStage,
+  shortShaderStage: ShortShaderStage,
   gpuTexture?: GPUTexture
 ) {
+  const stage = kShortShaderStageToShaderStage[shortShaderStage];
   await initMipGradientValuesForDevice(t, stage);
 
   let haveComparisonCheckInfo = false;
@@ -2281,7 +2301,8 @@ export async function checkCallResults<T extends Dimensionality>(
                 texture.viewDescriptor,
                 textureType,
                 debugSampler,
-                debugCalls
+                debugCalls,
+                stage
               );
               checkInfo = {
                 runner: debugRunner,
@@ -4330,7 +4351,7 @@ function createTextureCallsRunner<T extends Dimensionality>(
   textureType: string,
   sampler: GPUSamplerDescriptor | undefined,
   calls: TextureCall<T>[],
-  stage: ShaderStage = 'fragment' // MAINTENANCE_TODO: remove default
+  stage: ShaderStage
 ) {
   let structs = '';
   let body = '';
@@ -4731,8 +4752,9 @@ export async function doTextureCalls<T extends Dimensionality>(
   textureType: string,
   sampler: GPUSamplerDescriptor | undefined,
   calls: TextureCall<T>[],
-  stage: ShaderStage = 'fragment' // MAINTENANCE_TODO: remove default
+  shortShaderStage: ShortShaderStage
 ) {
+  const stage = kShortShaderStageToShaderStage[shortShaderStage];
   const runner = createTextureCallsRunner(
     t,
     gpuTexture instanceof GPUExternalTexture

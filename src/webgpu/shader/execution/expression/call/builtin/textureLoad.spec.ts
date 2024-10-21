@@ -38,7 +38,6 @@ import {
 import { GPUTest } from '../../../../../gpu_test.js';
 import { maxMipLevelCount, virtualMipSize } from '../../../../../util/texture/base.js';
 import { TexelFormats } from '../../../../types.js';
-import { kShaderStages } from '../../../../validation/decl/util.js';
 
 import {
   TextureCall,
@@ -51,6 +50,7 @@ import {
   vec2,
   vec3,
   kSamplePointMethods,
+  kShortShaderStages,
   generateTextureBuiltinInputs1D,
   generateTextureBuiltinInputs2D,
   generateTextureBuiltinInputs3D,
@@ -91,7 +91,7 @@ Parameters:
   )
   .params(u =>
     u
-      .combine('stage', kShaderStages)
+      .combine('stage', kShortShaderStages)
       .combine('format', kTestableColorFormats)
       .filter(t => textureDimensionAndFormatCompatible('1d', t.format))
       // 1d textures can't have a height !== 1
@@ -178,7 +178,7 @@ Parameters:
   )
   .params(u =>
     u
-      .combine('stage', kShaderStages)
+      .combine('stage', kShortShaderStages)
       .combine('format', kTestableColorFormats)
       .filter(t => !isCompressedFloatTextureFormat(t.format))
       .beginSubcases()
@@ -260,7 +260,7 @@ Parameters:
   )
   .params(u =>
     u
-      .combine('stage', kShaderStages)
+      .combine('stage', kShortShaderStages)
       .combine('format', kTestableColorFormats)
       .filter(t => textureDimensionAndFormatCompatible('3d', t.format))
       .beginSubcases()
@@ -346,7 +346,7 @@ Parameters:
   )
   .params(u =>
     u
-      .combine('stage', kShaderStages)
+      .combine('stage', kShortShaderStages)
       .combine('texture_type', [
         'texture_multisampled_2d',
         'texture_depth_multisampled_2d',
@@ -441,7 +441,7 @@ Parameters:
   )
   .params(u =>
     u
-      .combine('stage', kShaderStages)
+      .combine('stage', kShortShaderStages)
       .combine('format', kDepthStencilFormats)
       // filter out stencil only formats
       .filter(t => isDepthTextureFormat(t.format))
@@ -523,7 +523,7 @@ Parameters:
   )
   .params(u =>
     u
-      .combine('stage', kShaderStages)
+      .combine('stage', kShortShaderStages)
       .beginSubcases()
       .combine('samplePoints', kSamplePointMethods)
       .combine('C', ['i32', 'u32'] as const)
@@ -603,7 +603,7 @@ Parameters:
   )
   .params(u =>
     u
-      .combine('stage', kShaderStages)
+      .combine('stage', kShortShaderStages)
       .combine('format', kTestableColorFormats)
       // MAINTENANCE_TODO: Update createTextureFromTexelViews to support stencil8 and remove this filter.
       .filter(t => t.format !== 'stencil8' && !isCompressedFloatTextureFormat(t.format))
@@ -700,7 +700,7 @@ Parameters:
   )
   .params(u =>
     u
-      .combine('stage', kShaderStages)
+      .combine('stage', kShortShaderStages)
       .combineWithParams([...TexelFormats, { format: 'bgra8unorm' }] as const)
       .beginSubcases()
       .combine('samplePoints', kSamplePointMethods)
@@ -779,7 +779,7 @@ Parameters:
   )
   .params(u =>
     u
-      .combine('stage', kShaderStages)
+      .combine('stage', kShortShaderStages)
       .combineWithParams([...TexelFormats, { format: 'bgra8unorm' }] as const)
       .beginSubcases()
       .combine('samplePoints', kSamplePointMethods)
@@ -858,7 +858,7 @@ Parameters:
   )
   .params(u =>
     u
-      .combine('stage', kShaderStages)
+      .combine('stage', kShortShaderStages)
       .combineWithParams([...TexelFormats, { format: 'bgra8unorm' }] as const)
       .beginSubcases()
       .combine('samplePoints', kSamplePointMethods)
@@ -941,7 +941,7 @@ Parameters:
   )
   .params(u =>
     u
-      .combine('stage', kShaderStages)
+      .combine('stage', kShortShaderStages)
       .combineWithParams([...TexelFormats, { format: 'bgra8unorm' }] as const)
       .beginSubcases()
       .combine('samplePoints', kSamplePointMethods)
