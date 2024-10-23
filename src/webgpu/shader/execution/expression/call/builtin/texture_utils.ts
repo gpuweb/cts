@@ -109,6 +109,11 @@ export function getTextureTypeForTextureViewDimension(viewDimension: GPUTextureV
 const is32Float = (format: GPUTextureFormat) =>
   format === 'r32float' || format === 'rg32float' || format === 'rgba32float';
 
+const isUnencodableDepthFormat = (format: GPUTextureFormat) =>
+  format === 'depth24plus' ||
+  format === 'depth24plus-stencil8' ||
+  format === 'depth32float-stencil8';
+
 /**
  * Skips a subcase if the filter === 'linear' and the format is type
  * 'unfilterable-float' and we cannot enable filtering.
@@ -1982,7 +1987,15 @@ function isValidOutOfBoundsValue(
           for (let sampleIndex = 0; sampleIndex < sampleCount; ++sampleIndex) {
             const texel = mipTexels.color({ x, y, z, sampleIndex });
             const rgba = convertPerTexelComponentToResultFormat(texel, mipTexels.format);
-            if (texelsApproximatelyEqual(gotRGBA, rgba, mipTexels.format, maxFractionalDiff)) {
+            if (
+              texelsApproximatelyEqual(
+                gotRGBA,
+                texture.descriptor.format,
+                rgba,
+                mipTexels.format,
+                maxFractionalDiff
+              )
+            ) {
               return true;
             }
           }
@@ -2026,23 +2039,24 @@ const kRComponent = [TexelComponent.R] as const;
 
 function texelsApproximatelyEqual(
   gotRGBA: PerTexelComponent<number>,
+  gotFormat: GPUTextureFormat,
   expectRGBA: PerTexelComponent<number>,
-  format: EncodableTextureFormat,
+  expectedFormat: EncodableTextureFormat,
   maxFractionalDiff: number
 ) {
-  const rep = kTexelRepresentationInfo[format];
-  const got = convertResultFormatToTexelViewFormat(gotRGBA, format);
-  const expect = convertResultFormatToTexelViewFormat(expectRGBA, format);
+  const rep = kTexelRepresentationInfo[expectedFormat];
+  const got = convertResultFormatToTexelViewFormat(gotRGBA, expectedFormat);
+  const expect = convertResultFormatToTexelViewFormat(expectRGBA, expectedFormat);
   const gULP = convertPerTexelComponentToResultFormat(
     rep.bitsToULPFromZero(rep.numberToBits(got)),
-    format
+    expectedFormat
   );
   const eULP = convertPerTexelComponentToResultFormat(
     rep.bitsToULPFromZero(rep.numberToBits(expect)),
-    format
+    expectedFormat
   );
 
-  const rgbaComponentsToCheck = isDepthOrStencilTextureFormat(format)
+  const rgbaComponentsToCheck = isDepthOrStencilTextureFormat(gotFormat)
     ? kRComponent
     : kRGBAComponents;
 
@@ -2152,7 +2166,15 @@ export async function checkCallResults<T extends Dimensionality>(
       continue;
     }
 
-    if (texelsApproximatelyEqual(gotRGBA, expectRGBA, format, maxFractionalDiff)) {
+    if (
+      texelsApproximatelyEqual(
+        gotRGBA,
+        texture.descriptor.format,
+        expectRGBA,
+        format,
+        maxFractionalDiff
+      )
+    ) {
       continue;
     }
 
@@ -2360,7 +2382,15 @@ export async function checkCallResults<T extends Dimensionality>(
               call,
               gpuTexels,
               async (texels: TexelView[]) => {
-                const gpuTexture = createTextureFromTexelViewsLocal(t, texels, texture.descriptor);
+                // We're trying to create a texture with black and white texels
+                // but if it's a compressed texture we use an encodable texture.
+                // It's not perfect but we already know it failed. We're just hoping
+                // to get sample points.
+                const descriptor = { ...texture.descriptor };
+                if (isCompressedTextureFormat(descriptor.format)) {
+                  descriptor.format = texels[0].format;
+                }
+                const gpuTexture = createTextureFromTexelViewsLocal(t, texels, descriptor);
                 const result = (await checkInfo.runner.run(gpuTexture))[callIdx];
                 gpuTexture.destroy();
                 return result;
@@ -2704,11 +2734,18 @@ export async function readTextureToTexelViews(
 
     const sampler = device.createSampler();
 
+    const aspect = getAspectForTexture(texture);
     const bindGroup = device.createBindGroup({
       layout: pipeline.getBindGroupLayout(0),
       entries: [
         { binding: 0, resource: { buffer: uniformBuffer } },
-        { binding: 1, resource: texture.createView({ dimension: viewDimension }) },
+        {
+          binding: 1,
+          resource: texture.createView({
+            dimension: viewDimension,
+            aspect,
+          }),
+        },
         { binding: 2, resource: sampler },
         { binding: 3, resource: { buffer: storageBuffer } },
       ],
@@ -2756,7 +2793,7 @@ export async function readTextureToTexelViews(
 function createTextureFromTexelViewsLocal(
   t: GPUTest,
   texelViews: TexelView[],
-  desc: Omit<GPUTextureDescriptor, 'format'>
+  desc: GPUTextureDescriptor
 ): GPUTexture {
   const modifiedDescriptor = { ...desc };
   // If it's a depth or stencil texture we need to render to it to fill it with data.
@@ -2787,6 +2824,25 @@ export async function createTextureWithRandomDataAndGetTexels(
     const texture = t.createTextureTracked(descriptor);
 
     fillTextureWithRandomData(t.device, texture);
+    const texels = await readTextureToTexelViews(
+      t,
+      texture,
+      descriptor,
+      getTexelViewFormatForTextureFormat(texture.format)
+    );
+    return { texture, texels };
+  } else if (isUnencodableDepthFormat(descriptor.format)) {
+    // This is round about. We can't directly write to depth24plus, depth24plus-stencil8, depth32float-stencil8
+    // and they are not encodable. So: (1) we make random data using `depth32float`. We create a texture with
+    // that data (createTextureFromTexelViewsLocal will render the data into the texture rather than copy).
+    // We then need to read it back out but as rgba32float since that is encodable but, since it round tripped
+    // through the GPU it's now been quantized.
+    const d32Descriptor = {
+      ...descriptor,
+      format: 'depth32float' as GPUTextureFormat,
+    };
+    const tempTexels = createRandomTexelViewMipmap(d32Descriptor, options);
+    const texture = createTextureFromTexelViewsLocal(t, tempTexels, descriptor);
     const texels = await readTextureToTexelViews(
       t,
       texture,
@@ -4263,6 +4319,15 @@ function describeTextureCall<T extends Dimensionality>(call: TextureCall<T>): st
   return `${call.builtin}(${args.join(', ')})`;
 }
 
+const getAspectForTexture = (texture: GPUTexture | GPUExternalTexture): GPUTextureAspect =>
+  texture instanceof GPUExternalTexture
+    ? 'all'
+    : isDepthTextureFormat(texture.format)
+    ? 'depth-only'
+    : isStencilTextureFormat(texture.format)
+    ? 'stencil-only'
+    : 'all';
+
 const s_deviceToPipelines = new WeakMap<
   GPUDevice,
   Map<string, GPURenderPipeline | GPUComputePipeline>
@@ -4642,6 +4707,12 @@ ${stageWGSL}
       usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
     });
 
+    const aspect = getAspectForTexture(gpuTexture);
+    const runViewDescriptor = {
+      ...viewDescriptor,
+      aspect,
+    };
+
     const bindGroup0 = t.device.createBindGroup({
       layout: pipeline!.getBindGroupLayout(0),
       entries: [
@@ -4650,7 +4721,7 @@ ${stageWGSL}
           resource:
             gpuTexture instanceof GPUExternalTexture
               ? gpuTexture
-              : gpuTexture.createView(viewDescriptor),
+              : gpuTexture.createView(runViewDescriptor),
         },
         ...(sampler ? [{ binding: 1, resource: gpuSampler! }] : []),
         { binding: 2, resource: { buffer: dataBuffer } },
