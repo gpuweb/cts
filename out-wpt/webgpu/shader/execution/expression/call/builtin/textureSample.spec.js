@@ -190,7 +190,7 @@ fn(async (t) => {
     method: samplePoints,
     descriptor,
     derivatives: true,
-    offset: true,
+    offset,
     hashInputs: [format, samplePoints, modeU, modeV, minFilter, offset]
   }).map(({ coords, derivativeMult, offset }) => {
     return {
