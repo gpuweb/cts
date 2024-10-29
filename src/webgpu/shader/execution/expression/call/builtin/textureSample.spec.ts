@@ -11,9 +11,8 @@ import { makeTestGroup } from '../../../../../../common/framework/test_group.js'
 import {
   isDepthTextureFormat,
   isEncodableTextureFormat,
-  kCompressedTextureFormats,
   kDepthStencilFormats,
-  kEncodableTextureFormats,
+  kAllTextureFormats,
   textureDimensionAndFormatCompatible,
 } from '../../../../../format_info.js';
 import { TextureTestMixin } from '../../../../../gpu_test.js';
@@ -44,8 +43,6 @@ import {
   skipIfNeedsFilteringAndIsUnfilterable,
 } from './texture_utils.js';
 
-const kTestableColorFormats = [...kEncodableTextureFormats, ...kCompressedTextureFormats] as const;
-
 export const g = makeTestGroup(TextureTestMixin(WGSLTextureSampleTest));
 
 g.test('sampled_1d_coords')
@@ -62,7 +59,7 @@ Parameters:
   )
   .params(u =>
     u
-      .combine('format', kTestableColorFormats)
+      .combine('format', kAllTextureFormats)
       .filter(t => textureDimensionAndFormatCompatible('1d', t.format))
       .filter(t => isPotentiallyFilterableAndFillable(t.format))
       .combine('filt', ['nearest', 'linear'] as const)
@@ -151,7 +148,7 @@ Parameters:
   )
   .params(u =>
     u
-      .combine('format', kTestableColorFormats)
+      .combine('format', kAllTextureFormats)
       .filter(t => isPotentiallyFilterableAndFillable(t.format))
       .combine('filt', ['nearest', 'linear'] as const)
       .combine('modeU', kShortAddressModes)
@@ -249,7 +246,7 @@ Parameters:
   )
   .params(u =>
     u
-      .combine('format', kTestableColorFormats)
+      .combine('format', kAllTextureFormats)
       .filter(t => isPotentiallyFilterableAndFillable(t.format))
       .combine('dim', ['3d', 'cube'] as const)
       .filter(t => isSupportedViewFormatCombo(t.format, t.dim))
@@ -478,7 +475,7 @@ Parameters:
   )
   .params(u =>
     u
-      .combine('format', kTestableColorFormats)
+      .combine('format', kAllTextureFormats)
       .filter(t => isPotentiallyFilterableAndFillable(t.format))
       .combine('filt', ['nearest', 'linear'] as const)
       .combine('modeU', kShortAddressModes)
@@ -574,7 +571,7 @@ Parameters:
   )
   .params(u =>
     u
-      .combine('format', kTestableColorFormats)
+      .combine('format', kAllTextureFormats)
       .filter(t => isPotentiallyFilterableAndFillable(t.format))
       .combine('filt', ['nearest', 'linear'] as const)
       .combine('mode', kShortAddressModes)

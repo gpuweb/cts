@@ -8,7 +8,7 @@ Samples a texture with a bias to the mip level.
 `;
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
-import { kCompressedTextureFormats, kEncodableTextureFormats } from '../../../../../format_info.js';
+import { kAllTextureFormats } from '../../../../../format_info.js';
 import { TextureTestMixin } from '../../../../../gpu_test.js';
 
 import {
@@ -35,8 +35,6 @@ import {
   skipIfNeedsFilteringAndIsUnfilterable,
 } from './texture_utils.js';
 
-const kTestableColorFormats = [...kEncodableTextureFormats, ...kCompressedTextureFormats] as const;
-
 export const g = makeTestGroup(TextureTestMixin(WGSLTextureSampleTest));
 
 g.test('sampled_2d_coords')
@@ -61,7 +59,7 @@ Parameters:
   )
   .params(u =>
     u
-      .combine('format', kTestableColorFormats)
+      .combine('format', kAllTextureFormats)
       .filter(t => isPotentiallyFilterableAndFillable(t.format))
       .combine('filt', ['nearest', 'linear'] as const)
       .combine('modeU', kShortAddressModes)
@@ -159,7 +157,7 @@ Parameters:
   )
   .params(u =>
     u
-      .combine('format', kTestableColorFormats)
+      .combine('format', kAllTextureFormats)
       .filter(t => isPotentiallyFilterableAndFillable(t.format))
       .combine('dim', ['3d', 'cube'] as const)
       .filter(t => isSupportedViewFormatCombo(t.format, t.dim))
@@ -296,7 +294,7 @@ Parameters:
   )
   .params(u =>
     u
-      .combine('format', kTestableColorFormats)
+      .combine('format', kAllTextureFormats)
       .filter(t => isPotentiallyFilterableAndFillable(t.format))
       .combine('filt', ['nearest', 'linear'] as const)
       .combine('modeU', kShortAddressModes)
@@ -400,7 +398,7 @@ Parameters:
   )
   .params(u =>
     u
-      .combine('format', kTestableColorFormats)
+      .combine('format', kAllTextureFormats)
       .filter(t => isPotentiallyFilterableAndFillable(t.format))
       .combine('filt', ['nearest', 'linear'] as const)
       .combine('mode', kShortAddressModes)
