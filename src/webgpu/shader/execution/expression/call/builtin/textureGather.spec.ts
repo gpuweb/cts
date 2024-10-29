@@ -28,9 +28,8 @@ import { makeTestGroup } from '../../../../../../common/framework/test_group.js'
 import {
   isDepthTextureFormat,
   isEncodableTextureFormat,
-  kCompressedTextureFormats,
   kDepthStencilFormats,
-  kEncodableTextureFormats,
+  kAllTextureFormats,
 } from '../../../../../format_info.js';
 
 import {
@@ -53,8 +52,6 @@ import {
   vec3,
   WGSLTextureSampleTest,
 } from './texture_utils.js';
-
-const kTestableColorFormats = [...kEncodableTextureFormats, ...kCompressedTextureFormats] as const;
 
 export const g = makeTestGroup(WGSLTextureSampleTest);
 
@@ -87,7 +84,7 @@ Parameters:
   .params(u =>
     u
       .combine('stage', kShortShaderStages)
-      .combine('format', kTestableColorFormats)
+      .combine('format', kAllTextureFormats)
       .filter(t => isFillable(t.format))
       .combine('filt', ['nearest', 'linear'] as const)
       .combine('modeU', kShortAddressModes)
@@ -184,7 +181,7 @@ Parameters:
   .params(u =>
     u
       .combine('stage', kShortShaderStages)
-      .combine('format', kTestableColorFormats)
+      .combine('format', kAllTextureFormats)
       .filter(t => isFillable(t.format))
       .combine('filt', ['nearest', 'linear'] as const)
       .combine('mode', kShortAddressModes)
@@ -292,7 +289,7 @@ Parameters:
   .params(u =>
     u
       .combine('stage', kShortShaderStages)
-      .combine('format', kTestableColorFormats)
+      .combine('format', kAllTextureFormats)
       .filter(t => isFillable(t.format))
       .combine('filt', ['nearest', 'linear'] as const)
       .combine('modeU', kShortAddressModes)
@@ -398,7 +395,7 @@ Parameters:
   .params(u =>
     u
       .combine('stage', kShortShaderStages)
-      .combine('format', kTestableColorFormats)
+      .combine('format', kAllTextureFormats)
       .filter(t => isFillable(t.format))
       .combine('filt', ['nearest', 'linear'] as const)
       .combine('mode', kShortAddressModes)

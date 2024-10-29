@@ -6,7 +6,7 @@ Samples a texture using explicit gradients.
 - TODO: test cube maps with more than one mip level.
 - TODO: Test un-encodable formats.
 `;import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
-import { kCompressedTextureFormats, kEncodableTextureFormats } from '../../../../../format_info.js';
+import { kAllTextureFormats } from '../../../../../format_info.js';
 
 import {
   appendComponentTypeForFormatToTextureType,
@@ -34,8 +34,6 @@ import {
   WGSLTextureSampleTest } from
 './texture_utils.js';
 
-const kTestableColorFormats = [...kEncodableTextureFormats, ...kCompressedTextureFormats];
-
 export const g = makeTestGroup(WGSLTextureSampleTest);
 
 g.test('sampled_2d_coords').
@@ -62,7 +60,7 @@ Parameters:
 params((u) =>
 u.
 combine('stage', kShortShaderStages).
-combine('format', kTestableColorFormats).
+combine('format', kAllTextureFormats).
 filter((t) => isPotentiallyFilterableAndFillable(t.format)).
 combine('filt', ['nearest', 'linear']).
 combine('modeU', kShortAddressModes).
@@ -161,7 +159,7 @@ Parameters:
 params((u) =>
 u.
 combine('stage', kShortShaderStages).
-combine('format', kTestableColorFormats).
+combine('format', kAllTextureFormats).
 filter((t) => isPotentiallyFilterableAndFillable(t.format)).
 combine('dim', ['3d', 'cube']).
 filter((t) => isSupportedViewFormatCombo(t.format, t.dim)).
@@ -301,7 +299,7 @@ Parameters:
 params((u) =>
 u.
 combine('stage', kShortShaderStages).
-combine('format', kTestableColorFormats).
+combine('format', kAllTextureFormats).
 filter((t) => isPotentiallyFilterableAndFillable(t.format)).
 combine('filt', ['nearest', 'linear']).
 combine('modeU', kShortAddressModes).
@@ -407,7 +405,7 @@ Parameters:
 params((u) =>
 u.
 combine('stage', kShortShaderStages).
-combine('format', kTestableColorFormats).
+combine('format', kAllTextureFormats).
 filter((t) => isPotentiallyFilterableAndFillable(t.format)).
 combine('filt', ['nearest', 'linear']).
 combine('mode', kShortAddressModes).

@@ -29,9 +29,8 @@ import {
   isEncodableTextureFormat,
   isMultisampledTextureFormat,
   isStencilTextureFormat,
-  kCompressedTextureFormats,
   kDepthStencilFormats,
-  kEncodableTextureFormats,
+  kAllTextureFormats,
   kTextureFormatInfo,
   textureDimensionAndFormatCompatible } from
 '../../../../../format_info.js';
@@ -57,8 +56,6 @@ import {
 
   createVideoFrameWithRandomDataAndGetTexels } from
 './texture_utils.js';
-
-const kTestableColorFormats = [...kEncodableTextureFormats, ...kCompressedTextureFormats];
 
 export function normalizedCoordToTexelLoadTestCoord(
 descriptor,
@@ -92,7 +89,7 @@ Parameters:
 params((u) =>
 u.
 combine('stage', kShortShaderStages).
-combine('format', kTestableColorFormats).
+combine('format', kAllTextureFormats).
 filter((t) => textureDimensionAndFormatCompatible('1d', t.format))
 // 1d textures can't have a height !== 1
 .filter((t) => kTextureFormatInfo[t.format].blockHeight === 1).
@@ -179,7 +176,7 @@ Parameters:
 params((u) =>
 u.
 combine('stage', kShortShaderStages).
-combine('format', kTestableColorFormats).
+combine('format', kAllTextureFormats).
 filter((t) => !isCompressedFloatTextureFormat(t.format)).
 beginSubcases().
 combine('samplePoints', kSamplePointMethods).
@@ -261,7 +258,7 @@ Parameters:
 params((u) =>
 u.
 combine('stage', kShortShaderStages).
-combine('format', kTestableColorFormats).
+combine('format', kAllTextureFormats).
 filter((t) => textureDimensionAndFormatCompatible('3d', t.format)).
 beginSubcases().
 combine('samplePoints', kSamplePointMethods).
@@ -351,7 +348,7 @@ combine('texture_type', [
 'texture_multisampled_2d',
 'texture_depth_multisampled_2d']
 ).
-combine('format', kTestableColorFormats).
+combine('format', kAllTextureFormats).
 filter((t) => isMultisampledTextureFormat(t.format)).
 filter((t) => !isStencilTextureFormat(t.format))
 // Filter out texture_depth_multisampled_2d with non-depth formats
@@ -604,7 +601,7 @@ Parameters:
 params((u) =>
 u.
 combine('stage', kShortShaderStages).
-combine('format', kTestableColorFormats)
+combine('format', kAllTextureFormats)
 // MAINTENANCE_TODO: Update createTextureFromTexelViews to support stencil8 and remove this filter.
 .filter((t) => t.format !== 'stencil8' && !isCompressedFloatTextureFormat(t.format)).
 combine('texture_type', ['texture_2d_array', 'texture_depth_2d_array']).

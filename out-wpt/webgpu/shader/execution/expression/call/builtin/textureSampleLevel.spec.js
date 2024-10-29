@@ -8,9 +8,8 @@ Samples a texture.
 import {
   isDepthTextureFormat,
   isEncodableTextureFormat,
-  kCompressedTextureFormats,
-  kDepthStencilFormats,
-  kEncodableTextureFormats } from
+  kAllTextureFormats,
+  kDepthStencilFormats } from
 '../../../../../format_info.js';
 
 import {
@@ -39,8 +38,6 @@ import {
 
   WGSLTextureSampleTest } from
 './texture_utils.js';
-
-const kTestableColorFormats = [...kEncodableTextureFormats, ...kCompressedTextureFormats];
 
 export const g = makeTestGroup(WGSLTextureSampleTest);
 
@@ -71,7 +68,7 @@ Parameters:
 params((u) =>
 u.
 combine('stage', kShortShaderStages).
-combine('format', kTestableColorFormats).
+combine('format', kAllTextureFormats).
 filter((t) => isPotentiallyFilterableAndFillable(t.format)).
 combine('filt', ['nearest', 'linear']).
 combine('modeU', kShortAddressModes).
@@ -175,7 +172,7 @@ Parameters:
 params((u) =>
 u.
 combine('stage', kShortShaderStages).
-combine('format', kTestableColorFormats).
+combine('format', kAllTextureFormats).
 filter((t) => isPotentiallyFilterableAndFillable(t.format)).
 combine('filt', ['nearest', 'linear']).
 combine('modeU', kShortAddressModes).
@@ -283,7 +280,7 @@ Parameters:
 params((u) =>
 u.
 combine('stage', kShortShaderStages).
-combine('format', kTestableColorFormats).
+combine('format', kAllTextureFormats).
 filter((t) => isPotentiallyFilterableAndFillable(t.format)).
 combine('dim', ['3d', 'cube']).
 filter((t) => isSupportedViewFormatCombo(t.format, t.dim)).
@@ -416,7 +413,7 @@ Parameters:
 params((u) =>
 u.
 combine('stage', kShortShaderStages).
-combine('format', kTestableColorFormats).
+combine('format', kAllTextureFormats).
 filter((t) => isPotentiallyFilterableAndFillable(t.format)).
 combine('filt', ['nearest', 'linear']).
 combine('mode', kShortAddressModes).

@@ -28,9 +28,8 @@ A texture gather operation reads from a 2D, 2D array, cube, or cube array textur
 import {
   isDepthTextureFormat,
   isEncodableTextureFormat,
-  kCompressedTextureFormats,
   kDepthStencilFormats,
-  kEncodableTextureFormats } from
+  kAllTextureFormats } from
 '../../../../../format_info.js';
 
 import {
@@ -53,8 +52,6 @@ import {
 
   WGSLTextureSampleTest } from
 './texture_utils.js';
-
-const kTestableColorFormats = [...kEncodableTextureFormats, ...kCompressedTextureFormats];
 
 export const g = makeTestGroup(WGSLTextureSampleTest);
 
@@ -87,7 +84,7 @@ Parameters:
 params((u) =>
 u.
 combine('stage', kShortShaderStages).
-combine('format', kTestableColorFormats).
+combine('format', kAllTextureFormats).
 filter((t) => isFillable(t.format)).
 combine('filt', ['nearest', 'linear']).
 combine('modeU', kShortAddressModes).
@@ -184,7 +181,7 @@ Parameters:
 params((u) =>
 u.
 combine('stage', kShortShaderStages).
-combine('format', kTestableColorFormats).
+combine('format', kAllTextureFormats).
 filter((t) => isFillable(t.format)).
 combine('filt', ['nearest', 'linear']).
 combine('mode', kShortAddressModes).
@@ -292,7 +289,7 @@ Parameters:
 params((u) =>
 u.
 combine('stage', kShortShaderStages).
-combine('format', kTestableColorFormats).
+combine('format', kAllTextureFormats).
 filter((t) => isFillable(t.format)).
 combine('filt', ['nearest', 'linear']).
 combine('modeU', kShortAddressModes).
@@ -398,7 +395,7 @@ Parameters:
 params((u) =>
 u.
 combine('stage', kShortShaderStages).
-combine('format', kTestableColorFormats).
+combine('format', kAllTextureFormats).
 filter((t) => isFillable(t.format)).
 combine('filt', ['nearest', 'linear']).
 combine('mode', kShortAddressModes).
