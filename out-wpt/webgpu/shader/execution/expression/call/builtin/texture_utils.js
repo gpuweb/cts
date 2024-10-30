@@ -4470,7 +4470,7 @@ stage)
   const samplerType = isCompare ? 'sampler_comparison' : 'sampler';
 
   const renderTarget = t.createTextureTracked({
-    format: resultFormat,
+    format: 'rgba32uint',
     size: [calls.length, 1],
     usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT
   });
@@ -4510,8 +4510,8 @@ stage)
               getResult(instance_index, ${derivativeType}(0)));
 }
 
-@fragment fn fsVertex(v: VOut) -> @location(0) ${returnType} {
-  return v.result;
+@fragment fn fsVertex(v: VOut) -> @location(0) vec4u {
+  return bitcast<vec4u>(v.result);
 }
 ` :
   stage === 'fragment' ?
@@ -4524,9 +4524,9 @@ stage)
   return VOut(vec4f(positions[vertex_index], 0, 1), instance_index, ${returnType}(0));
 }
 
-@fragment fn fsFragment(v: VOut) -> @location(0) ${returnType} {
+@fragment fn fsFragment(v: VOut) -> @location(0) vec4u {
   ${derivativeBaseWGSL}
-  return getResult(v.ndx, derivativeBase);
+  return bitcast<vec4u>(getResult(v.ndx, derivativeBase));
 }
 ` :
   `
@@ -4696,7 +4696,7 @@ ${stageWGSL}
           vertex: { module },
           fragment: {
             module,
-            targets: [{ format: renderTarget.format }]
+            targets: [{ format: 'rgba32uint' }]
           }
         });
         break;
