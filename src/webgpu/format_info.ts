@@ -1793,6 +1793,11 @@ export function canUseAsRenderTarget(format: GPUTextureFormat) {
   return kTextureFormatInfo[format].colorRender || isDepthOrStencilTextureFormat(format);
 }
 
+export function isFilterable(format: GPUTextureFormat) {
+  const info = kTextureFormatInfo[format];
+  return info.color?.type === 'float';
+}
+
 export const kCompatModeUnsupportedStorageTextureFormats: readonly GPUTextureFormat[] = [
   'rg32float',
   'rg32sint',
