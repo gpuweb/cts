@@ -191,6 +191,9 @@ export function skipIfTextureFormatNotSupportedNotAvailableOrNotFilterable(
   }
 }
 
+const builtinNeedsMipGradientValues = (builtin: TextureBuiltin) =>
+  builtin !== 'textureLoad' && builtin !== 'textureGather' && builtin !== 'textureGatherCompare';
+
 /**
  * Splits in array into multiple arrays where every Nth value goes to a different array
  */
@@ -2130,7 +2133,9 @@ export async function checkCallResults<T extends Dimensionality>(
   gpuTexture?: GPUTexture
 ) {
   const stage = kShortShaderStageToShaderStage[shortShaderStage];
-  await initMipGradientValuesForDevice(t, stage);
+  if (builtinNeedsMipGradientValues(calls[0].builtin)) {
+    await initMipGradientValuesForDevice(t, stage);
+  }
 
   let haveComparisonCheckInfo = false;
   let checkInfo = {
