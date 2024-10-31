@@ -1537,7 +1537,7 @@ function checkSubgroupSizeConsistency(
  * @param height The framebuffer height
  * @param checker A functor to check the framebuffer values
  */
- async function runSubgroupTest(
+async function runSubgroupTest(
   t: FragmentBuiltinTest,
   format: GPUTextureFormat,
   fsShader: string,
@@ -1818,7 +1818,7 @@ fn fsMain(
   var repId = atomicAdd(&counter, 1);
   repId = subgroupBroadcast(repId, 0);
 
-  return vec4u(id, ballotSize, repId, 0);
+  return vec4u(id, sg_size, ballotSize, repId);
 }`;
 
     await runSubgroupTest(
