@@ -1454,6 +1454,76 @@ function popcount(input: number): number {
 }
 
 /**
+ * Checks subgroup_size builtin value consistency.
+ *
+ * The builtin subgroup_size is not assumed to be uniform in fragment shaders.
+ * Therefore, this function checks the value is a power of two within the device
+ * limits and that the ballot size is less than the stated size.
+ * @param data An array of vec4u that contains (per texel):
+ *             * builtin value
+ *             * ballot size
+ *             * comparison to other invocations
+ *             * 0
+ * @param format The texture format for data
+ * @param min The minimum subgroup size from the device
+ * @param max The maximum subgroup size from the device
+ * @param width The width of the framebuffer
+ * @param height The height of the framebuffer
+ */
+function checkSubgroupSizeConsistency(
+  data: Uint32Array,
+  format: GPUTextureFormat,
+  min: number,
+  max: number,
+  width: number,
+  height: number
+): Error | undefined {
+  const { blockWidth, blockHeight, bytesPerBlock } = kTextureFormatInfo[format];
+  const blocksPerRow = width / blockWidth;
+  // Image copies require bytesPerRow to be a multiple of 256.
+  const bytesPerRow = align(blocksPerRow * (bytesPerBlock ?? 1), 256);
+  const uintsPerRow = bytesPerRow / 4;
+  const uintsPerTexel = (bytesPerBlock ?? 1) / blockWidth / blockHeight / 4;
+
+  for (let row = 0; row < height; row++) {
+    for (let col = 0; col < width; col++) {
+      const offset = uintsPerRow * row + col * uintsPerTexel;
+      const builtinSize = data[offset];
+      const ballotSize = data[offset + 1];
+      const comparison = data[offset + 2];
+      if (builtinSize === 0) {
+        continue;
+      }
+
+      if (popcount(builtinSize) !== 1) {
+        return new Error(`Subgroup size '${builtinSize}' is not a power of two`);
+      }
+
+      if (builtinSize < min) {
+        return new Error(`Subgroup size '${builtinSize}' is less than minimum '${min}'`);
+      }
+      if (max < builtinSize) {
+        return new Error(`Subgroup size '${builtinSize}' is greater than maximum '${max}'`);
+      }
+
+      if (builtinSize < ballotSize) {
+        return new Error(`Inconsistent subgroup ballot size
+-   icoord: (${row}, ${col})
+- expected: ${builtinSize}
+-      got: ${ballotSize}`);
+      }
+
+      if (comparison !== 1) {
+        return new Error(`Not all invocations in subgroup have same view of the size
+- icoord: (${row}, ${col})`);
+      }
+    }
+  }
+
+  return undefined;
+}
+
+/**
  * Runs a subgroup builtin test for fragment shaders
  *
  * This test draws a full screen in 2 separate draw calls (half screen each).
@@ -1467,7 +1537,7 @@ function popcount(input: number): number {
  * @param height The framebuffer height
  * @param checker A functor to check the framebuffer values
  */
-async function runSubgroupTest(
+ async function runSubgroupTest(
   t: FragmentBuiltinTest,
   format: GPUTextureFormat,
   fsShader: string,
@@ -1564,76 +1634,6 @@ fn vsMain(@builtin(vertex_index) index : u32) -> @builtin(position) vec4f {
 
     t.expectOK(checker(data));
   }
-}
-
-/**
- * Checks subgroup_size builtin value consistency.
- *
- * The builtin subgroup_size is not assumed to be uniform in fragment shaders.
- * Therefore, this function checks the value is a power of two within the device
- * limits and that the ballot size is less than the stated size.
- * @param data An array of vec4u that contains (per texel):
- *             * builtin value
- *             * ballot size
- *             * comparison to other invocations
- *             * 0
- * @param format The texture format for data
- * @param min The minimum subgroup size from the device
- * @param max The maximum subgroup size from the device
- * @param width The width of the framebuffer
- * @param height The height of the framebuffer
- */
-function checkSubgroupSizeConsistency(
-  data: Uint32Array,
-  format: GPUTextureFormat,
-  min: number,
-  max: number,
-  width: number,
-  height: number
-): Error | undefined {
-  const { blockWidth, blockHeight, bytesPerBlock } = kTextureFormatInfo[format];
-  const blocksPerRow = width / blockWidth;
-  // Image copies require bytesPerRow to be a multiple of 256.
-  const bytesPerRow = align(blocksPerRow * (bytesPerBlock ?? 1), 256);
-  const uintsPerRow = bytesPerRow / 4;
-  const uintsPerTexel = (bytesPerBlock ?? 1) / blockWidth / blockHeight / 4;
-
-  for (let row = 0; row < height; row++) {
-    for (let col = 0; col < width; col++) {
-      const offset = uintsPerRow * row + col * uintsPerTexel;
-      const builtinSize = data[offset];
-      const ballotSize = data[offset + 1];
-      const comparison = data[offset + 2];
-      if (builtinSize === 0) {
-        continue;
-      }
-
-      if (popcount(builtinSize) !== 1) {
-        return new Error(`Subgroup size '${builtinSize}' is not a power of two`);
-      }
-
-      if (builtinSize < min) {
-        return new Error(`Subgroup size '${builtinSize}' is less than minimum '${min}'`);
-      }
-      if (max < builtinSize) {
-        return new Error(`Subgroup size '${builtinSize}' is greater than maximum '${max}'`);
-      }
-
-      if (builtinSize < ballotSize) {
-        return new Error(`Inconsistent subgroup ballot size
--   icoord: (${row}, ${col})
-- expected: ${builtinSize}
--      got: ${ballotSize}`);
-      }
-
-      if (comparison !== 1) {
-        return new Error(`Not all invocations in subgroup have same view of the size
-- icoord: (${row}, ${col})`);
-      }
-    }
-  }
-
-  return undefined;
 }
 
 g.test('subgroup_size')
