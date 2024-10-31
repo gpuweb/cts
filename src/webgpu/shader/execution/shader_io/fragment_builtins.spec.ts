@@ -1454,76 +1454,6 @@ function popcount(input: number): number {
 }
 
 /**
- * Checks subgroup_size builtin value consistency.
- *
- * The builtin subgroup_size is not assumed to be uniform in fragment shaders.
- * Therefore, this function checks the value is a power of two within the device
- * limits and that the ballot size is less than the stated size.
- * @param data An array of vec4u that contains (per texel):
- *             * builtin value
- *             * ballot size
- *             * comparison to other invocations
- *             * 0
- * @param format The texture format for data
- * @param min The minimum subgroup size from the device
- * @param max The maximum subgroup size from the device
- * @param width The width of the framebuffer
- * @param height The height of the framebuffer
- */
-function checkSubgroupSizeConsistency(
-  data: Uint32Array,
-  format: GPUTextureFormat,
-  min: number,
-  max: number,
-  width: number,
-  height: number
-): Error | undefined {
-  const { blockWidth, blockHeight, bytesPerBlock } = kTextureFormatInfo[format];
-  const blocksPerRow = width / blockWidth;
-  // Image copies require bytesPerRow to be a multiple of 256.
-  const bytesPerRow = align(blocksPerRow * (bytesPerBlock ?? 1), 256);
-  const uintsPerRow = bytesPerRow / 4;
-  const uintsPerTexel = (bytesPerBlock ?? 1) / blockWidth / blockHeight / 4;
-
-  for (let row = 0; row < height; row++) {
-    for (let col = 0; col < width; col++) {
-      const offset = uintsPerRow * row + col * uintsPerTexel;
-      const builtinSize = data[offset];
-      const ballotSize = data[offset + 1];
-      const comparison = data[offset + 2];
-      if (builtinSize === 0) {
-        continue;
-      }
-
-      if (popcount(builtinSize) !== 1) {
-        return new Error(`Subgroup size '${builtinSize}' is not a power of two`);
-      }
-
-      if (builtinSize < min) {
-        return new Error(`Subgroup size '${builtinSize}' is less than minimum '${min}'`);
-      }
-      if (max < builtinSize) {
-        return new Error(`Subgroup size '${builtinSize}' is greater than maximum '${max}'`);
-      }
-
-      if (builtinSize < ballotSize) {
-        return new Error(`Inconsistent subgroup ballot size
--   icoord: (${row}, ${col})
-- expected: ${builtinSize}
--      got: ${ballotSize}`);
-      }
-
-      if (comparison !== 1) {
-        return new Error(`Not all invocations in subgroup have same view of the size
-- icoord: (${row}, ${col})`);
-      }
-    }
-  }
-
-  return undefined;
-}
-
-/**
  * Runs a subgroup builtin test for fragment shaders
  *
  * This test draws a full screen in 2 separate draw calls (half screen each).
@@ -1618,7 +1548,8 @@ fn vsMain(@builtin(vertex_index) index : u32) -> @builtin(position) vec4f {
     });
     pass.setPipeline(pipeline);
     pass.setBindGroup(0, bg);
-    pass.draw(3, 1, i);
+    // Draw the uperr-left triangle (vertices 0-2) or the lower-right triangle (vertices 3-5)
+    pass.draw(3, 1, i * 3);
     pass.end();
     t.queue.submit([encoder.finish()]);
 
@@ -1633,6 +1564,76 @@ fn vsMain(@builtin(vertex_index) index : u32) -> @builtin(position) vec4f {
 
     t.expectOK(checker(data));
   }
+}
+
+/**
+ * Checks subgroup_size builtin value consistency.
+ *
+ * The builtin subgroup_size is not assumed to be uniform in fragment shaders.
+ * Therefore, this function checks the value is a power of two within the device
+ * limits and that the ballot size is less than the stated size.
+ * @param data An array of vec4u that contains (per texel):
+ *             * builtin value
+ *             * ballot size
+ *             * comparison to other invocations
+ *             * 0
+ * @param format The texture format for data
+ * @param min The minimum subgroup size from the device
+ * @param max The maximum subgroup size from the device
+ * @param width The width of the framebuffer
+ * @param height The height of the framebuffer
+ */
+function checkSubgroupSizeConsistency(
+  data: Uint32Array,
+  format: GPUTextureFormat,
+  min: number,
+  max: number,
+  width: number,
+  height: number
+): Error | undefined {
+  const { blockWidth, blockHeight, bytesPerBlock } = kTextureFormatInfo[format];
+  const blocksPerRow = width / blockWidth;
+  // Image copies require bytesPerRow to be a multiple of 256.
+  const bytesPerRow = align(blocksPerRow * (bytesPerBlock ?? 1), 256);
+  const uintsPerRow = bytesPerRow / 4;
+  const uintsPerTexel = (bytesPerBlock ?? 1) / blockWidth / blockHeight / 4;
+
+  for (let row = 0; row < height; row++) {
+    for (let col = 0; col < width; col++) {
+      const offset = uintsPerRow * row + col * uintsPerTexel;
+      const builtinSize = data[offset];
+      const ballotSize = data[offset + 1];
+      const comparison = data[offset + 2];
+      if (builtinSize === 0) {
+        continue;
+      }
+
+      if (popcount(builtinSize) !== 1) {
+        return new Error(`Subgroup size '${builtinSize}' is not a power of two`);
+      }
+
+      if (builtinSize < min) {
+        return new Error(`Subgroup size '${builtinSize}' is less than minimum '${min}'`);
+      }
+      if (max < builtinSize) {
+        return new Error(`Subgroup size '${builtinSize}' is greater than maximum '${max}'`);
+      }
+
+      if (builtinSize < ballotSize) {
+        return new Error(`Inconsistent subgroup ballot size
+-   icoord: (${row}, ${col})
+- expected: ${builtinSize}
+-      got: ${ballotSize}`);
+      }
+
+      if (comparison !== 1) {
+        return new Error(`Not all invocations in subgroup have same view of the size
+- icoord: (${row}, ${col})`);
+      }
+    }
+  }
+
+  return undefined;
 }
 
 g.test('subgroup_size')
@@ -1704,12 +1705,13 @@ fn fsMain(
  *
  * Very little uniformity is expected for subgroup_invocation_id.
  * This function checks that all ids are less than the subgroup size
- * and no id is repeated.
+ * (not the ballot size, since the subgroup id can be allocated to
+ * inactivate invocations between active ones) and no id is repeated.
  * @param data An array of vec4u that contains (per texel):
  *             * subgroup_invocation_id
+ *             * subgroup size
  *             * ballot size
  *             * non-zero ID unique to each subgroup
- *             * 0
  * @param format The texture format of data
  * @param width The width of the framebuffer
  * @param height The height of the framebuffer
@@ -1726,31 +1728,57 @@ function checkSubgroupInvocationIdConsistency(
   const uintsPerRow = bytesPerRow / 4;
   const uintsPerTexel = (bytesPerBlock ?? 1) / blockWidth / blockHeight / 4;
 
-  const mappings = new Map<number, bigint>();
+  const invocationIdBitmapOfSubgroups = new Map<number, bigint>();
+  const ballotSizeRecordOfSubgroups = new Map<
+    number,
+    { ballotSize: number; row: number; col: number }
+  >();
   for (let row = 0; row < height; row++) {
     for (let col = 0; col < width; col++) {
       const offset = uintsPerRow * row + col * uintsPerTexel;
       const id = data[offset];
-      const size = data[offset + 1];
-      const repId = data[offset + 2];
+      const sgSize = data[offset + 1];
+      const ballotSize = data[offset + 2];
+      const repId = data[offset + 3];
 
       if (repId === 0) {
         continue;
       }
 
-      if (size < id) {
+      if (sgSize < id) {
         return new Error(
-          `Invocation id '${id}' is greater than subgroup size '${size}' for (${row}, ${col})`
+          `Invocation id '${id}' is greater than subgroup size '${sgSize}' for (${row}, ${col})`
         );
       }
 
-      let v = mappings.get(repId) ?? 0n;
+      if (sgSize < ballotSize) {
+        return new Error(
+          `Ballot size '${ballotSize}' is greater than subgroup size '${sgSize}' for (${row}, ${col})`
+        );
+      }
+
+      const ballotSizeRecord = ballotSizeRecordOfSubgroups.get(repId);
+      if (ballotSizeRecord === undefined) {
+        ballotSizeRecordOfSubgroups.set(repId, { ballotSize, row, col });
+      } else {
+        if (ballotSize !== ballotSizeRecord.ballotSize) {
+          return new Error(
+            `Inconsistent subgroup ballot size within same subgroup
+- icoord: (${ballotSizeRecord.row}, ${ballotSizeRecord.col})
+-    got: ${ballotSizeRecord.ballotSize}
+- icoord: (${row}, ${col})
+-    got: ${ballotSize}`
+          );
+        }
+      }
+
+      let invocationIdBitmap = invocationIdBitmapOfSubgroups.get(repId) ?? 0n;
       const mask = 1n << BigInt(id);
-      if ((mask & v) !== 0n) {
+      if ((mask & invocationIdBitmap) !== 0n) {
         return new Error(`Multiple invocations with id '${id}' in subgroup '${repId}'`);
       }
-      v |= mask;
-      mappings.set(repId, v);
+      invocationIdBitmap |= mask;
+      invocationIdBitmapOfSubgroups.set(repId, invocationIdBitmap);
     }
   }
 
