@@ -28,6 +28,7 @@ import { makeTestGroup } from '../../../../../../common/framework/test_group.js'
 import {
   isDepthTextureFormat,
   isEncodableTextureFormat,
+  isFilterable,
   kDepthStencilFormats,
   kAllTextureFormats,
 } from '../../../../../format_info.js';
@@ -87,6 +88,7 @@ Parameters:
       .combine('format', kAllTextureFormats)
       .filter(t => isFillable(t.format))
       .combine('filt', ['nearest', 'linear'] as const)
+      .filter(t => t.filt === 'nearest' || isFilterable(t.format))
       .combine('modeU', kShortAddressModes)
       .combine('modeV', kShortAddressModes)
       .combine('offset', [false, true] as const)
@@ -184,6 +186,7 @@ Parameters:
       .combine('format', kAllTextureFormats)
       .filter(t => isFillable(t.format))
       .combine('filt', ['nearest', 'linear'] as const)
+      .filter(t => t.filt === 'nearest' || isFilterable(t.format))
       .combine('mode', kShortAddressModes)
       .beginSubcases()
       .combine('C', ['i32', 'u32'] as const)
@@ -292,6 +295,7 @@ Parameters:
       .combine('format', kAllTextureFormats)
       .filter(t => isFillable(t.format))
       .combine('filt', ['nearest', 'linear'] as const)
+      .filter(t => t.filt === 'nearest' || isFilterable(t.format))
       .combine('modeU', kShortAddressModes)
       .combine('modeV', kShortAddressModes)
       .combine('offset', [false, true] as const)
@@ -398,6 +402,7 @@ Parameters:
       .combine('format', kAllTextureFormats)
       .filter(t => isFillable(t.format))
       .combine('filt', ['nearest', 'linear'] as const)
+      .filter(t => t.filt === 'nearest' || isFilterable(t.format))
       .combine('mode', kShortAddressModes)
       .beginSubcases()
       .combine('samplePoints', kCubeSamplePointMethods)

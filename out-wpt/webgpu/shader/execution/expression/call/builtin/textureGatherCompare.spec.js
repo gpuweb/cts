@@ -76,7 +76,6 @@ combine('format', kDepthStencilFormats)
 .filter((t) => isDepthTextureFormat(t.format))
 // MAINTENANCE_TODO: Remove when support for depth24plus, depth24plus-stencil8, and depth32float-stencil8 is added.
 .filter((t) => isEncodableTextureFormat(t.format)).
-combine('filt', ['nearest', 'linear']).
 combine('modeU', kShortAddressModes).
 combine('modeV', kShortAddressModes).
 combine('offset', [false, true]).
@@ -89,17 +88,7 @@ beforeAllSubcases((t) => {
   t.skipIfTextureFormatNotSupported(t.params.format);
 }).
 fn(async (t) => {
-  const {
-    format,
-    stage,
-    samplePoints,
-    A,
-    modeU,
-    modeV,
-    filt: minFilter,
-    compare,
-    offset
-  } = t.params;
+  const { format, stage, samplePoints, A, modeU, modeV, compare, offset } = t.params;
 
   const viewDimension = '2d-array';
   const size = chooseTextureSize({ minSize: 8, minBlocks: 4, format, viewDimension });
@@ -115,10 +104,7 @@ fn(async (t) => {
   const sampler = {
     addressModeU: kShortAddressModeToAddressMode[modeU],
     addressModeV: kShortAddressModeToAddressMode[modeV],
-    compare,
-    minFilter,
-    magFilter: minFilter,
-    mipmapFilter: minFilter
+    compare
   };
 
   const calls = generateTextureBuiltinInputs2D(50, {
@@ -129,7 +115,7 @@ fn(async (t) => {
     arrayIndex: { num: texture.depthOrArrayLayers, type: A },
     depthRef: true,
     offset,
-    hashInputs: [stage, format, samplePoints, A, modeU, modeV, minFilter, offset]
+    hashInputs: [stage, format, samplePoints, A, modeU, modeV, offset]
   }).map(({ coords, arrayIndex, depthRef, offset }) => {
     return {
       builtin: 'textureGatherCompare',
@@ -189,7 +175,6 @@ combine('format', kDepthStencilFormats)
 .filter((t) => isDepthTextureFormat(t.format))
 // MAINTENANCE_TODO: Remove when support for depth24plus, depth24plus-stencil8, and depth32float-stencil8 is added.
 .filter((t) => isEncodableTextureFormat(t.format)).
-combine('filt', ['nearest', 'linear']).
 combine('mode', kShortAddressModes).
 beginSubcases().
 combine('samplePoints', kCubeSamplePointMethods).
@@ -200,7 +185,7 @@ beforeAllSubcases((t) => {
   t.skipIfTextureViewDimensionNotSupported('cube-array');
 }).
 fn(async (t) => {
-  const { format, A, stage, samplePoints, mode, filt: minFilter, compare } = t.params;
+  const { format, A, stage, samplePoints, mode, compare } = t.params;
 
   const viewDimension = 'cube-array';
   const size = chooseTextureSize({ minSize: 8, minBlocks: 2, format, viewDimension });
@@ -218,10 +203,7 @@ fn(async (t) => {
     addressModeU: kShortAddressModeToAddressMode[mode],
     addressModeV: kShortAddressModeToAddressMode[mode],
     addressModeW: kShortAddressModeToAddressMode[mode],
-    compare,
-    minFilter,
-    magFilter: minFilter,
-    mipmapFilter: minFilter
+    compare
   };
 
   const calls = generateSamplePointsCube(50, {
@@ -231,7 +213,7 @@ fn(async (t) => {
     textureBuiltin: 'textureGatherCompare',
     arrayIndex: { num: texture.depthOrArrayLayers / 6, type: A },
     depthRef: true,
-    hashInputs: [stage, format, samplePoints, mode, minFilter]
+    hashInputs: [stage, format, samplePoints, mode]
   }).map(({ coords, depthRef, arrayIndex }) => {
     return {
       builtin: 'textureGatherCompare',
@@ -296,7 +278,6 @@ combine('format', kDepthStencilFormats)
 .filter((t) => isDepthTextureFormat(t.format))
 // MAINTENANCE_TODO: Remove when support for depth24plus, depth24plus-stencil8, and depth32float-stencil8 is added.
 .filter((t) => isEncodableTextureFormat(t.format)).
-combine('filt', ['nearest', 'linear']).
 combine('mode', kShortAddressModes).
 combine('offset', [false, true]).
 beginSubcases().
@@ -305,7 +286,7 @@ combine('samplePoints', kSamplePointMethods).
 combine('compare', kCompareFunctions)
 ).
 fn(async (t) => {
-  const { format, C, stage, samplePoints, mode, compare, filt: minFilter, offset } = t.params;
+  const { format, C, stage, samplePoints, mode, compare, offset } = t.params;
 
   const size = chooseTextureSize({ minSize: 8, minBlocks: 4, format });
   const descriptor = {
@@ -319,10 +300,7 @@ fn(async (t) => {
   const sampler = {
     addressModeU: kShortAddressModeToAddressMode[mode],
     addressModeV: kShortAddressModeToAddressMode[mode],
-    compare,
-    minFilter,
-    magFilter: minFilter,
-    mipmapFilter: minFilter
+    compare
   };
 
   const calls = generateTextureBuiltinInputs2D(50, {
@@ -332,7 +310,7 @@ fn(async (t) => {
     descriptor,
     offset,
     depthRef: true,
-    hashInputs: [stage, format, C, samplePoints, mode, minFilter, compare, offset]
+    hashInputs: [stage, format, C, samplePoints, mode, compare, offset]
   }).map(({ coords, depthRef, offset }) => {
     return {
       builtin: 'textureGatherCompare',
@@ -387,14 +365,13 @@ combine('format', kDepthStencilFormats)
 .filter((t) => isDepthTextureFormat(t.format))
 // MAINTENANCE_TODO: Remove when support for depth24plus, depth24plus-stencil8, and depth32float-stencil8 is added.
 .filter((t) => isEncodableTextureFormat(t.format)).
-combine('filt', ['nearest', 'linear']).
 combine('mode', kShortAddressModes).
 beginSubcases().
 combine('samplePoints', kCubeSamplePointMethods).
 combine('compare', kCompareFunctions)
 ).
 fn(async (t) => {
-  const { format, stage, samplePoints, mode, filt: minFilter, compare } = t.params;
+  const { format, stage, samplePoints, mode, compare } = t.params;
 
   const viewDimension = 'cube';
   const size = chooseTextureSize({ minSize: 8, minBlocks: 2, format, viewDimension });
@@ -412,10 +389,7 @@ fn(async (t) => {
     addressModeU: kShortAddressModeToAddressMode[mode],
     addressModeV: kShortAddressModeToAddressMode[mode],
     addressModeW: kShortAddressModeToAddressMode[mode],
-    compare,
-    minFilter,
-    magFilter: minFilter,
-    mipmapFilter: minFilter
+    compare
   };
 
   const calls = generateSamplePointsCube(50, {
@@ -424,7 +398,7 @@ fn(async (t) => {
     descriptor,
     depthRef: true,
     textureBuiltin: 'textureGatherCompare',
-    hashInputs: [stage, format, samplePoints, mode, minFilter, compare]
+    hashInputs: [stage, format, samplePoints, mode, compare]
   }).map(({ coords, depthRef }) => {
     return {
       builtin: 'textureGatherCompare',

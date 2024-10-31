@@ -1793,6 +1793,11 @@ export function canUseAsRenderTarget(format) {
   return kTextureFormatInfo[format].colorRender || isDepthOrStencilTextureFormat(format);
 }
 
+export function isFilterable(format) {
+  const info = kTextureFormatInfo[format];
+  return info.color?.type === 'float';
+}
+
 export const kCompatModeUnsupportedStorageTextureFormats = [
 'rg32float',
 'rg32sint',
