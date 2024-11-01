@@ -1742,6 +1742,12 @@ function checkSubgroupInvocationIdConsistency(
       const repId = data[offset + 3];
 
       if (repId === 0) {
+        // repId of 0 indicates inactivate fragment, and all output should be zero.
+        if ((id !== 0) || (sgSize !== 0) || (ballotSize !== 0)) {
+          return new Error(
+            `Unexpected zero repId with non-zero outputs for (${row}, ${col}): got output [${id}, ${sgSize}, ${ballotSize}, ${repId}]`
+          );
+        }
         continue;
       }
 
