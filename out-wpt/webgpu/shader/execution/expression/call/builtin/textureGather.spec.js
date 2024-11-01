@@ -28,7 +28,7 @@ A texture gather operation reads from a 2D, 2D array, cube, or cube array textur
 import {
   isDepthTextureFormat,
   isEncodableTextureFormat,
-  isFilterable,
+  isFilterableAsTextureF32,
   kDepthStencilFormats,
   kAllTextureFormats } from
 '../../../../../format_info.js';
@@ -88,7 +88,7 @@ combine('stage', kShortShaderStages).
 combine('format', kAllTextureFormats).
 filter((t) => isFillable(t.format)).
 combine('filt', ['nearest', 'linear']).
-filter((t) => t.filt === 'nearest' || isFilterable(t.format)).
+filter((t) => t.filt === 'nearest' || isFilterableAsTextureF32(t.format)).
 combine('modeU', kShortAddressModes).
 combine('modeV', kShortAddressModes).
 combine('offset', [false, true]).
@@ -186,7 +186,7 @@ combine('stage', kShortShaderStages).
 combine('format', kAllTextureFormats).
 filter((t) => isFillable(t.format)).
 combine('filt', ['nearest', 'linear']).
-filter((t) => t.filt === 'nearest' || isFilterable(t.format)).
+filter((t) => t.filt === 'nearest' || isFilterableAsTextureF32(t.format)).
 combine('mode', kShortAddressModes).
 beginSubcases().
 combine('C', ['i32', 'u32']).
@@ -295,7 +295,7 @@ combine('stage', kShortShaderStages).
 combine('format', kAllTextureFormats).
 filter((t) => isFillable(t.format)).
 combine('filt', ['nearest', 'linear']).
-filter((t) => t.filt === 'nearest' || isFilterable(t.format)).
+filter((t) => t.filt === 'nearest' || isFilterableAsTextureF32(t.format)).
 combine('modeU', kShortAddressModes).
 combine('modeV', kShortAddressModes).
 combine('offset', [false, true]).
@@ -402,7 +402,7 @@ combine('stage', kShortShaderStages).
 combine('format', kAllTextureFormats).
 filter((t) => isFillable(t.format)).
 combine('filt', ['nearest', 'linear']).
-filter((t) => t.filt === 'nearest' || isFilterable(t.format)).
+filter((t) => t.filt === 'nearest' || isFilterableAsTextureF32(t.format)).
 combine('mode', kShortAddressModes).
 beginSubcases().
 combine('samplePoints', kCubeSamplePointMethods).

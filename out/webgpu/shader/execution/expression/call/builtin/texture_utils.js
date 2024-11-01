@@ -3,6 +3,7 @@
 **/import { keysOf } from '../../../../../../common/util/data_tables.js';import { assert, range, unreachable } from '../../../../../../common/util/util.js';import { Float16Array } from '../../../../../../external/petamoriken/float16/float16.js';
 import {
 
+  is32Float,
   isCompressedFloatTextureFormat,
   isCompressedTextureFormat,
   isDepthOrStencilTextureFormat,
@@ -106,9 +107,6 @@ export function getTextureTypeForTextureViewDimension(viewDimension) {
       unreachable();
   }
 }
-
-const is32Float = (format) =>
-format === 'r32float' || format === 'rg32float' || format === 'rgba32float';
 
 const isUnencodableDepthFormat = (format) =>
 format === 'depth24plus' ||
@@ -4729,12 +4727,11 @@ ${stageWGSL}
   }
 
   if (sampler) {
+    const type = isCompare ? 'comparison' : isFiltering ? 'filtering' : 'non-filtering';
     entries.push({
       binding: 1,
       visibility,
-      sampler: {
-        type: isCompare ? 'comparison' : isFiltering ? 'filtering' : 'non-filtering'
-      }
+      sampler: { type }
     });
   }
 

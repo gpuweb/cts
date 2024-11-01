@@ -3,6 +3,7 @@ import { assert, range, unreachable } from '../../../../../../common/util/util.j
 import { Float16Array } from '../../../../../../external/petamoriken/float16/float16.js';
 import {
   EncodableTextureFormat,
+  is32Float,
   isCompressedFloatTextureFormat,
   isCompressedTextureFormat,
   isDepthOrStencilTextureFormat,
@@ -106,9 +107,6 @@ export function getTextureTypeForTextureViewDimension(viewDimension: GPUTextureV
       unreachable();
   }
 }
-
-const is32Float = (format: GPUTextureFormat) =>
-  format === 'r32float' || format === 'rg32float' || format === 'rgba32float';
 
 const isUnencodableDepthFormat = (format: GPUTextureFormat) =>
   format === 'depth24plus' ||
@@ -4729,12 +4727,11 @@ ${stageWGSL}
   }
 
   if (sampler) {
+    const type = isCompare ? 'comparison' : isFiltering ? 'filtering' : 'non-filtering';
     entries.push({
       binding: 1,
       visibility,
-      sampler: {
-        type: isCompare ? 'comparison' : isFiltering ? 'filtering' : 'non-filtering',
-      },
+      sampler: { type },
     });
   }
 

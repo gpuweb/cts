@@ -1793,9 +1793,21 @@ export function canUseAsRenderTarget(format) {
   return kTextureFormatInfo[format].colorRender || isDepthOrStencilTextureFormat(format);
 }
 
-export function isFilterable(format) {
+export function is32Float(format) {
+  return format === 'r32float' || format === 'rg32float' || format === 'rgba32float';
+}
+
+/**
+ * Returns true if texture is filterable as `texture_xxx<f32>`
+ *
+ * examples:
+ * * 'rgba8unorm' -> true
+ * * 'depth16unorm' -> false
+ * * 'rgba32float' -> true (you need to enable feature 'float32-filterable')
+ */
+export function isFilterableAsTextureF32(format) {
   const info = kTextureFormatInfo[format];
-  return info.color?.type === 'float';
+  return info.color?.type === 'float' || is32Float(format);
 }
 
 export const kCompatModeUnsupportedStorageTextureFormats = [
