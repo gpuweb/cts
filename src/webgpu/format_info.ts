@@ -1822,10 +1822,19 @@ export function isRegularTextureFormat(format: GPUTextureFormat) {
 }
 
 /**
- * Returns true of format is both compressed and a float format, for example 'bc6h-rgb-ufloat'.
+ * Returns true if format is both compressed and a float format, for example 'bc6h-rgb-ufloat'.
  */
 export function isCompressedFloatTextureFormat(format: GPUTextureFormat) {
   return isCompressedTextureFormat(format) && format.includes('float');
+}
+
+/**
+ * Returns true if format is sint or uint
+ */
+export function isSintOrUintFormat(format: GPUTextureFormat) {
+  const info = kTextureFormatInfo[format];
+  const type = info.color?.type ?? info.depth?.type ?? info.stencil?.type;
+  return type === 'sint' || type === 'uint';
 }
 
 /**

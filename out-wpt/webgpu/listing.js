@@ -3403,6 +3403,16 @@ export const listing = [
       "expression",
       "call",
       "builtin",
+      "texture_utils"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "call",
+      "builtin",
       "transpose"
     ]
   },

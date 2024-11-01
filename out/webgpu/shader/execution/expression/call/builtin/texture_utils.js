@@ -8,6 +8,7 @@ import {
   isDepthOrStencilTextureFormat,
   isDepthTextureFormat,
   isEncodableTextureFormat,
+  isSintOrUintFormat,
   isStencilTextureFormat,
   kEncodableTextureFormats,
   kTextureFormatInfo } from
@@ -79,8 +80,8 @@ format,
 viewDimension)
 {
   return !(
-  (isCompressedTextureFormat(format) || isDepthTextureFormat(format)) &&
-  viewDimension === '3d');
+  (isCompressedTextureFormat(format) || isDepthOrStencilTextureFormat(format)) && (
+  viewDimension === '3d' || viewDimension === '1d'));
 
 }
 
@@ -928,6 +929,11 @@ component)
  * or something similar to TexelView.
  */
 export function getTexelViewFormatForTextureFormat(format) {
+  if (format.endsWith('sint')) {
+    return 'rgba32sint';
+  } else if (format.endsWith('uint')) {
+    return 'rgba32uint';
+  }
   return format.endsWith('-srgb') ? 'rgba8unorm-srgb' : 'rgba32float';
 }
 
@@ -1250,6 +1256,9 @@ builtin === 'textureSampleCompare';
 
 const isCubeViewDimension = (viewDescriptor) =>
 viewDescriptor?.dimension === 'cube' || viewDescriptor?.dimension === 'cube-array';
+
+const isViewDimensionCubeOrCubeArray = (viewDimension) =>
+viewDimension === 'cube' || viewDimension === 'cube-array';
 
 const s_u32 = new Uint32Array(1);
 const s_f32 = new Float32Array(s_u32.buffer);
@@ -2040,7 +2049,10 @@ TexelComponent.A];
 
 const kRComponent = [TexelComponent.R];
 
-function texelsApproximatelyEqual(
+/**
+ * Compares two Texels
+ */
+export function texelsApproximatelyEqual(
 gotRGBA,
 gotFormat,
 expectRGBA,
@@ -2610,6 +2622,13 @@ descriptor)
   );
 }
 
+/**
+ * Reads a texture to an array of TexelViews, one per mip level.
+ * format is the format of the TexelView you want. Often this is
+ * same as the texture.format but if the texture.format is not
+ * "Encodable" then you need to choose a different format.
+ * Example: depth24plus -> r32float, bc1-rgba-unorm to rgba32float
+ */
 export async function readTextureToTexelViews(
 t,
 texture,
@@ -2622,78 +2641,95 @@ format)
   new Map();
   s_readTextureToRGBA32DeviceToPipeline.set(device, viewDimensionToPipelineMap);
 
+  const { componentType, resultType } = getTextureFormatTypeInfo(texture.format);
   const viewDimension = getEffectiveViewDimension(t, descriptor);
-  const id = `${viewDimension}:${texture.sampleCount}`;
+  const id = `${texture.format}:${viewDimension}:${texture.sampleCount}`;
   let pipeline = viewDimensionToPipelineMap.get(id);
   if (!pipeline) {
     let textureWGSL;
     let loadWGSL;
-    let dimensionWGSL = 'textureDimensions(tex, uni.mipLevel)';
+    let dimensionWGSL = 'textureDimensions(tex, 0)';
     switch (viewDimension) {
       case '2d':
         if (texture.sampleCount > 1) {
-          textureWGSL = 'texture_multisampled_2d<f32>';
+          textureWGSL = `texture_multisampled_2d<${componentType}>`;
           loadWGSL = 'textureLoad(tex, coord.xy, sampleIndex)';
           dimensionWGSL = 'textureDimensions(tex)';
         } else {
-          textureWGSL = 'texture_2d<f32>';
-          loadWGSL = 'textureLoad(tex, coord.xy, mipLevel)';
+          textureWGSL = `texture_2d<${componentType}>`;
+          loadWGSL = 'textureLoad(tex, coord.xy, 0)';
         }
         break;
       case 'cube-array': // cube-array doesn't exist in compat so we can just use 2d_array for this
       case '2d-array':
-        textureWGSL = 'texture_2d_array<f32>';
+        textureWGSL = `texture_2d_array<${componentType}>`;
         loadWGSL = `
           textureLoad(
               tex,
               coord.xy,
               coord.z,
-              mipLevel)`;
+              0)`;
         break;
       case '3d':
-        textureWGSL = 'texture_3d<f32>';
-        loadWGSL = 'textureLoad(tex, coord.xyz, mipLevel)';
+        textureWGSL = `texture_3d<${componentType}>`;
+        loadWGSL = 'textureLoad(tex, coord.xyz, 0)';
         break;
       case 'cube':
-        textureWGSL = 'texture_cube<f32>';
+        textureWGSL = `texture_cube<${componentType}>`;
         loadWGSL = `
-          textureLoadCubeAs2DArray(tex, coord.xy, coord.z, mipLevel);
+          textureLoadCubeAs2DArray(tex, coord.xy, coord.z);
         `;
+        break;
+      case '1d':
+        textureWGSL = `texture_1d<${componentType}>`;
+        loadWGSL = `textureLoad(tex, coord.x, 0)`;
+        dimensionWGSL = `vec2u(textureDimensions(tex), 1)`;
         break;
       default:
         unreachable(`unsupported view: ${viewDimension}`);
     }
+
+    const textureLoadCubeWGSL = `
+      const faceMat = array(
+        mat3x3f( 0,  0,  -2,  0, -2,   0,  1,  1,   1),   // pos-x
+        mat3x3f( 0,  0,   2,  0, -2,   0, -1,  1,  -1),   // neg-x
+        mat3x3f( 2,  0,   0,  0,  0,   2, -1,  1,  -1),   // pos-y
+        mat3x3f( 2,  0,   0,  0,  0,  -2, -1, -1,   1),   // neg-y
+        mat3x3f( 2,  0,   0,  0, -2,   0, -1,  1,   1),   // pos-z
+        mat3x3f(-2,  0,   0,  0, -2,   0,  1,  1,  -1));  // neg-z
+
+      // needed for compat mode.
+      fn textureLoadCubeAs2DArray(tex: texture_cube<${componentType}>, coord: vec2u, layer: u32) -> ${resultType} {
+        // convert texel coord normalized coord
+        let size = textureDimensions(tex, 0);
+        let uv = (vec2f(coord) + 0.5) / vec2f(size.xy);
+
+        // convert uv + layer into cube coord
+        let cubeCoord = faceMat[layer] * vec3f(uv, 1.0);
+
+        // We have to use textureGather as it's the only texture builtin that works on cubemaps
+        // with integer texture formats.
+        let r = textureGather(0, tex, smp, cubeCoord);
+        let g = textureGather(1, tex, smp, cubeCoord);
+        let b = textureGather(2, tex, smp, cubeCoord);
+        let a = textureGather(3, tex, smp, cubeCoord);
+
+        // element 3 is the texel corresponding to cubeCoord
+        return ${resultType}(r[3], g[3], b[3], a[3]);
+      }
+    `;
+
     const module = device.createShaderModule({
       code: `
-        const faceMat = array(
-          mat3x3f( 0,  0,  -2,  0, -2,   0,  1,  1,   1),   // pos-x
-          mat3x3f( 0,  0,   2,  0, -2,   0, -1,  1,  -1),   // neg-x
-          mat3x3f( 2,  0,   0,  0,  0,   2, -1,  1,  -1),   // pos-y
-          mat3x3f( 2,  0,   0,  0,  0,  -2, -1, -1,   1),   // neg-y
-          mat3x3f( 2,  0,   0,  0, -2,   0, -1,  1,   1),   // pos-z
-          mat3x3f(-2,  0,   0,  0, -2,   0,  1,  1,  -1));  // neg-z
-
-        // needed for compat mode.
-        fn textureLoadCubeAs2DArray(tex: texture_cube<f32>, coord: vec2u, layer: u32, mipLevel: u32) -> vec4f {
-          // convert texel coord normalized coord
-          let size = textureDimensions(tex, mipLevel);
-          let uv = (vec2f(coord) + 0.5) / vec2f(size.xy);
-
-          // convert uv + layer into cube coord
-          let cubeCoord = faceMat[layer] * vec3f(uv, 1.0);
-
-          return textureSampleLevel(tex, smp, cubeCoord, f32(mipLevel));
-        }
-
+        ${isViewDimensionCubeOrCubeArray(viewDimension) ? textureLoadCubeWGSL : ''}
         struct Uniforms {
-          mipLevel: u32,
           sampleCount: u32,
         };
 
         @group(0) @binding(0) var<uniform> uni: Uniforms;
         @group(0) @binding(1) var tex: ${textureWGSL};
         @group(0) @binding(2) var smp: sampler;
-        @group(0) @binding(3) var<storage, read_write> data: array<vec4f>;
+        @group(0) @binding(3) var<storage, read_write> data: array<${resultType}>;
 
         @compute @workgroup_size(1) fn cs(
           @builtin(global_invocation_id) global_invocation_id : vec3<u32>) {
@@ -2704,12 +2740,52 @@ format)
                     global_invocation_id.x;
           let coord = vec3u(global_invocation_id.x / uni.sampleCount, global_invocation_id.yz);
           let sampleIndex = global_invocation_id.x % uni.sampleCount;
-          let mipLevel = uni.mipLevel;
           data[ndx] = ${loadWGSL};
         }
       `
     });
-    pipeline = device.createComputePipeline({ layout: 'auto', compute: { module } });
+    const sampleType = isDepthTextureFormat(texture.format) ?
+    'unfilterable-float' :
+    isStencilTextureFormat(texture.format) ?
+    'uint' :
+    kTextureFormatInfo[texture.format].color?.type ?? 'unfilterable-float';
+    const bindGroupLayout = device.createBindGroupLayout({
+      entries: [
+      {
+        binding: 0,
+        visibility: GPUShaderStage.COMPUTE,
+        buffer: {
+          type: 'uniform'
+        }
+      },
+      {
+        binding: 1,
+        visibility: GPUShaderStage.COMPUTE,
+        texture: {
+          sampleType,
+          viewDimension
+        }
+      },
+      {
+        binding: 2,
+        visibility: GPUShaderStage.COMPUTE,
+        sampler: {
+          type: 'non-filtering'
+        }
+      },
+      {
+        binding: 3,
+        visibility: GPUShaderStage.COMPUTE,
+        buffer: {
+          type: 'storage'
+        }
+      }]
+
+    });
+    const layout = device.createPipelineLayout({
+      bindGroupLayouts: [bindGroupLayout]
+    });
+    pipeline = device.createComputePipeline({ layout, compute: { module } });
     viewDimensionToPipelineMap.set(id, pipeline);
   }
 
@@ -2719,7 +2795,7 @@ format)
   for (let mipLevel = 0; mipLevel < texture.mipLevelCount; ++mipLevel) {
     const size = virtualMipSize(texture.dimension, texture, mipLevel);
 
-    const uniformValues = new Uint32Array([mipLevel, texture.sampleCount, 0, 0]); // min size is 16 bytes
+    const uniformValues = new Uint32Array([texture.sampleCount, 0, 0, 0]); // min size is 16 bytes
     const uniformBuffer = t.createBufferTracked({
       size: uniformValues.byteLength,
       usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
@@ -2748,7 +2824,9 @@ format)
         binding: 1,
         resource: texture.createView({
           dimension: viewDimension,
-          aspect
+          aspect,
+          baseMipLevel: mipLevel,
+          mipLevelCount: 1
         })
       },
       { binding: 2, resource: sampler },
@@ -2772,7 +2850,9 @@ format)
     await readBuffer.mapAsync(GPUMapMode.READ);
 
     // need a copy of the data since unmapping will nullify the typedarray view.
-    const data = new Float32Array(readBuffer.getMappedRange()).slice();
+    const Ctor =
+    componentType === 'i32' ? Int32Array : componentType === 'u32' ? Uint32Array : Float32Array;
+    const data = new Ctor(readBuffer.getMappedRange()).slice();
     readBuffer.unmap();
 
     const { sampleCount } = texture;
@@ -3183,11 +3263,13 @@ run)
       }
 
       const pad2 = (n) => n.toString().padStart(2);
+      const pad3 = (n) => n.toString().padStart(3);
       const fix5 = (n) => n.toFixed(5);
+      const formatValue = isSintOrUintFormat(format) ? pad3 : fix5;
       const formatTexel = (texel) =>
       texel ?
       Object.entries(texel).
-      map(([k, v]) => `${k}: ${fix5(v)}`).
+      map(([k, v]) => `${k}: ${formatValue(v)}`).
       join(', ') :
       '*texel values unavailable*';
 
