@@ -449,7 +449,7 @@ struct VSOutputs {
               };
             }
 
-            case 'unorm8x4-bgra' as GPUVertexFormat: {
+            case 'unorm8x4-bgra': {
               const data = [42, 0, 1, 2, 3, 4, 128, 255];
               const vertexData = new Uint8Array(data).buffer;
               const expectedData = new Float32Array(
