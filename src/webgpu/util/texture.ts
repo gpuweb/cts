@@ -318,9 +318,9 @@ const s_copyBufferToTextureViaRenderPipelines = new WeakMap<
 function copyBufferToTextureViaRender(
   t: GPUTest,
   encoder: GPUCommandEncoder,
-  source: GPUImageCopyBuffer,
+  source: GPUTexelCopyBufferInfo,
   sourceFormat: GPUTextureFormat,
-  dest: GPUImageCopyTexture,
+  dest: GPUTexelCopyTextureInfo,
   size: GPUExtent3D
 ) {
   const { format: textureFormat, sampleCount } = dest.texture;
