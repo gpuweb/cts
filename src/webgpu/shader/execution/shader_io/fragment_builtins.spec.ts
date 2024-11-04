@@ -345,7 +345,7 @@ function generateFragmentInputs({
 
     const cw = isTriangleClockwise(windowPoints2D);
     const frontFacing = frontFace === 'cw' ? cw : !cw;
-    const fragmentOffsets = getMultisampleFragmentOffsets(sampleCount)!;
+    const fragmentOffsets = getMultisampleFragmentOffsets(sampleCount);
 
     for (let y = 0; y < height; ++y) {
       for (let x = 0; x < width; ++x) {

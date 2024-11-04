@@ -248,7 +248,7 @@ Parameters:
     const viewDescriptor = {
       dimension: viewDimension,
     };
-    const textureType = getTextureTypeForTextureViewDimension(viewDimension)!;
+    const textureType = getTextureTypeForTextureViewDimension(viewDimension);
     const results = await doTextureCalls(
       t,
       texture,
