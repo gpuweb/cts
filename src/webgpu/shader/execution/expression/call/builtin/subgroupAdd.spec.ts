@@ -24,6 +24,7 @@ import {
 import { FP } from '../../../../../util/floating_point.js';
 
 import {
+  kDataSentinel,
   kNumCases,
   kStride,
   kWGSizes,
@@ -278,7 +279,7 @@ function checkPredicatedAddition(
         }
       }
     } else {
-      expected = 999;
+      expected = kDataSentinel;
     }
     if (expected !== output[i]) {
       return new Error(`Invocation ${i}: incorrect result
