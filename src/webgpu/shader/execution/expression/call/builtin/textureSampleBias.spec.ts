@@ -8,7 +8,7 @@ Samples a texture with a bias to the mip level.
 `;
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
-import { kAllTextureFormats } from '../../../../../format_info.js';
+import { isFilterableAsTextureF32, kAllTextureFormats } from '../../../../../format_info.js';
 import { TextureTestMixin } from '../../../../../gpu_test.js';
 
 import {
@@ -62,6 +62,7 @@ Parameters:
       .combine('format', kAllTextureFormats)
       .filter(t => isPotentiallyFilterableAndFillable(t.format))
       .combine('filt', ['nearest', 'linear'] as const)
+      .filter(t => t.filt === 'nearest' || isFilterableAsTextureF32(t.format))
       .combine('modeU', kShortAddressModes)
       .combine('modeV', kShortAddressModes)
       .combine('offset', [false, true] as const)
@@ -162,6 +163,7 @@ Parameters:
       .combine('dim', ['3d', 'cube'] as const)
       .filter(t => isSupportedViewFormatCombo(t.format, t.dim))
       .combine('filt', ['nearest', 'linear'] as const)
+      .filter(t => t.filt === 'nearest' || isFilterableAsTextureF32(t.format))
       .combine('modeU', kShortAddressModes)
       .combine('modeV', kShortAddressModes)
       .combine('modeW', kShortAddressModes)
@@ -297,6 +299,7 @@ Parameters:
       .combine('format', kAllTextureFormats)
       .filter(t => isPotentiallyFilterableAndFillable(t.format))
       .combine('filt', ['nearest', 'linear'] as const)
+      .filter(t => t.filt === 'nearest' || isFilterableAsTextureF32(t.format))
       .combine('modeU', kShortAddressModes)
       .combine('modeV', kShortAddressModes)
       .combine('offset', [false, true] as const)
@@ -401,6 +404,7 @@ Parameters:
       .combine('format', kAllTextureFormats)
       .filter(t => isPotentiallyFilterableAndFillable(t.format))
       .combine('filt', ['nearest', 'linear'] as const)
+      .filter(t => t.filt === 'nearest' || isFilterableAsTextureF32(t.format))
       .combine('mode', kShortAddressModes)
       .beginSubcases()
       .combine('samplePoints', kCubeSamplePointMethods)

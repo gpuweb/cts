@@ -8,7 +8,7 @@ Samples a texture with a bias to the mip level.
 - TODO: test cube maps with more than one mip level.
 - TODO: Test un-encodable formats.
 `;import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
-import { kAllTextureFormats } from '../../../../../format_info.js';
+import { isFilterableAsTextureF32, kAllTextureFormats } from '../../../../../format_info.js';
 import { TextureTestMixin } from '../../../../../gpu_test.js';
 
 import {
@@ -62,6 +62,7 @@ u.
 combine('format', kAllTextureFormats).
 filter((t) => isPotentiallyFilterableAndFillable(t.format)).
 combine('filt', ['nearest', 'linear']).
+filter((t) => t.filt === 'nearest' || isFilterableAsTextureF32(t.format)).
 combine('modeU', kShortAddressModes).
 combine('modeV', kShortAddressModes).
 combine('offset', [false, true]).
@@ -162,6 +163,7 @@ filter((t) => isPotentiallyFilterableAndFillable(t.format)).
 combine('dim', ['3d', 'cube']).
 filter((t) => isSupportedViewFormatCombo(t.format, t.dim)).
 combine('filt', ['nearest', 'linear']).
+filter((t) => t.filt === 'nearest' || isFilterableAsTextureF32(t.format)).
 combine('modeU', kShortAddressModes).
 combine('modeV', kShortAddressModes).
 combine('modeW', kShortAddressModes).
@@ -297,6 +299,7 @@ u.
 combine('format', kAllTextureFormats).
 filter((t) => isPotentiallyFilterableAndFillable(t.format)).
 combine('filt', ['nearest', 'linear']).
+filter((t) => t.filt === 'nearest' || isFilterableAsTextureF32(t.format)).
 combine('modeU', kShortAddressModes).
 combine('modeV', kShortAddressModes).
 combine('offset', [false, true]).
@@ -401,6 +404,7 @@ u.
 combine('format', kAllTextureFormats).
 filter((t) => isPotentiallyFilterableAndFillable(t.format)).
 combine('filt', ['nearest', 'linear']).
+filter((t) => t.filt === 'nearest' || isFilterableAsTextureF32(t.format)).
 combine('mode', kShortAddressModes).
 beginSubcases().
 combine('samplePoints', kCubeSamplePointMethods).

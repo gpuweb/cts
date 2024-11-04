@@ -26,7 +26,6 @@ import {
   canUseAsRenderTarget,
   isCompressedFloatTextureFormat,
   isDepthTextureFormat,
-  isEncodableTextureFormat,
   isMultisampledTextureFormat,
   isStencilTextureFormat,
   kDepthStencilFormats,
@@ -441,9 +440,7 @@ u.
 combine('stage', kShortShaderStages).
 combine('format', kDepthStencilFormats)
 // filter out stencil only formats
-.filter((t) => isDepthTextureFormat(t.format))
-// MAINTENANCE_TODO: Remove when support for depth24plus, depth24plus-stencil8, and depth32float-stencil8 is added.
-.filter((t) => isEncodableTextureFormat(t.format)).
+.filter((t) => isDepthTextureFormat(t.format)).
 beginSubcases().
 combine('samplePoints', kSamplePointMethods).
 combine('C', ['i32', 'u32']).
@@ -451,6 +448,7 @@ combine('L', ['i32', 'u32'])
 ).
 beforeAllSubcases((t) => {
   t.skipIfTextureLoadNotSupportedForTextureType('texture_depth_2d');
+  t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
 }).
 fn(async (t) => {
   const { format, stage, samplePoints, C, L } = t.params;
