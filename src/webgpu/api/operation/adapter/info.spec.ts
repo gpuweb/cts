@@ -43,7 +43,8 @@ g.test('adapter_info')
 g.test('same_object')
   .desc(
     `
-GPUAdapter.info and GPUDevice.adapterInfo provide the same object each time it's accessed`
+GPUAdapter.info and GPUDevice.adapterInfo provide the same object each time they're accessed,
+but different objects from one another.`
   )
   .fn(async t => {
     const gpu = getGPU(t.rec);
@@ -67,7 +68,8 @@ GPUAdapter.info and GPUDevice.adapterInfo provide the same object each time it's
 g.test('device_matches_adapter')
   .desc(
     `
-Test that GPUDevice.adapterInfo matches GPUAdapter.info`
+Test that GPUDevice.adapterInfo matches GPUAdapter.info. Cases access the members in
+different orders to make sure that they are consistent regardless of the access order.`
   )
   .paramsSubcasesOnly(u =>
     u.combine('testDeviceFirst', [true, false]).combine('testMembersFirst', [true, false])
