@@ -54,16 +54,22 @@ but different objects from one another.`
 
     const adapterInfo1 = adapter.info;
     const adapterInfo2 = adapter.info;
-    t.expect(adapterInfo1 === adapterInfo2);
+    t.expect(adapterInfo1 === adapterInfo2, 'adapter.info should obey [SameObject]');
 
     const device = await t.requestDeviceTracked(adapter);
     assert(device !== null);
 
     const deviceAdapterInfo1 = device.adapterInfo;
     const deviceAdapterInfo2 = device.adapterInfo;
-    t.expect(deviceAdapterInfo1 === deviceAdapterInfo2);
+    t.expect(
+      deviceAdapterInfo1 === deviceAdapterInfo2,
+      'device.adapterInfo should obey [SameObject]'
+    );
 
-    t.expect(adapter.info !== device.adapterInfo);
+    t.expect(
+      adapter.info !== device.adapterInfo,
+      'adapter.info and device.adapterInfo should NOT return the same object'
+    );
   });
 
 g.test('device_matches_adapter')
