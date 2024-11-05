@@ -4,6 +4,7 @@ Tests for GPUAdapterInfo.
 
 import { Fixture } from '../../../../common/framework/fixture.js';
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
+import { keysOf } from '../../../../common/util/data_tables.js';
 import { getGPU } from '../../../../common/util/navigator_gpu.js';
 import { assert, objectEquals } from '../../../../common/util/util.js';
 
@@ -87,25 +88,24 @@ different orders to make sure that they are consistent regardless of the access 
     const deviceInfo: unknown[] = [];
     const adapterInfo: unknown[] = [];
 
-    type GPUAdapterInfoKey = 'vendor' | 'architecture' | 'device' | 'description';
-    const GPUAdapterInfoKeys = Object.keys(GPUAdapterInfo.prototype) as GPUAdapterInfoKey[];
+    const kGPUAdapterInfoKeys = keysOf(GPUAdapterInfo.prototype);
     if (testMembersFirst) {
       if (testDeviceFirst) {
         assert(device.adapterInfo instanceof GPUAdapterInfo);
-        for (const k of GPUAdapterInfoKeys) {
+        for (const k of kGPUAdapterInfoKeys) {
           deviceInfo.push(device.adapterInfo[k]);
         }
         assert(adapter.info instanceof GPUAdapterInfo);
-        for (const k of GPUAdapterInfoKeys) {
+        for (const k of kGPUAdapterInfoKeys) {
           adapterInfo.push(adapter.info[k]);
         }
       } else {
         assert(adapter.info instanceof GPUAdapterInfo);
-        for (const k of GPUAdapterInfoKeys) {
+        for (const k of kGPUAdapterInfoKeys) {
           adapterInfo.push(adapter.info[k]);
         }
         assert(device.adapterInfo instanceof GPUAdapterInfo);
-        for (const k of GPUAdapterInfoKeys) {
+        for (const k of kGPUAdapterInfoKeys) {
           deviceInfo.push(device.adapterInfo[k]);
         }
       }
@@ -113,14 +113,14 @@ different orders to make sure that they are consistent regardless of the access 
       if (testDeviceFirst) {
         assert(device.adapterInfo instanceof GPUAdapterInfo);
         assert(adapter.info instanceof GPUAdapterInfo);
-        for (const k of GPUAdapterInfoKeys) {
+        for (const k of kGPUAdapterInfoKeys) {
           deviceInfo.push(device.adapterInfo[k]);
           adapterInfo.push(adapter.info[k]);
         }
       } else {
         assert(adapter.info instanceof GPUAdapterInfo);
         assert(device.adapterInfo instanceof GPUAdapterInfo);
-        for (const k of GPUAdapterInfoKeys) {
+        for (const k of kGPUAdapterInfoKeys) {
           adapterInfo.push(adapter.info[k]);
           deviceInfo.push(device.adapterInfo[k]);
         }
