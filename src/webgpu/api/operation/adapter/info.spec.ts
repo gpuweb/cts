@@ -43,7 +43,7 @@ g.test('adapter_info')
 g.test('same_object')
   .desc(
     `
-GPUAdapter.info provides the same object each time it's accessed`
+GPUAdapter.info and GPUDevice.adapterInfo provide the same object each time it's accessed`
   )
   .fn(async t => {
     const gpu = getGPU(t.rec);
@@ -53,6 +53,15 @@ GPUAdapter.info provides the same object each time it's accessed`
     const adapterInfo1 = adapter.info;
     const adapterInfo2 = adapter.info;
     t.expect(adapterInfo1 === adapterInfo2);
+
+    const device = await t.requestDeviceTracked(adapter);
+    assert(device !== null);
+
+    const deviceAdapterInfo1 = device.adapterInfo;
+    const deviceAdapterInfo2 = device.adapterInfo;
+    t.expect(deviceAdapterInfo1 === deviceAdapterInfo2);
+
+    t.expect(adapter.info !== device.adapterInfo);
   });
 
 g.test('device_matches_adapter')
@@ -60,7 +69,12 @@ g.test('device_matches_adapter')
     `
 Test that GPUDevice.adapterInfo matches GPUAdapter.info`
   )
+  .paramsSubcasesOnly(u =>
+    u.combine('testDeviceFirst', [true, false]).combine('testMembersFirst', [true, false])
+  )
   .fn(async t => {
+    const { testDeviceFirst, testMembersFirst } = t.params;
+
     const gpu = getGPU(t.rec);
     const adapter = await gpu.requestAdapter();
     assert(adapter !== null);
@@ -68,13 +82,47 @@ Test that GPUDevice.adapterInfo matches GPUAdapter.info`
     const device = await t.requestDeviceTracked(adapter);
     assert(device !== null);
 
-    assert(device.adapterInfo instanceof GPUAdapterInfo);
-    assert(adapter.info instanceof GPUAdapterInfo);
+    const deviceInfo: unknown[] = [];
+    const adapterInfo: unknown[] = [];
 
-    for (const k of Object.keys(GPUAdapterInfo.prototype)) {
-      t.expect(
-        objectEquals(device.adapterInfo[k], adapter.info[k]),
-        `device.adapterInfo.${k} is "${device.adapterInfo[k]}". Expected "${adapter.info[k]}"`
-      );
+    type GPUAdapterInfoKey = 'vendor' | 'architecture' | 'device' | 'description';
+    const GPUAdapterInfoKeys = Object.keys(GPUAdapterInfo.prototype) as GPUAdapterInfoKey[];
+    if (testMembersFirst) {
+      if (testDeviceFirst) {
+        assert(device.adapterInfo instanceof GPUAdapterInfo);
+        for (const k of GPUAdapterInfoKeys) {
+          deviceInfo.push(device.adapterInfo[k]);
+        }
+        assert(adapter.info instanceof GPUAdapterInfo);
+        for (const k of GPUAdapterInfoKeys) {
+          adapterInfo.push(adapter.info[k]);
+        }
+      } else {
+        assert(adapter.info instanceof GPUAdapterInfo);
+        for (const k of GPUAdapterInfoKeys) {
+          adapterInfo.push(adapter.info[k]);
+        }
+        assert(device.adapterInfo instanceof GPUAdapterInfo);
+        for (const k of GPUAdapterInfoKeys) {
+          deviceInfo.push(device.adapterInfo[k]);
+        }
+      }
+    } else {
+      if (testDeviceFirst) {
+        assert(device.adapterInfo instanceof GPUAdapterInfo);
+        assert(adapter.info instanceof GPUAdapterInfo);
+        for (const k of GPUAdapterInfoKeys) {
+          deviceInfo.push(device.adapterInfo[k]);
+          adapterInfo.push(adapter.info[k]);
+        }
+      } else {
+        assert(adapter.info instanceof GPUAdapterInfo);
+        assert(device.adapterInfo instanceof GPUAdapterInfo);
+        for (const k of GPUAdapterInfoKeys) {
+          adapterInfo.push(adapter.info[k]);
+          deviceInfo.push(device.adapterInfo[k]);
+        }
+      }
+      t.expect(objectEquals(deviceInfo, adapterInfo));
     }
   });
