@@ -51,6 +51,7 @@ but different objects from one another.`
     const gpu = getGPU(t.rec);
     const adapter = await gpu.requestAdapter();
     assert(adapter !== null);
+    assert(adapter.info instanceof GPUAdapterInfo);
 
     const adapterInfo1 = adapter.info;
     const adapterInfo2 = adapter.info;
@@ -58,6 +59,7 @@ but different objects from one another.`
 
     const device = await t.requestDeviceTracked(adapter);
     assert(device !== null);
+    assert(device.adapterInfo instanceof GPUAdapterInfo);
 
     const deviceAdapterInfo1 = device.adapterInfo;
     const deviceAdapterInfo2 = device.adapterInfo;
