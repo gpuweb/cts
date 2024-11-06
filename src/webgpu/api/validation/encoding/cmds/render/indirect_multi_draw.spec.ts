@@ -224,74 +224,72 @@ Tests multi indirect draw calls with various offsets and buffer sizes.
     t.selectDeviceOrSkipTestCase('chromium-experimental-multi-draw-indirect' as GPUFeatureName);
   })
   .params(u =>
-    u.expandWithParams(() => {
-      return [
-        // In bounds
-        { bufferSize: 4, indirectOffset: 0, _valid: true },
-        // In bounds, bigger buffer
-        { bufferSize: 7, indirectOffset: 0, _valid: true },
-        // In bounds, bigger buffer, positive offset
-        { bufferSize: 8, indirectOffset: 4, _valid: true },
-        // In bounds for maxDrawCount
-        { bufferSize: 8, indirectOffset: 0, maxDrawCount: 2, _valid: true },
-        // In bounds with drawCountBuffer
-        { bufferSize: 4, indirectOffset: 0, useDrawCountBuffer: true, _valid: true },
-        // In bounds with drawCountBuffer, bigger buffer
-        {
-          bufferSize: 7,
-          indirectOffset: 0,
-          drawCountOffset: 6 * Uint32Array.BYTES_PER_ELEMENT,
-          useDrawCountBuffer: true,
-          _valid: true,
-        },
-        // In bounds, non-multiple of 4 offsets
-        { bufferSize: 5, indirectOffset: 1, _valid: false },
-        { bufferSize: 5, indirectOffset: 2, _valid: false },
-        {
-          bufferSize: 5,
-          indirectOffset: 0,
-          drawCountOffset: 1,
-          useDrawCountBuffer: true,
-          _valid: false,
-        },
-        {
-          bufferSize: 5,
-          indirectOffset: 0,
-          drawCountOffset: 2,
-          useDrawCountBuffer: true,
-          _valid: false,
-        },
-        // Out of bounds, buffer too small
-        { bufferSize: 3, indirectOffset: 0, _valid: false },
-        // Out of bounds, index too big
-        { bufferSize: 4, indirectOffset: 1 * Uint32Array.BYTES_PER_ELEMENT, _valid: false },
-        // Out of bounds, index past buffer
-        { bufferSize: 4, indirectOffset: 5 * Uint32Array.BYTES_PER_ELEMENT, _valid: false },
-        // Out of bounds, too small for maxDrawCount
-        { bufferSize: 7, indirectOffset: 0, drawCountOffset: 0, maxDrawCount: 2, _valid: false },
-        // Out of bounds, offset too big for drawCountBuffer
-        {
-          bufferSize: 4,
-          indirectOffset: 0,
-          drawCountOffset: 4 * Uint32Array.BYTES_PER_ELEMENT,
-          useDrawCountBuffer: true,
-          _valid: false,
-        },
-        // Out of bounds, index + size of command overflows
-        // uint64_t offset = std::numeric_limits<uint64_t>::max();
-        { bufferSize: 7, indirectOffset: kMaxUnsignedLongLongValue, _valid: false },
-        // Out of bounds, index + size of command overflows with drawCountBuffer
-        {
-          bufferSize: 7,
-          indirectOffset: 0,
-          drawCountOffset: kMaxUnsignedLongLongValue,
-          useDrawCountBuffer: true,
-          _valid: false,
-        },
-        // Out of bounds, maxDrawCount = kMaxUnsignedLongValue
-        { bufferSize: 7, indirectOffset: 0, maxDrawCount: kMaxUnsignedLongValue, _valid: false },
-      ];
-    })
+    u.combineWithParams([
+      // In bounds
+      { bufferSize: 4, indirectOffset: 0, _valid: true },
+      // In bounds, bigger buffer
+      { bufferSize: 7, indirectOffset: 0, _valid: true },
+      // In bounds, bigger buffer, positive offset
+      { bufferSize: 8, indirectOffset: 4, _valid: true },
+      // In bounds for maxDrawCount
+      { bufferSize: 8, indirectOffset: 0, maxDrawCount: 2, _valid: true },
+      // In bounds with drawCountBuffer
+      { bufferSize: 4, indirectOffset: 0, useDrawCountBuffer: true, _valid: true },
+      // In bounds with drawCountBuffer, bigger buffer
+      {
+        bufferSize: 7,
+        indirectOffset: 0,
+        drawCountOffset: 6 * Uint32Array.BYTES_PER_ELEMENT,
+        useDrawCountBuffer: true,
+        _valid: true,
+      },
+      // In bounds, non-multiple of 4 offsets
+      { bufferSize: 5, indirectOffset: 1, _valid: false },
+      { bufferSize: 5, indirectOffset: 2, _valid: false },
+      {
+        bufferSize: 5,
+        indirectOffset: 0,
+        drawCountOffset: 1,
+        useDrawCountBuffer: true,
+        _valid: false,
+      },
+      {
+        bufferSize: 5,
+        indirectOffset: 0,
+        drawCountOffset: 2,
+        useDrawCountBuffer: true,
+        _valid: false,
+      },
+      // Out of bounds, buffer too small
+      { bufferSize: 3, indirectOffset: 0, _valid: false },
+      // Out of bounds, index too big
+      { bufferSize: 4, indirectOffset: 1 * Uint32Array.BYTES_PER_ELEMENT, _valid: false },
+      // Out of bounds, index past buffer
+      { bufferSize: 4, indirectOffset: 5 * Uint32Array.BYTES_PER_ELEMENT, _valid: false },
+      // Out of bounds, too small for maxDrawCount
+      { bufferSize: 7, indirectOffset: 0, drawCountOffset: 0, maxDrawCount: 2, _valid: false },
+      // Out of bounds, offset too big for drawCountBuffer
+      {
+        bufferSize: 4,
+        indirectOffset: 0,
+        drawCountOffset: 4 * Uint32Array.BYTES_PER_ELEMENT,
+        useDrawCountBuffer: true,
+        _valid: false,
+      },
+      // Out of bounds, index + size of command overflows
+      // uint64_t offset = std::numeric_limits<uint64_t>::max();
+      { bufferSize: 7, indirectOffset: kMaxUnsignedLongLongValue, _valid: false },
+      // Out of bounds, index + size of command overflows with drawCountBuffer
+      {
+        bufferSize: 7,
+        indirectOffset: 0,
+        drawCountOffset: kMaxUnsignedLongLongValue,
+        useDrawCountBuffer: true,
+        _valid: false,
+      },
+      // Out of bounds, maxDrawCount = kMaxUnsignedLongValue
+      { bufferSize: 7, indirectOffset: 0, maxDrawCount: kMaxUnsignedLongValue, _valid: false },
+    ])
   )
   .fn(t => {
     const {
@@ -331,71 +329,69 @@ Tests multi indexed indirect draw calls with various offsets and buffer sizes.
     t.selectDeviceOrSkipTestCase('chromium-experimental-multi-draw-indirect' as GPUFeatureName);
   })
   .params(u =>
-    u.expandWithParams(() => {
-      return [
-        // In bounds
-        { bufferSize: 5, indirectOffset: 0, _valid: true },
-        // In bounds, bigger buffer
-        { bufferSize: 9, indirectOffset: 0, _valid: true },
-        // In bounds, bigger buffer, positive offset
-        { bufferSize: 10, indirectOffset: 5 * Uint32Array.BYTES_PER_ELEMENT, _valid: true },
-        // In bounds with drawCountBuffer
-        { bufferSize: 5, indirectOffset: 0, useDrawCountBuffer: true, _valid: true },
-        // In bounds with drawCountBuffer, bigger buffer
-        {
-          bufferSize: 6,
-          indirectOffset: 0,
-          drawCountOffset: 5 * Uint32Array.BYTES_PER_ELEMENT,
-          useDrawCountBuffer: true,
-          _valid: true,
-        },
-        // In bounds, non-multiple of 4 offsets
-        { bufferSize: 6, indirectOffset: 1, _valid: false },
-        { bufferSize: 6, indirectOffset: 2, _valid: false },
-        {
-          bufferSize: 6,
-          indirectOffset: 0,
-          drawCountOffset: 1,
-          useDrawCountBuffer: true,
-          _valid: false,
-        },
-        {
-          bufferSize: 6,
-          indirectOffset: 0,
-          drawCountOffset: 2,
-          useDrawCountBuffer: true,
-          _valid: false,
-        },
-        // Out of bounds, buffer too small
-        { bufferSize: 4, indirectOffset: 0, _valid: false },
-        // Out of bounds, index too big
-        { bufferSize: 5, indirectOffset: 1 * Uint32Array.BYTES_PER_ELEMENT, _valid: false },
-        // Out of bounds, index past buffer
-        { bufferSize: 5, indirectOffset: 5 * Uint32Array.BYTES_PER_ELEMENT, _valid: false },
-        // Out of bounds, too small for maxDrawCount
-        { bufferSize: 5, indirectOffset: 0, drawCountOffset: 0, maxDrawCount: 2, _valid: false },
-        // Out of bounds, offset too big for drawCountBuffer
-        {
-          bufferSize: 5,
-          indirectOffset: 0,
-          drawCountOffset: 5 * Uint32Array.BYTES_PER_ELEMENT,
-          useDrawCountBuffer: true,
-          _valid: false,
-        },
-        // Out of bounds, index + size of command overflows
-        { bufferSize: 10, indirectOffset: kMaxUnsignedLongLongValue, _valid: false },
-        // Out of bounds, index + size of command overflows with drawCountBuffer
-        {
-          bufferSize: 10,
-          indirectOffset: 0,
-          drawCountOffset: kMaxUnsignedLongLongValue,
-          useDrawCountBuffer: true,
-          _valid: false,
-        },
-        // Out of bounds, maxDrawCount = kMaxUnsignedLongValue
-        { bufferSize: 5, indirectOffset: 0, maxDrawCount: kMaxUnsignedLongValue, _valid: false },
-      ];
-    })
+    u.combineWithParams([
+      // In bounds
+      { bufferSize: 5, indirectOffset: 0, _valid: true },
+      // In bounds, bigger buffer
+      { bufferSize: 9, indirectOffset: 0, _valid: true },
+      // In bounds, bigger buffer, positive offset
+      { bufferSize: 10, indirectOffset: 5 * Uint32Array.BYTES_PER_ELEMENT, _valid: true },
+      // In bounds with drawCountBuffer
+      { bufferSize: 5, indirectOffset: 0, useDrawCountBuffer: true, _valid: true },
+      // In bounds with drawCountBuffer, bigger buffer
+      {
+        bufferSize: 6,
+        indirectOffset: 0,
+        drawCountOffset: 5 * Uint32Array.BYTES_PER_ELEMENT,
+        useDrawCountBuffer: true,
+        _valid: true,
+      },
+      // In bounds, non-multiple of 4 offsets
+      { bufferSize: 6, indirectOffset: 1, _valid: false },
+      { bufferSize: 6, indirectOffset: 2, _valid: false },
+      {
+        bufferSize: 6,
+        indirectOffset: 0,
+        drawCountOffset: 1,
+        useDrawCountBuffer: true,
+        _valid: false,
+      },
+      {
+        bufferSize: 6,
+        indirectOffset: 0,
+        drawCountOffset: 2,
+        useDrawCountBuffer: true,
+        _valid: false,
+      },
+      // Out of bounds, buffer too small
+      { bufferSize: 4, indirectOffset: 0, _valid: false },
+      // Out of bounds, index too big
+      { bufferSize: 5, indirectOffset: 1 * Uint32Array.BYTES_PER_ELEMENT, _valid: false },
+      // Out of bounds, index past buffer
+      { bufferSize: 5, indirectOffset: 5 * Uint32Array.BYTES_PER_ELEMENT, _valid: false },
+      // Out of bounds, too small for maxDrawCount
+      { bufferSize: 5, indirectOffset: 0, drawCountOffset: 0, maxDrawCount: 2, _valid: false },
+      // Out of bounds, offset too big for drawCountBuffer
+      {
+        bufferSize: 5,
+        indirectOffset: 0,
+        drawCountOffset: 5 * Uint32Array.BYTES_PER_ELEMENT,
+        useDrawCountBuffer: true,
+        _valid: false,
+      },
+      // Out of bounds, index + size of command overflows
+      { bufferSize: 10, indirectOffset: kMaxUnsignedLongLongValue, _valid: false },
+      // Out of bounds, index + size of command overflows with drawCountBuffer
+      {
+        bufferSize: 10,
+        indirectOffset: 0,
+        drawCountOffset: kMaxUnsignedLongLongValue,
+        useDrawCountBuffer: true,
+        _valid: false,
+      },
+      // Out of bounds, maxDrawCount = kMaxUnsignedLongValue
+      { bufferSize: 5, indirectOffset: 0, maxDrawCount: kMaxUnsignedLongValue, _valid: false },
+    ])
   )
   .fn(t => {
     const {
