@@ -1562,6 +1562,7 @@ const kSubgroupShaderNoError = 17;
  * @param data An array of vec4u that contains (per texel):
  *             * subgroup_size builtin value
  *             * balloted active invocations number
+ *             * balloted subgroup size all active invocations agreed on, otherwise 0
  *             * error flag, should be equal to kSubgroupShaderNoError or shader found
  *               expection failed otherwise.
  * @param format The texture format for data
