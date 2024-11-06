@@ -47,9 +47,9 @@ g.test('defaults')
     t.expect(configuration.device === t.device);
     t.expect(configuration.format === 'rgba8unorm');
     t.expect(configuration.usage === GPUTextureUsage.RENDER_ATTACHMENT);
-    t.expect((configuration.viewFormats as GPUTextureFormat[]).length === 0);
+    t.expect(configuration.viewFormats.length === 0);
     t.expect(configuration.colorSpace === 'srgb');
-    t.expect(configuration.toneMapping!.mode === 'standard');
+    t.expect(configuration.toneMapping?.mode === 'standard');
     t.expect(configuration.alphaMode === 'opaque');
 
     const currentTexture = ctx.getCurrentTexture();
@@ -107,9 +107,9 @@ g.test('device')
     t.expect(configuration.device === t.device);
     t.expect(configuration.format === 'rgba8unorm');
     t.expect(configuration.usage === GPUTextureUsage.RENDER_ATTACHMENT);
-    t.expect((configuration.viewFormats as GPUTextureFormat[]).length === 0);
+    t.expect(configuration.viewFormats.length === 0);
     t.expect(configuration.colorSpace === 'srgb');
-    t.expect(configuration.toneMapping!.mode === 'standard');
+    t.expect(configuration.toneMapping?.mode === 'standard');
     t.expect(configuration.alphaMode === 'opaque');
 
     // getCurrentTexture will succeed with a valid device.
@@ -138,9 +138,9 @@ g.test('device')
     t.expect(newConfiguration.device === t.device);
     t.expect(newConfiguration.format === 'rgba8unorm');
     t.expect(newConfiguration.usage === GPUTextureUsage.RENDER_ATTACHMENT);
-    t.expect((newConfiguration.viewFormats as GPUTextureFormat[]).length === 0);
+    t.expect(newConfiguration.viewFormats.length === 0);
     t.expect(newConfiguration.colorSpace === 'srgb');
-    t.expect(newConfiguration.toneMapping!.mode === 'standard');
+    t.expect(newConfiguration.toneMapping?.mode === 'standard');
     t.expect(newConfiguration.alphaMode === 'premultiplied');
   });
 
@@ -173,21 +173,21 @@ g.test('format')
       }
     }
 
-    t.expectValidationError(() => {
+    if (validFormat) {
       ctx.configure({
         device: t.device,
         format,
       });
-    }, !validFormat);
-
-    const configuration = ctx.getConfiguration();
-    t.expect(configuration!.format === format);
-
-    t.expectValidationError(() => {
-      // Should always return a texture, whether the configured format was valid or not.
-      const currentTexture = ctx.getCurrentTexture();
-      t.expect(currentTexture instanceof GPUTexture);
-    }, !validFormat);
+      const configuration = ctx.getConfiguration();
+      t.expect(configuration!.format === format);
+    } else {
+      t.shouldThrow('TypeError', () => {
+        ctx.configure({
+          device: t.device,
+          format,
+        });
+      });
+    }
   });
 
 g.test('usage')
@@ -461,8 +461,7 @@ g.test('viewFormats')
       });
     }, !compatible);
 
-    const viewFormats = ctx.getConfiguration()!.viewFormats!;
-    assert(Array.isArray(viewFormats));
+    const viewFormats = ctx.getConfiguration()!.viewFormats;
     t.expect(viewFormats[0] === viewFormat);
 
     // Likewise for getCurrentTexture().
