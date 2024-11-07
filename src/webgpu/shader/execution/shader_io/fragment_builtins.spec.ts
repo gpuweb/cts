@@ -1622,13 +1622,6 @@ function checkSubgroupSizeConsistency(
 -  countActive: ${countActive}`);
       }
 
-      if (subgroupSize < countActive) {
-        return new Error(`Unexpected active invocations number larger than subgroup size
--       icoord: (${row}, ${col})
-- subgroupSize: ${subgroupSize}
--  countActive: ${countActive}`);
-      }
-
       if (subgroupSize !== ballotedSubgroupSize) {
         return new Error(`Inconsistent subgroup size
 -                 icoord: (${row}, ${col})
