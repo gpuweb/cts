@@ -101,6 +101,8 @@ const kRenderPassEncoderCommandInfo: {
   pushDebugGroup: {},
   popDebugGroup: {},
   insertDebugMarker: {},
+  multiDrawIndirect: {},
+  multiDrawIndexedIndirect: {},
 };
 const kRenderPassEncoderCommands = keysOf(kRenderPassEncoderCommandInfo);
 
@@ -298,6 +300,12 @@ g.test('render_pass_commands')
       .beginSubcases()
       .combine('finishBeforeCommand', [false, true])
   )
+  .beforeAllSubcases(t => {
+    const { command } = t.params;
+    if (command === 'multiDrawIndirect' || command === 'multiDrawIndexedIndirect') {
+      t.selectDeviceOrSkipTestCase('chromium-experimental-multi-draw-indirect' as GPUFeatureName);
+    }
+  })
   .fn(t => {
     const { command, finishBeforeCommand } = t.params;
 
@@ -412,6 +420,16 @@ g.test('render_pass_commands')
         case 'insertDebugMarker':
           {
             encoder.insertDebugMarker('marker');
+          }
+          break;
+        case 'multiDrawIndirect':
+          {
+            renderPass.multiDrawIndirect(buffer, 0, 1);
+          }
+          break;
+        case 'multiDrawIndexedIndirect':
+          {
+            renderPass.multiDrawIndexedIndirect(buffer, 0, 1);
           }
           break;
         default:

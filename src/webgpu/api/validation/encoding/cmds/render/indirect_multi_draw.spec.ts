@@ -214,85 +214,131 @@ Tests indirect and draw count offsets must be a multiple of 4.
     validateFinish(indirectOffset % 4 === 0 && (!useDrawCountBuffer || drawCountOffset % 4 === 0));
   });
 
+interface IndirectOffsetOobCase {
+  indirectOffset: number;
+  bufferSize: number;
+  useDrawCountBuffer?: boolean;
+  drawCountOffset?: number;
+  maxDrawCount?: number;
+  _valid: boolean;
+}
+
 g.test('indirect_offset_oob')
   .desc(
     `
 Tests multi indirect draw calls with various offsets and buffer sizes.
+- (indirect offset, b.size) is
+  - (0, 0)
+  - (0, min size) (control case)
+  - (0, min size + 1) (control case)
+  - (0, min size) with drawCountBuffer (control case)
+  - (b.size / 2, b.size) with doubled b.size (control case)
+  - (0, min size) with drawCountBuffer and drawCountOffset in bounds (control case)
+  - (0, min size - 1)
+  - (0, min size - min alignment)
+  - (min alignment +/- 1, min size + min alignment)
+  - (0, min size + min alignment) with drawCountBuffer and drawCountOffset not a multiple of 4
+  - (1, min size) index too big
+  - (min size + min alignment, min size) index past buffer
+  - (0, min size) with maxDrawCount = 2
+  - (0, min size) with drawCountOffset = min size
+  - (kMaxUnsignedLongLongValue, min size)
+  - (0, min size) with drawCountOffset = kMaxUnsignedLongLongValue
+  - (0, min size) with maxDrawCount = kMaxUnsignedLongValue
+- min size = indirect draw parameters size
+- x =(multiDrawIndirect, multiDrawIndexedIndirect)
   `
   )
   .beforeAllSubcases(t => {
     t.selectDeviceOrSkipTestCase('chromium-experimental-multi-draw-indirect' as GPUFeatureName);
   })
-  .params(u =>
-    u.combineWithParams([
-      // In bounds
-      { bufferSize: 4, indirectOffset: 0, _valid: true },
-      // In bounds, bigger buffer
-      { bufferSize: 7, indirectOffset: 0, _valid: true },
-      // In bounds, bigger buffer, positive offset
-      { bufferSize: 8, indirectOffset: 4, _valid: true },
-      // In bounds for maxDrawCount
-      { bufferSize: 8, indirectOffset: 0, maxDrawCount: 2, _valid: true },
-      // In bounds with drawCountBuffer
-      { bufferSize: 4, indirectOffset: 0, useDrawCountBuffer: true, _valid: true },
-      // In bounds with drawCountBuffer, bigger buffer
-      {
-        bufferSize: 7,
-        indirectOffset: 0,
-        drawCountOffset: 6 * Uint32Array.BYTES_PER_ELEMENT,
-        useDrawCountBuffer: true,
-        _valid: true,
-      },
-      // In bounds, non-multiple of 4 offsets
-      { bufferSize: 5, indirectOffset: 1, _valid: false },
-      { bufferSize: 5, indirectOffset: 2, _valid: false },
-      {
-        bufferSize: 5,
-        indirectOffset: 0,
-        drawCountOffset: 1,
-        useDrawCountBuffer: true,
-        _valid: false,
-      },
-      {
-        bufferSize: 5,
-        indirectOffset: 0,
-        drawCountOffset: 2,
-        useDrawCountBuffer: true,
-        _valid: false,
-      },
-      // Out of bounds, buffer too small
-      { bufferSize: 3, indirectOffset: 0, _valid: false },
-      // Out of bounds, index too big
-      { bufferSize: 4, indirectOffset: 1 * Uint32Array.BYTES_PER_ELEMENT, _valid: false },
-      // Out of bounds, index past buffer
-      { bufferSize: 4, indirectOffset: 5 * Uint32Array.BYTES_PER_ELEMENT, _valid: false },
-      // Out of bounds, too small for maxDrawCount
-      { bufferSize: 7, indirectOffset: 0, drawCountOffset: 0, maxDrawCount: 2, _valid: false },
-      // Out of bounds, offset too big for drawCountBuffer
-      {
-        bufferSize: 4,
-        indirectOffset: 0,
-        drawCountOffset: 4 * Uint32Array.BYTES_PER_ELEMENT,
-        useDrawCountBuffer: true,
-        _valid: false,
-      },
-      // Out of bounds, index + size of command overflows
-      // uint64_t offset = std::numeric_limits<uint64_t>::max();
-      { bufferSize: 7, indirectOffset: kMaxUnsignedLongLongValue, _valid: false },
-      // Out of bounds, index + size of command overflows with drawCountBuffer
-      {
-        bufferSize: 7,
-        indirectOffset: 0,
-        drawCountOffset: kMaxUnsignedLongLongValue,
-        useDrawCountBuffer: true,
-        _valid: false,
-      },
-      // Out of bounds, maxDrawCount = kMaxUnsignedLongValue
-      { bufferSize: 7, indirectOffset: 0, maxDrawCount: kMaxUnsignedLongValue, _valid: false },
-    ])
+
+  .paramsSubcasesOnly(u =>
+    u.combine('indexed', [true, false] as const).expandWithParams<IndirectOffsetOobCase>(p => {
+      const indirectParamsSize = p.indexed ? 20 : 16;
+      return [
+        { indirectOffset: 0, bufferSize: 0, _valid: false },
+        // In bounds
+        { indirectOffset: 0, bufferSize: indirectParamsSize, _valid: true },
+        { indirectOffset: 0, bufferSize: indirectParamsSize + 1, _valid: true },
+        // In bounds with drawCountBuffer
+        {
+          indirectOffset: 0,
+          bufferSize: indirectParamsSize,
+          useDrawCountBuffer: true,
+          _valid: true,
+        },
+        // In bounds, bigger buffer, positive offset
+        { indirectOffset: indirectParamsSize, bufferSize: indirectParamsSize * 2, _valid: true },
+        // In bounds with drawCountBuffer, bigger buffer
+        {
+          indirectOffset: 0,
+          bufferSize: indirectParamsSize,
+          useDrawCountBuffer: true,
+          drawCountOffset: indirectParamsSize - 4,
+          _valid: true,
+        },
+        // Out of bounds, buffer too small
+        { indirectOffset: 0, bufferSize: indirectParamsSize - 1, _valid: false },
+        { indirectOffset: 0, bufferSize: indirectParamsSize - 4, _valid: false },
+        // In bounds, non-multiple of 4 offsets
+        { indirectOffset: 3, bufferSize: indirectParamsSize + 4, _valid: false },
+        { indirectOffset: 5, bufferSize: indirectParamsSize + 4, _valid: false },
+        {
+          indirectOffset: 0,
+          bufferSize: indirectParamsSize + 4,
+          useDrawCountBuffer: true,
+          drawCountOffset: 1,
+          _valid: false,
+        },
+        {
+          indirectOffset: 0,
+          bufferSize: indirectParamsSize + 4,
+          useDrawCountBuffer: true,
+          drawCountOffset: 2,
+          _valid: false,
+        },
+        // Out of bounds, index too big
+        { indirectOffset: 4, bufferSize: indirectParamsSize, _valid: false },
+        // Out of bounds, index past buffer
+        { indirectOffset: indirectParamsSize + 4, bufferSize: indirectParamsSize, _valid: false },
+        // Out of bounds, too small for maxDrawCount
+        { indirectOffset: 0, bufferSize: indirectParamsSize, maxDrawCount: 2, _valid: false },
+        // Out of bounds, offset too big for drawCountBuffer
+        {
+          indirectOffset: 0,
+          bufferSize: indirectParamsSize,
+          useDrawCountBuffer: true,
+          drawCountOffset: indirectParamsSize,
+          _valid: false,
+        },
+        // Out of bounds, index + size of command overflows
+        {
+          indirectOffset: kMaxUnsignedLongLongValue,
+          bufferSize: indirectParamsSize,
+          _valid: false,
+        },
+        // Out of bounds, index + size of command overflows with drawCountBuffer
+        {
+          indirectOffset: 0,
+          bufferSize: indirectParamsSize,
+          useDrawCountBuffer: true,
+          drawCountOffset: kMaxUnsignedLongLongValue,
+          _valid: false,
+        },
+        // Out of bounds, maxDrawCount = kMaxUnsignedLongValue
+        {
+          indirectOffset: 0,
+          bufferSize: indirectParamsSize,
+          maxDrawCount: kMaxUnsignedLongValue,
+          _valid: false,
+        },
+      ] as const;
+    })
   )
   .fn(t => {
     const {
+      indexed,
       bufferSize,
       indirectOffset,
       drawCountOffset = 0,
@@ -302,122 +348,30 @@ Tests multi indirect draw calls with various offsets and buffer sizes.
     } = t.params;
 
     const indirectBuffer = t.createBufferTracked({
-      size: bufferSize * Uint32Array.BYTES_PER_ELEMENT,
+      size: bufferSize,
       usage: GPUBufferUsage.INDIRECT,
     });
 
     const { encoder, validateFinish } = t.createEncoder('render pass');
     encoder.setPipeline(t.createNoOpRenderPipeline());
-    encoder.multiDrawIndirect(
-      indirectBuffer,
-      indirectOffset,
-      maxDrawCount,
-      useDrawCountBuffer ? indirectBuffer : undefined,
-      drawCountOffset
-    );
-
-    validateFinish(_valid);
-  });
-
-g.test('indexed_indirect_offset_oob')
-  .desc(
-    `
-Tests multi indexed indirect draw calls with various offsets and buffer sizes.
-  `
-  )
-  .beforeAllSubcases(t => {
-    t.selectDeviceOrSkipTestCase('chromium-experimental-multi-draw-indirect' as GPUFeatureName);
-  })
-  .params(u =>
-    u.combineWithParams([
-      // In bounds
-      { bufferSize: 5, indirectOffset: 0, _valid: true },
-      // In bounds, bigger buffer
-      { bufferSize: 9, indirectOffset: 0, _valid: true },
-      // In bounds, bigger buffer, positive offset
-      { bufferSize: 10, indirectOffset: 5 * Uint32Array.BYTES_PER_ELEMENT, _valid: true },
-      // In bounds with drawCountBuffer
-      { bufferSize: 5, indirectOffset: 0, useDrawCountBuffer: true, _valid: true },
-      // In bounds with drawCountBuffer, bigger buffer
-      {
-        bufferSize: 6,
-        indirectOffset: 0,
-        drawCountOffset: 5 * Uint32Array.BYTES_PER_ELEMENT,
-        useDrawCountBuffer: true,
-        _valid: true,
-      },
-      // In bounds, non-multiple of 4 offsets
-      { bufferSize: 6, indirectOffset: 1, _valid: false },
-      { bufferSize: 6, indirectOffset: 2, _valid: false },
-      {
-        bufferSize: 6,
-        indirectOffset: 0,
-        drawCountOffset: 1,
-        useDrawCountBuffer: true,
-        _valid: false,
-      },
-      {
-        bufferSize: 6,
-        indirectOffset: 0,
-        drawCountOffset: 2,
-        useDrawCountBuffer: true,
-        _valid: false,
-      },
-      // Out of bounds, buffer too small
-      { bufferSize: 4, indirectOffset: 0, _valid: false },
-      // Out of bounds, index too big
-      { bufferSize: 5, indirectOffset: 1 * Uint32Array.BYTES_PER_ELEMENT, _valid: false },
-      // Out of bounds, index past buffer
-      { bufferSize: 5, indirectOffset: 5 * Uint32Array.BYTES_PER_ELEMENT, _valid: false },
-      // Out of bounds, too small for maxDrawCount
-      { bufferSize: 5, indirectOffset: 0, drawCountOffset: 0, maxDrawCount: 2, _valid: false },
-      // Out of bounds, offset too big for drawCountBuffer
-      {
-        bufferSize: 5,
-        indirectOffset: 0,
-        drawCountOffset: 5 * Uint32Array.BYTES_PER_ELEMENT,
-        useDrawCountBuffer: true,
-        _valid: false,
-      },
-      // Out of bounds, index + size of command overflows
-      { bufferSize: 10, indirectOffset: kMaxUnsignedLongLongValue, _valid: false },
-      // Out of bounds, index + size of command overflows with drawCountBuffer
-      {
-        bufferSize: 10,
-        indirectOffset: 0,
-        drawCountOffset: kMaxUnsignedLongLongValue,
-        useDrawCountBuffer: true,
-        _valid: false,
-      },
-      // Out of bounds, maxDrawCount = kMaxUnsignedLongValue
-      { bufferSize: 5, indirectOffset: 0, maxDrawCount: kMaxUnsignedLongValue, _valid: false },
-    ])
-  )
-  .fn(t => {
-    const {
-      bufferSize,
-      indirectOffset,
-      drawCountOffset = 0,
-      maxDrawCount = 1,
-      useDrawCountBuffer = false,
-      _valid,
-    } = t.params;
-
-    const indirectBuffer = t.createBufferTracked({
-      size: bufferSize * Uint32Array.BYTES_PER_ELEMENT,
-      usage: GPUBufferUsage.INDIRECT,
-    });
-
-    const { encoder, validateFinish } = t.createEncoder('render pass');
-    encoder.setPipeline(t.createNoOpRenderPipeline());
-    encoder.setIndexBuffer(t.makeIndexBuffer(), 'uint32');
-    encoder.multiDrawIndexedIndirect(
-      indirectBuffer,
-      indirectOffset,
-      maxDrawCount,
-      useDrawCountBuffer ? indirectBuffer : undefined,
-      drawCountOffset
-    );
+    if (indexed) {
+      encoder.setIndexBuffer(t.makeIndexBuffer(), 'uint32');
+      encoder.multiDrawIndexedIndirect(
+        indirectBuffer,
+        indirectOffset,
+        maxDrawCount,
+        useDrawCountBuffer ? indirectBuffer : undefined,
+        drawCountOffset
+      );
+    } else {
+      encoder.multiDrawIndirect(
+        indirectBuffer,
+        indirectOffset,
+        maxDrawCount,
+        useDrawCountBuffer ? indirectBuffer : undefined,
+        drawCountOffset
+      );
+    }
 
     validateFinish(_valid);
   });
