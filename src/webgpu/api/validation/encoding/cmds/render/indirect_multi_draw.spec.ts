@@ -59,9 +59,11 @@ Tests indirect and draw count buffers must be valid.
     encoder.setPipeline(t.createNoOpRenderPipeline());
     if (indexed) {
       encoder.setIndexBuffer(t.makeIndexBuffer(), 'uint32');
-      encoder.multiDrawIndexedIndirect(indirectBuffer, 0, 1, drawCountBuffer);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (encoder as any).multiDrawIndexedIndirect(indirectBuffer, 0, 1, drawCountBuffer);
     } else {
-      encoder.multiDrawIndirect(indirectBuffer, 0, 1, drawCountBuffer);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (encoder as any).multiDrawIndirect(indirectBuffer, 0, 1, drawCountBuffer);
     }
 
     const shouldBeValid =
@@ -104,9 +106,11 @@ g.test('buffers,device_mismatch')
     encoder.setPipeline(t.createNoOpRenderPipeline());
     if (indexed) {
       encoder.setIndexBuffer(t.makeIndexBuffer(), 'uint32');
-      encoder.multiDrawIndexedIndirect(indirectBuffer, 0, 1, drawCountBuffer);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (encoder as any).multiDrawIndexedIndirect(indirectBuffer, 0, 1, drawCountBuffer);
     } else {
-      encoder.multiDrawIndirect(indirectBuffer, 0, 1, drawCountBuffer);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (encoder as any).multiDrawIndirect(indirectBuffer, 0, 1, drawCountBuffer);
     }
     validateFinish(!mismatched);
   });
@@ -151,9 +155,11 @@ Tests indirect and draw count buffers must have 'Indirect' usage.
     encoder.setPipeline(t.createNoOpRenderPipeline());
     if (indexed) {
       encoder.setIndexBuffer(t.makeIndexBuffer(), 'uint32');
-      encoder.multiDrawIndexedIndirect(indirectBuffer, 0, 1, drawCountBuffer);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (encoder as any).multiDrawIndexedIndirect(indirectBuffer, 0, 1, drawCountBuffer);
     } else {
-      encoder.multiDrawIndirect(indirectBuffer, 0, 1, drawCountBuffer);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (encoder as any).multiDrawIndirect(indirectBuffer, 0, 1, drawCountBuffer);
     }
     const shouldSucceed =
       (indirectUsage & GPUBufferUsage.INDIRECT) !== 0 &&
@@ -193,7 +199,8 @@ Tests indirect and draw count offsets must be a multiple of 4.
     encoder.setPipeline(t.createNoOpRenderPipeline());
     if (indexed) {
       encoder.setIndexBuffer(t.makeIndexBuffer(), 'uint32');
-      encoder.multiDrawIndexedIndirect(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (encoder as any).multiDrawIndexedIndirect(
         indirectBuffer,
         indirectOffset,
         1,
@@ -201,7 +208,8 @@ Tests indirect and draw count offsets must be a multiple of 4.
         drawCountOffset
       );
     } else {
-      encoder.multiDrawIndirect(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (encoder as any).multiDrawIndirect(
         indirectBuffer,
         indirectOffset,
         1,
@@ -356,7 +364,8 @@ Tests multi indirect draw calls with various offsets and buffer sizes.
     encoder.setPipeline(t.createNoOpRenderPipeline());
     if (indexed) {
       encoder.setIndexBuffer(t.makeIndexBuffer(), 'uint32');
-      encoder.multiDrawIndexedIndirect(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (encoder as any).multiDrawIndexedIndirect(
         indirectBuffer,
         indirectOffset,
         maxDrawCount,
@@ -364,7 +373,8 @@ Tests multi indirect draw calls with various offsets and buffer sizes.
         drawCountOffset
       );
     } else {
-      encoder.multiDrawIndirect(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (encoder as any).multiDrawIndirect(
         indirectBuffer,
         indirectOffset,
         maxDrawCount,

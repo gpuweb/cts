@@ -79,7 +79,11 @@ const kEncoderCommandInfo: {
 };
 const kEncoderCommands = keysOf(kEncoderCommandInfo);
 
-type RenderPassEncoderCommands = keyof Omit<GPURenderPassEncoder, '__brand' | 'label' | 'end'>;
+// MAINTENANCE_TODO: Remove multiDrawIndirect and multiDrawIndexedIndirect once https://github.com/gpuweb/gpuweb/pull/2315 is merged.
+type RenderPassEncoderCommands =
+  | keyof Omit<GPURenderPassEncoder, '__brand' | 'label' | 'end'>
+  | 'multiDrawIndirect'
+  | 'multiDrawIndexedIndirect';
 const kRenderPassEncoderCommandInfo: {
   readonly [k in RenderPassEncoderCommands]: {};
 } = {
@@ -424,12 +428,14 @@ g.test('render_pass_commands')
           break;
         case 'multiDrawIndirect':
           {
-            renderPass.multiDrawIndirect(buffer, 0, 1);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (renderPass as any).multiDrawIndirect(buffer, 0, 1);
           }
           break;
         case 'multiDrawIndexedIndirect':
           {
-            renderPass.multiDrawIndexedIndirect(buffer, 0, 1);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (renderPass as any).multiDrawIndexedIndirect(buffer, 0, 1);
           }
           break;
         default:
