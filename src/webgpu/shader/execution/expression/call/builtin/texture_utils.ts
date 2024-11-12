@@ -839,17 +839,19 @@ function getWeightForMipLevel(
 }
 
 /**
- * Used for textureNumSamples, textureNumLevels, textureNumLayers
+ * Used for textureNumSamples, textureNumLevels, textureNumLayers, textureDimension
  */
 export class WGSLTextureQueryTest extends GPUTest {
   executeAndExpectResult(
     stage: ShaderStage,
     code: string,
-    view: GPUTextureView,
+    texture: GPUTexture | GPUExternalTexture,
+    viewDescriptor: GPUTextureViewDescriptor | undefined,
     expected: number[]
   ) {
     const { device } = this;
     const returnType = `vec4<u32>`;
+    const castWGSL = `${returnType}(getValue()${range(4 - expected.length, () => ', 0').join('')})`;
     const stageWGSL =
       stage === 'vertex'
         ? `
@@ -860,7 +862,7 @@ export class WGSLTextureQueryTest extends GPUTest {
   let positions = array(vec2f(-1, 3), vec2f(3, -1), vec2f(-1, -1));
   return VOut(vec4f(positions[vertex_index], 0, 1),
               instance_index,
-              ${returnType}(getValue()));
+              ${castWGSL});
 }
 
 @fragment fn fsVertex(v: VOut) -> @location(0) vec4u {
@@ -878,7 +880,7 @@ export class WGSLTextureQueryTest extends GPUTest {
 }
 
 @fragment fn fsFragment(v: VOut) -> @location(0) vec4u {
-  return bitcast<vec4u>(${returnType}(getValue()));
+  return bitcast<vec4u>(${castWGSL});
 }
 `
         : `
@@ -886,7 +888,7 @@ export class WGSLTextureQueryTest extends GPUTest {
 @group(1) @binding(0) var<storage, read_write> results: array<${returnType}>;
 
 @compute @workgroup_size(1) fn csCompute(@builtin(global_invocation_id) id: vec3u) {
-  results[id.x] = ${returnType}(getValue());
+  results[id.x] = ${castWGSL};
 }
 `;
     const wgsl = `
@@ -901,19 +903,96 @@ struct VOut {
       ${stageWGSL}
     `;
     const module = device.createShaderModule({ code: wgsl });
+
+    const visibility =
+      stage === 'compute'
+        ? GPUShaderStage.COMPUTE
+        : stage === 'fragment'
+        ? GPUShaderStage.FRAGMENT
+        : GPUShaderStage.VERTEX;
+
+    const entries: GPUBindGroupLayoutEntry[] = [];
+    if (texture instanceof GPUExternalTexture) {
+      entries.push({
+        binding: 0,
+        visibility,
+        externalTexture: {},
+      });
+    } else if (code.includes('texture_storage')) {
+      entries.push({
+        binding: 0,
+        visibility,
+        storageTexture: {
+          access: code.includes(', read>')
+            ? 'read-only'
+            : code.includes(', write>')
+            ? 'write-only'
+            : 'read-write',
+          viewDimension: viewDescriptor?.dimension ?? '2d',
+          format: texture.format,
+        },
+      });
+    } else {
+      const sampleType =
+        viewDescriptor?.aspect === 'stencil-only'
+          ? 'uint'
+          : code.includes('texture_depth')
+          ? 'depth'
+          : isDepthTextureFormat(texture.format)
+          ? 'unfilterable-float'
+          : isStencilTextureFormat(texture.format)
+          ? 'uint'
+          : texture.sampleCount > 1 && kTextureFormatInfo[texture.format].color?.type === 'float'
+          ? 'unfilterable-float'
+          : kTextureFormatInfo[texture.format].color?.type ?? 'unfilterable-float';
+      entries.push({
+        binding: 0,
+        visibility,
+        texture: {
+          sampleType,
+          viewDimension: viewDescriptor?.dimension ?? '2d',
+          multisampled: texture.sampleCount > 1,
+        },
+      });
+    }
+
+    const bindGroupLayouts: GPUBindGroupLayout[] = [device.createBindGroupLayout({ entries })];
+
+    if (stage === 'compute') {
+      bindGroupLayouts.push(
+        device.createBindGroupLayout({
+          entries: [
+            {
+              binding: 0,
+              visibility: GPUShaderStage.COMPUTE,
+              buffer: {
+                type: 'storage',
+                hasDynamicOffset: false,
+                minBindingSize: 16,
+              },
+            },
+          ],
+        })
+      );
+    }
+
+    const layout = device.createPipelineLayout({
+      bindGroupLayouts,
+    });
+
     let pipeline: GPUComputePipeline | GPURenderPipeline;
 
     switch (stage) {
       case 'compute':
         pipeline = device.createComputePipeline({
-          layout: 'auto',
+          layout,
           compute: { module },
         });
         break;
       case 'fragment':
       case 'vertex':
         pipeline = device.createRenderPipeline({
-          layout: 'auto',
+          layout,
           vertex: { module },
           fragment: {
             module,
@@ -925,7 +1004,13 @@ struct VOut {
 
     const bindGroup0 = device.createBindGroup({
       layout: pipeline.getBindGroupLayout(0),
-      entries: [{ binding: 0, resource: view }],
+      entries: [
+        {
+          binding: 0,
+          resource:
+            texture instanceof GPUExternalTexture ? texture : texture.createView(viewDescriptor),
+        },
+      ],
     });
 
     const renderTarget = this.createTextureTracked({
@@ -990,7 +1075,7 @@ struct VOut {
     this.device.queue.submit([encoder.finish()]);
 
     const e = new Uint32Array(4);
-    e.set([expected[0], expected[0], expected[0], expected[0]]);
+    e.set(expected);
     this.expectGPUBufferValuesEqual(resultBuffer, e);
   }
 }
