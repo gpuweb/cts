@@ -839,42 +839,158 @@ mipLevel)
 }
 
 /**
- * Used for textureDimension, textureNumLevels, textureNumLayers
+ * Used for textureNumSamples, textureNumLevels, textureNumLayers
  */
 export class WGSLTextureQueryTest extends GPUTest {
-  executeAndExpectResult(code, view, expected) {
+  executeAndExpectResult(
+  stage,
+  code,
+  view,
+  expected)
+  {
     const { device } = this;
-    const module = device.createShaderModule({ code });
-    const pipeline = device.createComputePipeline({
-      layout: 'auto',
-      compute: {
-        module
-      }
+    const returnType = `vec4<u32>`;
+    const stageWGSL =
+    stage === 'vertex' ?
+    `
+// --------------------------- vertex stage shaders --------------------------------
+@vertex fn vsVertex(
+    @builtin(vertex_index) vertex_index : u32,
+    @builtin(instance_index) instance_index : u32) -> VOut {
+  let positions = array(vec2f(-1, 3), vec2f(3, -1), vec2f(-1, -1));
+  return VOut(vec4f(positions[vertex_index], 0, 1),
+              instance_index,
+              ${returnType}(getValue()));
+}
+
+@fragment fn fsVertex(v: VOut) -> @location(0) vec4u {
+  return bitcast<vec4u>(v.result);
+}
+` :
+    stage === 'fragment' ?
+    `
+// --------------------------- fragment stage shaders --------------------------------
+@vertex fn vsFragment(
+    @builtin(vertex_index) vertex_index : u32,
+    @builtin(instance_index) instance_index : u32) -> VOut {
+  let positions = array(vec2f(-1, 3), vec2f(3, -1), vec2f(-1, -1));
+  return VOut(vec4f(positions[vertex_index], 0, 1), instance_index, ${returnType}(0));
+}
+
+@fragment fn fsFragment(v: VOut) -> @location(0) vec4u {
+  return bitcast<vec4u>(${returnType}(getValue()));
+}
+` :
+    `
+// --------------------------- compute stage shaders --------------------------------
+@group(1) @binding(0) var<storage, read_write> results: array<${returnType}>;
+
+@compute @workgroup_size(1) fn csCompute(@builtin(global_invocation_id) id: vec3u) {
+  results[id.x] = ${returnType}(getValue());
+}
+`;
+    const wgsl = `
+      ${code}
+
+struct VOut {
+  @builtin(position) pos: vec4f,
+  @location(0) @interpolate(flat, either) ndx: u32,
+  @location(1) @interpolate(flat, either) result: ${returnType},
+};
+
+      ${stageWGSL}
+    `;
+    const module = device.createShaderModule({ code: wgsl });
+    let pipeline;
+
+    switch (stage) {
+      case 'compute':
+        pipeline = device.createComputePipeline({
+          layout: 'auto',
+          compute: { module }
+        });
+        break;
+      case 'fragment':
+      case 'vertex':
+        pipeline = device.createRenderPipeline({
+          layout: 'auto',
+          vertex: { module },
+          fragment: {
+            module,
+            targets: [{ format: 'rgba32uint' }]
+          }
+        });
+        break;
+    }
+
+    const bindGroup0 = device.createBindGroup({
+      layout: pipeline.getBindGroupLayout(0),
+      entries: [{ binding: 0, resource: view }]
+    });
+
+    const renderTarget = this.createTextureTracked({
+      format: 'rgba32uint',
+      size: [expected.length, 1],
+      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT
     });
 
     const resultBuffer = this.createBufferTracked({
-      size: 16,
-      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
+      size: align(expected.length * 4, 256),
+      usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC
     });
 
-    const bindGroup = device.createBindGroup({
-      layout: pipeline.getBindGroupLayout(0),
-      entries: [
-      { binding: 0, resource: view },
-      { binding: 1, resource: { buffer: resultBuffer } }]
-
-    });
-
+    let storageBuffer;
     const encoder = device.createCommandEncoder();
-    const pass = encoder.beginComputePass();
-    pass.setPipeline(pipeline);
-    pass.setBindGroup(0, bindGroup);
-    pass.dispatchWorkgroups(1);
-    pass.end();
-    device.queue.submit([encoder.finish()]);
+
+    if (stage === 'compute') {
+      storageBuffer = this.createBufferTracked({
+        size: resultBuffer.size,
+        usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
+      });
+
+      const bindGroup1 = device.createBindGroup({
+        layout: pipeline.getBindGroupLayout(1),
+        entries: [{ binding: 0, resource: { buffer: storageBuffer } }]
+      });
+
+      const pass = encoder.beginComputePass();
+      pass.setPipeline(pipeline);
+      pass.setBindGroup(0, bindGroup0);
+      pass.setBindGroup(1, bindGroup1);
+      pass.dispatchWorkgroups(expected.length);
+      pass.end();
+      encoder.copyBufferToBuffer(storageBuffer, 0, resultBuffer, 0, storageBuffer.size);
+    } else {
+      const pass = encoder.beginRenderPass({
+        colorAttachments: [
+        {
+          view: renderTarget.createView(),
+          loadOp: 'clear',
+          storeOp: 'store'
+        }]
+
+      });
+
+      pass.setPipeline(pipeline);
+      pass.setBindGroup(0, bindGroup0);
+      for (let i = 0; i < expected.length; ++i) {
+        pass.setViewport(i, 0, 1, 1, 0, 1);
+        pass.draw(3, 1, 0, i);
+      }
+      pass.end();
+      encoder.copyTextureToBuffer(
+        { texture: renderTarget },
+        {
+          buffer: resultBuffer,
+          bytesPerRow: resultBuffer.size
+        },
+        [renderTarget.width, 1]
+      );
+    }
+    this.device.queue.submit([encoder.finish()]);
 
     const e = new Uint32Array(4);
-    e.set(expected);
+    e.set([expected[0], expected[0], expected[0], expected[0]]);
     this.expectGPUBufferValuesEqual(resultBuffer, e);
   }
 }
