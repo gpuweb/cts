@@ -50,9 +50,7 @@ fn getValue() -> u32 {
     `;
 
   const expected = [sampleCount];
-  const view = texture.createView({});
-
-  t.executeAndExpectResult(stage, code, view, expected);
+  t.executeAndExpectResult(stage, code, texture, {}, expected);
 });
 
 g.test('depth').
@@ -85,8 +83,6 @@ fn getValue() -> u32 {
     `;
 
   const expected = [sampleCount];
-  const view = texture.createView({});
-
-  t.executeAndExpectResult(stage, code, view, expected);
+  t.executeAndExpectResult(stage, code, texture, {}, expected);
 });
 //# sourceMappingURL=textureNumSamples.spec.js.map

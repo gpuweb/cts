@@ -88,13 +88,13 @@ fn getValue() -> u32 {
     view_type,
     isCubeArray: texture_type === 'texture_cube_array'
   });
-  const view = texture.createView({
+  const viewDescription = {
     dimension: texture_type === 'texture_2d_array' ? '2d-array' : 'cube-array',
     baseArrayLayer,
     arrayLayerCount
-  });
+  };
 
-  t.executeAndExpectResult(stage, code, view, expected);
+  t.executeAndExpectResult(stage, code, texture, viewDescription, expected);
 });
 
 g.test('arrayed').
@@ -146,13 +146,13 @@ fn getValue() -> u32 {
     view_type,
     isCubeArray: texture_type === 'texture_depth_cube_array'
   });
-  const view = texture.createView({
+  const viewDescription = {
     dimension: texture_type === 'texture_depth_2d_array' ? '2d-array' : 'cube-array',
     baseArrayLayer,
     arrayLayerCount
-  });
+  };
 
-  t.executeAndExpectResult(stage, code, view, expected);
+  t.executeAndExpectResult(stage, code, texture, viewDescription, expected);
 });
 
 g.test('storage').
@@ -223,11 +223,11 @@ fn getValue() -> u32 {
   const { baseArrayLayer, arrayLayerCount, expected } = getLayerSettingsAndExpected({
     view_type
   });
-  const view = texture.createView({
+  const viewDescription = {
     dimension: '2d-array',
     baseArrayLayer,
     arrayLayerCount
-  });
+  };
 
-  t.executeAndExpectResult(stage, code, view, expected);
+  t.executeAndExpectResult(stage, code, texture, viewDescription, expected);
 });

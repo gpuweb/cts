@@ -112,13 +112,13 @@ fn getValue() -> u32 {
     view_type,
     mipCount
   );
-  const view = texture.createView({
+  const viewDescription = {
     dimension: viewDimension,
     baseMipLevel,
     mipLevelCount
-  });
+  };
 
-  t.executeAndExpectResult(stage, code, view, expected);
+  t.executeAndExpectResult(stage, code, texture, viewDescription, expected);
 });
 
 g.test('depth').
@@ -184,11 +184,11 @@ fn getValue() -> u32 {
     view_type,
     mipCount
   );
-  const view = texture.createView({
+  const viewDescription = {
     dimension: viewDimension,
     baseMipLevel,
     mipLevelCount
-  });
+  };
 
-  t.executeAndExpectResult(stage, code, view, expected);
+  t.executeAndExpectResult(stage, code, texture, viewDescription, expected);
 });
