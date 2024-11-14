@@ -163,7 +163,9 @@ g.test('conflicting_directive')
 
 g.test('duplicate_attribute_same_location')
   .specURL('https://gpuweb.github.io/gpuweb/wgsl/#diagnostics')
-  .desc(`Tests duplicate diagnostics at the same location must be on different rules`)
+  .desc(
+    `Tests duplicate diagnostics at the same location must be on different rules unless the severity is the same`
+  )
   .params(u =>
     u
       .combine('loc', keysOf(kValidLocations))
@@ -181,7 +183,7 @@ g.test('duplicate_attribute_same_location')
     const d1 = generateDiagnostic('attribute', t.params.s1, rule1);
     const d2 = generateDiagnostic('attribute', t.params.s2, t.params.same_rule ? rule1 : rule2);
     const code = `${kValidLocations[t.params.loc](`${d1} ${d2}`)}`;
-    t.expectCompileResult(!t.params.same_rule, code);
+    t.expectCompileResult(!t.params.same_rule || t.params.s1 === t.params.s2, code);
   });
 
 g.test('conflicting_attribute_different_location')
