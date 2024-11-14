@@ -1691,11 +1691,8 @@ fn fsMain(
     let countSubgroupSizeEqualI = ballotSubgroupSizeEqualI.x + ballotSubgroupSizeEqualI.y + ballotSubgroupSizeEqualI.z + ballotSubgroupSizeEqualI.w;
     subgroupSizeBallotedInvocations += countSubgroupSizeEqualI;
     // Validate that all active invocations see the same subgroup size, i.e. ballotedSubgroupSize
-    if (countSubgroupSizeEqualI == countActive) {
-      ballotedSubgroupSize = i;
-    } else if (countSubgroupSizeEqualI != 0) {
-      error++;
-    }
+    ballotedSubgroupSize = select(ballotedSubgroupSize, i, countSubgroupSizeEqualI == countActive);
+    error = select(error, error + 1, countSubgroupSizeEqualI != countActive && countSubgroupSizeEqualI != 0);
   }
   // Validate that all active invocations balloted in previous loop
   if (subgroupSizeBallotedInvocations != countActive) {
