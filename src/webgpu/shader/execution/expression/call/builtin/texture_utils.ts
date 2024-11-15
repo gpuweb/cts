@@ -2371,6 +2371,93 @@ export async function checkCallResults<T extends Dimensionality>(
     const call = calls[callIdx];
     const gotRGBA = results.results[callIdx];
     const expectRGBA = softwareTextureRead(t, stage, call, texture, sampler);
+    // Issues with textureSampleBias
+    //
+    // textureSampleBias tests start to get unexpected results when bias >= ~12
+    // where the mip level selected by the GPU is off by +/- 0.41.
+    //
+    // The issue is probably an internal precision issue. In order to test a bias of 12
+    // we choose a target mip level between 0 and mipLevelCount - 1. For example 0.4.
+    // We then compute what mip level we need the derivatives to select such that when
+    // we add in the bias it will result in a mip level of 0.4.  For a bias of 12
+    // that's means we need the derivatives to select mip level -11.4. That means
+    // the derivatives are `pow(2, -11.4) / textureSize` so for a texture that's 16
+    // pixels wide that's `0.00002312799936691891`. I'm just guessing some of that
+    // gets rounded off leading. For example, if we round it ourselves.
+    //
+    // | derivative             | mip level |
+    // +------------------------+-----------+
+    // | 0.00002312799936691891 | -11.4     |
+    // | 0.000022               | -11.47    |
+    // | 0.000023               | -11.408   |
+    // | 0.000024               | -11.34    |
+    // +------------------------+-----------+
+    //
+    // Note: As an example of a bad case: set `callSpecificMaxFractionalDiff = maxFractionalDiff` below
+    // then run `webgpu:shader,execution,expression,call,builtin,textureSampleBias:sampled_2d_coords:format="astc-6x6-unorm";filt="linear";modeU="m";modeV="m";offset=false`
+    // on an M1 Mac.
+    //
+    // ```
+    // EXPECTATION FAILED: subcase: samplePoints="spiral"
+    // result was not as expected:
+    //       size: [18, 18, 1]
+    //   mipCount: 3
+    //       call: textureSampleBias(texture: T, sampler: S, coords: vec2f(0.1527777777777778, 1.4166666666666667) + derivativeBase * derivativeMult(vec2f(0.00002249990733551491, 0)), bias: f32(15.739721414633095))  // #32
+    //           : as texel coord @ mip level[0]: (2.750, 25.500)
+    //           : as texel coord @ mip level[1]: (1.375, 12.750)
+    //           : as texel coord @ mip level[2]: (0.611, 5.667)
+    // implicit derivative based mip level: -15.439721414633095 (without bias)
+    //                        clamped bias: 15.739721414633095
+    //                 mip level with bias: 0.3000000000000007
+    //        got: 0.555311381816864, 0.7921856045722961, 0.8004884123802185, 0.38046398758888245
+    //   expected: 0.6069580801937625, 0.7999182825318225, 0.8152446179041957, 0.335314491045024
+    //   max diff: 0.027450980392156862
+    //  abs diffs: 0.0516466983768985, 0.007732677959526368, 0.014756205523977162, 0.04514949654385847
+    //  rel diffs: 8.51%, 0.97%, 1.81%, 11.87%
+    //  ulp diffs: 866488, 129733, 247568, 1514966
+    //
+    //   sample points:
+    // expected:                                                                   | got:
+    // ...
+    // a: mip(0) at: [ 2, 10,  0], weight: 0.52740                                 | a: mip(0) at: [ 2, 10,  0], weight: 0.60931
+    // b: mip(0) at: [ 3, 10,  0], weight: 0.17580                                 | b: mip(0) at: [ 3, 10,  0], weight: 0.20319
+    // a: value: R: 0.46642, G: 0.77875, B: 0.77509, A: 0.45788                    | a: value: R: 0.46642, G: 0.77875, B: 0.77509, A: 0.45788
+    // b: value: R: 0.46642, G: 0.77875, B: 0.77509, A: 0.45788                    | b: value: R: 0.46642, G: 0.77875, B: 0.77509, A: 0.45788
+    // mip level (0) weight: 0.70320                                               | mip level (0) weight: 0.81250
+    // ```
+    //
+    // Notice above the "expected" level weight (0.7) matches the "mip level with bias (0.3)" which is
+    // the mip level we expected the GPU to select. Selecting mip level 0.3 will do `mix(level0, level1, 0.3)`
+    // which is 0.7 of level 0 and 0.3 of level 1. Notice the "got" level weight is 0.81 which is pretty far off.
+    //
+    // Just looking at the failures, the largest formula below makes most of the tests pass
+    //
+    // MAINTENANCE_TODO: Consider different solutions for this issue
+    //
+    // 1. Try to figure out what the exact rounding issue is the take it into account
+    //
+    // 2. The code currently samples the texture once via the GPU and once via softwareTextureRead. These values are
+    //    "got:" and "expected:" above. The test only fails if they are too different. We could rather get the bilinear
+    //    sample from every mip level and then check the "got" value is between 2 of the levels (or equal if nearest).
+    //    In other words.
+    //
+    //        if (bias >= 12)
+    //          colorForEachMipLevel = range(mipLevelCount, mipLevel => softwareTextureReadLevel(..., mipLevel))
+    //          if nearest
+    //            pass = got === one of colorForEachMipLevel
+    //          else // linear
+    //            pass = false;
+    //            for (i = 0; !pass && i < mipLevelCount - 1; i)
+    //              pass = got is between colorForEachMipLevel[i] and colorForEachMipLevel[i + 1]
+    //
+    //    This would check "something" but effectively it would no longer be checking "bias" for values > 12. Only that
+    //    textureSampleBias returns some possible answer vs some completely wrong answer.
+    //
+    // 3. It's possible this check is just not possible given the precision required. We could just check bias -16 to 12
+    //    and ignore values > 12. We won't be able to test clamping but maybe that's irrelevant.
+    //
+    const callSpecificMaxFractionalDiff =
+      call.bias! >= 12 ? maxFractionalDiff * (2 + call.bias! - 12) : maxFractionalDiff;
 
     // The spec says depth and stencil have implementation defined values for G, B, and A
     // so if this is `textureGather` and component > 0 then there's nothing to check.
@@ -2388,13 +2475,13 @@ export async function checkCallResults<T extends Dimensionality>(
         texture.descriptor.format,
         expectRGBA,
         format,
-        maxFractionalDiff
+        callSpecificMaxFractionalDiff
       )
     ) {
       continue;
     }
 
-    if (!sampler && okBecauseOutOfBounds(texture, call, gotRGBA, maxFractionalDiff)) {
+    if (!sampler && okBecauseOutOfBounds(texture, call, gotRGBA, callSpecificMaxFractionalDiff)) {
       continue;
     }
 
@@ -2417,7 +2504,7 @@ export async function checkCallResults<T extends Dimensionality>(
       assert(!Number.isNaN(ulpDiff));
       const maxAbs = Math.max(Math.abs(g), Math.abs(e));
       const relDiff = maxAbs > 0 ? absDiff / maxAbs : 0;
-      if (ulpDiff > 3 && absDiff > maxFractionalDiff) {
+      if (ulpDiff > 3 && absDiff > callSpecificMaxFractionalDiff) {
         bad = true;
       }
       return { absDiff, relDiff, ulpDiff };
@@ -2483,7 +2570,7 @@ export async function checkCallResults<T extends Dimensionality>(
       errs.push(`\
        got: ${fix5v(rgbaToArray(gotRGBA))}
   expected: ${fix5v(rgbaToArray(expectRGBA))}
-  max diff: ${maxFractionalDiff}
+  max diff: ${callSpecificMaxFractionalDiff}
  abs diffs: ${fix5v(diffs.map(({ absDiff }) => absDiff))}
  rel diffs: ${diffs.map(({ relDiff }) => `${(relDiff * 100).toFixed(2)}%`).join(', ')}
  ulp diffs: ${diffs.map(({ ulpDiff }) => ulpDiff).join(', ')}
@@ -3081,7 +3168,7 @@ function createTextureFromTexelViewsLocal(
 ): GPUTexture {
   const modifiedDescriptor = { ...desc };
   // If it's a depth or stencil texture we need to render to it to fill it with data.
-  if (isDepthOrStencilTextureFormat(texelViews[0].format)) {
+  if (isDepthOrStencilTextureFormat(desc.format)) {
     modifiedDescriptor.usage = desc.usage | GPUTextureUsage.RENDER_ATTACHMENT;
   }
   return createTextureFromTexelViews(t, texelViews, modifiedDescriptor);
@@ -3300,6 +3387,8 @@ async function identifySamplePoints<T extends Dimensionality>(
   const format = (
     kEncodableTextureFormats.includes(info.format as EncodableTextureFormat)
       ? info.format
+      : isDepthTextureFormat(info.format)
+      ? 'depth16unorm'
       : 'rgba8unorm'
   ) as EncodableTextureFormat;
   const rep = kTexelRepresentationInfo[format];
@@ -3407,9 +3496,11 @@ async function identifySamplePoints<T extends Dimensionality>(
       const unSampled = layerEntries ? '' : 'un-sampled';
       if (isCube) {
         const face = kFaceNames[layer % 6];
-        lines.push(`layer: ${layer}, cube-layer: ${(layer / 6) | 0} (${face}) ${unSampled}`);
+        lines.push(
+          `layer: ${layer} mip(${mipLevel}), cube-layer: ${(layer / 6) | 0} (${face}) ${unSampled}`
+        );
       } else {
-        lines.push(`layer: ${layer} ${unSampled}`);
+        lines.push(`layer: ${layer} mip(${mipLevel}) ${unSampled}`);
       }
 
       if (!layerEntries) {
@@ -3463,7 +3554,10 @@ async function identifySamplePoints<T extends Dimensionality>(
 
       const pad2 = (n: number) => n.toString().padStart(2);
       const pad3 = (n: number) => n.toString().padStart(3);
-      const fix5 = (n: number) => n.toFixed(5);
+      const fix5 = (n: number) => {
+        const s = n.toFixed(5);
+        return s === '0.00000' && n !== 0 ? n.toString() : s;
+      };
       const formatValue = isSintOrUintFormat(format) ? pad3 : fix5;
       const formatTexel = (texel: PerTexelComponent<number> | undefined) =>
         texel
@@ -3510,7 +3604,7 @@ async function identifySamplePoints<T extends Dimensionality>(
       lines.push(...colorLines);
       lines.push(...compareLines);
       if (!isNaN(levelWeight)) {
-        lines.push(`level weight: ${fix5(levelWeight)}`);
+        lines.push(`mip level (${mipLevel}) weight: ${fix5(levelWeight)}`);
       }
       idCount += orderedTexelIndices.length;
     }

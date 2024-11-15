@@ -1,5 +1,10 @@
 import { assert } from '../../common/util/util.js';
-import { isDepthOrStencilTextureFormat, kTextureFormatInfo } from '../format_info.js';
+import {
+  isDepthOrStencilTextureFormat,
+  isDepthTextureFormat,
+  isStencilTextureFormat,
+  kTextureFormatInfo,
+} from '../format_info.js';
 import { GPUTest } from '../gpu_test.js';
 
 import { getTextureCopyLayout } from './texture/layout.js';
@@ -16,8 +21,6 @@ const kLoadValueFromStorageInfo: Partial<{
     storageType: string;
     texelType: string;
     unpackWGSL: string;
-    useFragDepth?: boolean;
-    discardWithStencil?: boolean;
   };
 }> = {
   r8unorm: {
@@ -223,7 +226,6 @@ const kLoadValueFromStorageInfo: Partial<{
       let v = unpack2x16unorm(src[byteOffset / 4])[byteOffset % 4 / 2];
       return vec4f(v, 0.123, 0.123, 0.123)
     `,
-    useFragDepth: true,
   },
   depth32float: {
     storageType: 'f32',
@@ -232,7 +234,6 @@ const kLoadValueFromStorageInfo: Partial<{
       let v = src[byteOffset / 4];
       return vec4f(v, 0.123, 0.123, 0.123)
     `,
-    useFragDepth: true,
   },
   stencil8: {
     storageType: 'u32',
@@ -240,14 +241,25 @@ const kLoadValueFromStorageInfo: Partial<{
     unpackWGSL: `
       return vec4u(unpack4xU8(src[byteOffset / 4])[byteOffset % 4], 123, 123, 123)
     `,
-    discardWithStencil: true,
   },
 };
 
-function getCopyBufferToTextureViaRenderCode(format: GPUTextureFormat) {
-  const info = kLoadValueFromStorageInfo[format];
+function getDepthStencilOptionsForFormat(format: GPUTextureFormat) {
+  // Note: For now we prefer depth over stencil. To fix this would require passing GPUTextureAspect all the way down.
+  return {
+    useFragDepth: isDepthTextureFormat(format),
+    discardWithStencil: isStencilTextureFormat(format) && !isDepthTextureFormat(format),
+  };
+}
+
+function getCopyBufferToTextureViaRenderCode(
+  srcFormat: GPUTextureFormat,
+  dstFormat: GPUTextureFormat
+) {
+  const info = kLoadValueFromStorageInfo[srcFormat];
   assert(!!info);
-  const { storageType, texelType, unpackWGSL, useFragDepth, discardWithStencil } = info;
+  const { storageType, texelType, unpackWGSL } = info;
+  const { useFragDepth, discardWithStencil } = getDepthStencilOptionsForFormat(dstFormat);
 
   const [depthDecl, depthCode] = useFragDepth
     ? ['@builtin(frag_depth) d: f32,', 'fs.d = fs.v[0];']
@@ -326,15 +338,12 @@ function copyBufferToTextureViaRender(
   const { format: textureFormat, sampleCount } = dest.texture;
   const origin = reifyOrigin3D(dest.origin ?? [0]);
   const copySize = reifyExtent3D(size);
-
-  const msInfo = kLoadValueFromStorageInfo[sourceFormat];
-  assert(!!msInfo);
-  const { useFragDepth, discardWithStencil } = msInfo;
+  const { useFragDepth, discardWithStencil } = getDepthStencilOptionsForFormat(dest.texture.format);
 
   const { device } = t;
   const numBlits = discardWithStencil ? 8 : 1;
   for (let blitCount = 0; blitCount < numBlits; ++blitCount) {
-    const code = getCopyBufferToTextureViaRenderCode(sourceFormat);
+    const code = getCopyBufferToTextureViaRenderCode(sourceFormat, dest.texture.format);
     const stencilWriteMask = 1 << blitCount;
     const id = JSON.stringify({
       textureFormat,
