@@ -3031,11 +3031,14 @@ format)
         }
       `
     });
-    const sampleType = isDepthTextureFormat(texture.format) ?
-    'unfilterable-float' :
-    isStencilTextureFormat(texture.format) ?
+    const info = kTextureFormatInfo[texture.format];
+    const sampleType = info.depth ?
+    'unfilterable-float' // depth only supports unfilterable-float if not a comparison.
+    : info.stencil ?
     'uint' :
-    kTextureFormatInfo[texture.format].color?.type ?? 'unfilterable-float';
+    info.color.type === 'float' ?
+    'unfilterable-float' :
+    info.color.type;
     const bindGroupLayout = device.createBindGroupLayout({
       entries: [
       {
@@ -3050,7 +3053,8 @@ format)
         visibility: GPUShaderStage.COMPUTE,
         texture: {
           sampleType,
-          viewDimension
+          viewDimension,
+          multisampled: texture.sampleCount > 1
         }
       },
       {
@@ -3169,7 +3173,7 @@ desc)
 {
   const modifiedDescriptor = { ...desc };
   // If it's a depth or stencil texture we need to render to it to fill it with data.
-  if (isDepthOrStencilTextureFormat(desc.format)) {
+  if (isDepthOrStencilTextureFormat(desc.format) || desc.sampleCount > 1) {
     modifiedDescriptor.usage = desc.usage | GPUTextureUsage.RENDER_ATTACHMENT;
   }
   return createTextureFromTexelViews(t, texelViews, modifiedDescriptor);
