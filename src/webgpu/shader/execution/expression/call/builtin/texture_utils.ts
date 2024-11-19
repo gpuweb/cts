@@ -191,7 +191,10 @@ export function skipIfTextureFormatNotSupportedNotAvailableOrNotFilterable(
 }
 
 const builtinNeedsMipGradientValues = (builtin: TextureBuiltin) =>
-  builtin !== 'textureLoad' && builtin !== 'textureGather' && builtin !== 'textureGatherCompare';
+  builtin !== 'textureLoad' &&
+  builtin !== 'textureGather' &&
+  builtin !== 'textureGatherCompare' &&
+  builtin !== 'textureSampleBaseClampToEdge';
 
 /**
  * Splits in array into multiple arrays where every Nth value goes to a different array
