@@ -4,6 +4,7 @@ Tests for texture_utils.ts
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { assert } from '../../../../../../common/util/util.js';
+import { isMultisampledTextureFormat, kDepthStencilFormats } from '../../../../../format_info.js';
 import { GPUTest } from '../../../../../gpu_test.js';
 import { getTextureDimensionFromView, virtualMipSize } from '../../../../../util/texture/base.js';
 import {
@@ -16,6 +17,7 @@ import {
   chooseTextureSize,
   createTextureWithRandomDataAndGetTexels,
   isSupportedViewFormatCombo,
+  makeRandomDepthComparisonTexelGenerator,
   readTextureToTexelViews,
   texelsApproximatelyEqual,
 } from './texture_utils.js';
@@ -25,6 +27,41 @@ export const g = makeTestGroup(GPUTest);
 function texelFormat(texel: Readonly<PerTexelComponent<number>>, rep: TexelRepresentationInfo) {
   return rep.componentOrder.map(component => `${component}: ${texel[component]}`).join(', ');
 }
+
+g.test('createTextureWithRandomDataAndGetTexels_with_generator')
+  .desc(
+    `
+    Test createTextureWithRandomDataAndGetTexels with a generator. Generators
+    are only used with textureXXXCompare builtins as we need specific random
+    values to test these builtins with a depth reference value.
+    `
+  )
+  .params(u =>
+    u
+      .combine('format', kDepthStencilFormats)
+      .combine('viewDimension', ['2d', '2d-array', 'cube', 'cube-array'] as const)
+      .filter(t => isSupportedViewFormatCombo(t.format, t.viewDimension))
+  )
+  .beforeAllSubcases(t => {
+    t.skipIfTextureViewDimensionNotSupported(t.params.viewDimension);
+    t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
+  })
+  .fn(async t => {
+    const { format, viewDimension } = t.params;
+    const size = chooseTextureSize({ minSize: 8, minBlocks: 4, format, viewDimension });
+    const descriptor: GPUTextureDescriptor = {
+      format,
+      dimension: getTextureDimensionFromView(viewDimension),
+      size,
+      mipLevelCount: 3,
+      usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
+      ...(t.isCompatibility && { textureBindingViewDimension: viewDimension }),
+    };
+    await createTextureWithRandomDataAndGetTexels(t, descriptor, {
+      generator: makeRandomDepthComparisonTexelGenerator(descriptor, 'equal'),
+    });
+    // We don't expect any particular results. We just expect no validation errors.
+  });
 
 g.test('readTextureToTexelViews')
   .desc('test readTextureToTexelViews for various formats and dimensions')
@@ -44,19 +81,26 @@ g.test('readTextureToTexelViews')
       ] as const)
       .combine('viewDimension', ['1d', '2d', '2d-array', '3d', 'cube', 'cube-array'] as const)
       .filter(t => isSupportedViewFormatCombo(t.srcFormat, t.viewDimension))
+      .combine('sampleCount', [1, 4] as const)
+      .unless(
+        t =>
+          t.sampleCount > 1 &&
+          (!isMultisampledTextureFormat(t.srcFormat) || t.viewDimension !== '2d')
+      )
   )
   .beforeAllSubcases(t => {
     t.skipIfTextureViewDimensionNotSupported(t.params.viewDimension);
   })
   .fn(async t => {
-    const { srcFormat, texelViewFormat, viewDimension } = t.params;
+    const { srcFormat, texelViewFormat, viewDimension, sampleCount } = t.params;
     const size = chooseTextureSize({ minSize: 8, minBlocks: 4, format: srcFormat, viewDimension });
     const descriptor: GPUTextureDescriptor = {
       format: srcFormat,
       dimension: getTextureDimensionFromView(viewDimension),
       size,
-      mipLevelCount: viewDimension === '1d' ? 1 : 3,
+      mipLevelCount: viewDimension === '1d' || sampleCount > 1 ? 1 : 3,
       usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
+      sampleCount,
       ...(t.isCompatibility && { textureBindingViewDimension: viewDimension }),
     };
     const { texels: expectedTexelViews, texture } = await createTextureWithRandomDataAndGetTexels(
