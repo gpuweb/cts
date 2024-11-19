@@ -3,11 +3,13 @@ import { assert, range, unreachable } from '../../../../../../common/util/util.j
 import { Float16Array } from '../../../../../../external/petamoriken/float16/float16.js';
 import {
   EncodableTextureFormat,
+  is32Float,
   isCompressedFloatTextureFormat,
   isCompressedTextureFormat,
   isDepthOrStencilTextureFormat,
   isDepthTextureFormat,
   isEncodableTextureFormat,
+  isSintOrUintFormat,
   isStencilTextureFormat,
   kEncodableTextureFormats,
   kTextureFormatInfo,
@@ -79,8 +81,8 @@ export function isSupportedViewFormatCombo(
   viewDimension: GPUTextureViewDimension
 ) {
   return !(
-    (isCompressedTextureFormat(format) || isDepthTextureFormat(format)) &&
-    viewDimension === '3d'
+    (isCompressedTextureFormat(format) || isDepthOrStencilTextureFormat(format)) &&
+    (viewDimension === '3d' || viewDimension === '1d')
   );
 }
 
@@ -106,8 +108,10 @@ export function getTextureTypeForTextureViewDimension(viewDimension: GPUTextureV
   }
 }
 
-const is32Float = (format: GPUTextureFormat) =>
-  format === 'r32float' || format === 'rg32float' || format === 'rgba32float';
+const isUnencodableDepthFormat = (format: GPUTextureFormat) =>
+  format === 'depth24plus' ||
+  format === 'depth24plus-stencil8' ||
+  format === 'depth32float-stencil8';
 
 /**
  * Skips a subcase if the filter === 'linear' and the format is type
@@ -185,6 +189,9 @@ export function skipIfTextureFormatNotSupportedNotAvailableOrNotFilterable(
     t.selectDeviceForTextureFormatOrSkipTestCase(format);
   }
 }
+
+const builtinNeedsMipGradientValues = (builtin: TextureBuiltin) =>
+  builtin !== 'textureLoad' && builtin !== 'textureGather' && builtin !== 'textureGatherCompare';
 
 /**
  * Splits in array into multiple arrays where every Nth value goes to a different array
@@ -832,39 +839,240 @@ function getWeightForMipLevel(
 }
 
 /**
- * Used for textureDimension, textureNumLevels, textureNumLayers
+ * Used for textureNumSamples, textureNumLevels, textureNumLayers, textureDimension
  */
 export class WGSLTextureQueryTest extends GPUTest {
-  executeAndExpectResult(code: string, view: GPUTextureView, expected: number[]) {
+  executeAndExpectResult(
+    stage: ShaderStage,
+    code: string,
+    texture: GPUTexture | GPUExternalTexture,
+    viewDescriptor: GPUTextureViewDescriptor | undefined,
+    expected: number[]
+  ) {
     const { device } = this;
-    const module = device.createShaderModule({ code });
-    const pipeline = device.createComputePipeline({
-      layout: 'auto',
-      compute: {
-        module,
-      },
+    const returnType = `vec4<u32>`;
+    const castWGSL = `${returnType}(getValue()${range(4 - expected.length, () => ', 0').join('')})`;
+    const stageWGSL =
+      stage === 'vertex'
+        ? `
+// --------------------------- vertex stage shaders --------------------------------
+@vertex fn vsVertex(
+    @builtin(vertex_index) vertex_index : u32,
+    @builtin(instance_index) instance_index : u32) -> VOut {
+  let positions = array(vec2f(-1, 3), vec2f(3, -1), vec2f(-1, -1));
+  return VOut(vec4f(positions[vertex_index], 0, 1),
+              instance_index,
+              ${castWGSL});
+}
+
+@fragment fn fsVertex(v: VOut) -> @location(0) vec4u {
+  return bitcast<vec4u>(v.result);
+}
+`
+        : stage === 'fragment'
+        ? `
+// --------------------------- fragment stage shaders --------------------------------
+@vertex fn vsFragment(
+    @builtin(vertex_index) vertex_index : u32,
+    @builtin(instance_index) instance_index : u32) -> VOut {
+  let positions = array(vec2f(-1, 3), vec2f(3, -1), vec2f(-1, -1));
+  return VOut(vec4f(positions[vertex_index], 0, 1), instance_index, ${returnType}(0));
+}
+
+@fragment fn fsFragment(v: VOut) -> @location(0) vec4u {
+  return bitcast<vec4u>(${castWGSL});
+}
+`
+        : `
+// --------------------------- compute stage shaders --------------------------------
+@group(1) @binding(0) var<storage, read_write> results: array<${returnType}>;
+
+@compute @workgroup_size(1) fn csCompute(@builtin(global_invocation_id) id: vec3u) {
+  results[id.x] = ${castWGSL};
+}
+`;
+    const wgsl = `
+      ${code}
+
+struct VOut {
+  @builtin(position) pos: vec4f,
+  @location(0) @interpolate(flat, either) ndx: u32,
+  @location(1) @interpolate(flat, either) result: ${returnType},
+};
+
+      ${stageWGSL}
+    `;
+    const module = device.createShaderModule({ code: wgsl });
+
+    const visibility =
+      stage === 'compute'
+        ? GPUShaderStage.COMPUTE
+        : stage === 'fragment'
+        ? GPUShaderStage.FRAGMENT
+        : GPUShaderStage.VERTEX;
+
+    const entries: GPUBindGroupLayoutEntry[] = [];
+    if (texture instanceof GPUExternalTexture) {
+      entries.push({
+        binding: 0,
+        visibility,
+        externalTexture: {},
+      });
+    } else if (code.includes('texture_storage')) {
+      entries.push({
+        binding: 0,
+        visibility,
+        storageTexture: {
+          access: code.includes(', read>')
+            ? 'read-only'
+            : code.includes(', write>')
+            ? 'write-only'
+            : 'read-write',
+          viewDimension: viewDescriptor?.dimension ?? '2d',
+          format: texture.format,
+        },
+      });
+    } else {
+      const sampleType =
+        viewDescriptor?.aspect === 'stencil-only'
+          ? 'uint'
+          : code.includes('texture_depth')
+          ? 'depth'
+          : isDepthTextureFormat(texture.format)
+          ? 'unfilterable-float'
+          : isStencilTextureFormat(texture.format)
+          ? 'uint'
+          : texture.sampleCount > 1 && kTextureFormatInfo[texture.format].color?.type === 'float'
+          ? 'unfilterable-float'
+          : kTextureFormatInfo[texture.format].color?.type ?? 'unfilterable-float';
+      entries.push({
+        binding: 0,
+        visibility,
+        texture: {
+          sampleType,
+          viewDimension: viewDescriptor?.dimension ?? '2d',
+          multisampled: texture.sampleCount > 1,
+        },
+      });
+    }
+
+    const bindGroupLayouts: GPUBindGroupLayout[] = [device.createBindGroupLayout({ entries })];
+
+    if (stage === 'compute') {
+      bindGroupLayouts.push(
+        device.createBindGroupLayout({
+          entries: [
+            {
+              binding: 0,
+              visibility: GPUShaderStage.COMPUTE,
+              buffer: {
+                type: 'storage',
+                hasDynamicOffset: false,
+                minBindingSize: 16,
+              },
+            },
+          ],
+        })
+      );
+    }
+
+    const layout = device.createPipelineLayout({
+      bindGroupLayouts,
     });
 
-    const resultBuffer = this.createBufferTracked({
-      size: 16,
-      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
-    });
+    let pipeline: GPUComputePipeline | GPURenderPipeline;
 
-    const bindGroup = device.createBindGroup({
+    switch (stage) {
+      case 'compute':
+        pipeline = device.createComputePipeline({
+          layout,
+          compute: { module },
+        });
+        break;
+      case 'fragment':
+      case 'vertex':
+        pipeline = device.createRenderPipeline({
+          layout,
+          vertex: { module },
+          fragment: {
+            module,
+            targets: [{ format: 'rgba32uint' }],
+          },
+        });
+        break;
+    }
+
+    const bindGroup0 = device.createBindGroup({
       layout: pipeline.getBindGroupLayout(0),
       entries: [
-        { binding: 0, resource: view },
-        { binding: 1, resource: { buffer: resultBuffer } },
+        {
+          binding: 0,
+          resource:
+            texture instanceof GPUExternalTexture ? texture : texture.createView(viewDescriptor),
+        },
       ],
     });
 
+    const renderTarget = this.createTextureTracked({
+      format: 'rgba32uint',
+      size: [expected.length, 1],
+      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
+    });
+
+    const resultBuffer = this.createBufferTracked({
+      size: align(expected.length * 4, 256),
+      usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC,
+    });
+
+    let storageBuffer: GPUBuffer | undefined;
     const encoder = device.createCommandEncoder();
-    const pass = encoder.beginComputePass();
-    pass.setPipeline(pipeline);
-    pass.setBindGroup(0, bindGroup);
-    pass.dispatchWorkgroups(1);
-    pass.end();
-    device.queue.submit([encoder.finish()]);
+
+    if (stage === 'compute') {
+      storageBuffer = this.createBufferTracked({
+        size: resultBuffer.size,
+        usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
+      });
+
+      const bindGroup1 = device.createBindGroup({
+        layout: pipeline!.getBindGroupLayout(1),
+        entries: [{ binding: 0, resource: { buffer: storageBuffer } }],
+      });
+
+      const pass = encoder.beginComputePass();
+      pass.setPipeline(pipeline! as GPUComputePipeline);
+      pass.setBindGroup(0, bindGroup0);
+      pass.setBindGroup(1, bindGroup1);
+      pass.dispatchWorkgroups(expected.length);
+      pass.end();
+      encoder.copyBufferToBuffer(storageBuffer, 0, resultBuffer, 0, storageBuffer.size);
+    } else {
+      const pass = encoder.beginRenderPass({
+        colorAttachments: [
+          {
+            view: renderTarget.createView(),
+            loadOp: 'clear',
+            storeOp: 'store',
+          },
+        ],
+      });
+
+      pass.setPipeline(pipeline! as GPURenderPipeline);
+      pass.setBindGroup(0, bindGroup0);
+      for (let i = 0; i < expected.length; ++i) {
+        pass.setViewport(i, 0, 1, 1, 0, 1);
+        pass.draw(3, 1, 0, i);
+      }
+      pass.end();
+      encoder.copyTextureToBuffer(
+        { texture: renderTarget },
+        {
+          buffer: resultBuffer,
+          bytesPerRow: resultBuffer.size,
+        },
+        [renderTarget.width, 1]
+      );
+    }
+    this.device.queue.submit([encoder.finish()]);
 
     const e = new Uint32Array(4);
     e.set(expected);
@@ -920,6 +1128,11 @@ function getMinAndMaxTexelValueForComponent(
  * or something similar to TexelView.
  */
 export function getTexelViewFormatForTextureFormat(format: GPUTextureFormat) {
+  if (format.endsWith('sint')) {
+    return 'rgba32sint';
+  } else if (format.endsWith('uint')) {
+    return 'rgba32uint';
+  }
   return format.endsWith('-srgb') ? 'rgba8unorm-srgb' : 'rgba32float';
 }
 
@@ -1242,6 +1455,9 @@ const builtinNeedsDerivatives = (builtin: TextureBuiltin) =>
 
 const isCubeViewDimension = (viewDescriptor?: GPUTextureViewDescriptor) =>
   viewDescriptor?.dimension === 'cube' || viewDescriptor?.dimension === 'cube-array';
+
+const isViewDimensionCubeOrCubeArray = (viewDimension: GPUTextureViewDimension) =>
+  viewDimension === 'cube' || viewDimension === 'cube-array';
 
 const s_u32 = new Uint32Array(1);
 const s_f32 = new Float32Array(s_u32.buffer);
@@ -1982,7 +2198,15 @@ function isValidOutOfBoundsValue(
           for (let sampleIndex = 0; sampleIndex < sampleCount; ++sampleIndex) {
             const texel = mipTexels.color({ x, y, z, sampleIndex });
             const rgba = convertPerTexelComponentToResultFormat(texel, mipTexels.format);
-            if (texelsApproximatelyEqual(gotRGBA, rgba, mipTexels.format, maxFractionalDiff)) {
+            if (
+              texelsApproximatelyEqual(
+                gotRGBA,
+                texture.descriptor.format,
+                rgba,
+                mipTexels.format,
+                maxFractionalDiff
+              )
+            ) {
               return true;
             }
           }
@@ -2024,25 +2248,29 @@ const kRGBAComponents = [
 
 const kRComponent = [TexelComponent.R] as const;
 
-function texelsApproximatelyEqual(
+/**
+ * Compares two Texels
+ */
+export function texelsApproximatelyEqual(
   gotRGBA: PerTexelComponent<number>,
+  gotFormat: GPUTextureFormat,
   expectRGBA: PerTexelComponent<number>,
-  format: EncodableTextureFormat,
+  expectedFormat: EncodableTextureFormat,
   maxFractionalDiff: number
 ) {
-  const rep = kTexelRepresentationInfo[format];
-  const got = convertResultFormatToTexelViewFormat(gotRGBA, format);
-  const expect = convertResultFormatToTexelViewFormat(expectRGBA, format);
+  const rep = kTexelRepresentationInfo[expectedFormat];
+  const got = convertResultFormatToTexelViewFormat(gotRGBA, expectedFormat);
+  const expect = convertResultFormatToTexelViewFormat(expectRGBA, expectedFormat);
   const gULP = convertPerTexelComponentToResultFormat(
     rep.bitsToULPFromZero(rep.numberToBits(got)),
-    format
+    expectedFormat
   );
   const eULP = convertPerTexelComponentToResultFormat(
     rep.bitsToULPFromZero(rep.numberToBits(expect)),
-    format
+    expectedFormat
   );
 
-  const rgbaComponentsToCheck = isDepthOrStencilTextureFormat(format)
+  const rgbaComponentsToCheck = isDepthOrStencilTextureFormat(gotFormat)
     ? kRComponent
     : kRGBAComponents;
 
@@ -2116,7 +2344,9 @@ export async function checkCallResults<T extends Dimensionality>(
   gpuTexture?: GPUTexture
 ) {
   const stage = kShortShaderStageToShaderStage[shortShaderStage];
-  await initMipGradientValuesForDevice(t, stage);
+  if (builtinNeedsMipGradientValues(calls[0].builtin)) {
+    await initMipGradientValuesForDevice(t, stage);
+  }
 
   let haveComparisonCheckInfo = false;
   let checkInfo = {
@@ -2141,6 +2371,93 @@ export async function checkCallResults<T extends Dimensionality>(
     const call = calls[callIdx];
     const gotRGBA = results.results[callIdx];
     const expectRGBA = softwareTextureRead(t, stage, call, texture, sampler);
+    // Issues with textureSampleBias
+    //
+    // textureSampleBias tests start to get unexpected results when bias >= ~12
+    // where the mip level selected by the GPU is off by +/- 0.41.
+    //
+    // The issue is probably an internal precision issue. In order to test a bias of 12
+    // we choose a target mip level between 0 and mipLevelCount - 1. For example 0.4.
+    // We then compute what mip level we need the derivatives to select such that when
+    // we add in the bias it will result in a mip level of 0.4.  For a bias of 12
+    // that's means we need the derivatives to select mip level -11.4. That means
+    // the derivatives are `pow(2, -11.4) / textureSize` so for a texture that's 16
+    // pixels wide that's `0.00002312799936691891`. I'm just guessing some of that
+    // gets rounded off leading. For example, if we round it ourselves.
+    //
+    // | derivative             | mip level |
+    // +------------------------+-----------+
+    // | 0.00002312799936691891 | -11.4     |
+    // | 0.000022               | -11.47    |
+    // | 0.000023               | -11.408   |
+    // | 0.000024               | -11.34    |
+    // +------------------------+-----------+
+    //
+    // Note: As an example of a bad case: set `callSpecificMaxFractionalDiff = maxFractionalDiff` below
+    // then run `webgpu:shader,execution,expression,call,builtin,textureSampleBias:sampled_2d_coords:format="astc-6x6-unorm";filt="linear";modeU="m";modeV="m";offset=false`
+    // on an M1 Mac.
+    //
+    // ```
+    // EXPECTATION FAILED: subcase: samplePoints="spiral"
+    // result was not as expected:
+    //       size: [18, 18, 1]
+    //   mipCount: 3
+    //       call: textureSampleBias(texture: T, sampler: S, coords: vec2f(0.1527777777777778, 1.4166666666666667) + derivativeBase * derivativeMult(vec2f(0.00002249990733551491, 0)), bias: f32(15.739721414633095))  // #32
+    //           : as texel coord @ mip level[0]: (2.750, 25.500)
+    //           : as texel coord @ mip level[1]: (1.375, 12.750)
+    //           : as texel coord @ mip level[2]: (0.611, 5.667)
+    // implicit derivative based mip level: -15.439721414633095 (without bias)
+    //                        clamped bias: 15.739721414633095
+    //                 mip level with bias: 0.3000000000000007
+    //        got: 0.555311381816864, 0.7921856045722961, 0.8004884123802185, 0.38046398758888245
+    //   expected: 0.6069580801937625, 0.7999182825318225, 0.8152446179041957, 0.335314491045024
+    //   max diff: 0.027450980392156862
+    //  abs diffs: 0.0516466983768985, 0.007732677959526368, 0.014756205523977162, 0.04514949654385847
+    //  rel diffs: 8.51%, 0.97%, 1.81%, 11.87%
+    //  ulp diffs: 866488, 129733, 247568, 1514966
+    //
+    //   sample points:
+    // expected:                                                                   | got:
+    // ...
+    // a: mip(0) at: [ 2, 10,  0], weight: 0.52740                                 | a: mip(0) at: [ 2, 10,  0], weight: 0.60931
+    // b: mip(0) at: [ 3, 10,  0], weight: 0.17580                                 | b: mip(0) at: [ 3, 10,  0], weight: 0.20319
+    // a: value: R: 0.46642, G: 0.77875, B: 0.77509, A: 0.45788                    | a: value: R: 0.46642, G: 0.77875, B: 0.77509, A: 0.45788
+    // b: value: R: 0.46642, G: 0.77875, B: 0.77509, A: 0.45788                    | b: value: R: 0.46642, G: 0.77875, B: 0.77509, A: 0.45788
+    // mip level (0) weight: 0.70320                                               | mip level (0) weight: 0.81250
+    // ```
+    //
+    // Notice above the "expected" level weight (0.7) matches the "mip level with bias (0.3)" which is
+    // the mip level we expected the GPU to select. Selecting mip level 0.3 will do `mix(level0, level1, 0.3)`
+    // which is 0.7 of level 0 and 0.3 of level 1. Notice the "got" level weight is 0.81 which is pretty far off.
+    //
+    // Just looking at the failures, the largest formula below makes most of the tests pass
+    //
+    // MAINTENANCE_TODO: Consider different solutions for this issue
+    //
+    // 1. Try to figure out what the exact rounding issue is the take it into account
+    //
+    // 2. The code currently samples the texture once via the GPU and once via softwareTextureRead. These values are
+    //    "got:" and "expected:" above. The test only fails if they are too different. We could rather get the bilinear
+    //    sample from every mip level and then check the "got" value is between 2 of the levels (or equal if nearest).
+    //    In other words.
+    //
+    //        if (bias >= 12)
+    //          colorForEachMipLevel = range(mipLevelCount, mipLevel => softwareTextureReadLevel(..., mipLevel))
+    //          if nearest
+    //            pass = got === one of colorForEachMipLevel
+    //          else // linear
+    //            pass = false;
+    //            for (i = 0; !pass && i < mipLevelCount - 1; i)
+    //              pass = got is between colorForEachMipLevel[i] and colorForEachMipLevel[i + 1]
+    //
+    //    This would check "something" but effectively it would no longer be checking "bias" for values > 12. Only that
+    //    textureSampleBias returns some possible answer vs some completely wrong answer.
+    //
+    // 3. It's possible this check is just not possible given the precision required. We could just check bias -16 to 12
+    //    and ignore values > 12. We won't be able to test clamping but maybe that's irrelevant.
+    //
+    const callSpecificMaxFractionalDiff =
+      call.bias! >= 12 ? maxFractionalDiff * (2 + call.bias! - 12) : maxFractionalDiff;
 
     // The spec says depth and stencil have implementation defined values for G, B, and A
     // so if this is `textureGather` and component > 0 then there's nothing to check.
@@ -2152,11 +2469,19 @@ export async function checkCallResults<T extends Dimensionality>(
       continue;
     }
 
-    if (texelsApproximatelyEqual(gotRGBA, expectRGBA, format, maxFractionalDiff)) {
+    if (
+      texelsApproximatelyEqual(
+        gotRGBA,
+        texture.descriptor.format,
+        expectRGBA,
+        format,
+        callSpecificMaxFractionalDiff
+      )
+    ) {
       continue;
     }
 
-    if (!sampler && okBecauseOutOfBounds(texture, call, gotRGBA, maxFractionalDiff)) {
+    if (!sampler && okBecauseOutOfBounds(texture, call, gotRGBA, callSpecificMaxFractionalDiff)) {
       continue;
     }
 
@@ -2179,7 +2504,7 @@ export async function checkCallResults<T extends Dimensionality>(
       assert(!Number.isNaN(ulpDiff));
       const maxAbs = Math.max(Math.abs(g), Math.abs(e));
       const relDiff = maxAbs > 0 ? absDiff / maxAbs : 0;
-      if (ulpDiff > 3 && absDiff > maxFractionalDiff) {
+      if (ulpDiff > 3 && absDiff > callSpecificMaxFractionalDiff) {
         bad = true;
       }
       return { absDiff, relDiff, ulpDiff };
@@ -2245,7 +2570,7 @@ export async function checkCallResults<T extends Dimensionality>(
       errs.push(`\
        got: ${fix5v(rgbaToArray(gotRGBA))}
   expected: ${fix5v(rgbaToArray(expectRGBA))}
-  max diff: ${maxFractionalDiff}
+  max diff: ${callSpecificMaxFractionalDiff}
  abs diffs: ${fix5v(diffs.map(({ absDiff }) => absDiff))}
  rel diffs: ${diffs.map(({ relDiff }) => `${(relDiff * 100).toFixed(2)}%`).join(', ')}
  ulp diffs: ${diffs.map(({ ulpDiff }) => ulpDiff).join(', ')}
@@ -2360,7 +2685,15 @@ export async function checkCallResults<T extends Dimensionality>(
               call,
               gpuTexels,
               async (texels: TexelView[]) => {
-                const gpuTexture = createTextureFromTexelViewsLocal(t, texels, texture.descriptor);
+                // We're trying to create a texture with black and white texels
+                // but if it's a compressed texture we use an encodable texture.
+                // It's not perfect but we already know it failed. We're just hoping
+                // to get sample points.
+                const descriptor = { ...texture.descriptor };
+                if (isCompressedTextureFormat(descriptor.format)) {
+                  descriptor.format = texels[0].format;
+                }
+                const gpuTexture = createTextureFromTexelViewsLocal(t, texels, descriptor);
                 const result = (await checkInfo.runner.run(gpuTexture))[callIdx];
                 gpuTexture.destroy();
                 return result;
@@ -2575,6 +2908,13 @@ function getEffectiveViewDimension(
   );
 }
 
+/**
+ * Reads a texture to an array of TexelViews, one per mip level.
+ * format is the format of the TexelView you want. Often this is
+ * same as the texture.format but if the texture.format is not
+ * "Encodable" then you need to choose a different format.
+ * Example: depth24plus -> r32float, bc1-rgba-unorm to rgba32float
+ */
 export async function readTextureToTexelViews(
   t: GPUTest,
   texture: GPUTexture,
@@ -2587,78 +2927,95 @@ export async function readTextureToTexelViews(
     new Map<GPUTextureViewDimension, GPUComputePipeline>();
   s_readTextureToRGBA32DeviceToPipeline.set(device, viewDimensionToPipelineMap);
 
+  const { componentType, resultType } = getTextureFormatTypeInfo(texture.format);
   const viewDimension = getEffectiveViewDimension(t, descriptor);
-  const id = `${viewDimension}:${texture.sampleCount}`;
+  const id = `${texture.format}:${viewDimension}:${texture.sampleCount}`;
   let pipeline = viewDimensionToPipelineMap.get(id);
   if (!pipeline) {
     let textureWGSL;
     let loadWGSL;
-    let dimensionWGSL = 'textureDimensions(tex, uni.mipLevel)';
+    let dimensionWGSL = 'textureDimensions(tex, 0)';
     switch (viewDimension) {
       case '2d':
         if (texture.sampleCount > 1) {
-          textureWGSL = 'texture_multisampled_2d<f32>';
+          textureWGSL = `texture_multisampled_2d<${componentType}>`;
           loadWGSL = 'textureLoad(tex, coord.xy, sampleIndex)';
           dimensionWGSL = 'textureDimensions(tex)';
         } else {
-          textureWGSL = 'texture_2d<f32>';
-          loadWGSL = 'textureLoad(tex, coord.xy, mipLevel)';
+          textureWGSL = `texture_2d<${componentType}>`;
+          loadWGSL = 'textureLoad(tex, coord.xy, 0)';
         }
         break;
       case 'cube-array': // cube-array doesn't exist in compat so we can just use 2d_array for this
       case '2d-array':
-        textureWGSL = 'texture_2d_array<f32>';
+        textureWGSL = `texture_2d_array<${componentType}>`;
         loadWGSL = `
           textureLoad(
               tex,
               coord.xy,
               coord.z,
-              mipLevel)`;
+              0)`;
         break;
       case '3d':
-        textureWGSL = 'texture_3d<f32>';
-        loadWGSL = 'textureLoad(tex, coord.xyz, mipLevel)';
+        textureWGSL = `texture_3d<${componentType}>`;
+        loadWGSL = 'textureLoad(tex, coord.xyz, 0)';
         break;
       case 'cube':
-        textureWGSL = 'texture_cube<f32>';
+        textureWGSL = `texture_cube<${componentType}>`;
         loadWGSL = `
-          textureLoadCubeAs2DArray(tex, coord.xy, coord.z, mipLevel);
+          textureLoadCubeAs2DArray(tex, coord.xy, coord.z);
         `;
+        break;
+      case '1d':
+        textureWGSL = `texture_1d<${componentType}>`;
+        loadWGSL = `textureLoad(tex, coord.x, 0)`;
+        dimensionWGSL = `vec2u(textureDimensions(tex), 1)`;
         break;
       default:
         unreachable(`unsupported view: ${viewDimension}`);
     }
+
+    const textureLoadCubeWGSL = `
+      const faceMat = array(
+        mat3x3f( 0,  0,  -2,  0, -2,   0,  1,  1,   1),   // pos-x
+        mat3x3f( 0,  0,   2,  0, -2,   0, -1,  1,  -1),   // neg-x
+        mat3x3f( 2,  0,   0,  0,  0,   2, -1,  1,  -1),   // pos-y
+        mat3x3f( 2,  0,   0,  0,  0,  -2, -1, -1,   1),   // neg-y
+        mat3x3f( 2,  0,   0,  0, -2,   0, -1,  1,   1),   // pos-z
+        mat3x3f(-2,  0,   0,  0, -2,   0,  1,  1,  -1));  // neg-z
+
+      // needed for compat mode.
+      fn textureLoadCubeAs2DArray(tex: texture_cube<${componentType}>, coord: vec2u, layer: u32) -> ${resultType} {
+        // convert texel coord normalized coord
+        let size = textureDimensions(tex, 0);
+        let uv = (vec2f(coord) + 0.5) / vec2f(size.xy);
+
+        // convert uv + layer into cube coord
+        let cubeCoord = faceMat[layer] * vec3f(uv, 1.0);
+
+        // We have to use textureGather as it's the only texture builtin that works on cubemaps
+        // with integer texture formats.
+        let r = textureGather(0, tex, smp, cubeCoord);
+        let g = textureGather(1, tex, smp, cubeCoord);
+        let b = textureGather(2, tex, smp, cubeCoord);
+        let a = textureGather(3, tex, smp, cubeCoord);
+
+        // element 3 is the texel corresponding to cubeCoord
+        return ${resultType}(r[3], g[3], b[3], a[3]);
+      }
+    `;
+
     const module = device.createShaderModule({
       code: `
-        const faceMat = array(
-          mat3x3f( 0,  0,  -2,  0, -2,   0,  1,  1,   1),   // pos-x
-          mat3x3f( 0,  0,   2,  0, -2,   0, -1,  1,  -1),   // neg-x
-          mat3x3f( 2,  0,   0,  0,  0,   2, -1,  1,  -1),   // pos-y
-          mat3x3f( 2,  0,   0,  0,  0,  -2, -1, -1,   1),   // neg-y
-          mat3x3f( 2,  0,   0,  0, -2,   0, -1,  1,   1),   // pos-z
-          mat3x3f(-2,  0,   0,  0, -2,   0,  1,  1,  -1));  // neg-z
-
-        // needed for compat mode.
-        fn textureLoadCubeAs2DArray(tex: texture_cube<f32>, coord: vec2u, layer: u32, mipLevel: u32) -> vec4f {
-          // convert texel coord normalized coord
-          let size = textureDimensions(tex, mipLevel);
-          let uv = (vec2f(coord) + 0.5) / vec2f(size.xy);
-
-          // convert uv + layer into cube coord
-          let cubeCoord = faceMat[layer] * vec3f(uv, 1.0);
-
-          return textureSampleLevel(tex, smp, cubeCoord, f32(mipLevel));
-        }
-
+        ${isViewDimensionCubeOrCubeArray(viewDimension) ? textureLoadCubeWGSL : ''}
         struct Uniforms {
-          mipLevel: u32,
           sampleCount: u32,
         };
 
         @group(0) @binding(0) var<uniform> uni: Uniforms;
         @group(0) @binding(1) var tex: ${textureWGSL};
         @group(0) @binding(2) var smp: sampler;
-        @group(0) @binding(3) var<storage, read_write> data: array<vec4f>;
+        @group(0) @binding(3) var<storage, read_write> data: array<${resultType}>;
 
         @compute @workgroup_size(1) fn cs(
           @builtin(global_invocation_id) global_invocation_id : vec3<u32>) {
@@ -2669,12 +3026,52 @@ export async function readTextureToTexelViews(
                     global_invocation_id.x;
           let coord = vec3u(global_invocation_id.x / uni.sampleCount, global_invocation_id.yz);
           let sampleIndex = global_invocation_id.x % uni.sampleCount;
-          let mipLevel = uni.mipLevel;
           data[ndx] = ${loadWGSL};
         }
       `,
     });
-    pipeline = device.createComputePipeline({ layout: 'auto', compute: { module } });
+    const sampleType = isDepthTextureFormat(texture.format)
+      ? 'unfilterable-float'
+      : isStencilTextureFormat(texture.format)
+      ? 'uint'
+      : kTextureFormatInfo[texture.format].color?.type ?? 'unfilterable-float';
+    const bindGroupLayout = device.createBindGroupLayout({
+      entries: [
+        {
+          binding: 0,
+          visibility: GPUShaderStage.COMPUTE,
+          buffer: {
+            type: 'uniform',
+          },
+        },
+        {
+          binding: 1,
+          visibility: GPUShaderStage.COMPUTE,
+          texture: {
+            sampleType,
+            viewDimension,
+          },
+        },
+        {
+          binding: 2,
+          visibility: GPUShaderStage.COMPUTE,
+          sampler: {
+            type: 'non-filtering',
+          },
+        },
+        {
+          binding: 3,
+          visibility: GPUShaderStage.COMPUTE,
+          buffer: {
+            type: 'storage',
+          },
+        },
+      ],
+    });
+    const layout = device.createPipelineLayout({
+      bindGroupLayouts: [bindGroupLayout],
+    });
+    pipeline = device.createComputePipeline({ layout, compute: { module } });
     viewDimensionToPipelineMap.set(id, pipeline);
   }
 
@@ -2684,7 +3081,7 @@ export async function readTextureToTexelViews(
   for (let mipLevel = 0; mipLevel < texture.mipLevelCount; ++mipLevel) {
     const size = virtualMipSize(texture.dimension, texture, mipLevel);
 
-    const uniformValues = new Uint32Array([mipLevel, texture.sampleCount, 0, 0]); // min size is 16 bytes
+    const uniformValues = new Uint32Array([texture.sampleCount, 0, 0, 0]); // min size is 16 bytes
     const uniformBuffer = t.createBufferTracked({
       size: uniformValues.byteLength,
       usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
@@ -2704,11 +3101,20 @@ export async function readTextureToTexelViews(
 
     const sampler = device.createSampler();
 
+    const aspect = getAspectForTexture(texture);
     const bindGroup = device.createBindGroup({
       layout: pipeline.getBindGroupLayout(0),
       entries: [
         { binding: 0, resource: { buffer: uniformBuffer } },
-        { binding: 1, resource: texture.createView({ dimension: viewDimension }) },
+        {
+          binding: 1,
+          resource: texture.createView({
+            dimension: viewDimension,
+            aspect,
+            baseMipLevel: mipLevel,
+            mipLevelCount: 1,
+          }),
+        },
         { binding: 2, resource: sampler },
         { binding: 3, resource: { buffer: storageBuffer } },
       ],
@@ -2730,7 +3136,9 @@ export async function readTextureToTexelViews(
     await readBuffer.mapAsync(GPUMapMode.READ);
 
     // need a copy of the data since unmapping will nullify the typedarray view.
-    const data = new Float32Array(readBuffer.getMappedRange()).slice();
+    const Ctor =
+      componentType === 'i32' ? Int32Array : componentType === 'u32' ? Uint32Array : Float32Array;
+    const data = new Ctor(readBuffer.getMappedRange()).slice();
     readBuffer.unmap();
 
     const { sampleCount } = texture;
@@ -2756,11 +3164,11 @@ export async function readTextureToTexelViews(
 function createTextureFromTexelViewsLocal(
   t: GPUTest,
   texelViews: TexelView[],
-  desc: Omit<GPUTextureDescriptor, 'format'>
+  desc: GPUTextureDescriptor
 ): GPUTexture {
   const modifiedDescriptor = { ...desc };
   // If it's a depth or stencil texture we need to render to it to fill it with data.
-  if (isDepthOrStencilTextureFormat(texelViews[0].format)) {
+  if (isDepthOrStencilTextureFormat(desc.format)) {
     modifiedDescriptor.usage = desc.usage | GPUTextureUsage.RENDER_ATTACHMENT;
   }
   return createTextureFromTexelViews(t, texelViews, modifiedDescriptor);
@@ -2787,6 +3195,25 @@ export async function createTextureWithRandomDataAndGetTexels(
     const texture = t.createTextureTracked(descriptor);
 
     fillTextureWithRandomData(t.device, texture);
+    const texels = await readTextureToTexelViews(
+      t,
+      texture,
+      descriptor,
+      getTexelViewFormatForTextureFormat(texture.format)
+    );
+    return { texture, texels };
+  } else if (isUnencodableDepthFormat(descriptor.format)) {
+    // This is round about. We can't directly write to depth24plus, depth24plus-stencil8, depth32float-stencil8
+    // and they are not encodable. So: (1) we make random data using `depth32float`. We create a texture with
+    // that data (createTextureFromTexelViewsLocal will render the data into the texture rather than copy).
+    // We then need to read it back out but as rgba32float since that is encodable but, since it round tripped
+    // through the GPU it's now been quantized.
+    const d32Descriptor = {
+      ...descriptor,
+      format: 'depth32float' as GPUTextureFormat,
+    };
+    const tempTexels = createRandomTexelViewMipmap(d32Descriptor, options);
+    const texture = createTextureFromTexelViewsLocal(t, tempTexels, descriptor);
     const texels = await readTextureToTexelViews(
       t,
       texture,
@@ -2960,6 +3387,8 @@ async function identifySamplePoints<T extends Dimensionality>(
   const format = (
     kEncodableTextureFormats.includes(info.format as EncodableTextureFormat)
       ? info.format
+      : isDepthTextureFormat(info.format)
+      ? 'depth16unorm'
       : 'rgba8unorm'
   ) as EncodableTextureFormat;
   const rep = kTexelRepresentationInfo[format];
@@ -3067,9 +3496,11 @@ async function identifySamplePoints<T extends Dimensionality>(
       const unSampled = layerEntries ? '' : 'un-sampled';
       if (isCube) {
         const face = kFaceNames[layer % 6];
-        lines.push(`layer: ${layer}, cube-layer: ${(layer / 6) | 0} (${face}) ${unSampled}`);
+        lines.push(
+          `layer: ${layer} mip(${mipLevel}), cube-layer: ${(layer / 6) | 0} (${face}) ${unSampled}`
+        );
       } else {
-        lines.push(`layer: ${layer} ${unSampled}`);
+        lines.push(`layer: ${layer} mip(${mipLevel}) ${unSampled}`);
       }
 
       if (!layerEntries) {
@@ -3122,11 +3553,16 @@ async function identifySamplePoints<T extends Dimensionality>(
       }
 
       const pad2 = (n: number) => n.toString().padStart(2);
-      const fix5 = (n: number) => n.toFixed(5);
+      const pad3 = (n: number) => n.toString().padStart(3);
+      const fix5 = (n: number) => {
+        const s = n.toFixed(5);
+        return s === '0.00000' && n !== 0 ? n.toString() : s;
+      };
+      const formatValue = isSintOrUintFormat(format) ? pad3 : fix5;
       const formatTexel = (texel: PerTexelComponent<number> | undefined) =>
         texel
           ? Object.entries(texel)
-              .map(([k, v]) => `${k}: ${fix5(v)}`)
+              .map(([k, v]) => `${k}: ${formatValue(v)}`)
               .join(', ')
           : '*texel values unavailable*';
 
@@ -3168,7 +3604,7 @@ async function identifySamplePoints<T extends Dimensionality>(
       lines.push(...colorLines);
       lines.push(...compareLines);
       if (!isNaN(levelWeight)) {
-        lines.push(`level weight: ${fix5(levelWeight)}`);
+        lines.push(`mip level (${mipLevel}) weight: ${fix5(levelWeight)}`);
       }
       idCount += orderedTexelIndices.length;
     }
@@ -4263,6 +4699,15 @@ function describeTextureCall<T extends Dimensionality>(call: TextureCall<T>): st
   return `${call.builtin}(${args.join(', ')})`;
 }
 
+const getAspectForTexture = (texture: GPUTexture | GPUExternalTexture): GPUTextureAspect =>
+  texture instanceof GPUExternalTexture
+    ? 'all'
+    : isDepthTextureFormat(texture.format)
+    ? 'depth-only'
+    : isStencilTextureFormat(texture.format)
+    ? 'stencil-only'
+    : 'all';
+
 const s_deviceToPipelines = new WeakMap<
   GPUDevice,
   Map<string, GPURenderPipeline | GPUComputePipeline>
@@ -4400,7 +4845,7 @@ function createTextureCallsRunner<T extends Dimensionality>(
   const samplerType = isCompare ? 'sampler_comparison' : 'sampler';
 
   const renderTarget = t.createTextureTracked({
-    format: resultFormat,
+    format: 'rgba32uint',
     size: [calls.length, 1],
     usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
   });
@@ -4440,8 +4885,8 @@ function createTextureCallsRunner<T extends Dimensionality>(
               getResult(instance_index, ${derivativeType}(0)));
 }
 
-@fragment fn fsVertex(v: VOut) -> @location(0) ${returnType} {
-  return v.result;
+@fragment fn fsVertex(v: VOut) -> @location(0) vec4u {
+  return bitcast<vec4u>(v.result);
 }
 `
       : stage === 'fragment'
@@ -4454,9 +4899,9 @@ function createTextureCallsRunner<T extends Dimensionality>(
   return VOut(vec4f(positions[vertex_index], 0, 1), instance_index, ${returnType}(0));
 }
 
-@fragment fn fsFragment(v: VOut) -> @location(0) ${returnType} {
+@fragment fn fsFragment(v: VOut) -> @location(0) vec4u {
   ${derivativeBaseWGSL}
-  return getResult(v.ndx, derivativeBase);
+  return bitcast<vec4u>(getResult(v.ndx, derivativeBase));
 }
 `
       : `
@@ -4577,12 +5022,11 @@ ${stageWGSL}
   }
 
   if (sampler) {
+    const type = isCompare ? 'comparison' : isFiltering ? 'filtering' : 'non-filtering';
     entries.push({
       binding: 1,
       visibility,
-      sampler: {
-        type: isCompare ? 'comparison' : isFiltering ? 'filtering' : 'non-filtering',
-      },
+      sampler: { type },
     });
   }
 
@@ -4626,7 +5070,7 @@ ${stageWGSL}
           vertex: { module },
           fragment: {
             module,
-            targets: [{ format: renderTarget.format }],
+            targets: [{ format: 'rgba32uint' }],
           },
         });
         break;
@@ -4642,6 +5086,12 @@ ${stageWGSL}
       usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
     });
 
+    const aspect = getAspectForTexture(gpuTexture);
+    const runViewDescriptor = {
+      ...viewDescriptor,
+      aspect,
+    };
+
     const bindGroup0 = t.device.createBindGroup({
       layout: pipeline!.getBindGroupLayout(0),
       entries: [
@@ -4650,7 +5100,7 @@ ${stageWGSL}
           resource:
             gpuTexture instanceof GPUExternalTexture
               ? gpuTexture
-              : gpuTexture.createView(viewDescriptor),
+              : gpuTexture.createView(runViewDescriptor),
         },
         ...(sampler ? [{ binding: 1, resource: gpuSampler! }] : []),
         { binding: 2, resource: { buffer: dataBuffer } },
