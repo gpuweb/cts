@@ -1195,7 +1195,8 @@ info,
 
 comparison)
 {
-  const rep = kTexelRepresentationInfo[info.format];
+  const format = isUnencodableDepthFormat(info.format) ? 'depth32float' : info.format;
+  const rep = kTexelRepresentationInfo[format];
   const size = reifyExtent3D(info.size);
 
   const comparisonIsEqualOrNotEqual = comparison === 'equal' || comparison === 'not-equal';
@@ -1207,7 +1208,7 @@ comparison)
   // The problem with comparing equal is other than 0.0 and 1.0, no other
   // values are guaranteed to be equal.
   const fixedValues = [0, 0.6, 1, 1];
-  const format = comparisonIsEqualOrNotEqual ?
+  const encode = comparisonIsEqualOrNotEqual ?
   (norm) => fixedValues[norm * (fixedValues.length - 1) | 0] :
   (norm) => norm;
 
@@ -1225,7 +1226,7 @@ comparison)
         size.depthOrArrayLayers
       );
       const normalized = clamp(rnd / 0xffffffff, { min: 0, max: 1 });
-      texel[component] = format(normalized);
+      texel[component] = encode(normalized);
     }
     return quantize(texel, rep);
   };
