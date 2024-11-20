@@ -91,6 +91,8 @@ const kRenderPassEncoderCommandInfo: {
   drawIndexed: {},
   drawIndexedIndirect: {},
   drawIndirect: {},
+  multiDrawIndexedIndirect: {},
+  multiDrawIndirect: {},
   setIndexBuffer: {},
   setBindGroup: {},
   setVertexBuffer: {},
@@ -105,8 +107,6 @@ const kRenderPassEncoderCommandInfo: {
   pushDebugGroup: {},
   popDebugGroup: {},
   insertDebugMarker: {},
-  multiDrawIndirect: {},
-  multiDrawIndexedIndirect: {},
 };
 const kRenderPassEncoderCommands = keysOf(kRenderPassEncoderCommandInfo);
 
@@ -358,6 +358,18 @@ g.test('render_pass_commands')
             renderPass.drawIndexedIndirect(buffer, 0);
           }
           break;
+        case 'multiDrawIndirect':
+          {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (renderPass as any).multiDrawIndirect(buffer, 0, 1);
+          }
+          break;
+        case 'multiDrawIndexedIndirect':
+          {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (renderPass as any).multiDrawIndexedIndirect(buffer, 0, 1);
+          }
+          break;
         case 'setBindGroup':
           {
             renderPass.setBindGroup(0, bindGroup);
@@ -424,18 +436,6 @@ g.test('render_pass_commands')
         case 'insertDebugMarker':
           {
             encoder.insertDebugMarker('marker');
-          }
-          break;
-        case 'multiDrawIndirect':
-          {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (renderPass as any).multiDrawIndirect(buffer, 0, 1);
-          }
-          break;
-        case 'multiDrawIndexedIndirect':
-          {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (renderPass as any).multiDrawIndexedIndirect(buffer, 0, 1);
           }
           break;
         default:
