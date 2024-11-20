@@ -190,8 +190,11 @@ export function skipIfTextureFormatNotSupportedNotAvailableOrNotFilterable(
   }
 }
 
-const builtinNeedsMipGradientValues = (builtin: TextureBuiltin) =>
-  builtin !== 'textureLoad' && builtin !== 'textureGather' && builtin !== 'textureGatherCompare';
+const builtinNeedsMipLevelWeights = (builtin: TextureBuiltin) =>
+  builtin !== 'textureLoad' &&
+  builtin !== 'textureGather' &&
+  builtin !== 'textureGatherCompare' &&
+  builtin !== 'textureSampleBaseClampToEdge';
 
 /**
  * Splits in array into multiple arrays where every Nth value goes to a different array
@@ -268,8 +271,10 @@ ${graphWeights(32, weights)}
     `stage: ${stage}, weight 0 expected 0 but was ${weights[0]}\n${showWeights()}`
   );
   assert(
-    weights[kMipGradientSteps] === 1,
-    `stage: ${stage}, top weight expected 1 but was ${weights[kMipGradientSteps]}\n${showWeights()}`
+    weights[kMipLevelWeightSteps] === 1,
+    `stage: ${stage}, top weight expected 1 but was ${
+      weights[kMipLevelWeightSteps]
+    }\n${showWeights()}`
   );
 
   // Note: for 16 steps, these are the AMD weights
@@ -340,8 +345,8 @@ ${graphWeights(32, weights)}
   // |*******         |
   // +----------------+
   //
-  const dx = 1 / kMipGradientSteps;
-  for (let i = 0; i < kMipGradientSteps; ++i) {
+  const dx = 1 / kMipLevelWeightSteps;
+  for (let i = 0; i < kMipLevelWeightSteps; ++i) {
     const dy = weights[i + 1] - weights[i];
     // dy / dx because dy might be 0
     const slope = dy / dx;
@@ -462,7 +467,7 @@ ${graphWeights(32, weights)}
  * +--------+--------+--------+--------+
  */
 
-async function queryMipGradientValuesForDevice(t: GPUTest, stage: ShaderStage) {
+async function queryMipLevelMixWeightsForDevice(t: GPUTest, stage: ShaderStage) {
   const { device } = t;
   const kNumWeightTypes = 2;
   const module = device.createShaderModule({
@@ -478,7 +483,7 @@ async function queryMipGradientValuesForDevice(t: GPUTest, stage: ShaderStage) {
       };
 
       fn getMixLevels(wNdx: u32) -> vec4f {
-        let mipLevel = f32(wNdx) / ${kMipGradientSteps};
+        let mipLevel = f32(wNdx) / ${kMipLevelWeightSteps};
         let size = textureDimensions(tex);
         let g = mix(1.0, 2.0, mipLevel) / f32(size.x);
         let ddx = vec2f(g, 0);
@@ -557,7 +562,7 @@ async function queryMipGradientValuesForDevice(t: GPUTest, stage: ShaderStage) {
   });
 
   const storageBuffer = t.createBufferTracked({
-    size: 4 * (kMipGradientSteps + 1) * kNumWeightTypes,
+    size: 4 * (kMipLevelWeightSteps + 1) * kNumWeightTypes,
     usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
   });
 
@@ -586,7 +591,7 @@ async function queryMipGradientValuesForDevice(t: GPUTest, stage: ShaderStage) {
       const pass = encoder.beginComputePass();
       pass.setPipeline(pipeline);
       pass.setBindGroup(0, createBindGroup(pipeline));
-      pass.dispatchWorkgroups(kMipGradientSteps + 1);
+      pass.dispatchWorkgroups(kMipLevelWeightSteps + 1);
       pass.end();
       break;
     }
@@ -607,7 +612,7 @@ async function queryMipGradientValuesForDevice(t: GPUTest, stage: ShaderStage) {
       });
       pass.setPipeline(pipeline);
       pass.setBindGroup(0, createBindGroup(pipeline));
-      pass.draw(3, kMipGradientSteps + 1);
+      pass.draw(3, kMipLevelWeightSteps + 1);
       pass.end();
       break;
     }
@@ -628,7 +633,7 @@ async function queryMipGradientValuesForDevice(t: GPUTest, stage: ShaderStage) {
       });
       pass.setPipeline(pipeline);
       pass.setBindGroup(0, createBindGroup(pipeline));
-      pass.draw(3, kMipGradientSteps + 1);
+      pass.draw(3, kMipLevelWeightSteps + 1);
       pass.end();
       break;
     }
@@ -765,20 +770,20 @@ const euclideanModulo = (n: number, m: number) => ((n % m) + m) % m;
  * for subcase 1's "query the weights" step. Otherwise, all subcases would do the
  * "get the weights" step separately.
  */
-const kMipGradientSteps = 64;
-const s_deviceToMipGradientValuesPromise = new WeakMap<
+const kMipLevelWeightSteps = 64;
+const s_deviceToMipLevelWeightsPromise = new WeakMap<
   GPUDevice,
   Record<ShaderStage, Promise<MipWeights>>
 >();
-const s_deviceToMipGradientValues = new WeakMap<GPUDevice, Record<ShaderStage, MipWeights>>();
+const s_deviceToMipLevelWeights = new WeakMap<GPUDevice, Record<ShaderStage, MipWeights>>();
 
-async function initMipGradientValuesForDevice(t: GPUTest, stage: ShaderStage) {
+async function initMipLevelWeightsForDevice(t: GPUTest, stage: ShaderStage) {
   const { device } = t;
   // Get the per stage promises (or make them)
   const stageWeightsP =
-    s_deviceToMipGradientValuesPromise.get(device) ??
+    s_deviceToMipLevelWeightsPromise.get(device) ??
     ({} as Record<ShaderStage, Promise<MipWeights>>);
-  s_deviceToMipGradientValuesPromise.set(device, stageWeightsP);
+  s_deviceToMipLevelWeightsPromise.set(device, stageWeightsP);
 
   let weightsP = stageWeightsP[stage];
   if (!weightsP) {
@@ -786,12 +791,12 @@ async function initMipGradientValuesForDevice(t: GPUTest, stage: ShaderStage) {
     // and add a then clause so the first thing that will happen
     // when the promise resolves is that we'll record the weights for
     // that stage.
-    weightsP = queryMipGradientValuesForDevice(t, stage);
+    weightsP = queryMipLevelMixWeightsForDevice(t, stage);
     weightsP
       .then(weights => {
         const stageWeights =
-          s_deviceToMipGradientValues.get(device) ?? ({} as Record<ShaderStage, MipWeights>);
-        s_deviceToMipGradientValues.set(device, stageWeights);
+          s_deviceToMipLevelWeights.get(device) ?? ({} as Record<ShaderStage, MipWeights>);
+        s_deviceToMipLevelWeights.set(device, stageWeights);
         stageWeights[stage] = weights;
       })
       .catch(e => {
@@ -812,7 +817,7 @@ function getMixWeightByTypeForMipLevel(
     return euclideanModulo(mipLevel, 1);
   }
   // linear interpolate between weights
-  const weights = s_deviceToMipGradientValues.get(t.device)![stage][weightType];
+  const weights = s_deviceToMipLevelWeights.get(t.device)![stage][weightType];
   assert(
     !!weights,
     'you must use WGSLTextureSampleTest or call initializeDeviceMipWeights before calling this function'
@@ -2345,8 +2350,8 @@ export async function checkCallResults<T extends Dimensionality>(
   gpuTexture?: GPUTexture
 ) {
   const stage = kShortShaderStageToShaderStage[shortShaderStage];
-  if (builtinNeedsMipGradientValues(calls[0].builtin)) {
-    await initMipGradientValuesForDevice(t, stage);
+  if (builtinNeedsMipLevelWeights(calls[0].builtin)) {
+    await initMipLevelWeightsForDevice(t, stage);
   }
 
   let haveComparisonCheckInfo = false;
