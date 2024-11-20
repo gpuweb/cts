@@ -155,7 +155,7 @@ g.test('readTextureToTexelViews')
     }
   });
 
-function validateWeights(stage: string, builtin: string, weights: number[]) {
+function validateWeights(t: GPUTest, stage: string, builtin: string, weights: number[]) {
   const kNumMixSteps = weights.length - 1;
   const showWeights = () => `
 ${weights.map((v, i) => `${i.toString().padStart(2)}: ${v}`).join('\n')}
@@ -165,11 +165,11 @@ A = actual
 ${graphWeights(32, weights)}
 `;
 
-  assert(
+  t.expect(
     weights[0] === 0,
     `stage: ${stage}, ${builtin}, weight 0 expected 0 but was ${weights[0]}\n${showWeights()}`
   );
-  assert(
+  t.expect(
     weights[kNumMixSteps] === 1,
     `stage: ${stage}, ${builtin}, top weight expected 1 but was ${
       weights[kNumMixSteps]
@@ -181,10 +181,18 @@ ${graphWeights(32, weights)}
     const dy = weights[i + 1] - weights[i];
     // dy / dx because dy might be 0
     const slope = dy / dx;
+
+    // Validate the slope is not going down.
     assert(
       slope >= 0,
       `stage: ${stage}, ${builtin}, weight[${i}] was not <= weight[${i + 1}]\n${showWeights()}`
     );
+
+    // Validate the slope is not going up too steeply.
+    // The correct slope is 1 / kNumMixSteps but Mac AMD and Mac Intel
+    // have the wrong mix weights. 2 is enough to pass Mac AMD which we
+    // decided is ok but will fail on Mac Intel in compute stage which we
+    // decides is not ok.
     assert(
       slope <= 2,
       `stage: ${stage}, ${builtin}, slope from weight[${i}] to weight[${
@@ -193,9 +201,14 @@ ${graphWeights(32, weights)}
     );
   }
 
-  assert(
-    new Set(weights).size >= ((weights.length * 0.66) | 0),
-    `stage: ${stage}, ${builtin}, expected more unique weights\n${showWeights()}`
+  // Test that we don't have a mostly flat set of weights.
+  // Note: Ideally every value is unique but 66% is enough to pass AMD Mac
+  // which we decided was ok but high enough to fail Intel Mac in a compute stage
+  // which we decided is not ok.
+  const kMinPercentUniqueWeights = 66;
+  t.expect(
+    new Set(weights).size >= ((weights.length * kMinPercentUniqueWeights * 0.01) | 0),
+    `stage: ${stage}, ${builtin}, expected at least ~${kMinPercentUniqueWeights}% unique weights\n${showWeights()}`
   );
 }
 
@@ -273,6 +286,6 @@ are supposed to work around this issue by poly-filling on devices that fail this
   .fn(async t => {
     const { stage } = t.params;
     const weights = await queryMipLevelMixWeightsForDevice(t, t.params.stage);
-    validateWeights(stage, 'textureSampleLevel', weights.sampleLevelWeights);
-    validateWeights(stage, 'textureSampleGrad', weights.softwareMixToGPUMixGradWeights);
+    validateWeights(t, stage, 'textureSampleLevel', weights.sampleLevelWeights);
+    validateWeights(t, stage, 'textureSampleGrad', weights.softwareMixToGPUMixGradWeights);
   });

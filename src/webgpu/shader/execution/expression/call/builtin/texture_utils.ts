@@ -279,9 +279,15 @@ ${graphWeights(32, weights)}
       weights[kMipLevelWeightSteps]
     }\n${showWeights()}`
   );
+
+  // Test that we don't have a mostly flat set of weights.
+  // This is also some small guarantee that we actually read something.
+  // Note: Ideally every value is unique but 25% is about how many an Intel Mac
+  // returns in a compute stage.
+  const kMinPercentUniqueWeights = 25;
   assert(
-    new Set(weights).size >= ((weights.length * 0.25) | 0),
-    `stage: ${stage}, expected more unique weights\n${showWeights()}`
+    new Set(weights).size >= ((weights.length * kMinPercentUniqueWeights * 0.01) | 0),
+    `stage: ${stage}, expected at least ~${kMinPercentUniqueWeights}% unique weights\n${showWeights()}`
   );
 }
 
