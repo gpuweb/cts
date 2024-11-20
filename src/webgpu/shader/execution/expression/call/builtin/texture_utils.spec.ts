@@ -12,12 +12,15 @@ import {
   PerTexelComponent,
   TexelRepresentationInfo,
 } from '../../../../../util/texture/texel_data.js';
+import { kShaderStages } from '../../../../validation/decl/util.js';
 
 import {
   chooseTextureSize,
   createTextureWithRandomDataAndGetTexels,
+  graphWeights,
   isSupportedViewFormatCombo,
   makeRandomDepthComparisonTexelGenerator,
+  queryMipLevelMixWeightsForDevice,
   readTextureToTexelViews,
   texelsApproximatelyEqual,
 } from './texture_utils.js';
@@ -150,4 +153,126 @@ g.test('readTextureToTexelViews')
 
       assert(errors.length === 0, errors.join('\n'));
     }
+  });
+
+function validateWeights(stage: string, builtin: string, weights: number[]) {
+  const kNumMixSteps = weights.length - 1;
+  const showWeights = () => `
+${weights.map((v, i) => `${i.toString().padStart(2)}: ${v}`).join('\n')}
+
+e = expected
+A = actual
+${graphWeights(32, weights)}
+`;
+
+  assert(
+    weights[0] === 0,
+    `stage: ${stage}, ${builtin}, weight 0 expected 0 but was ${weights[0]}\n${showWeights()}`
+  );
+  assert(
+    weights[kNumMixSteps] === 1,
+    `stage: ${stage}, ${builtin}, top weight expected 1 but was ${
+      weights[kNumMixSteps]
+    }\n${showWeights()}`
+  );
+
+  const dx = 1 / kNumMixSteps;
+  for (let i = 0; i < kNumMixSteps; ++i) {
+    const dy = weights[i + 1] - weights[i];
+    // dy / dx because dy might be 0
+    const slope = dy / dx;
+    assert(
+      slope >= 0,
+      `stage: ${stage}, ${builtin}, weight[${i}] was not <= weight[${i + 1}]\n${showWeights()}`
+    );
+    assert(
+      slope <= 2,
+      `stage: ${stage}, ${builtin}, slope from weight[${i}] to weight[${
+        i + 1
+      }] is > 2.\n${showWeights()}`
+    );
+  }
+
+  assert(
+    new Set(weights).size >= ((weights.length * 0.66) | 0),
+    `stage: ${stage}, ${builtin}, expected more unique weights\n${showWeights()}`
+  );
+}
+
+g.test('weights')
+  .desc(
+    `
+Test the mip level weights are linear.
+
+Given 2 mip levels, textureSampleLevel(....., mipLevel) should return
+mix(colorFromLevel0, colorFromLevel1, mipLevel).
+
+Similarly, textureSampleGrad(...., ddx, ...) where ddx is
+vec2(mix(1.0, 2.0, mipLevel) / textureWidth, 0) should so return
+mix(colorFromLevel0, colorFromLevel1, mipLevel).
+
+If we put 0,0,0,0 in level 0 and 1,1,1,1 in level 1 then we should arguably
+be able to assert
+
+    for (mipLevel = 0; mipLevel <= 1, mipLevel += 0.01) {
+      assert(textureSampleLevel(t, s, vec2f(0.5), mipLevel) === mipLevel)
+      ddx = vec2(mix(1.0, 2.0, mipLevel) / textureWidth, 0)
+      assert(textureSampleGrad(t, s, vec2f(0.5), ddx, vec2f(0)) === mipLevel)
+    }
+
+Unfortunately, the GPUs do not do this. In particular:
+
+AMD Mac goes like this: Not great but we allow it
+
+ +----------------+
+ |             ***|
+ |           **   |
+ |          *     |
+ |        **      |
+ |      **        |
+ |     *          |
+ |   **           |
+ |***             |
+ +----------------+
+
+ Intel Mac goes like this in a compute stage
+
+ +----------------+
+ |         *******|
+ |         *      |
+ |        *       |
+ |        *       |
+ |       *        |
+ |       *        |
+ |      *         |
+ |*******         |
+ +----------------+
+
+Where as they should go like this
+
+ +----------------+
+ |              **|
+ |            **  |
+ |          **    |
+ |        **      |
+ |      **        |
+ |    **          |
+ |  **            |
+ |**              |
+ +----------------+
+
+To make the texture builtin tests pass, they use the mix weights we query from the GPU
+even if they are arguably bad. This test is to surface the failure of the GPU
+to use mix weights the approximate a linear interpolation.
+
+We allow the AMD case as but disallow extreme Intel case. WebGPU implementations
+are supposed to work around this issue by poly-filling on devices that fail this test.
+`
+  )
+  .params(u => u.combine('stage', kShaderStages))
+  .fn(async t => {
+    const { stage } = t.params;
+    const weights = await queryMipLevelMixWeightsForDevice(t, t.params.stage);
+    validateWeights(stage, 'textureSampleLevel', weights.sampleLevelWeights);
+    validateWeights(stage, 'textureSampleGrad', weights.softwareMixToGPUMixGradWeights);
   });

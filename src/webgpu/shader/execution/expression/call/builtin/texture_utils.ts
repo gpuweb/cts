@@ -246,7 +246,10 @@ function* linear0to1OverN(n: number) {
   }
 }
 
-function graphWeights(height: number, weights: number[]) {
+/**
+ * Generates an ascii graph of weights
+ */
+export function graphWeights(height: number, weights: number[]) {
   const graph = makeGraph(weights.length, height);
   graph.plotValues(linear0to1OverN(weights.length - 1), 1);
   graph.plotValues(weights, 2);
@@ -276,92 +279,8 @@ ${graphWeights(32, weights)}
       weights[kMipLevelWeightSteps]
     }\n${showWeights()}`
   );
-
-  // Note: for 16 steps, these are the AMD weights
-  //
-  //                 standard
-  // step  mipLevel    gpu        AMD
-  // ----  --------  --------  ----------
-  //  0:   0         0           0
-  //  1:   0.0625    0.0625      0
-  //  2:   0.125     0.125       0.03125
-  //  3:   0.1875    0.1875      0.109375
-  //  4:   0.25      0.25        0.1875
-  //  5:   0.3125    0.3125      0.265625
-  //  6:   0.375     0.375       0.34375
-  //  7:   0.4375    0.4375      0.421875
-  //  8:   0.5       0.5         0.5
-  //  9:   0.5625    0.5625      0.578125
-  // 10:   0.625     0.625       0.65625
-  // 11:   0.6875    0.6875      0.734375
-  // 12:   0.75      0.75        0.8125
-  // 13:   0.8125    0.8125      0.890625
-  // 14:   0.875     0.875       0.96875
-  // 15:   0.9375    0.9375      1
-  // 16:   1         1           1
-  //
-  // notice step 1 is 0 and step 15 is 1.
-  // so we only check the 1 through 14.
-  //
-  // Note: these 2 changes are effectively here to catch Intel Mac
-  // issues and require implementations to work around them.
-  //
-  // Ideally the weights should form a straight line
-  //
-  // +----------------+
-  // |              **|
-  // |            **  |
-  // |          **    |
-  // |        **      |
-  // |      **        |
-  // |    **          |
-  // |  **            |
-  // |**              |
-  // +----------------+
-  //
-  // AMD Mac goes like this: Not great but we allow it
-  //
-  // +----------------+
-  // |             ***|
-  // |           **   |
-  // |          *     |
-  // |        **      |
-  // |      **        |
-  // |     *          |
-  // |   **           |
-  // |***             |
-  // +----------------+
-  //
-  // Intel Mac goes like this: Unacceptable
-  //
-  // +----------------+
-  // |         *******|
-  // |         *      |
-  // |        *       |
-  // |        *       |
-  // |       *        |
-  // |       *        |
-  // |      *         |
-  // |*******         |
-  // +----------------+
-  //
-  const dx = 1 / kMipLevelWeightSteps;
-  for (let i = 0; i < kMipLevelWeightSteps; ++i) {
-    const dy = weights[i + 1] - weights[i];
-    // dy / dx because dy might be 0
-    const slope = dy / dx;
-    assert(
-      slope >= 0,
-      `stage: ${stage}, weight[${i}] was not <= weight[${i + 1}]\n${showWeights()}`
-    );
-    assert(
-      slope <= 2,
-      `stage: ${stage}, slope from weight[${i}] to weight[${i + 1}] is > 2.\n${showWeights()}`
-    );
-  }
-
   assert(
-    new Set(weights).size >= ((weights.length * 0.66) | 0),
+    new Set(weights).size >= ((weights.length * 0.25) | 0),
     `stage: ${stage}, expected more unique weights\n${showWeights()}`
   );
 }
@@ -467,7 +386,7 @@ ${graphWeights(32, weights)}
  * +--------+--------+--------+--------+
  */
 
-async function queryMipLevelMixWeightsForDevice(t: GPUTest, stage: ShaderStage) {
+export async function queryMipLevelMixWeightsForDevice(t: GPUTest, stage: ShaderStage) {
   const { device } = t;
   const kNumWeightTypes = 2;
   const module = device.createShaderModule({
