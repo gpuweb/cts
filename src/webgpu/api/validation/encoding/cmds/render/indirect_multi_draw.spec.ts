@@ -87,11 +87,14 @@ g.test('buffers,device_mismatch')
     'Tests multiDraw(Indexed)Indirect cannot be called with buffers created from another device'
   )
   .paramsSubcasesOnly(
-    kIndirectMultiDrawTestParams.combineWithParams([
-      { indirectMismatched: false, drawCountMismatched: false }, // control case
-      { indirectMismatched: true, drawCountMismatched: false },
-      { indirectMismatched: false, drawCountMismatched: true },
-    ])
+    kIndirectMultiDrawTestParams
+      .combineWithParams([
+        { indirectMismatched: false, drawCountMismatched: false }, // control case
+        { indirectMismatched: true, drawCountMismatched: false },
+        { indirectMismatched: false, drawCountMismatched: true },
+      ])
+      // drawCountMismatched only matters if useDrawCountBuffer=true
+      .filter(p => p.useDrawCountBuffer || !p.drawCountMismatched)
   )
   .beforeAllSubcases(t => {
     t.selectDeviceOrSkipTestCase('chromium-experimental-multi-draw-indirect' as GPUFeatureName);
@@ -128,7 +131,7 @@ g.test('buffers,device_mismatch')
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (encoder as any).multiDrawIndirect(indirectBuffer, 0, 1, drawCountBuffer);
     }
-    validateFinish(!indirectMismatched && (!useDrawCountBuffer || !drawCountMismatched));
+    validateFinish(!indirectMismatched && !drawCountMismatched);
   });
 
 g.test('indirect_buffer_usage')
@@ -246,92 +249,49 @@ Tests indirect and draw count offsets must be a multiple of 4.
     validateFinish(indirectOffset % 4 === 0 && (!useDrawCountBuffer || drawCountOffset % 4 === 0));
   });
 
-interface IndirectOffsetOobCase {
-  indirectOffset: number;
-  bufferSize: number;
-  useDrawCountBuffer?: boolean;
-  drawCountOffset?: number;
-  maxDrawCount?: number;
-  _valid: boolean;
-}
-
-g.test('offsets_and_buffer_sizes')
+g.test('indirect_buffer_OOB')
   .desc(
     `
-Tests multi indirect draw calls with various indirect offsets, buffer sizes, draw count offsets, and draw count buffer sizes.
-  `
+Tests multi indirect draw calls with various indirect offsets and buffer sizes without draw count buffer.
+`
   )
   .paramsSubcasesOnly(u =>
-    u.combine('indexed', [true, false] as const).expandWithParams<IndirectOffsetOobCase>(p => {
+    u.combine('indexed', [true, false] as const).expandWithParams(p => {
       const indirectParamsSize = p.indexed ? 20 : 16;
       return [
-        { indirectOffset: 0, bufferSize: 0, _valid: false },
+        { indirectOffset: 0, bufferSize: 0, maxDrawCount: 1, _valid: false },
         // In bounds
-        { indirectOffset: 0, bufferSize: indirectParamsSize, _valid: true },
-        { indirectOffset: 0, bufferSize: indirectParamsSize + 1, _valid: true },
-        // In bounds with drawCountBuffer
-        {
-          indirectOffset: 0,
-          bufferSize: indirectParamsSize,
-          useDrawCountBuffer: true,
-          _valid: true,
-        },
+        { indirectOffset: 0, bufferSize: indirectParamsSize, maxDrawCount: 1, _valid: true },
+        { indirectOffset: 0, bufferSize: indirectParamsSize + 1, maxDrawCount: 1, _valid: true },
         // In bounds, bigger buffer, positive offset
-        { indirectOffset: indirectParamsSize, bufferSize: indirectParamsSize * 2, _valid: true },
-        // In bounds with drawCountBuffer, bigger buffer
         {
-          indirectOffset: 0,
-          bufferSize: indirectParamsSize,
-          useDrawCountBuffer: true,
-          drawCountOffset: indirectParamsSize - 4,
+          indirectOffset: indirectParamsSize,
+          bufferSize: indirectParamsSize * 2,
+          maxDrawCount: 1,
           _valid: true,
         },
         // Out of bounds, buffer too small
-        { indirectOffset: 0, bufferSize: indirectParamsSize - 1, _valid: false },
-        { indirectOffset: 0, bufferSize: indirectParamsSize - 4, _valid: false },
+        { indirectOffset: 0, bufferSize: indirectParamsSize - 1, maxDrawCount: 1, _valid: false },
+        { indirectOffset: 0, bufferSize: indirectParamsSize - 4, maxDrawCount: 1, _valid: false },
         // In bounds, non-multiple of 4 offsets
-        { indirectOffset: 3, bufferSize: indirectParamsSize + 4, _valid: false },
-        { indirectOffset: 5, bufferSize: indirectParamsSize + 4, _valid: false },
-        {
-          indirectOffset: 0,
-          bufferSize: indirectParamsSize + 4,
-          useDrawCountBuffer: true,
-          drawCountOffset: 1,
-          _valid: false,
-        },
-        {
-          indirectOffset: 0,
-          bufferSize: indirectParamsSize + 4,
-          useDrawCountBuffer: true,
-          drawCountOffset: 2,
-          _valid: false,
-        },
+        { indirectOffset: 3, bufferSize: indirectParamsSize + 4, maxDrawCount: 1, _valid: false },
+        { indirectOffset: 5, bufferSize: indirectParamsSize + 4, maxDrawCount: 1, _valid: false },
         // Out of bounds, index too big
-        { indirectOffset: 4, bufferSize: indirectParamsSize, _valid: false },
+        { indirectOffset: 4, bufferSize: indirectParamsSize, maxDrawCount: 1, _valid: false },
         // Out of bounds, index past buffer
-        { indirectOffset: indirectParamsSize + 4, bufferSize: indirectParamsSize, _valid: false },
+        {
+          indirectOffset: indirectParamsSize + 4,
+          bufferSize: indirectParamsSize,
+          maxDrawCount: 1,
+          _valid: false,
+        },
         // Out of bounds, too small for maxDrawCount
         { indirectOffset: 0, bufferSize: indirectParamsSize, maxDrawCount: 2, _valid: false },
-        // Out of bounds, offset too big for drawCountBuffer
-        {
-          indirectOffset: 0,
-          bufferSize: indirectParamsSize,
-          useDrawCountBuffer: true,
-          drawCountOffset: indirectParamsSize,
-          _valid: false,
-        },
         // Out of bounds, index + size of command overflows
         {
           indirectOffset: kMaxUnsignedLongLongValue,
           bufferSize: indirectParamsSize,
-          _valid: false,
-        },
-        // Out of bounds, index + size of command overflows with drawCountBuffer
-        {
-          indirectOffset: 0,
-          bufferSize: indirectParamsSize,
-          useDrawCountBuffer: true,
-          drawCountOffset: kMaxUnsignedLongLongValue,
+          maxDrawCount: 1,
           _valid: false,
         },
         // Out of bounds, maxDrawCount = kMaxUnsignedLongValue
@@ -348,15 +308,80 @@ Tests multi indirect draw calls with various indirect offsets, buffer sizes, dra
     t.selectDeviceOrSkipTestCase('chromium-experimental-multi-draw-indirect' as GPUFeatureName);
   })
   .fn(t => {
-    const {
-      indexed,
-      bufferSize,
-      indirectOffset,
-      drawCountOffset = 0,
-      maxDrawCount = 1,
-      useDrawCountBuffer = false,
-      _valid,
-    } = t.params;
+    const { indexed, indirectOffset, bufferSize, maxDrawCount, _valid } = t.params;
+
+    const indirectBuffer = t.createBufferTracked({
+      size: bufferSize,
+      usage: GPUBufferUsage.INDIRECT,
+    });
+
+    const { encoder, validateFinish } = t.createEncoder('render pass');
+    encoder.setPipeline(t.createNoOpRenderPipeline());
+    if (indexed) {
+      encoder.setIndexBuffer(t.makeIndexBuffer(), 'uint32');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (encoder as any).multiDrawIndexedIndirect(indirectBuffer, indirectOffset, maxDrawCount);
+    } else {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (encoder as any).multiDrawIndirect(indirectBuffer, indirectOffset, maxDrawCount);
+    }
+
+    validateFinish(_valid);
+  });
+
+g.test('draw_count_buffer_OOB')
+  .desc(
+    `
+Tests multi indirect draw calls with various draw count offsets, and draw count buffer sizes.
+  `
+  )
+  .paramsSubcasesOnly(u =>
+    u.combine('indexed', [true, false] as const).expandWithParams(p => {
+      const indirectParamsSize = p.indexed ? 20 : 16;
+      return [
+        // In bounds
+        {
+          bufferSize: indirectParamsSize,
+          drawCountOffset: 0,
+          _valid: true,
+        },
+        // In bounds with bigger buffer
+        {
+          bufferSize: indirectParamsSize,
+          drawCountOffset: indirectParamsSize - 4,
+          _valid: true,
+        },
+        // In bounds, non-multiple of 4 offsets
+        {
+          bufferSize: indirectParamsSize + 4,
+          drawCountOffset: 1,
+          _valid: false,
+        },
+        {
+          bufferSize: indirectParamsSize + 4,
+          drawCountOffset: 2,
+          _valid: false,
+        },
+        // Out of bounds, offset too big for drawCountBuffer
+        {
+          bufferSize: indirectParamsSize,
+          drawCountOffset: indirectParamsSize,
+          _valid: false,
+        },
+        // Out of bounds, index + size of command overflows with drawCountBuffer
+        {
+          bufferSize: indirectParamsSize,
+          drawCountOffset: kMaxUnsignedLongLongValue,
+          _valid: false,
+        },
+      ] as const;
+    })
+  )
+  .beforeAllSubcases(t => {
+    t.selectDeviceOrSkipTestCase('chromium-experimental-multi-draw-indirect' as GPUFeatureName);
+  })
+  .fn(t => {
+    const { indexed, bufferSize, drawCountOffset, _valid } = t.params;
 
     const indirectBuffer = t.createBufferTracked({
       size: bufferSize,
@@ -370,20 +395,14 @@ Tests multi indirect draw calls with various indirect offsets, buffer sizes, dra
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (encoder as any).multiDrawIndexedIndirect(
         indirectBuffer,
-        indirectOffset,
-        maxDrawCount,
-        useDrawCountBuffer ? indirectBuffer : undefined,
+        0,
+        1,
+        indirectBuffer,
         drawCountOffset
       );
     } else {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (encoder as any).multiDrawIndirect(
-        indirectBuffer,
-        indirectOffset,
-        maxDrawCount,
-        useDrawCountBuffer ? indirectBuffer : undefined,
-        drawCountOffset
-      );
+      (encoder as any).multiDrawIndirect(indirectBuffer, 0, 1, indirectBuffer, drawCountOffset);
     }
 
     validateFinish(_valid);
