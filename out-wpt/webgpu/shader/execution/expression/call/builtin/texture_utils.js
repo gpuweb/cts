@@ -2582,6 +2582,21 @@ gpuTexture)
 
           const callForSamplePoints = checkInfo.calls[callIdx];
 
+          // We're going to create textures with black and white texels
+          // but if it's a compressed texture we use an encodable texture.
+          // It's not perfect but we already know it failed. We're just hoping
+          // to get sample points.
+          const useTexelFormatForGPUTexture = isCompressedTextureFormat(texture.descriptor.format);
+
+          if (useTexelFormatForGPUTexture) {
+            errs.push(`
+### WARNING: sample points are derived from un-compressed textures and may not match the
+actual GPU results of sampling a compressed texture. The test itself failed at this point
+(see expected: and got: above). We're only trying to determine what the GPU sampled, but
+we can not do that easily with compressed textures. ###
+`);
+          }
+
           const expectedSamplePoints = [
           'expected:',
           ...(await identifySamplePoints(
@@ -2616,12 +2631,8 @@ gpuTexture)
             call,
             gpuTexels,
             async (texels) => {
-              // We're trying to create a texture with black and white texels
-              // but if it's a compressed texture we use an encodable texture.
-              // It's not perfect but we already know it failed. We're just hoping
-              // to get sample points.
               const descriptor = { ...texture.descriptor };
-              if (isCompressedTextureFormat(descriptor.format)) {
+              if (useTexelFormatForGPUTexture) {
                 descriptor.format = texels[0].format;
               }
               const gpuTexture = createTextureFromTexelViewsLocal(t, texels, descriptor);
@@ -3401,18 +3412,28 @@ run)
     layerEntries.set(xyId, weight);
   }
 
-  // +---+---+---+---+
-  // | a |   |   |   |
-  // +---+---+---+---+
-  // |   |   |   |   |
-  // +---+---+---+---+
-  // |   |   |   |   |
-  // +---+---+---+---+
-  // |   |   |   | b |
-  // +---+---+---+---+
+  // example when blockWidth = 2, blockHeight = 2
+  //
+  //     0   1   2   3
+  //   +===+===+===+===+
+  // 0 # a |   #   |   #
+  //   +---+---+---+---+
+  // 1 #   |   #   |   #
+  //   +===+===+===+===+
+  // 2 #   |   #   |   #
+  //   +---+---+---+---+
+  // 3 #   |   #   | b #
+  //   +===+===+===+===+
+
   const lines = [];
   const letter = (idx) => String.fromCodePoint(idx < 30 ? 97 + idx : idx + 9600 - 30); // 97: 'a'
   let idCount = 0;
+
+  const { blockWidth, blockHeight } = kTextureFormatInfo[texture.descriptor.format];
+  const [blockHChar, blockVChar] = Math.max(blockWidth, blockHeight) > 1 ? ['=', '#'] : ['-', '|'];
+  const blockHCell = '+'.padStart(4, blockHChar); // generates ---+ or ===+
+  // range + concatenate results.
+  const rangeCat = (num, fn) => range(num, fn).join('');
 
   for (let mipLevel = 0; mipLevel < mipLevelCount; ++mipLevel) {
     const level = levels[mipLevel];
@@ -3442,50 +3463,31 @@ run)
         continue;
       }
 
-      {
-        let line = '  ';
-        for (let x = 0; x < width; x++) {
-          line += `  ${x.toString().padEnd(2)}`;
-        }
-        lines.push(line);
-      }
-      {
-        let line = '  +';
-        for (let x = 0; x < width; x++) {
-          line += x === width - 1 ? '---+' : '---+';
-        }
-        lines.push(line);
-      }
+      lines.push(`   ${rangeCat(width, (x) => `  ${x.toString().padEnd(2)}`)}`);
+      lines.push(`   +${rangeCat(width, () => blockHCell)}`);
       for (let y = 0; y < height; y++) {
         {
-          let line = `${y.toString().padEnd(2)}|`;
+          let line = `${y.toString().padStart(2)} ${blockVChar}`;
           for (let x = 0; x < width; x++) {
+            const colChar = (x + 1) % blockWidth === 0 ? blockVChar : '|';
             const texelIdx = x + y * texelsPerRow;
             const weight = layerEntries.get(texelIdx);
             if (weight !== undefined) {
-              line += ` ${letter(idCount + orderedTexelIndices.length)} |`;
+              line += ` ${letter(idCount + orderedTexelIndices.length)} ${colChar}`;
               orderedTexelIndices.push(texelIdx);
             } else {
-              line += '   |';
+              line += `   ${colChar}`;
             }
           }
           lines.push(line);
         }
         if (y < height - 1) {
-          let line = '  +';
-          for (let x = 0; x < width; x++) {
-            line += x === width - 1 ? '---+' : '---+';
-          }
-          lines.push(line);
+          lines.push(
+            `   +${rangeCat(width, () => (y + 1) % blockHeight === 0 ? blockHCell : '---+')}`
+          );
         }
       }
-      {
-        let line = '  +';
-        for (let x = 0; x < width; x++) {
-          line += x === width - 1 ? '---+' : '---+';
-        }
-        lines.push(line);
-      }
+      lines.push(`   +${range(width, () => blockHCell).join('')}`);
 
       const pad2 = (n) => n.toString().padStart(2);
       const pad3 = (n) => n.toString().padStart(3);
