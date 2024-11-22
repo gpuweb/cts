@@ -538,9 +538,10 @@ beginSubcases().
 combine('samplePoints', kSamplePointMethods).
 combine('L', ['i32', 'u32'])
 ).
-beforeAllSubcases((t) =>
-skipIfTextureFormatNotSupportedNotAvailableOrNotFilterable(t, t.params.format)
-).
+beforeAllSubcases((t) => {
+  t.skipIfDepthTextureCanNotBeUsedWithNonComparisonSampler();
+  skipIfTextureFormatNotSupportedNotAvailableOrNotFilterable(t, t.params.format);
+}).
 fn(async (t) => {
   const { format, stage, samplePoints, mode, L, offset } = t.params;
 
@@ -640,9 +641,10 @@ combine('samplePoints', kSamplePointMethods).
 combine('A', ['i32', 'u32']).
 combine('L', ['i32', 'u32'])
 ).
-beforeAllSubcases((t) =>
-skipIfTextureFormatNotSupportedNotAvailableOrNotFilterable(t, t.params.format)
-).
+beforeAllSubcases((t) => {
+  t.skipIfDepthTextureCanNotBeUsedWithNonComparisonSampler();
+  skipIfTextureFormatNotSupportedNotAvailableOrNotFilterable(t, t.params.format);
+}).
 fn(async (t) => {
   const { format, stage, samplePoints, mode, A, L, offset } = t.params;
 
@@ -749,6 +751,7 @@ combine('samplePoints', kCubeSamplePointMethods).
 combine('L', ['i32', 'u32'])
 ).
 beforeAllSubcases((t) => {
+  t.skipIfDepthTextureCanNotBeUsedWithNonComparisonSampler();
   skipIfTextureFormatNotSupportedNotAvailableOrNotFilterable(t, t.params.format);
   t.skipIfTextureViewDimensionNotSupported(t.params.viewDimension);
 }).

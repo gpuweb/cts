@@ -512,7 +512,10 @@ combine('offset', [false, true]).
 beginSubcases().
 combine('samplePoints', kSamplePointMethods)
 ).
-beforeAllSubcases((t) => t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format)).
+beforeAllSubcases((t) => {
+  t.skipIfDepthTextureCanNotBeUsedWithNonComparisonSampler();
+  t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
+}).
 fn(async (t) => {
   const { format, stage, samplePoints, modeU, modeV, offset } = t.params;
 
@@ -591,7 +594,10 @@ combine('mode', kShortAddressModes).
 beginSubcases().
 combine('samplePoints', kCubeSamplePointMethods)
 ).
-beforeAllSubcases((t) => t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format)).
+beforeAllSubcases((t) => {
+  t.skipIfDepthTextureCanNotBeUsedWithNonComparisonSampler();
+  t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
+}).
 fn(async (t) => {
   const { format, stage, samplePoints, mode } = t.params;
 
@@ -688,6 +694,7 @@ combine('samplePoints', kSamplePointMethods).
 combine('A', ['i32', 'u32'])
 ).
 beforeAllSubcases((t) => {
+  t.skipIfDepthTextureCanNotBeUsedWithNonComparisonSampler();
   t.skipIfTextureFormatNotSupported(t.params.format);
   t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
 }).
@@ -779,6 +786,7 @@ combine('samplePoints', kCubeSamplePointMethods).
 combine('A', ['i32', 'u32'])
 ).
 beforeAllSubcases((t) => {
+  t.skipIfDepthTextureCanNotBeUsedWithNonComparisonSampler();
   t.skipIfTextureViewDimensionNotSupported('cube-array');
   t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
 }).
