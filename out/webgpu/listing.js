@@ -1693,6 +1693,14 @@ export const listing = [
       "compat",
       "api",
       "validation",
+      "pipeline_creation"
+    ]
+  },
+  {
+    "file": [
+      "compat",
+      "api",
+      "validation",
       "render_pipeline",
       "depth_stencil_state"
     ]
