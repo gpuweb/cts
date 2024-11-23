@@ -315,61 +315,38 @@ Tests multi indirect draw calls with various indirect offsets and buffer sizes w
     validateFinish(valid);
   });
 
-g.test('draw_count_buffer_OOB')
+g.test('drawCountBuffer_range')
   .desc(
     `
 Tests multi indirect draw calls with various draw count offsets, and draw count buffer sizes.
   `
   )
   .paramsSubcasesOnly(u =>
-    u.combine('indexed', [true, false] as const).expandWithParams(p => {
-      const indirectParamsSize = p.indexed ? 20 : 16;
-      return [
+    u
+      .combine('indexed', [true, false] as const) //
+      .combineWithParams([
         // In bounds
-        {
-          bufferSize: indirectParamsSize,
-          drawCountOffset: 0,
-          _valid: true,
-        },
-        // In bounds with bigger buffer
-        {
-          bufferSize: indirectParamsSize,
-          drawCountOffset: indirectParamsSize - 4,
-          _valid: true,
-        },
-        // In bounds, non-multiple of 4 offsets
-        {
-          bufferSize: indirectParamsSize + 4,
-          drawCountOffset: 1,
-          _valid: false,
-        },
-        {
-          bufferSize: indirectParamsSize + 4,
-          drawCountOffset: 2,
-          _valid: false,
-        },
+        { offset: 0, bufferSize: 4 },
+        { offset: 0, bufferSize: 5 },
+        // In bounds, but non-multiple of 4 offset
+        { offset: 2, bufferSize: 8 },
         // Out of bounds, offset too big for drawCountBuffer
-        {
-          bufferSize: indirectParamsSize,
-          drawCountOffset: indirectParamsSize,
-          _valid: false,
-        },
-        // Out of bounds, index + size of command overflows with drawCountBuffer
-        {
-          bufferSize: indirectParamsSize,
-          drawCountOffset: kMaxUnsignedLongLongValue,
-          _valid: false,
-        },
-      ] as const;
-    })
+        { offset: 4, bufferSize: 7 },
+        // Out of bounds, (offset + kDrawCountSize) may overflow
+        { offset: kMaxUnsignedLongLongValue, bufferSize: 1024 },
+      ])
   )
   .beforeAllSubcases(t => {
     t.selectDeviceOrSkipTestCase('chromium-experimental-multi-draw-indirect' as GPUFeatureName);
   })
   .fn(t => {
-    const { indexed, bufferSize, drawCountOffset, _valid } = t.params;
+    const { indexed, bufferSize, offset } = t.params;
 
     const indirectBuffer = t.createBufferTracked({
+      size: indexed ? 20 : 16,
+      usage: GPUBufferUsage.INDIRECT,
+    });
+    const drawCountBuffer = t.createBufferTracked({
       size: bufferSize,
       usage: GPUBufferUsage.INDIRECT,
     });
@@ -379,17 +356,13 @@ Tests multi indirect draw calls with various draw count offsets, and draw count 
     if (indexed) {
       encoder.setIndexBuffer(t.makeIndexBuffer(), 'uint32');
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (encoder as any).multiDrawIndexedIndirect(
-        indirectBuffer,
-        0,
-        1,
-        indirectBuffer,
-        drawCountOffset
-      );
+      (encoder as any).multiDrawIndexedIndirect(indirectBuffer, 0, 1, drawCountBuffer, offset);
     } else {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (encoder as any).multiDrawIndirect(indirectBuffer, 0, 1, indirectBuffer, drawCountOffset);
+      (encoder as any).multiDrawIndirect(indirectBuffer, 0, 1, drawCountBuffer, offset);
     }
 
-    validateFinish(_valid);
+    const kDrawCountSize = 4;
+    const valid = offset % 4 === 0 && offset + kDrawCountSize <= bufferSize;
+    validateFinish(valid);
   });
