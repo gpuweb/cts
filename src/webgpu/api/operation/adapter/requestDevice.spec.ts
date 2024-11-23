@@ -224,7 +224,8 @@ g.test('limits,unknown')
   .desc(
     `
     Test that specifying limits that aren't part of the supported limit set causes
-    requestDevice to reject unless the value is undefined`
+    requestDevice to reject unless the value is undefined.
+    Also tests that the invalid requestDevice() call does not expire the adapter.`
   )
   .fn(async t => {
     const gpu = getGPU(t.rec);
@@ -235,6 +236,7 @@ g.test('limits,unknown')
       'OperationError',
       t.requestDeviceTracked(adapter, { requiredLimits: { unknownLimitName: 9000 } })
     );
+    // Adapter is still alive because the requestDevice() call was invalid.
 
     const device = await t.requestDeviceTracked(adapter, {
       requiredLimits: { unknownLimitName: undefined },
