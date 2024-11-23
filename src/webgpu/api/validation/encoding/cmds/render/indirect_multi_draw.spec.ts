@@ -249,66 +249,49 @@ Tests indirect and draw count offsets must be a multiple of 4.
     validateFinish(indirectOffset % 4 === 0 && (!useDrawCountBuffer || drawCountOffset % 4 === 0));
   });
 
-g.test('indirect_buffer_OOB')
+g.test('indirectBuffer_range')
   .desc(
     `
 Tests multi indirect draw calls with various indirect offsets and buffer sizes without draw count buffer.
 `
   )
   .paramsSubcasesOnly(u =>
-    u.combine('indexed', [true, false] as const).expandWithParams(p => {
-      const indirectParamsSize = p.indexed ? 20 : 16;
-      return [
-        { indirectOffset: 0, bufferSize: 0, maxDrawCount: 1, _valid: false },
-        // In bounds
-        { indirectOffset: 0, bufferSize: indirectParamsSize, maxDrawCount: 1, _valid: true },
-        { indirectOffset: 0, bufferSize: indirectParamsSize + 1, maxDrawCount: 1, _valid: true },
-        // In bounds, bigger buffer, positive offset
-        {
-          indirectOffset: indirectParamsSize,
-          bufferSize: indirectParamsSize * 2,
-          maxDrawCount: 1,
-          _valid: true,
-        },
-        // Out of bounds, buffer too small
-        { indirectOffset: 0, bufferSize: indirectParamsSize - 1, maxDrawCount: 1, _valid: false },
-        { indirectOffset: 0, bufferSize: indirectParamsSize - 4, maxDrawCount: 1, _valid: false },
-        // In bounds, non-multiple of 4 offsets
-        { indirectOffset: 3, bufferSize: indirectParamsSize + 4, maxDrawCount: 1, _valid: false },
-        { indirectOffset: 5, bufferSize: indirectParamsSize + 4, maxDrawCount: 1, _valid: false },
-        // Out of bounds, index too big
-        { indirectOffset: 4, bufferSize: indirectParamsSize, maxDrawCount: 1, _valid: false },
-        // Out of bounds, index past buffer
-        {
-          indirectOffset: indirectParamsSize + 4,
-          bufferSize: indirectParamsSize,
-          maxDrawCount: 1,
-          _valid: false,
-        },
-        // Out of bounds, too small for maxDrawCount
-        { indirectOffset: 0, bufferSize: indirectParamsSize, maxDrawCount: 2, _valid: false },
-        // Out of bounds, index + size of command overflows
-        {
-          indirectOffset: kMaxUnsignedLongLongValue,
-          bufferSize: indirectParamsSize,
-          maxDrawCount: 1,
-          _valid: false,
-        },
-        // Out of bounds, maxDrawCount = kMaxUnsignedLongValue
-        {
-          indirectOffset: 0,
-          bufferSize: indirectParamsSize,
-          maxDrawCount: kMaxUnsignedLongValue,
-          _valid: false,
-        },
-      ] as const;
-    })
+    u
+      .combine('indexed', [true, false] as const) //
+      .expandWithParams(function* (p) {
+        const drawParamsSize = p.indexed ? 20 : 16;
+
+        // Simple OOB test cases, using a delta from the exact required size
+        for (const { maxDrawCount, offset } of [
+          { maxDrawCount: 1, offset: 0 },
+          { maxDrawCount: 1, offset: 4 },
+          { maxDrawCount: 1, offset: drawParamsSize + 4 },
+          { maxDrawCount: 2, offset: 0 },
+          { maxDrawCount: 6, offset: drawParamsSize },
+        ]) {
+          const exactRequiredSize = offset + maxDrawCount * drawParamsSize;
+          yield { offset, maxDrawCount, bufferSize: exactRequiredSize };
+          yield { offset, maxDrawCount, bufferSize: exactRequiredSize - 1 };
+        }
+
+        // Additional test cases
+        // - Buffer size is 0
+        yield { offset: 0, maxDrawCount: 1, bufferSize: 0 };
+        // - Buffer size is unaligned (OK)
+        yield { offset: 0, maxDrawCount: 1, bufferSize: drawParamsSize + 1 };
+        // - In-bounds, but non-multiple of 4 offset
+        yield { offset: 2, maxDrawCount: 1, bufferSize: drawParamsSize + 8 };
+        yield { offset: 6, maxDrawCount: 1, bufferSize: drawParamsSize + 8 };
+        // - Out of bounds, (offset + (drawParamsSize * maxDrawCount)) may overflow
+        yield { offset: kMaxUnsignedLongLongValue, maxDrawCount: 1, bufferSize: 1024 };
+        yield { offset: 0, maxDrawCount: kMaxUnsignedLongValue, bufferSize: 1024 };
+      })
   )
   .beforeAllSubcases(t => {
     t.selectDeviceOrSkipTestCase('chromium-experimental-multi-draw-indirect' as GPUFeatureName);
   })
   .fn(t => {
-    const { indexed, indirectOffset, bufferSize, maxDrawCount, _valid } = t.params;
+    const { indexed, offset, maxDrawCount, bufferSize } = t.params;
 
     const indirectBuffer = t.createBufferTracked({
       size: bufferSize,
@@ -320,13 +303,16 @@ Tests multi indirect draw calls with various indirect offsets and buffer sizes w
     if (indexed) {
       encoder.setIndexBuffer(t.makeIndexBuffer(), 'uint32');
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (encoder as any).multiDrawIndexedIndirect(indirectBuffer, indirectOffset, maxDrawCount);
+      (encoder as any).multiDrawIndexedIndirect(indirectBuffer, offset, maxDrawCount);
     } else {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (encoder as any).multiDrawIndirect(indirectBuffer, indirectOffset, maxDrawCount);
+      (encoder as any).multiDrawIndirect(indirectBuffer, offset, maxDrawCount);
     }
 
-    validateFinish(_valid);
+    const paramsSize = indexed ? 20 : 16;
+    const exactRequiredSize = offset + maxDrawCount * paramsSize;
+    const valid = offset % 4 === 0 && bufferSize >= exactRequiredSize;
+    validateFinish(valid);
   });
 
 g.test('draw_count_buffer_OOB')
