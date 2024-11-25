@@ -1306,7 +1306,7 @@ function setAllLimitsToAdapterLimits(
   const descWithMaxLimits: CanonicalDeviceDescriptor = {
     requiredFeatures: [],
     defaultQueue: {},
-    ...(desc ?? desc),
+    ...desc,
     requiredLimits: getAdapterLimitsAsDeviceRequiredLimits(adapter),
   };
   return descWithMaxLimits;
@@ -1331,35 +1331,12 @@ export class MaxLimitsGPUTestSubcaseBatchState extends GPUTestSubcaseBatchState 
 /**
  * A Test that requests all the max limits from the adapter on the device.
  */
-export class MaxLimitsTest extends GPUTestBase {
-  // Should never be undefined in a test. If it is, init() must not have run/finished.
-  private provider: DeviceProvider | undefined;
-
+export class MaxLimitsTest extends GPUTest {
   public static override MakeSharedState(
     recorder: TestCaseRecorder,
     params: TestParams
   ): GPUTestSubcaseBatchState {
     return new MaxLimitsGPUTestSubcaseBatchState(recorder, params);
-  }
-
-  override async init() {
-    await super.init();
-
-    this.provider = await this.sharedState.acquireProvider();
-  }
-
-  /** GPUAdapter that the device was created from. */
-  get adapter(): GPUAdapter {
-    assert(this.provider !== undefined, 'internal error: DeviceProvider missing');
-    return this.provider.adapter;
-  }
-
-  /**
-   * GPUDevice for the test to use.
-   */
-  override get device(): GPUDevice {
-    assert(this.provider !== undefined, 'internal error: DeviceProvider missing');
-    return this.provider.device;
   }
 }
 
