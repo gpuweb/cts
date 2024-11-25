@@ -11,10 +11,10 @@ import {
   TypedArrayBufferView,
   TypedArrayBufferViewConstructor,
 } from '../../../../common/util/util.js';
-import { GPUTest, TextureTestMixin } from '../../../gpu_test.js';
+import { MaxLimitsTest, TextureTestMixin } from '../../../gpu_test.js';
 import { PerPixelComparison } from '../../../util/texture/texture_ok.js';
 
-class DrawTest extends TextureTestMixin(GPUTest) {
+class DrawTest extends TextureTestMixin(MaxLimitsTest) {
   checkTriangleDraw(opts: {
     firstIndex: number | undefined;
     count: number;
