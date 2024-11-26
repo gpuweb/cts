@@ -1294,6 +1294,11 @@ function getAdapterLimitsAsDeviceRequiredLimits(adapter) {
   const requiredLimits = {};
   const adapterLimits = adapter.limits;
   for (const key in adapter.limits) {
+    // MAINTENANCE_TODO: Remove this once minSubgroupSize is removed from
+    // chromium.
+    if (key === 'maxSubgroupSize' || key === 'minSubgroupSize') {
+      continue;
+    }
     requiredLimits[key] = adapterLimits[key];
   }
   return requiredLimits;

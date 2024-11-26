@@ -212,6 +212,14 @@ export const listing = [
       "api",
       "operation",
       "device",
+      "all_limits_and_features"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "operation",
+      "device",
       "lost"
     ]
   },
