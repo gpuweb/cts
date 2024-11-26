@@ -78,7 +78,7 @@ export type ResourceState = (typeof kResourceStateValues)[number];
 export const kResourceStates: readonly ResourceState[] = kResourceStateValues;
 
 /** Various "convenient" shorthands for GPUDeviceDescriptors for selectDevice functions. */
-type DeviceSelectionDescriptor =
+export type DeviceSelectionDescriptor =
   | UncanonicalizedDeviceDescriptor
   | GPUFeatureName
   | undefined
@@ -1294,6 +1294,11 @@ function getAdapterLimitsAsDeviceRequiredLimits(adapter: GPUAdapter) {
   const requiredLimits: Record<string, GPUSize64> = {};
   const adapterLimits = adapter.limits as unknown as Record<string, GPUSize64>;
   for (const key in adapter.limits) {
+    // MAINTENANCE_TODO: Remove this once minSubgroupSize is removed from
+    // chromium.
+    if (key === 'maxSubgroupSize' || key === 'minSubgroupSize') {
+      continue;
+    }
     requiredLimits[key] = adapterLimits[key];
   }
   return requiredLimits;
