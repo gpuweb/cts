@@ -176,6 +176,20 @@ g.test('texture_sampler_combos')
 Test that you can not use more texture+sampler combos than
 min(maxSamplersPerShaderStage, maxSampledTexturesPerShaderStage)
 in compatibility mode.
+
+The spec, copy and pasted here:
+
+maxCombinationsPerStage = min(maxSampledTexturesPerShaderStage, maxSamplersPerShaderStage)
+for each stage of the pipeline:
+  sum = 0
+  for each texture binding in the pipeline layout which is visible to that stage:
+    sum += max(1, number of texture sampler combos for that texture binding)
+  for each external texture binding in the pipeline layout which is visible to that stage:
+    sum += 1 // for LUT texture + LUT sampler
+    sum += 3 * max(1, number of external_texture sampler combos) // for Y+U+V
+  if sum > maxCombinationsPerStage
+    generate a validation error.
+
 `
   )
   .params(u =>
@@ -312,8 +326,6 @@ fn usage1() -> vec4f {
   _ = ${stages.includes('vertex') ? 'usage0()' : 'vec4f(0)'};
   return vec4f(0);
 }
-
-@group(2) @binding(0) var tt: texture_2d<f32>;
 
 @fragment fn fs() -> @location(0) vec4f {
   return ${stages.includes('fragment') ? 'usage1()' : 'vec4f(0)'};
