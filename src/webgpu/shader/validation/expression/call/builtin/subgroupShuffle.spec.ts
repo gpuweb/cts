@@ -94,6 +94,57 @@ g.test('early_eval')
     t.expectCompileResult(t.params.stage === 'runtime', code);
   });
 
+g.test('param2_early_eval')
+  .desc('Ensures delta/mask parameters must be in the range [0, 128) for const and override')
+  .params(u =>
+    u
+      .combine('op', kOps)
+      .filter(t => {
+        return t.op !== 'subgroupShuffle';
+      })
+      .combine('value', [0, 127, 128] as const)
+      .beginSubcases()
+      .combine('stage', ['constant', 'override', 'runtime'] as const)
+  )
+  .beforeAllSubcases(t => {
+    t.selectDeviceOrSkipTestCase('subgroups' as GPUFeatureName);
+  })
+  .fn(t => {
+    let arg = `const_param`;
+    if (t.params.stage === 'override') {
+      arg = `override_param`;
+    } else if (t.params.stage === 'runtime') {
+      arg = `let_param`;
+    }
+
+    const wgsl = `
+enable subgroups;
+
+const const_param : u32 = ${t.params.value};
+override override_param : u32 = 0;
+
+fn foo() {
+  let let_param : u32 = ${t.params.value};
+  _ = ${t.params.op}(0, ${arg});
+}`;
+
+    const value_ok = t.params.value >= 0 && t.params.value < 128;
+    const compile_expect = value_ok || t.params.stage !== 'constant';
+    const pipeline_expect = value_ok || t.params.stage !== 'override';
+    t.expectCompileResult(compile_expect, wgsl);
+    if (compile_expect) {
+      const constants: Record<string, number> = {};
+      constants['override_param'] = t.params.value;
+      t.expectPipelineResult({
+        expectedResult: pipeline_expect,
+        code: wgsl,
+        constants,
+        reference: [],
+        statements: ['foo();'],
+      });
+    }
+  });
+
 g.test('must_use')
   .desc('Tests that the builtin has the @must_use attribute')
   .params(u => u.combine('must_use', [true, false] as const).combine('op', kOps))
