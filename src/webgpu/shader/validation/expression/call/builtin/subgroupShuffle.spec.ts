@@ -95,11 +95,15 @@ g.test('early_eval')
   });
 
 g.test('param2_early_eval')
-  .desc('Ensures delta/mask parameters must be in the range [0, 128) for const and override')
+  .desc('Ensures id/delta/mask parameters must be in the range [0, 128) for const and override')
   .params(u =>
     u
       .combine('op', kOps)
-      .combine('value', [0, 127, 128] as const)
+      .combine('value', [-1, 0, 127, 128] as const)
+      .filter(t => {
+        // Only subgroupShuffle supports an i32 parameter.
+        return t.op === 'subgroupShuffle' || t.value !== -1;
+      })
       .beginSubcases()
       .combine('stage', ['constant', 'override', 'runtime'] as const)
   )
@@ -114,14 +118,16 @@ g.test('param2_early_eval')
       arg = `let_param`;
     }
 
+    const type = t.params.value === -1 ? `i32` : `u32`;
+
     const wgsl = `
 enable subgroups;
 
-const const_param : u32 = ${t.params.value};
-override override_param : u32 = 0;
+const const_param : ${type} = ${t.params.value};
+override override_param : ${type} = 0;
 
 fn foo() {
-  let let_param : u32 = ${t.params.value};
+  let let_param : ${type} = ${t.params.value};
   _ = ${t.params.op}(0, ${arg});
 }`;
 
