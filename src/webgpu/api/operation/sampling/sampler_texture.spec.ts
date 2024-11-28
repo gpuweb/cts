@@ -135,7 +135,7 @@ The result should be a texture that has a value in each texel unique to a partic
       return samplerId;
     }
 
-    // Note: We are storing textureId, samplerId in th texture. That suggests we could use rgba32uint
+    // Note: We are storing textureId, samplerId in the texture. That suggests we could use rgba32uint
     // texture but we can't do that because we want to be able to set the samplers to linear.
     // Similarly we can't use rgba32float since they're not filterable by default.
     // So, we encode via rgba8unorm where rg is a 16bit textureId and ba is a 16bit samplerId
