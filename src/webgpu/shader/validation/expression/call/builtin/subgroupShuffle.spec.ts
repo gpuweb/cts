@@ -99,9 +99,6 @@ g.test('param2_early_eval')
   .params(u =>
     u
       .combine('op', kOps)
-      .filter(t => {
-        return t.op !== 'subgroupShuffle';
-      })
       .combine('value', [0, 127, 128] as const)
       .beginSubcases()
       .combine('stage', ['constant', 'override', 'runtime'] as const)
