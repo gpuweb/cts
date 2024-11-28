@@ -516,6 +516,14 @@ export const listing = [
     "file": [
       "api",
       "operation",
+      "sampling",
+      "sampler_texture"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "operation",
       "shader_module",
       "compilation_info"
     ]
