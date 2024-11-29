@@ -246,6 +246,38 @@ fn foo() {
     t.expectCompileResult(kIdCases[t.params.value].valid, wgsl);
   });
 
+g.test('id_values')
+  .desc('Validates that id must be in the range [0, 4)')
+  .params(u =>
+    u
+      .combine('value', [-1, 0, 3, 4] as const)
+      .beginSubcases()
+      .combine('type', ['literal', 'const', 'expr'] as const)
+  )
+  .beforeAllSubcases(t => {
+    t.selectDeviceOrSkipTestCase('subgroups' as GPUFeatureName);
+  })
+  .fn(t => {
+    let arg = `${t.params.value}`;
+    if (t.params.type === 'const') {
+      arg = `c`;
+    } else if (t.params.type === 'expr') {
+      arg = `c + 0`;
+    }
+
+    const wgsl = `
+enable subgroups;
+
+const c = ${t.params.value};
+
+fn foo() {
+  _ = quadBroadcast(0, ${arg});
+}`;
+
+    const expect = t.params.value >= 0 && t.params.value < 4;
+    t.expectCompileResult(expect, wgsl);
+  });
+
 g.test('stage')
   .desc('Validates it is only usable in correct stage')
   .params(u => u.combine('stage', ['compute', 'fragment', 'vertex'] as const))
