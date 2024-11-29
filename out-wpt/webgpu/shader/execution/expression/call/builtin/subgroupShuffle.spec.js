@@ -890,8 +890,6 @@ beforeAllSubcases((t) => {
   t.selectDeviceOrSkipTestCase('subgroups');
 }).
 fn(async (t) => {
-  //t.skipIf(t.params.id !== 2);
-  //t.skipIf(t.params.op !== 'subgroupShuffleUp');
   const fsShader = `
 enable subgroups;
 
