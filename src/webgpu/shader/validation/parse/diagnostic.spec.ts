@@ -80,11 +80,6 @@ g.test('valid_params')
       .combine('rule', kSpecDiagnosticRules)
       .combine('type', kDiagnosticTypes)
   )
-  .beforeAllSubcases(t => {
-    if (t.params.rule === 'subgroup_uniformity') {
-      t.selectDeviceOrSkipTestCase('subgroups' as GPUFeatureName);
-    }
-  })
   .fn(t => {
     const diag = generateDiagnostic(t.params.type, t.params.severity, t.params.rule);
     let code = ``;
@@ -135,11 +130,6 @@ g.test('valid_locations')
       .combine('location', keysOf(kValidLocations))
       .combine('rule', kSpecDiagnosticRules)
   )
-  .beforeAllSubcases(t => {
-    if (t.params.rule === 'subgroup_uniformity') {
-      t.selectDeviceOrSkipTestCase('subgroups' as GPUFeatureName);
-    }
-  })
   .fn(t => {
     const diag = generateDiagnostic(t.params.type, 'info', t.params.rule);
     const code = kValidLocations[t.params.location](diag);
@@ -164,11 +154,6 @@ g.test('invalid_locations')
       .combine('location', keysOf(kInvalidLocations))
       .combine('rule', kSpecDiagnosticRules)
   )
-  .beforeAllSubcases(t => {
-    if (t.params.rule === 'subgroup_uniformity') {
-      t.selectDeviceOrSkipTestCase('subgroups' as GPUFeatureName);
-    }
-  })
   .fn(t => {
     const diag = generateDiagnostic(t.params.type, 'info', t.params.rule);
     t.expectCompileResult(true, kInvalidLocations[t.params.location](''));
