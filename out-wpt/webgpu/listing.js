@@ -3274,6 +3274,16 @@ export const listing = [
       "expression",
       "call",
       "builtin",
+      "subgroupShuffle"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "call",
+      "builtin",
       "tan"
     ]
   },
