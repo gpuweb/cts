@@ -464,13 +464,13 @@ function checkBitwiseFragment(
       }
 
       let ok = inBounds.get(subgroup_id) ?? true;
-      ok = ok && (row !== height - 1) && (col !== width - 1);
+      ok = ok && row !== height - 1 && col !== width - 1;
       inBounds.set(subgroup_id, ok);
     }
   }
 
   let anyInBounds = false;
-  for (let [key, value] of inBounds) {
+  for (const [_, value] of inBounds) {
     const ok = Boolean(value);
     anyInBounds = anyInBounds || ok;
   }
