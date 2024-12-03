@@ -31,7 +31,7 @@ fn foo() {
   });
 
 g.test('requires_subgroups_f16')
-  .desc('Validates that the subgroups feature is required')
+  .desc('Validates that the subgroups_f16 feature is required (deprecated)')
   .params(u => u.combine('enable', [false, true] as const))
   .beforeAllSubcases(t => {
     const features: GPUFeatureName[] = ['shader-f16', 'subgroups' as GPUFeatureName];
@@ -48,8 +48,8 @@ ${t.params.enable ? 'enable subgroups_f16;' : ''}
 fn foo() {
   _ = quadBroadcast(0h, 0);
 }`;
-
-    t.expectCompileResult(t.params.enable, wgsl);
+    const kAlwaysCompiles = true;
+    t.expectCompileResult(kAlwaysCompiles, wgsl);
   });
 
 const kArgumentTypes = objectsToRecord(kAllScalarsAndVectors);
