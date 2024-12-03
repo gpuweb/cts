@@ -52,7 +52,7 @@ fn foo() {
 }`;
 
     const kAlwaysCompiles = true;
-    t.expectCompileResult(t.params.enable, wgsl);
+    t.expectCompileResult(kAlwaysCompiles, wgsl);
   });
 
 const kStages: Record<string, (op: string) => string> = {
