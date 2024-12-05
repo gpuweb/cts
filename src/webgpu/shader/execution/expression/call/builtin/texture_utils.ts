@@ -522,7 +522,7 @@ export async function queryMipLevelMixWeightsForDevice(t: GPUTest, stage: Shader
       pass.setBindGroup(0, createBindGroup(pipeline));
       pass.dispatchWorkgroups(kMipLevelWeightSteps + 1);
       pass.end();
-      encoder.copyBufferToBuffer(storageBuffer, 0, resultBuffer, 0, resultBuffer.size);
+      encoder.copyBufferToBuffer(storageBuffer, 0, resultBuffer, 0, storageBuffer.size);
       break;
     }
     case 'fragment': {
