@@ -398,11 +398,11 @@ g.test('subgroup_size')
     t.selectDeviceOrSkipTestCase('subgroups' as GPUFeatureName);
   })
   .fn(async t => {
-    interface SubgroupProperties extends GPUAdapterInfo {
-      subgroupMinSize: number;
-      subgroupMaxSize: number;
+    interface SubgroupLimits extends GPUSupportedLimits {
+      minSubgroupSize: number;
+      maxSubgroupSize: number;
     }
-    const { subgroupMinSize, subgroupMaxSize } = t.device.adapterInfo as SubgroupProperties;
+    const { minSubgroupSize, maxSubgroupSize } = t.device.limits as SubgroupLimits;
 
     const wgx = t.params.sizes[0];
     const wgy = t.params.sizes[1];
@@ -518,8 +518,8 @@ fn main(@builtin(subgroup_size) size : u32,
       checkSubgroupSizeConsistency(
         sizesData,
         compareData,
-        subgroupMinSize,
-        subgroupMaxSize,
+        minSubgroupSize,
+        maxSubgroupSize,
         wgThreads
       )
     );

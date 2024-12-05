@@ -444,12 +444,12 @@ g.test('compute,split')
     const testcase = kPredicateCases[t.params.predicate];
     const wgThreads = t.params.wgSize[0] * t.params.wgSize[1] * t.params.wgSize[2];
 
-    interface SubgroupProperties extends GPUAdapterInfo {
-      subgroupMinSize: number;
-      subgroupMaxSize: number;
+    interface SubgroupLimits extends GPUSupportedLimits {
+      minSubgroupSize: number;
+      maxSubgroupSize: number;
     }
-    const { subgroupMinSize, subgroupMaxSize } = t.device.adapterInfo as SubgroupProperties;
-    for (let size = subgroupMinSize; size <= subgroupMaxSize; size *= 2) {
+    const { minSubgroupSize, maxSubgroupSize } = t.device.limits as SubgroupLimits;
+    for (let size = minSubgroupSize; size <= maxSubgroupSize; size *= 2) {
       t.skipIf(!testcase.filter(t.params.id, size), 'Skipping potential undefined behavior');
     }
 
@@ -669,11 +669,11 @@ g.test('fragment')
   })
   .fn(async t => {
     const innerTexels = (t.params.size[0] - 1) * (t.params.size[1] - 1);
-    interface SubgroupProperties extends GPUAdapterInfo {
-      subgroupMaxSize: number;
+    interface SubgroupLimits extends GPUSupportedLimits {
+      maxSubgroupSize: number;
     }
-    const { subgroupMaxSize } = t.device.adapterInfo as SubgroupProperties;
-    t.skipIf(innerTexels < subgroupMaxSize, 'Too few texels to be reliable');
+    const { maxSubgroupSize } = t.device.limits as SubgroupLimits;
+    t.skipIf(innerTexels < maxSubgroupSize, 'Too few texels to be reliable');
 
     const broadcast =
       t.params.id === 0
