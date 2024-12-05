@@ -448,8 +448,8 @@ fn(async (t) => {
 
 
 
-  const { minSubgroupSize, maxSubgroupSize } = t.device.limits;
-  for (let size = minSubgroupSize; size <= maxSubgroupSize; size *= 2) {
+  const { subgroupMinSize, subgroupMaxSize } = t.device.adapterInfo;
+  for (let size = subgroupMinSize; size <= subgroupMaxSize; size *= 2) {
     t.skipIf(!testcase.filter(t.params.id, size), 'Skipping potential undefined behavior');
   }
 
@@ -672,8 +672,8 @@ fn(async (t) => {
 
 
 
-  const { maxSubgroupSize } = t.device.limits;
-  t.skipIf(innerTexels < maxSubgroupSize, 'Too few texels to be reliable');
+  const { subgroupMaxSize } = t.device.adapterInfo;
+  t.skipIf(innerTexels < subgroupMaxSize, 'Too few texels to be reliable');
 
   const broadcast =
   t.params.id === 0 ?
