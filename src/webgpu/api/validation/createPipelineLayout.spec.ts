@@ -6,6 +6,7 @@ TODO: review existing tests, write descriptions, and make sure tests are complet
 
 import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { bufferBindingTypeInfo, kBufferBindingTypes } from '../../capability_info.js';
+import { GPUConst } from '../../constants.js';
 
 import { ValidationTest } from './validation_test.js';
 
@@ -161,4 +162,120 @@ g.test('bind_group_layouts,device_mismatch')
     t.expectValidationError(() => {
       t.device.createPipelineLayout({ bindGroupLayouts: [layout0, layout1] });
     }, mismatched);
+  });
+
+const MaybeNullBindGroupLayoutTypes = ['Null', 'Empty', 'NonEmpty'] as const;
+
+g.test('bind_group_layouts,null_bind_group_layouts')
+  .desc(
+    `
+    Tests that it is valid to create a pipeline layout with null bind group layouts.
+    `
+  )
+  .paramsSubcasesOnly(u =>
+    u //
+      .combine('bindGroupLayoutCount', [1, 2, 3, 4] as const)
+      .combine('bindGroupLayout0', MaybeNullBindGroupLayoutTypes)
+      .combine('bindGroupLayout1', MaybeNullBindGroupLayoutTypes)
+      .combine('bindGroupLayout2', MaybeNullBindGroupLayoutTypes)
+      .combine('bindGroupLayout3', MaybeNullBindGroupLayoutTypes)
+      .filter(t => {
+        switch (t.bindGroupLayoutCount) {
+          case 1:
+            // Only bindGroupLayout0 is valid and represents null bind group layout, and we don't
+            // need to care about the other bind group layouts.
+            return (
+              t.bindGroupLayout0 === 'Null' &&
+              t.bindGroupLayout1 === 'Null' &&
+              t.bindGroupLayout2 === 'Null' &&
+              t.bindGroupLayout3 === 'Null'
+            );
+          case 2:
+            // Only bindGroupLayout0 and bindGroupLayout1 are valid and at least one of them
+            // represents null bind group layout, and we don't need to care about the other bind
+            // group layouts.
+            return (
+              (t.bindGroupLayout0 === 'Null' || t.bindGroupLayout1 === 'Null') &&
+              t.bindGroupLayout2 === 'Null' &&
+              t.bindGroupLayout3 === 'Null'
+            );
+          case 3:
+            // Only bindGroupLayout0, bindGroupLayout1 and bindGroupLayout2 are valid and at least
+            // one of them represents null bind group layout, and we don't need to care about
+            // bindGroupLayout3.
+            return (
+              (t.bindGroupLayout0 === 'Null' ||
+                t.bindGroupLayout1 === 'Null' ||
+                t.bindGroupLayout2 === 'Null') &&
+              t.bindGroupLayout3 === 'Null'
+            );
+          case 4:
+            // At lease one of the bindGroupLayout0, bindGroupLayout1, bindGroupLayout2 and
+            // bindGroupLayout3 represents null bind group layout.
+            return (
+              t.bindGroupLayout0 === 'Null' ||
+              t.bindGroupLayout1 === 'Null' ||
+              t.bindGroupLayout2 === 'Null' ||
+              t.bindGroupLayout3 === 'Null'
+            );
+          default:
+            return false;
+        }
+      })
+  )
+  .fn(t => {
+    const {
+      bindGroupLayoutCount,
+      bindGroupLayout0,
+      bindGroupLayout1,
+      bindGroupLayout2,
+      bindGroupLayout3,
+    } = t.params;
+
+    const emptyBindGroupLayout = t.device.createBindGroupLayout({
+      entries: [],
+    });
+    const nonEmptyBindGroupLayout = t.device.createBindGroupLayout({
+      entries: [
+        {
+          binding: 0,
+          visibility: GPUConst.ShaderStage.COMPUTE,
+          texture: {},
+        },
+      ],
+    });
+
+    const bindGroupLayouts: (GPUBindGroupLayout | null)[] = [];
+
+    const AddBindGroupLayout = function (
+      bindGroupLayoutType: (typeof MaybeNullBindGroupLayoutTypes)[number]
+    ) {
+      switch (bindGroupLayoutType) {
+        case 'Null':
+          bindGroupLayouts.push(null);
+          break;
+        case 'Empty':
+          bindGroupLayouts.push(emptyBindGroupLayout);
+          break;
+        case 'NonEmpty':
+          bindGroupLayouts.push(nonEmptyBindGroupLayout);
+          break;
+      }
+    };
+
+    AddBindGroupLayout(bindGroupLayout0);
+    if (bindGroupLayoutCount > 1) {
+      AddBindGroupLayout(bindGroupLayout1);
+    }
+    if (bindGroupLayoutCount > 2) {
+      AddBindGroupLayout(bindGroupLayout2);
+    }
+    if (bindGroupLayoutCount > 3) {
+      AddBindGroupLayout(bindGroupLayout3);
+    }
+
+    const kShouldError = false;
+    t.expectValidationError(() => {
+      t.device.createPipelineLayout({ bindGroupLayouts });
+    }, kShouldError);
   });
