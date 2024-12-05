@@ -263,14 +263,16 @@ export function graphWeights(height: number, weights: number[]) {
 /**
  * Validates the weights go from 0 to 1 in increasing order.
  */
-function validateWeights(stage: string, weights: number[]) {
-  const showWeights = () => `
+function validateWeights(t: GPUTest, stage: string, weights: number[]) {
+  const showWeights = t.rec.debugging
+    ? () => `
 ${weights.map((v, i) => `${i.toString().padStart(2)}: ${v}`).join('\n')}
 
 e = expected
 A = actual
 ${graphWeights(32, weights)}
-`;
+`
+    : () => ``;
 
   // Validate the weights
   assert(
@@ -520,7 +522,7 @@ export async function queryMipLevelMixWeightsForDevice(t: GPUTest, stage: Shader
       pass.setBindGroup(0, createBindGroup(pipeline));
       pass.dispatchWorkgroups(kMipLevelWeightSteps + 1);
       pass.end();
-      encoder.copyBufferToBuffer(storageBuffer, 0, resultBuffer, 0, resultBuffer.size);
+      encoder.copyBufferToBuffer(storageBuffer, 0, resultBuffer, 0, storageBuffer.size);
       break;
     }
     case 'fragment': {
@@ -586,8 +588,8 @@ export async function queryMipLevelMixWeightsForDevice(t: GPUTest, stage: Shader
 
   const [sampleLevelWeights, gradWeights] = unzip(result, kNumWeightTypes, 4);
 
-  validateWeights(stage, sampleLevelWeights);
-  validateWeights(stage, gradWeights);
+  validateWeights(t, stage, sampleLevelWeights);
+  validateWeights(t, stage, gradWeights);
 
   texture.destroy();
   storageBuffer.destroy();
