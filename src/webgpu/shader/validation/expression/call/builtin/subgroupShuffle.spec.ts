@@ -37,29 +37,6 @@ fn foo() {
     t.expectCompileResult(t.params.enable, wgsl);
   });
 
-g.test('requires_subgroups_f16')
-  .desc('Validates that the subgroups_f16 feature is required (deprecated)')
-  .params(u => u.combine('enable', [false, true] as const).combine('op', kOps))
-  .beforeAllSubcases(t => {
-    const features: GPUFeatureName[] = ['shader-f16', 'subgroups' as GPUFeatureName];
-    if (t.params.enable) {
-      features.push('subgroups-f16' as GPUFeatureName);
-    }
-    t.selectDeviceOrSkipTestCase(features);
-  })
-  .fn(t => {
-    const wgsl = `
-enable f16;
-enable subgroups;
-${t.params.enable ? 'enable subgroups_f16;' : ''}
-fn foo() {
-  _ = ${t.params.op}(0h, 0);
-}`;
-
-    const kAlwaysCompiles = true;
-    t.expectCompileResult(kAlwaysCompiles, wgsl);
-  });
-
 const kStages: Record<string, (op: string) => string> = {
   constant: (op: string) => {
     return `
