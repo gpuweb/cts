@@ -550,9 +550,9 @@ fn(async (t) => {
 
 
 
-  const { subgroupMinSize } = t.device.adapterInfo;
+  const { minSubgroupSize } = t.device.limits;
   const innerTexels = (t.params.size[0] - 1) * (t.params.size[1] - 1);
-  t.skipIf(innerTexels < subgroupMinSize, 'Too few texels to be reliable');
+  t.skipIf(innerTexels < minSubgroupSize, 'Too few texels to be reliable');
 
   const inputData = generateInputData(t.params.case, numInputs, identity(t.params.op));
 
