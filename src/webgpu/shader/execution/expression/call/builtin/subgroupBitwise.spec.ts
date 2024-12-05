@@ -547,12 +547,12 @@ g.test('fragment,all_active')
   .fn(async t => {
     const numInputs = t.params.size[0] * t.params.size[1];
 
-    interface SubgroupLimits extends GPUSupportedLimits {
-      minSubgroupSize: number;
+    interface SubgroupProperties extends GPUAdapterInfo {
+      subgroupMinSize: number;
     }
-    const { minSubgroupSize } = t.device.limits as SubgroupLimits;
+    const { subgroupMinSize } = t.device.adapterInfo as SubgroupProperties;
     const innerTexels = (t.params.size[0] - 1) * (t.params.size[1] - 1);
-    t.skipIf(innerTexels < minSubgroupSize, 'Too few texels to be reliable');
+    t.skipIf(innerTexels < subgroupMinSize, 'Too few texels to be reliable');
 
     const inputData = generateInputData(t.params.case, numInputs, identity(t.params.op));
 
