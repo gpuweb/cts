@@ -343,6 +343,38 @@ export const kVideoInfo = makeTable({
         bottomRightColor: 'red',
       },
     },
+    'four-colors-h264-bt601-scaled-10x1.mp4': {
+      mimeType: 'video/mp4; codecs=avc1.4d400c',
+      colorSpace: 'bt601',
+      coded: {
+        topLeftColor: 'yellow',
+        topRightColor: 'red',
+        bottomLeftColor: 'blue',
+        bottomRightColor: 'green',
+      },
+      display: {
+        topLeftColor: 'yellow',
+        topRightColor: 'red',
+        bottomLeftColor: 'blue',
+        bottomRightColor: 'green',
+      },
+    },
+    'four-colors-vp9-bt601-scaled-10x1.mp4': {
+      mimeType: 'video/webm; codecs=vp9',
+      colorSpace: 'bt601',
+      coded: {
+        topLeftColor: 'yellow',
+        topRightColor: 'red',
+        bottomLeftColor: 'blue',
+        bottomRightColor: 'green',
+      },
+      display: {
+        topLeftColor: 'yellow',
+        topRightColor: 'red',
+        bottomLeftColor: 'blue',
+        bottomRightColor: 'green',
+      },
+    },
   },
 } as const);
 
