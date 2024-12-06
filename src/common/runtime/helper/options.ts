@@ -51,6 +51,7 @@ export function optionWorkerMode(
 export interface CTSOptions {
   worker: WorkerMode | null;
   debug: boolean;
+  featureLevel: 'core' | 'compatibility' | null;
   compatibility: boolean;
   forceFallbackAdapter: boolean;
   unrollConstEvalLoops: boolean;
@@ -61,6 +62,7 @@ export interface CTSOptions {
 export const kDefaultCTSOptions: CTSOptions = {
   worker: null,
   debug: true,
+  featureLevel: null,
   compatibility: false,
   forceFallbackAdapter: false,
   unrollConstEvalLoops: false,
@@ -98,7 +100,16 @@ export const kCTSOptionsInfo: OptionsInfos<CTSOptions> = {
     ],
   },
   debug: { description: 'show more info' },
-  compatibility: { description: 'run in compatibility mode' },
+  featureLevel: {
+    description: 'set feature level for some tests',
+    parser: optionString,
+    selectValueDescriptions: [
+      { value: null, description: 'default' },
+      { value: 'core', description: 'core' },
+      { value: 'compatibility', description: 'compatibility' },
+    ],
+  },
+  compatibility: { description: 'run in compatibility mode (non-standard)' },
   forceFallbackAdapter: { description: 'pass forceFallbackAdapter: true to requestAdapter' },
   unrollConstEvalLoops: { description: 'unroll const eval loops in WGSL' },
   powerPreference: {
