@@ -35,6 +35,11 @@ export type TestConfig = {
   unrollConstEvalLoops: boolean;
 
   /**
+   * Feature level for the adapter request.
+   */
+  featureLevel: string | null;
+
+  /**
    * Whether or not we're running in compatibility mode.
    */
   compatibility: boolean;
@@ -57,6 +62,7 @@ export const globalTestConfig: TestConfig = {
   testHeartbeatCallback: () => {},
   noRaceWithRejectOnTimeout: false,
   unrollConstEvalLoops: false,
+  featureLevel: null,
   compatibility: false,
   forceFallbackAdapter: false,
   logToWebSocket: false,

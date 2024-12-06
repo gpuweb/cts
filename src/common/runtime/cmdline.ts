@@ -105,6 +105,7 @@ for (let i = 0; i < sys.args.length; ++i) {
       globalTestConfig.unrollConstEvalLoops = true;
     } else if (a === '--compat') {
       globalTestConfig.compatibility = true;
+      globalTestConfig.featureLevel = 'compatibility';
     } else if (a === '--force-fallback-adapter') {
       globalTestConfig.forceFallbackAdapter = true;
     } else if (a === '--log-to-websocket') {
@@ -120,9 +121,14 @@ for (let i = 0; i < sys.args.length; ++i) {
 
 let codeCoverage: CodeCoverageProvider | undefined = undefined;
 
-if (globalTestConfig.compatibility || globalTestConfig.forceFallbackAdapter) {
+if (
+  globalTestConfig.featureLevel ||
+  globalTestConfig.compatibility ||
+  globalTestConfig.forceFallbackAdapter
+) {
   // MAINTENANCE_TODO: remove the cast once compatibilityMode is officially added
   setDefaultRequestAdapterOptions({
+    featureLevel: globalTestConfig.featureLevel,
     compatibilityMode: globalTestConfig.compatibility,
     forceFallbackAdapter: globalTestConfig.forceFallbackAdapter,
   } as GPURequestAdapterOptions);
