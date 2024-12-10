@@ -76,7 +76,6 @@ if (!sys.existsSync('src/common/runtime/cmdline.ts')) {
   console.log('Must be run from repository root');
   usage(1);
 }
-
 setBaseResourcePath('out-node/resources');
 
 Colors.enabled = false;
@@ -119,6 +118,7 @@ for (let i = 0; i < sys.args.length; ++i) {
 }
 
 let codeCoverage: CodeCoverageProvider | undefined = undefined;
+
 if (globalTestConfig.compatibility || globalTestConfig.forceFallbackAdapter) {
   // MAINTENANCE_TODO: remove the cast once compatibilityMode is officially added
   setDefaultRequestAdapterOptions({
