@@ -76,6 +76,7 @@ if (!sys.existsSync('src/common/runtime/cmdline.ts')) {
   console.log('Must be run from repository root');
   usage(1);
 }
+
 setBaseResourcePath('out-node/resources');
 
 Colors.enabled = false;
