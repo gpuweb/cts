@@ -3430,25 +3430,72 @@ run)
   // example when blockWidth = 2, blockHeight = 2
   //
   //     0   1   2   3
-  //   +===+===+===+===+
-  // 0 # a |   #   |   #
-  //   +---+---+---+---+
-  // 1 #   |   #   |   #
-  //   +===+===+===+===+
-  // 2 #   |   #   |   #
-  //   +---+---+---+---+
-  // 3 #   |   #   | b #
-  //   +===+===+===+===+
+  //   ╔═══╤═══╦═══╤═══╗
+  // 0 ║ a │   ║   │   ║
+  //   ╟───┼───╫───┼───╢
+  // 1 ║   │   ║   │   ║
+  //   ╠═══╪═══╬═══╪═══╣
+  // 2 ║   │   ║   │   ║
+  //   ╟───┼───╫───┼───╢
+  // 3 ║   │   ║   │ b ║
+  //   ╚═══╧═══╩═══╧═══╝
+
+
+  const blockParts = {
+    top: { left: '╔', fill: '═══', right: '╗', block: '╦', texel: '╤' },
+    mid: { left: '╠', fill: '═══', right: '╣', block: '╬', texel: '╪' },
+    bot: { left: '╚', fill: '═══', right: '╝', block: '╩', texel: '╧' },
+    texelMid: { left: '╟', fill: '───', right: '╢', block: '╫', texel: '┼' },
+    value: { left: '║', fill: '   ', right: '║', block: '║', texel: '│' }
+  };
+
+  const nonBlockParts = {
+    top: { left: '┌', fill: '───', right: '┐', block: '┬', texel: '┬' },
+    mid: { left: '├', fill: '───', right: '┤', block: '┼', texel: '┼' },
+    bot: { left: '└', fill: '───', right: '┘', block: '┴', texel: '┴' },
+    texelMid: { left: '├', fill: '───', right: '┤', block: '┼', texel: '┼' },
+    value: { left: '│', fill: '   ', right: '│', block: '│', texel: '│' }
+  };
 
   const lines = [];
   const letter = (idx) => String.fromCodePoint(idx < 30 ? 97 + idx : idx + 9600 - 30); // 97: 'a'
   let idCount = 0;
 
   const { blockWidth, blockHeight } = kTextureFormatInfo[texture.descriptor.format];
-  const [blockHChar, blockVChar] = Math.max(blockWidth, blockHeight) > 1 ? ['=', '#'] : ['-', '|'];
-  const blockHCell = '+'.padStart(4, blockHChar); // generates ---+ or ===+
   // range + concatenate results.
   const rangeCat = (num, fn) => range(num, fn).join('');
+  const joinFn = (arr, fn) => {
+    const joins = range(arr.length - 1, fn);
+    return arr.map((s, i) => `${s}${joins[i] ?? ''}`).join('');
+  };
+  const parts = Math.max(blockWidth, blockHeight) > 1 ? blockParts : nonBlockParts;
+  /**
+   * Makes a row that's [left, fill, texel, fill, block, fill, texel, fill, right]
+   * except if `contents` is supplied then it would be
+   * [left, contents[0], texel, contents[1], block, contents[2], texel, contents[3], right]
+   */
+  const makeRow = (
+  blockPaddedWidth,
+  width,
+  {
+    left,
+    fill,
+    right,
+    block,
+    texel
+
+
+
+
+
+
+  },
+  contents) =>
+  {
+    return `${left}${joinFn(contents ?? range(blockPaddedWidth, (x) => fill), (x) => {
+      return (x + 1) % blockWidth === 0 ? block : texel;
+    })}${right}`;
+  };
 
   for (let mipLevel = 0; mipLevel < mipLevelCount; ++mipLevel) {
     const level = levels[mipLevel];
@@ -3478,31 +3525,39 @@ run)
         continue;
       }
 
+      const blockPaddedHeight = align(height, blockHeight);
+      const blockPaddedWidth = align(width, blockWidth);
       lines.push(`   ${rangeCat(width, (x) => `  ${x.toString().padEnd(2)}`)}`);
-      lines.push(`   +${rangeCat(width, () => blockHCell)}`);
-      for (let y = 0; y < height; y++) {
-        {
-          let line = `${y.toString().padStart(2)} ${blockVChar}`;
-          for (let x = 0; x < width; x++) {
-            const colChar = (x + 1) % blockWidth === 0 ? blockVChar : '|';
-            const texelIdx = x + y * texelsPerRow;
-            const weight = layerEntries.get(texelIdx);
-            if (weight !== undefined) {
-              line += ` ${letter(idCount + orderedTexelIndices.length)} ${colChar}`;
-              orderedTexelIndices.push(texelIdx);
-            } else {
-              line += `   ${colChar}`;
-            }
-          }
-          lines.push(line);
-        }
-        if (y < height - 1) {
-          lines.push(
-            `   +${rangeCat(width, () => (y + 1) % blockHeight === 0 ? blockHCell : '---+')}`
-          );
-        }
+      lines.push(`   ${makeRow(blockPaddedWidth, width, parts.top)}`);
+      for (let y = 0; y < blockPaddedHeight; y++) {
+        lines.push(
+          `${y.toString().padStart(2)} ${makeRow(
+            blockPaddedWidth,
+            width,
+            parts.value,
+            range(blockPaddedWidth, (x) => {
+              const texelIdx = x + y * texelsPerRow;
+              const weight = layerEntries.get(texelIdx);
+              const outside = y >= height || x >= width;
+              if (outside || weight === undefined) {
+                return outside ? '░░░' : '   ';
+              } else {
+                const id = letter(idCount + orderedTexelIndices.length);
+                orderedTexelIndices.push(texelIdx);
+                return ` ${id} `;
+              }
+            })
+          )}`
+        );
+        // It's either a block row, a texel row, or the last row.
+        const end = y < blockPaddedHeight - 1;
+        const lineParts = end ?
+        (y + 1) % blockHeight === 0 ?
+        parts.mid :
+        parts.texelMid :
+        parts.bot;
+        lines.push(`   ${makeRow(blockPaddedWidth, width, lineParts)}`);
       }
-      lines.push(`   +${range(width, () => blockHCell).join('')}`);
 
       const pad2 = (n) => n.toString().padStart(2);
       const pad3 = (n) => n.toString().padStart(3);
