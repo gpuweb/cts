@@ -92,7 +92,6 @@ for (let i = 0; i < sys.args.length; ++i) {
       Colors.enabled = true;
     } else if (a === '--compat') {
       globalTestConfig.compatibility = true;
-      globalTestConfig.featureLevel = 'compatibility';
     } else if (a === '--coverage') {
       emitCoverage = true;
     } else if (a === '--force-fallback-adapter') {
@@ -120,14 +119,10 @@ for (let i = 0; i < sys.args.length; ++i) {
 
 let codeCoverage: CodeCoverageProvider | undefined = undefined;
 
-if (
-  globalTestConfig.featureLevel ||
-  globalTestConfig.compatibility ||
-  globalTestConfig.forceFallbackAdapter
-) {
+console.log("server");
+if (globalTestConfig.compatibility || globalTestConfig.forceFallbackAdapter) {
   // MAINTENANCE_TODO: remove the cast once compatibilityMode is officially added
   setDefaultRequestAdapterOptions({
-    featureLevel: globalTestConfig.featureLevel,
     compatibilityMode: globalTestConfig.compatibility,
     forceFallbackAdapter: globalTestConfig.forceFallbackAdapter,
   } as GPURequestAdapterOptions);

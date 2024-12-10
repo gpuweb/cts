@@ -129,7 +129,7 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
   }
 
   get isCompatibility() {
-    return globalTestConfig.compatibility || globalTestConfig.featureLevel === 'compatibility';
+    return globalTestConfig.compatibility;
   }
 
   getDefaultLimits() {
@@ -366,7 +366,7 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
   }
 
   get isCompatibility() {
-    return globalTestConfig.compatibility || globalTestConfig.featureLevel === 'compatibility';
+    return globalTestConfig.compatibility;
   }
 
   getDefaultLimits() {

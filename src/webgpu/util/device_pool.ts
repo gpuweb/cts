@@ -245,11 +245,9 @@ function canonicalizeDescriptor(
   const limitsCanonicalized: Record<string, number> = {};
   // MAINTENANCE_TODO: Remove cast when @webgpu/types includes compatibilityMode
   const adapterOptions = getDefaultRequestAdapterOptions() as unknown as {
-    featureLevel?: string;
     compatibilityMode?: boolean;
   };
-  const featureLevel =
-    adapterOptions?.featureLevel || adapterOptions?.compatibilityMode ? 'compatibility' : 'core';
+  const featureLevel = adapterOptions?.compatibilityMode ? 'compatibility' : 'core';
   const defaultLimits = getDefaultLimits(featureLevel);
   if (desc.requiredLimits) {
     for (const limit of kLimits) {
