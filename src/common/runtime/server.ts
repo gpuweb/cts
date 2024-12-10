@@ -118,8 +118,6 @@ for (let i = 0; i < sys.args.length; ++i) {
 }
 
 let codeCoverage: CodeCoverageProvider | undefined = undefined;
-
-console.log("server");
 if (globalTestConfig.compatibility || globalTestConfig.forceFallbackAdapter) {
   // MAINTENANCE_TODO: remove the cast once compatibilityMode is officially added
   setDefaultRequestAdapterOptions({
