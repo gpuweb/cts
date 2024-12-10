@@ -46,7 +46,6 @@ export function setDefaultRequestAdapterOptions(options: GPURequestAdapterOption
   // MAINTENANCE_TODO: remove this once compatibilityMode is removed.
   defaultRequestAdapterOptions.featureLevel =
     'compatibilityMode' in options && options.compatibilityMode ? 'compatibility' : 'core';
-
 }
 
 export function getDefaultRequestAdapterOptions() {
