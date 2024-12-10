@@ -15,16 +15,18 @@ export interface WorkerTestRunRequest {
  * Set config environment for workers with ctsOptions and return a Logger.
  */
 export function setupWorkerEnvironment(ctsOptions: CTSOptions): Logger {
-  const { powerPreference, compatibility } = ctsOptions;
+  const { featureLevel, powerPreference, compatibility } = ctsOptions;
   globalTestConfig.enableDebugLogs = ctsOptions.debug;
   globalTestConfig.unrollConstEvalLoops = ctsOptions.unrollConstEvalLoops;
+  globalTestConfig.featureLevel = featureLevel;
   globalTestConfig.compatibility = compatibility;
   globalTestConfig.logToWebSocket = ctsOptions.logToWebSocket;
 
   const log = new Logger();
 
-  if (powerPreference || compatibility) {
+  if (featureLevel || powerPreference || compatibility) {
     setDefaultRequestAdapterOptions({
+      ...(featureLevel && { featureLevel }),
       ...(powerPreference && { powerPreference }),
       // MAINTENANCE_TODO: Change this to whatever the option ends up being
       ...(compatibility && { compatibilityMode: true }),
