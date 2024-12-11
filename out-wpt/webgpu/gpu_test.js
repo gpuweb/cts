@@ -1333,16 +1333,27 @@ export class MaxLimitsGPUTestSubcaseBatchState extends GPUTestSubcaseBatchState 
   }
 }
 
-/**
- * A Test that requests all the max limits from the adapter on the device.
- */
-export class MaxLimitsTest extends GPUTest {
-  static MakeSharedState(
-  recorder,
-  params)
+
+
+
+
+export function MaxLimitsTestMixin(
+Base)
+{
+  class MaxLimitsImpl extends
+  Base
+
   {
-    return new MaxLimitsGPUTestSubcaseBatchState(recorder, params);
+    //
+    static MakeSharedState(
+    recorder,
+    params)
+    {
+      return new MaxLimitsGPUTestSubcaseBatchState(recorder, params);
+    }
   }
+
+  return MaxLimitsImpl;
 }
 
 /**

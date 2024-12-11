@@ -1333,16 +1333,27 @@ export class MaxLimitsGPUTestSubcaseBatchState extends GPUTestSubcaseBatchState 
   }
 }
 
-/**
- * A Test that requests all the max limits from the adapter on the device.
- */
-export class MaxLimitsTest extends GPUTest {
-  public static override MakeSharedState(
-    recorder: TestCaseRecorder,
-    params: TestParams
-  ): GPUTestSubcaseBatchState {
-    return new MaxLimitsGPUTestSubcaseBatchState(recorder, params);
+export type MaxLimitsTestMixinType = {
+  // placeholder. Change to an interface if we need MaxLimits specific methods.
+};
+
+export function MaxLimitsTestMixin<F extends FixtureClass<GPUTestBase>>(
+  Base: F
+): FixtureClassWithMixin<F, MaxLimitsTestMixinType> {
+  class MaxLimitsImpl
+    extends (Base as FixtureClassInterface<GPUTestBase>)
+    implements MaxLimitsTestMixinType
+  {
+    //
+    public static override MakeSharedState(
+      recorder: TestCaseRecorder,
+      params: TestParams
+    ): GPUTestSubcaseBatchState {
+      return new MaxLimitsGPUTestSubcaseBatchState(recorder, params);
+    }
   }
+
+  return MaxLimitsImpl as unknown as FixtureClassWithMixin<F, MaxLimitsTestMixinType>;
 }
 
 /**
