@@ -240,26 +240,25 @@ g.test('render_pass_and_bundle,color_sparse')
       // introduce attachmentCount to make it easier to split the test
       .combine('attachmentCount', kColorAttachmentCounts)
       .beginSubcases()
-      .combine('passAttachments', kColorAttachments)
-      .combine('bundleAttachments', kColorAttachments)
-      .filter(
-        p =>
-          p.attachmentCount === p.passAttachments.length &&
-          p.attachmentCount === p.bundleAttachments.length
+      // Indices into kColorAttachments
+      .expand('iPass', p =>
+        range(kColorAttachments.length, i => i).filter(
+          i => kColorAttachments[i].length === p.attachmentCount
+        )
+      )
+      .expand('iBundle', p =>
+        range(kColorAttachments.length, i => i).filter(
+          i => kColorAttachments[i].length === p.attachmentCount
+        )
       )
   )
   .fn(t => {
-    const { passAttachments, bundleAttachments } = t.params;
+    const passAttachments = kColorAttachments[t.params.iPass];
+    const bundleAttachments = kColorAttachments[t.params.iBundle];
 
     const { maxColorAttachments } = t.device.limits;
-    t.skipIf(
-      passAttachments.length > maxColorAttachments,
-      `num passAttachments: ${passAttachments.length} > maxColorAttachments for device: ${maxColorAttachments}`
-    );
-    t.skipIf(
-      bundleAttachments.length > maxColorAttachments,
-      `num bundleAttachments: ${bundleAttachments.length} > maxColorAttachments for device: ${maxColorAttachments}`
-    );
+    t.skipIf(passAttachments.length > maxColorAttachments);
+    t.skipIf(bundleAttachments.length > maxColorAttachments);
 
     const colorFormats = bundleAttachments.map(i => (i ? 'rgba8uint' : null));
     const bundleEncoder = t.device.createRenderBundleEncoder({
@@ -445,25 +444,26 @@ Test that each of color attachments in render passes or bundles match that of th
       // introduce attachmentCount to make it easier to split the test
       .combine('attachmentCount', kColorAttachmentCounts)
       .beginSubcases()
-      .combine('encoderAttachments', kColorAttachments)
-      .combine('pipelineAttachments', kColorAttachments)
-      .filter(
-        p =>
-          p.attachmentCount === p.encoderAttachments.length &&
-          p.attachmentCount === p.pipelineAttachments.length
+      // Indices into kColorAttachments
+      .expand('iEncoder', p =>
+        range(kColorAttachments.length, i => i).filter(
+          i => kColorAttachments[i].length === p.attachmentCount
+        )
+      )
+      .expand('iPipeline', p =>
+        range(kColorAttachments.length, i => i).filter(
+          i => kColorAttachments[i].length === p.attachmentCount
+        )
       )
   )
   .fn(t => {
-    const { encoderType, encoderAttachments, pipelineAttachments } = t.params;
+    const { encoderType } = t.params;
+    const encoderAttachments = kColorAttachments[t.params.iEncoder];
+    const pipelineAttachments = kColorAttachments[t.params.iPipeline];
+
     const { maxColorAttachments } = t.device.limits;
-    t.skipIf(
-      encoderAttachments.length > maxColorAttachments,
-      `num encoderAttachments: ${encoderAttachments.length} > maxColorAttachments for device: ${maxColorAttachments}`
-    );
-    t.skipIf(
-      pipelineAttachments.length > maxColorAttachments,
-      `num pipelineAttachments: ${pipelineAttachments.length} > maxColorAttachments for device: ${maxColorAttachments}`
-    );
+    t.skipIf(encoderAttachments.length > maxColorAttachments);
+    t.skipIf(pipelineAttachments.length > maxColorAttachments);
 
     const colorTargets = pipelineAttachments.map(i =>
       i ? ({ format: 'rgba8uint', writeMask: 0 } as GPUColorTargetState) : null
