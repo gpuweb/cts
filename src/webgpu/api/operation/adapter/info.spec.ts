@@ -21,6 +21,7 @@ g.test('adapter_info')
   .fn(async t => {
     const gpu = getGPU(t.rec);
     const adapter = await gpu.requestAdapter();
+    console.log(adapter);
     assert(adapter !== null);
 
     const adapterInfo = adapter.info;
