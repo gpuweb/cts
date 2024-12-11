@@ -70,6 +70,18 @@ enable f16;`,
     code: `enable subgroups;`,
     pass: true,
   },
+  subgroups_f16_pass1: {
+    code: `
+    enable f16;
+    enable subgroups;`,
+    pass: true,
+  },
+  subgroups_f16_pass2: {
+    code: `
+    enable subgroups;
+    enable f16;`,
+    pass: true,
+  },
 };
 
 g.test('enable')
