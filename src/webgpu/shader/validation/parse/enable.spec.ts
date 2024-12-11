@@ -91,11 +91,10 @@ g.test('enable')
     const name: string = t.params.case as string;
     if (name.includes('subgroups')) {
       features.push('subgroups' as GPUFeatureName);
-      if(name.includes('f16')){
+      if (name.includes('f16')) {
         features.push('shader-f16');
       }
-    } 
-    else {
+    } else {
       features.push('shader-f16');
     }
     t.selectDeviceOrSkipTestCase(features);
