@@ -102,7 +102,6 @@ and limit the number of permutations needed to calculate the final result.`
     const features: GPUFeatureName[] = ['subgroups' as GPUFeatureName];
     if (t.params.type === 'f16') {
       features.push('shader-f16');
-      features.push('subgroups-f16' as GPUFeatureName);
     }
     t.selectDeviceOrSkipTestCase(features);
   })
@@ -186,7 +185,6 @@ g.test('data_types')
     const features: GPUFeatureName[] = ['subgroups' as GPUFeatureName];
     const type = kDataTypes[t.params.type];
     if (type.requiresF16()) {
-      features.push('subgroups-f16' as GPUFeatureName);
       features.push('shader-f16' as GPUFeatureName);
     }
     t.selectDeviceOrSkipTestCase(features);
@@ -196,7 +194,7 @@ g.test('data_types')
     const type = kDataTypes[t.params.type];
     let enables = `enable subgroups;\n`;
     if (type.requiresF16()) {
-      enables += `enable f16;\nenable subgroups_f16;`;
+      enables += `enable f16;`;
     }
     const wgsl = `
 ${enables}
