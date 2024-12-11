@@ -1,10 +1,12 @@
 export const description = `
 Validation for attachment compatibility between render passes, bundles, and pipelines
+
+TODO(#3363): Make this into a MaxLimitTest and increase kMaxColorAttachments.
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { range } from '../../../../common/util/util.js';
-import { kMaxColorAttachmentsToTest, kTextureSampleCounts } from '../../../capability_info.js';
+import { getDefaultLimits, kTextureSampleCounts } from '../../../capability_info.js';
 import {
   kRegularTextureFormats,
   kSizedDepthStencilFormats,
@@ -15,7 +17,11 @@ import {
 } from '../../../format_info.js';
 import { ValidationTest } from '../validation_test.js';
 
-const kColorAttachmentCounts = range(kMaxColorAttachmentsToTest, i => i + 1);
+// MAINTENANCE_TODO: This should be changed to kMaxColorAttachmentsToTest
+// when this is made a MaxLimitTest (see above).
+const kMaxColorAttachments = getDefaultLimits('core').maxColorAttachments.default;
+
+const kColorAttachmentCounts = range(kMaxColorAttachments, i => i + 1);
 const kColorAttachments = kColorAttachmentCounts
   .map(count => {
     // generate cases with 0..1 null attachments at different location
