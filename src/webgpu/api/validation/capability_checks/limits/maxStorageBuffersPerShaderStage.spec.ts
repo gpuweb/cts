@@ -21,6 +21,8 @@ import {
 const kExtraLimits: LimitsRequest = {
   maxBindingsPerBindGroup: 'adapterLimit',
   maxBindGroups: 'adapterLimit',
+  maxStorageBuffersInFragmentStage: 'adapterLimit',
+  maxStorageBuffersInVertexStage: 'adapterLimit',
 };
 
 const limit = 'maxStorageBuffersPerShaderStage';
@@ -163,6 +165,22 @@ g.test('createPipeline,at_over')
         t.skipIf(
           bindGroupTest === 'sameGroup' && testValue > device.limits.maxBindingsPerBindGroup,
           `can not test ${testValue} bindings in same group because maxBindingsPerBindGroup = ${device.limits.maxBindingsPerBindGroup}`
+        );
+
+        t.skipIf(
+          (bindingCombination === 'fragment' ||
+            bindingCombination === 'vertexAndFragmentWithPossibleVertexStageOverflow' ||
+            bindingCombination === 'vertexAndFragmentWithPossibleFragmentStageOverflow') &&
+            testValue > device.limits.maxStorageBuffersInFragmentStage,
+          `can not test ${testValue} bindings as it is more than maxStorageBuffersInFragmentStage(${device.limits.maxStorageBuffersInFragmentStage})`
+        );
+
+        t.skipIf(
+          (bindingCombination === 'vertex' ||
+            bindingCombination === 'vertexAndFragmentWithPossibleVertexStageOverflow' ||
+            bindingCombination === 'vertexAndFragmentWithPossibleFragmentStageOverflow') &&
+            testValue > device.limits.maxStorageBuffersInVertexStage,
+          `can not test ${testValue} bindings as it is more than maxStorageBuffersInVertexStage(${device.limits.maxStorageBuffersInVertexStage})`
         );
 
         const code = getPerStageWGSLForBindingCombination(
