@@ -171,7 +171,7 @@ g.test('createPipeline,at_over')
           (bindingCombination === 'fragment' ||
             bindingCombination === 'vertexAndFragmentWithPossibleVertexStageOverflow' ||
             bindingCombination === 'vertexAndFragmentWithPossibleFragmentStageOverflow') &&
-            testValue > device.limits.maxStorageBuffersInFragmentStage,
+            testValue > (device.limits.maxStorageBuffersInFragmentStage ?? actualLimit),
           `can not test ${testValue} bindings as it is more than maxStorageBuffersInFragmentStage(${device.limits.maxStorageBuffersInFragmentStage})`
         );
 
@@ -179,7 +179,7 @@ g.test('createPipeline,at_over')
           (bindingCombination === 'vertex' ||
             bindingCombination === 'vertexAndFragmentWithPossibleVertexStageOverflow' ||
             bindingCombination === 'vertexAndFragmentWithPossibleFragmentStageOverflow') &&
-            testValue > device.limits.maxStorageBuffersInVertexStage,
+            testValue > (device.limits.maxStorageBuffersInVertexStage ?? actualLimit),
           `can not test ${testValue} bindings as it is more than maxStorageBuffersInVertexStage(${device.limits.maxStorageBuffersInVertexStage})`
         );
 
