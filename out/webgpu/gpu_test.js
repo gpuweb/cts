@@ -67,6 +67,17 @@ import {
 import { createTextureFromTexelViews } from './util/texture.js';
 import { reifyExtent3D, reifyOrigin3D } from './util/unions.js';
 
+// Declarations for WebGPU items we want tests for that are not yet officially part of the spec.
+
+
+
+
+
+
+
+
+
+
 const devicePool = new DevicePool();
 
 // MAINTENANCE_TODO: When DevicePool becomes able to provide multiple devices at once, use the
