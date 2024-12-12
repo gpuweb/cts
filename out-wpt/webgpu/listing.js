@@ -3264,6 +3264,16 @@ export const listing = [
       "expression",
       "call",
       "builtin",
+      "subgroupMinMax"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "call",
+      "builtin",
       "subgroupMul"
     ]
   },
