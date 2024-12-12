@@ -71,10 +71,10 @@ import { reifyExtent3D, reifyOrigin3D } from './util/unions.js';
 declare global {
   // MAINTENANCE_TODO: remove once added to @webgpu/types
   interface GPUSupportedLimits {
-    readonly maxStorageBuffersInFragmentStage: number;
-    readonly maxStorageTexturesInFragmentStage: number;
-    readonly maxStorageBuffersInVertexStage: number;
-    readonly maxStorageTexturesInVertexStage: number;
+    readonly maxStorageBuffersInFragmentStage?: number;
+    readonly maxStorageTexturesInFragmentStage?: number;
+    readonly maxStorageBuffersInVertexStage?: number;
+    readonly maxStorageTexturesInVertexStage?: number;
   }
 }
 
