@@ -167,21 +167,23 @@ g.test('createPipeline,at_over')
           `can not test ${testValue} bindings in same group because maxBindingsPerBindGroup = ${device.limits.maxBindingsPerBindGroup}`
         );
 
-        t.skipIf(
-          (bindingCombination === 'fragment' ||
-            bindingCombination === 'vertexAndFragmentWithPossibleVertexStageOverflow' ||
-            bindingCombination === 'vertexAndFragmentWithPossibleFragmentStageOverflow') &&
-            testValue > (device.limits.maxStorageBuffersInFragmentStage ?? actualLimit),
-          `can not test ${testValue} bindings as it is more than maxStorageBuffersInFragmentStage(${device.limits.maxStorageBuffersInFragmentStage})`
-        );
+        if (t.isCompatibility) {
+          t.skipIf(
+            (bindingCombination === 'fragment' ||
+              bindingCombination === 'vertexAndFragmentWithPossibleVertexStageOverflow' ||
+              bindingCombination === 'vertexAndFragmentWithPossibleFragmentStageOverflow') &&
+              testValue > device.limits.maxStorageBuffersInFragmentStage!,
+            `can not test ${testValue} bindings as it is more than maxStorageBuffersInFragmentStage(${device.limits.maxStorageBuffersInFragmentStage})`
+          );
 
-        t.skipIf(
-          (bindingCombination === 'vertex' ||
-            bindingCombination === 'vertexAndFragmentWithPossibleVertexStageOverflow' ||
-            bindingCombination === 'vertexAndFragmentWithPossibleFragmentStageOverflow') &&
-            testValue > (device.limits.maxStorageBuffersInVertexStage ?? actualLimit),
-          `can not test ${testValue} bindings as it is more than maxStorageBuffersInVertexStage(${device.limits.maxStorageBuffersInVertexStage})`
-        );
+          t.skipIf(
+            (bindingCombination === 'vertex' ||
+              bindingCombination === 'vertexAndFragmentWithPossibleVertexStageOverflow' ||
+              bindingCombination === 'vertexAndFragmentWithPossibleFragmentStageOverflow') &&
+              testValue > device.limits.maxStorageBuffersInVertexStage!,
+            `can not test ${testValue} bindings as it is more than maxStorageBuffersInVertexStage(${device.limits.maxStorageBuffersInVertexStage})`
+          );
+        }
 
         const code = getPerStageWGSLForBindingCombination(
           bindingCombination,
