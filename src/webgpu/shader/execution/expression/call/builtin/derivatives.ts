@@ -141,8 +141,6 @@ fn frag(info : CaseInfo) -> @location(0) vec4u {
     layout: pipeline.getBindGroupLayout(0),
   });
 
-  // Create a texture to use as a color attachment.
-  // We only need this for launching the desired number of fragment invocations.
   const colorAttachment = t.createTextureTracked({
     size: { width: 2, height: 2 },
     format: 'rgba32uint',
@@ -165,12 +163,7 @@ fn frag(info : CaseInfo) -> @location(0) vec4u {
     });
     pass.setPipeline(pipeline);
     pass.setBindGroup(0, group);
-    for (let y = 0; y < colorAttachment.height; ++y) {
-      for (let x = 0; x < colorAttachment.width; ++x) {
-        pass.setViewport(x, y, 1, 1, 0, 1);
-        pass.draw(3, 1, 0, quad);
-      }
-    }
+    pass.draw(3, 1, 0, quad);
     pass.end();
     const outputBuffer = t.createBufferTracked({
       size: bytesPerRow * colorAttachment.height,
