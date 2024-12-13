@@ -5,11 +5,12 @@ Returns the number samples per texel in a multisampled texture.
 `;
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
+import { MaxLimitsTestMixin } from '../../../../../gpu_test.js';
 import { kShaderStages } from '../../../../validation/decl/util.js';
 
 import { kSampleTypeInfo, WGSLTextureQueryTest } from './texture_utils.js';
 
-export const g = makeTestGroup(WGSLTextureQueryTest);
+export const g = makeTestGroup(MaxLimitsTestMixin(WGSLTextureQueryTest));
 
 g.test('sampled')
   .specURL('https://www.w3.org/TR/WGSL/#texturenumsamples')
