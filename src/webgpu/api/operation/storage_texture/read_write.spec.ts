@@ -316,7 +316,7 @@ g.test('basic')
       .unless(p => p.textureDimension === '1d' && p.depthOrArrayLayers > 1)
   )
   .beforeAllSubcases(t => {
-    t.skipIfTextureFormatNotUsableAsStorageTexture(t.params.format);
+    t.skipIfTextureFormatNotUsableAsStorageTexture(t.params.format, t.device);
   })
   .fn(t => {
     const { format, shaderStage, textureDimension, depthOrArrayLayers } = t.params;
