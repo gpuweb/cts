@@ -790,14 +790,14 @@ g.test('bgl_resource_type_mismatch')
       t.isCompatibility &&
         resourceIsStorageTexture(plResourceType) &&
         !(t.device.limits.maxStorageTexturesInFragmentStage! >= 1),
-      `maxStorageTexturesInFragmentStage(${t.device.limits.maxStorageTexturesInFragmentStage} is not >= 1`
+      `maxStorageTexturesInFragmentStage(${t.device.limits.maxStorageTexturesInFragmentStage}) is not >= 1`
     );
 
     t.skipIf(
       t.isCompatibility &&
         resourceIsStorageBuffer(plResourceType) &&
         !(t.device.limits.maxStorageBuffersInFragmentStage! >= 1),
-      `maxStorageBuffersInFragmentStage(${t.device.limits.maxStorageBuffersInFragmentStage} is not >= 1`
+      `maxStorageBuffersInFragmentStage(${t.device.limits.maxStorageBuffersInFragmentStage}) is not >= 1`
     );
 
     const bglEntries: Array<GPUBindGroupLayoutEntry> = [
