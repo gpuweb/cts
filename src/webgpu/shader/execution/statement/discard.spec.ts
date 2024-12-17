@@ -48,16 +48,20 @@ fn vsMain(@builtin(vertex_index) index : u32) -> @builtin(position) vec4f {
 }
 `;
 
-function hasStorageBuffers(t: GPUTest) {
-  return t.isCompatibility ? t.device.limits.maxStorageBuffersInFragmentStage! >= 2 : true;
-}
-
 function drawFullScreen(
   t: GPUTest,
   code: string,
+  useStorageBuffers: boolean,
   dataChecker: (a: Float32Array) => Error | undefined,
   framebufferChecker: (a: Uint32Array) => Error | undefined
 ) {
+  t.skipIf(
+    useStorageBuffers &&
+      t.isCompatibility &&
+      !(t.device.limits.maxStorageBuffersInFragmentStage! >= 2),
+    `maxStorageBuffersInFragmentStage${t.device.limits.maxStorageBuffersInFragmentStage} is less than 2`
+  );
+
   const pipeline = t.device.createRenderPipeline({
     layout: 'auto',
     vertex: {
@@ -120,7 +124,7 @@ function drawFullScreen(
   const bg = t.device.createBindGroup({
     layout: pipeline.getBindGroupLayout(0),
     entries: [
-      ...(hasStorageBuffers(t)
+      ...(useStorageBuffers
         ? [
             {
               binding: 0,
@@ -187,7 +191,7 @@ function drawFullScreen(
   );
   t.queue.submit([encoder.finish()]);
 
-  if (hasStorageBuffers(t)) {
+  if (useStorageBuffers) {
     t.expectGPUBufferValuesPassCheck(dataBuffer, dataChecker, {
       type: Float32Array,
       typedLength: dataSize / bytesPerWord,
@@ -202,7 +206,9 @@ function drawFullScreen(
 
 g.test('all')
   .desc('Test a shader that discards all fragments')
+  .params(u => u.combine('useStorageBuffers', [false, true]))
   .fn(t => {
+    const { useStorageBuffers } = t.params;
     const code = `
 ${kSharedCode}
 
@@ -211,7 +217,7 @@ fn fsMain(@builtin(position) pos : vec4f) -> @location(0) vec2u {
   _ = uniformValues[0];
   discard;
   ${
-    hasStorageBuffers(t)
+    useStorageBuffers
       ? `
   let idx = atomicAdd(&atomicIndex, 1);
   output[idx] = pos.xy;
@@ -262,12 +268,14 @@ fn fsMain(@builtin(position) pos : vec4f) -> @location(0) vec2u {
       );
     };
 
-    drawFullScreen(t, code, dataChecker, fbChecker);
+    drawFullScreen(t, code, useStorageBuffers, dataChecker, fbChecker);
   });
 
 g.test('three_quarters')
   .desc('Test a shader that discards all but the upper-left quadrant fragments')
+  .params(u => u.combine('useStorageBuffers', [false, true]))
   .fn(t => {
+    const { useStorageBuffers } = t.params;
     const code = `
 ${kSharedCode}
 
@@ -278,7 +286,7 @@ fn fsMain(@builtin(position) pos : vec4f) -> @location(0) vec2u {
     discard;
   }
   ${
-    hasStorageBuffers(t)
+    useStorageBuffers
       ? `
   let idx = atomicAdd(&atomicIndex, 1);
   output[idx] = pos.xy;
@@ -343,7 +351,7 @@ fn fsMain(@builtin(position) pos : vec4f) -> @location(0) vec2u {
           if (discarded(x, y)) {
             return value === kWidth * kHeight;
           } else {
-            if (hasStorageBuffers(t)) {
+            if (useStorageBuffers) {
               return value < (kWidth * kHeight) / 4;
             } else {
               return value === (idx % 2 ? y : x);
@@ -360,7 +368,7 @@ fn fsMain(@builtin(position) pos : vec4f) -> @location(0) vec2u {
                 if (discarded(x, y)) {
                   return 0;
                 } else {
-                  return hasStorageBuffers(t) ? 'any' : idx % 2 ? y : x;
+                  return useStorageBuffers ? 'any' : idx % 2 ? y : x;
                 }
               },
             },
@@ -369,12 +377,14 @@ fn fsMain(@builtin(position) pos : vec4f) -> @location(0) vec2u {
       );
     };
 
-    drawFullScreen(t, code, dataChecker, fbChecker);
+    drawFullScreen(t, code, useStorageBuffers, dataChecker, fbChecker);
   });
 
 g.test('function_call')
   .desc('Test discards happening in a function call')
+  .params(u => u.combine('useStorageBuffers', [false, true]))
   .fn(t => {
+    const { useStorageBuffers } = t.params;
     const code = `
 ${kSharedCode}
 
@@ -393,7 +403,7 @@ fn fsMain(@builtin(position) pos : vec4f) -> @location(0) vec2u {
   _ = uniformValues[0];
   foo(pos.xy);
   ${
-    hasStorageBuffers(t)
+    useStorageBuffers
       ? `
   let idx = atomicAdd(&atomicIndex, 1);
   output[idx] = pos.xy;
@@ -452,7 +462,7 @@ fn fsMain(@builtin(position) pos : vec4f) -> @location(0) vec2u {
           if (discarded(x, y)) {
             return value === kWidth * kHeight;
           } else {
-            if (hasStorageBuffers(t)) {
+            if (useStorageBuffers) {
               return value < (kWidth * kHeight) / 2;
             } else {
               return value === (idx % 2 ? y : x);
@@ -469,7 +479,7 @@ fn fsMain(@builtin(position) pos : vec4f) -> @location(0) vec2u {
                 if (discarded(x, y)) {
                   return kWidth * kHeight;
                 }
-                return hasStorageBuffers(t) ? 'any' : idx % 2 ? y : x;
+                return useStorageBuffers ? 'any' : idx % 2 ? y : x;
               },
             },
           ],
@@ -477,12 +487,14 @@ fn fsMain(@builtin(position) pos : vec4f) -> @location(0) vec2u {
       );
     };
 
-    drawFullScreen(t, code, dataChecker, fbChecker);
+    drawFullScreen(t, code, useStorageBuffers, dataChecker, fbChecker);
   });
 
 g.test('loop')
   .desc('Test discards in a loop')
+  .params(u => u.combine('useStorageBuffers', [false, true]))
   .fn(t => {
+    const { useStorageBuffers } = t.params;
     const code = `
 ${kSharedCode}
 
@@ -495,7 +507,7 @@ fn fsMain(@builtin(position) pos : vec4f) -> @location(0) vec2u {
     }
   }
   ${
-    hasStorageBuffers(t)
+    useStorageBuffers
       ? `
   let idx = atomicAdd(&atomicIndex, 1);
   output[idx] = pos.xy;
@@ -546,12 +558,14 @@ fn fsMain(@builtin(position) pos : vec4f) -> @location(0) vec2u {
       );
     };
 
-    drawFullScreen(t, code, dataChecker, fbChecker);
+    drawFullScreen(t, code, useStorageBuffers, dataChecker, fbChecker);
   });
 
 g.test('continuing')
   .desc('Test discards in a loop')
+  .params(u => u.combine('useStorageBuffers', [false, true]))
   .fn(t => {
+    const { useStorageBuffers } = t.params;
     const code = `
 ${kSharedCode}
 
@@ -569,7 +583,7 @@ fn fsMain(@builtin(position) pos : vec4f) -> @location(0) vec2u {
     }
   }
   ${
-    hasStorageBuffers(t)
+    useStorageBuffers
       ? `
   let idx = atomicAdd(&atomicIndex, 1);
   output[idx] = pos.xy;
@@ -620,12 +634,14 @@ fn fsMain(@builtin(position) pos : vec4f) -> @location(0) vec2u {
       );
     };
 
-    drawFullScreen(t, code, dataChecker, fbChecker);
+    drawFullScreen(t, code, useStorageBuffers, dataChecker, fbChecker);
   });
 
 g.test('uniform_read_loop')
   .desc('Test that helpers read a uniform value in a loop')
+  .params(u => u.combine('useStorageBuffers', [false, true]))
   .fn(t => {
+    const { useStorageBuffers } = t.params;
     const code = `
 ${kSharedCode}
 
@@ -635,7 +651,7 @@ fn fsMain(@builtin(position) pos : vec4f) -> @location(0) vec2u {
   for (var i = 0u; i < uniformValues[0].x; i++) {
   }
   ${
-    hasStorageBuffers(t)
+    useStorageBuffers
       ? `
   let idx = atomicAdd(&atomicIndex, 1);
   output[idx] = pos.xy;
@@ -686,12 +702,14 @@ fn fsMain(@builtin(position) pos : vec4f) -> @location(0) vec2u {
       );
     };
 
-    drawFullScreen(t, code, dataChecker, fbChecker);
+    drawFullScreen(t, code, useStorageBuffers, dataChecker, fbChecker);
   });
 
 g.test('derivatives')
   .desc('Test that derivatives are correct in the presence of discard')
+  .params(u => u.combine('useStorageBuffers', [false, true]))
   .fn(t => {
+    const { useStorageBuffers } = t.params;
     const code = `
 ${kSharedCode}
 
@@ -710,7 +728,7 @@ fn fsMain(@builtin(position) pos : vec4f) -> @location(0) vec2u {
   let dx = dpdx(f32(v));
   let dy = dpdy(f32(v));
   ${
-    hasStorageBuffers(t)
+    useStorageBuffers
       ? `
   let idx = atomicAdd(&atomicIndex, 1);
   output[idx] = vec2(dx, dy);
@@ -765,7 +783,7 @@ fn fsMain(@builtin(position) pos : vec4f) -> @location(0) vec2u {
           if (discarded(x, y)) {
             return value === kWidth * kHeight;
           } else {
-            if (hasStorageBuffers(t)) {
+            if (useStorageBuffers) {
               return value < (3 * (kWidth * kHeight)) / 4;
             } else {
               asU32[0] = value as number;
@@ -784,7 +802,7 @@ fn fsMain(@builtin(position) pos : vec4f) -> @location(0) vec2u {
                 if (((x | y) & 0x1) === 0) {
                   return kWidth * kHeight;
                 } else {
-                  return hasStorageBuffers(t) ? 'any' : '+/- 3';
+                  return useStorageBuffers ? 'any' : '+/- 3';
                 }
               },
             },
@@ -793,5 +811,5 @@ fn fsMain(@builtin(position) pos : vec4f) -> @location(0) vec2u {
       );
     };
 
-    drawFullScreen(t, code, dataChecker, fbChecker);
+    drawFullScreen(t, code, useStorageBuffers, dataChecker, fbChecker);
   });
