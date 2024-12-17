@@ -334,7 +334,8 @@ Tests that you can not use 2 different views of the same texture in a render pas
     t.skipIf(
       t.isCompatibility &&
         textureType === 'storage' &&
-        !(t.device.limits.maxStorageBuffersInFragmentStage! > 2)
+        !(t.device.limits.maxStorageBuffersInFragmentStage! > 2),
+      `device only supports maxStorageBuffersInFragmentStage(${t.device.limits.maxStorageBuffersInFragmentStage}) but test needs 2`
     );
 
     const { bindConfig, fn } = kBindCases[bindCase];
