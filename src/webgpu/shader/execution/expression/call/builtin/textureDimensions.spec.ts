@@ -486,6 +486,8 @@ Parameters:
     t.selectDeviceOrSkipTestCase(info.feature);
   })
   .fn(t => {
+    t.skipIfNoStorageTexturesInStage(t.params.stage);
+
     const values = testValues(t.params);
     const texture = t.createTextureTracked({
       size: values.size,

@@ -207,6 +207,8 @@ Parameters
   .fn(t => {
     const { stage, format, access_mode, view_type } = t.params;
 
+    t.skipIfNoStorageTexturesInStage(stage);
+
     const texture = t.createTextureTracked({
       format,
       usage: GPUTextureUsage.STORAGE_BINDING,

@@ -787,6 +787,19 @@ function getWeightForMipLevel(
  * Used for textureNumSamples, textureNumLevels, textureNumLayers, textureDimension
  */
 export class WGSLTextureQueryTest extends GPUTest {
+  skipIfNoStorageTexturesInStage(stage: ShaderStage) {
+    if (this.isCompatibility) {
+      this.skipIf(
+        stage === 'fragment' && !(this.device.limits.maxStorageTexturesInFragmentStage! > 0),
+        'device does not support storage textures in fragment shaders'
+      );
+      this.skipIf(
+        stage === 'vertex' && !(this.device.limits.maxStorageTexturesInVertexStage! > 0),
+        'device does not support storage textures in vertex shaders'
+      );
+    }
+  }
+
   executeAndExpectResult(
     stage: ShaderStage,
     code: string,
@@ -795,17 +808,6 @@ export class WGSLTextureQueryTest extends GPUTest {
     expected: number[]
   ) {
     const { device } = this;
-
-    if (this.isCompatibility) {
-      this.skipIf(
-        stage === 'fragment' && !(this.device.limits.maxStorageTexturesInFragmentStage! > 0),
-        'device does not support storage textures in fragment shaders'
-      );
-      this.skipIf(
-        stage === 'vertex' && !(this.device.limits.maxStorageTexturesInVertexStage! > 0),
-        'device does not support storage textures in fragment shaders'
-      );
-    }
 
     const returnType = `vec4<u32>`;
     const castWGSL = `${returnType}(getValue()${range(4 - expected.length, () => ', 0').join('')})`;

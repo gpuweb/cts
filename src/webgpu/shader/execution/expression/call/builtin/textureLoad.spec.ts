@@ -75,7 +75,7 @@ function skipIfStorageTexturesNotSupportedInStage(t: GPUTest, stage: ShortShader
     );
     t.skipIf(
       stage === 'v' && !(t.device.limits.maxStorageTexturesInVertexStage! > 0),
-      'device does not support storage textures in fragment shaders'
+      'device does not support storage textures in vertex shaders'
     );
   }
 }

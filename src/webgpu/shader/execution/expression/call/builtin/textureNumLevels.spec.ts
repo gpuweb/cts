@@ -5,7 +5,6 @@ Returns the number of mip levels of a texture.
 `;
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
-import { MaxLimitsTestMixin } from '../../../../../gpu_test.js';
 import { getTextureDimensionFromView } from '../../../../../util/texture/base.js';
 import { kShaderStages } from '../../../../validation/decl/util.js';
 
@@ -38,7 +37,7 @@ const kTextureTypeToViewDimension = {
   texture_depth_cube_array: 'cube-array',
 } as const;
 
-export const g = makeTestGroup(MaxLimitsTestMixin(WGSLTextureQueryTest));
+export const g = makeTestGroup(WGSLTextureQueryTest);
 
 g.test('sampled')
   .specURL('https://www.w3.org/TR/WGSL/#texturenumlevels')
