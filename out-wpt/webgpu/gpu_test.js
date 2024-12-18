@@ -156,13 +156,13 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
    */
   selectDeviceOrSkipTestCase(
   descriptor,
-  descriptorModifierFn)
+  descriptorModifier)
   {
     assert(this.provider === undefined, "Can't selectDeviceOrSkipTestCase() multiple times");
     this.provider = devicePool.acquire(
       this.recorder,
       initUncanonicalizedDeviceDescriptor(descriptor),
-      descriptorModifierFn
+      descriptorModifier
     );
     // Suppress uncaught promise rejection (we'll catch it later).
     this.provider.catch(() => {});
@@ -1334,13 +1334,20 @@ desc)
 export class MaxLimitsGPUTestSubcaseBatchState extends GPUTestSubcaseBatchState {
   selectDeviceOrSkipTestCase(
   descriptor,
-  descriptorModifierFn)
+  descriptorModifier)
   {
-    const wrapper = (adapter, desc) => {
-      desc = descriptorModifierFn ? descriptorModifierFn(adapter, desc) : desc;
-      return setAllLimitsToAdapterLimits(adapter, desc);
+    const mod = {
+      descriptorModifier(adapter, desc) {
+        desc = descriptorModifier?.descriptorModifier ?
+        descriptorModifier.descriptorModifier(adapter, desc) :
+        desc;
+        return setAllLimitsToAdapterLimits(adapter, desc);
+      },
+      keyModifier(baseKey) {
+        return `${baseKey}:MaxLimits`;
+      }
     };
-    super.selectDeviceOrSkipTestCase(initUncanonicalizedDeviceDescriptor(descriptor), wrapper);
+    super.selectDeviceOrSkipTestCase(initUncanonicalizedDeviceDescriptor(descriptor), mod);
   }
 }
 
