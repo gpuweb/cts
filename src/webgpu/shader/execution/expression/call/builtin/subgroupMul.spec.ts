@@ -403,6 +403,7 @@ const kMaxSize = 128;
  *             * Component 1 is the subgroup_invocation_id
  *             * Component 2 is a unique generated subgroup_id
  * @param inputData Input data array
+ * @param op The type of subgroup mulitply
  * @param format The framebuffer format
  * @param width The framebuffer width
  * @param height The framebuffer height
