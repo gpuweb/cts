@@ -43,7 +43,7 @@ import { CommandBufferMaker, EncoderType } from './util/command_buffer_maker.js'
 import { ScalarType } from './util/conversion.js';
 import {
   CanonicalDeviceDescriptor,
-  DescriptorModifierFn,
+  DescriptorModifier,
   DevicePool,
   DeviceProvider,
   UncanonicalizedDeviceDescriptor,
@@ -156,13 +156,13 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
    */
   selectDeviceOrSkipTestCase(
     descriptor: DeviceSelectionDescriptor,
-    descriptorModifierFn?: DescriptorModifierFn
+    descriptorModifier?: DescriptorModifier
   ): void {
     assert(this.provider === undefined, "Can't selectDeviceOrSkipTestCase() multiple times");
     this.provider = devicePool.acquire(
       this.recorder,
       initUncanonicalizedDeviceDescriptor(descriptor),
-      descriptorModifierFn
+      descriptorModifier
     );
     // Suppress uncaught promise rejection (we'll catch it later).
     this.provider.catch(() => {});
@@ -1334,13 +1334,20 @@ function setAllLimitsToAdapterLimits(
 export class MaxLimitsGPUTestSubcaseBatchState extends GPUTestSubcaseBatchState {
   override selectDeviceOrSkipTestCase(
     descriptor: DeviceSelectionDescriptor,
-    descriptorModifierFn?: DescriptorModifierFn
+    descriptorModifier?: DescriptorModifier
   ): void {
-    const wrapper = (adapter: GPUAdapter, desc: CanonicalDeviceDescriptor | undefined) => {
-      desc = descriptorModifierFn ? descriptorModifierFn(adapter, desc) : desc;
-      return setAllLimitsToAdapterLimits(adapter, desc);
+    const mod: DescriptorModifier = {
+      descriptorModifier(adapter: GPUAdapter, desc: CanonicalDeviceDescriptor | undefined) {
+        desc = descriptorModifier?.descriptorModifier
+          ? descriptorModifier.descriptorModifier(adapter, desc)
+          : desc;
+        return setAllLimitsToAdapterLimits(adapter, desc);
+      },
+      keyModifier(baseKey: string) {
+        return `${baseKey}:MaxLimits`;
+      },
     };
-    super.selectDeviceOrSkipTestCase(initUncanonicalizedDeviceDescriptor(descriptor), wrapper);
+    super.selectDeviceOrSkipTestCase(initUncanonicalizedDeviceDescriptor(descriptor), mod);
   }
 }
 
@@ -1466,7 +1473,7 @@ export interface TextureTestMixinType {
    * Effectively it's a Uint8Array to Uint8Array copy that
    * does the same thing as `writeTexture` but because the
    * destination is a buffer you have to provide the parameters
-   * of the destination buffer similarly to how you'd provide them
+   * of the destination buffer similarly to how you'esc provide them
    * to `copyTextureToBuffer`
    */
   updateLinearTextureDataSubBox(
