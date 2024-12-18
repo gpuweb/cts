@@ -67,6 +67,17 @@ import {
 import { createTextureFromTexelViews } from './util/texture.js';
 import { reifyExtent3D, reifyOrigin3D } from './util/unions.js';
 
+// Declarations for WebGPU items we want tests for that are not yet officially part of the spec.
+declare global {
+  // MAINTENANCE_TODO: remove once added to @webgpu/types
+  interface GPUSupportedLimits {
+    readonly maxStorageBuffersInFragmentStage?: number;
+    readonly maxStorageTexturesInFragmentStage?: number;
+    readonly maxStorageBuffersInVertexStage?: number;
+    readonly maxStorageTexturesInVertexStage?: number;
+  }
+}
+
 const devicePool = new DevicePool();
 
 // MAINTENANCE_TODO: When DevicePool becomes able to provide multiple devices at once, use the
@@ -1333,16 +1344,27 @@ export class MaxLimitsGPUTestSubcaseBatchState extends GPUTestSubcaseBatchState 
   }
 }
 
-/**
- * A Test that requests all the max limits from the adapter on the device.
- */
-export class MaxLimitsTest extends GPUTest {
-  public static override MakeSharedState(
-    recorder: TestCaseRecorder,
-    params: TestParams
-  ): GPUTestSubcaseBatchState {
-    return new MaxLimitsGPUTestSubcaseBatchState(recorder, params);
+export type MaxLimitsTestMixinType = {
+  // placeholder. Change to an interface if we need MaxLimits specific methods.
+};
+
+export function MaxLimitsTestMixin<F extends FixtureClass<GPUTestBase>>(
+  Base: F
+): FixtureClassWithMixin<F, MaxLimitsTestMixinType> {
+  class MaxLimitsImpl
+    extends (Base as FixtureClassInterface<GPUTestBase>)
+    implements MaxLimitsTestMixinType
+  {
+    //
+    public static override MakeSharedState(
+      recorder: TestCaseRecorder,
+      params: TestParams
+    ): GPUTestSubcaseBatchState {
+      return new MaxLimitsGPUTestSubcaseBatchState(recorder, params);
+    }
   }
+
+  return MaxLimitsImpl as unknown as FixtureClassWithMixin<F, MaxLimitsTestMixinType>;
 }
 
 /**

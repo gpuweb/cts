@@ -787,6 +787,19 @@ function getWeightForMipLevel(
  * Used for textureNumSamples, textureNumLevels, textureNumLayers, textureDimension
  */
 export class WGSLTextureQueryTest extends GPUTest {
+  skipIfNoStorageTexturesInStage(stage: ShaderStage) {
+    if (this.isCompatibility) {
+      this.skipIf(
+        stage === 'fragment' && !(this.device.limits.maxStorageTexturesInFragmentStage! > 0),
+        'device does not support storage textures in fragment shaders'
+      );
+      this.skipIf(
+        stage === 'vertex' && !(this.device.limits.maxStorageTexturesInVertexStage! > 0),
+        'device does not support storage textures in vertex shaders'
+      );
+    }
+  }
+
   executeAndExpectResult(
     stage: ShaderStage,
     code: string,
@@ -795,6 +808,7 @@ export class WGSLTextureQueryTest extends GPUTest {
     expected: number[]
   ) {
     const { device } = this;
+
     const returnType = `vec4<u32>`;
     const castWGSL = `${returnType}(getValue()${range(4 - expected.length, () => ', 0').join('')})`;
     const stageWGSL =
@@ -1516,7 +1530,7 @@ export interface Texture {
 /**
  * Converts the src texel representation to an RGBA representation.
  */
-function convertPerTexelComponentToResultFormat(
+export function convertPerTexelComponentToResultFormat(
   src: PerTexelComponent<number>,
   format: EncodableTextureFormat
 ): PerTexelComponent<number> {
@@ -2223,6 +2237,8 @@ export function texelsApproximatelyEqual(
   for (const component of rgbaComponentsToCheck) {
     const g = gotRGBA[component]!;
     const e = expectRGBA[component]!;
+    assert(!isNaN(g), () => `got component is NaN: ${g}`);
+    assert(!isNaN(e), () => `expected component is NaN: ${e}`);
     const absDiff = Math.abs(g - e);
     const ulpDiff = Math.abs(gULP[component]! - eULP[component]!);
     if (ulpDiff > 3 && absDiff > maxFractionalDiff) {
@@ -2486,7 +2502,7 @@ export async function checkCallResults<T extends Dimensionality>(
             `          : as texel coord mip level[${mipLevel}]: (${t[0]}, ${t[1]}), face: ${faceNdx}(${kFaceNames[faceNdx]})`
           );
         }
-      } else {
+      } else if (call.coordType === 'f') {
         for (let mipLevel = 0; mipLevel < (texture.descriptor.mipLevelCount ?? 1); ++mipLevel) {
           const mipSize = virtualMipSize(
             texture.descriptor.dimension ?? '2d',
@@ -3109,12 +3125,15 @@ export async function readTextureToTexelViews(
           ((coord.z * size[0] * size[1] + coord.y * size[0] + coord.x) * sampleCount +
             (coord.sampleIndex ?? 0)) *
           4;
-        return {
-          R: data[offset + 0],
-          G: data[offset + 1],
-          B: data[offset + 2],
-          A: data[offset + 3],
-        };
+        return convertResultFormatToTexelViewFormat(
+          {
+            R: data[offset + 0],
+            G: data[offset + 1],
+            B: data[offset + 2],
+            A: data[offset + 3],
+          },
+          format
+        );
       })
     );
   }
@@ -3430,25 +3449,72 @@ async function identifySamplePoints<T extends Dimensionality>(
   // example when blockWidth = 2, blockHeight = 2
   //
   //     0   1   2   3
-  //   +===+===+===+===+
-  // 0 # a |   #   |   #
-  //   +---+---+---+---+
-  // 1 #   |   #   |   #
-  //   +===+===+===+===+
-  // 2 #   |   #   |   #
-  //   +---+---+---+---+
-  // 3 #   |   #   | b #
-  //   +===+===+===+===+
+  //   ╔═══╤═══╦═══╤═══╗
+  // 0 ║ a │   ║   │   ║
+  //   ╟───┼───╫───┼───╢
+  // 1 ║   │   ║   │   ║
+  //   ╠═══╪═══╬═══╪═══╣
+  // 2 ║   │   ║   │   ║
+  //   ╟───┼───╫───┼───╢
+  // 3 ║   │   ║   │ b ║
+  //   ╚═══╧═══╩═══╧═══╝
+
+  /* prettier-ignore */
+  const blockParts = {
+    top:      { left: '╔', fill: '═══', right: '╗', block: '╦', texel: '╤' },
+    mid:      { left: '╠', fill: '═══', right: '╣', block: '╬', texel: '╪' },
+    bot:      { left: '╚', fill: '═══', right: '╝', block: '╩', texel: '╧' },
+    texelMid: { left: '╟', fill: '───', right: '╢', block: '╫', texel: '┼' },
+    value:    { left: '║', fill: '   ', right: '║', block: '║', texel: '│' },
+  } as const;
+  /* prettier-ignore */
+  const nonBlockParts = {
+    top:      { left: '┌', fill: '───', right: '┐', block: '┬', texel: '┬' },
+    mid:      { left: '├', fill: '───', right: '┤', block: '┼', texel: '┼' },
+    bot:      { left: '└', fill: '───', right: '┘', block: '┴', texel: '┴' },
+    texelMid: { left: '├', fill: '───', right: '┤', block: '┼', texel: '┼' },
+    value:    { left: '│', fill: '   ', right: '│', block: '│', texel: '│' },
+  } as const;
 
   const lines: string[] = [];
   const letter = (idx: number) => String.fromCodePoint(idx < 30 ? 97 + idx : idx + 9600 - 30); // 97: 'a'
   let idCount = 0;
 
   const { blockWidth, blockHeight } = kTextureFormatInfo[texture.descriptor.format];
-  const [blockHChar, blockVChar] = Math.max(blockWidth, blockHeight) > 1 ? ['=', '#'] : ['-', '|'];
-  const blockHCell = '+'.padStart(4, blockHChar); // generates ---+ or ===+
   // range + concatenate results.
   const rangeCat = <T>(num: number, fn: (i: number) => T) => range(num, fn).join('');
+  const joinFn = (arr: string[], fn: (i: number) => string) => {
+    const joins = range(arr.length - 1, fn);
+    return arr.map((s, i) => `${s}${joins[i] ?? ''}`).join('');
+  };
+  const parts = Math.max(blockWidth, blockHeight) > 1 ? blockParts : nonBlockParts;
+  /**
+   * Makes a row that's [left, fill, texel, fill, block, fill, texel, fill, right]
+   * except if `contents` is supplied then it would be
+   * [left, contents[0], texel, contents[1], block, contents[2], texel, contents[3], right]
+   */
+  const makeRow = (
+    blockPaddedWidth: number,
+    width: number,
+    {
+      left,
+      fill,
+      right,
+      block,
+      texel,
+    }: {
+      left: string;
+      fill: string;
+      right: string;
+      block: string;
+      texel: string;
+    },
+    contents?: string[]
+  ) => {
+    return `${left}${joinFn(contents ?? range(blockPaddedWidth, x => fill), x => {
+      return (x + 1) % blockWidth === 0 ? block : texel;
+    })}${right}`;
+  };
 
   for (let mipLevel = 0; mipLevel < mipLevelCount; ++mipLevel) {
     const level = levels[mipLevel];
@@ -3478,31 +3544,39 @@ async function identifySamplePoints<T extends Dimensionality>(
         continue;
       }
 
+      const blockPaddedHeight = align(height, blockHeight);
+      const blockPaddedWidth = align(width, blockWidth);
       lines.push(`   ${rangeCat(width, x => `  ${x.toString().padEnd(2)}`)}`);
-      lines.push(`   +${rangeCat(width, () => blockHCell)}`);
-      for (let y = 0; y < height; y++) {
-        {
-          let line = `${y.toString().padStart(2)} ${blockVChar}`;
-          for (let x = 0; x < width; x++) {
-            const colChar = (x + 1) % blockWidth === 0 ? blockVChar : '|';
-            const texelIdx = x + y * texelsPerRow;
-            const weight = layerEntries.get(texelIdx);
-            if (weight !== undefined) {
-              line += ` ${letter(idCount + orderedTexelIndices.length)} ${colChar}`;
-              orderedTexelIndices.push(texelIdx);
-            } else {
-              line += `   ${colChar}`;
-            }
-          }
-          lines.push(line);
-        }
-        if (y < height - 1) {
-          lines.push(
-            `   +${rangeCat(width, () => ((y + 1) % blockHeight === 0 ? blockHCell : '---+'))}`
-          );
-        }
+      lines.push(`   ${makeRow(blockPaddedWidth, width, parts.top)}`);
+      for (let y = 0; y < blockPaddedHeight; y++) {
+        lines.push(
+          `${y.toString().padStart(2)} ${makeRow(
+            blockPaddedWidth,
+            width,
+            parts.value,
+            range(blockPaddedWidth, x => {
+              const texelIdx = x + y * texelsPerRow;
+              const weight = layerEntries.get(texelIdx);
+              const outside = y >= height || x >= width;
+              if (outside || weight === undefined) {
+                return outside ? '░░░' : '   ';
+              } else {
+                const id = letter(idCount + orderedTexelIndices.length);
+                orderedTexelIndices.push(texelIdx);
+                return ` ${id} `;
+              }
+            })
+          )}`
+        );
+        // It's either a block row, a texel row, or the last row.
+        const end = y < blockPaddedHeight - 1;
+        const lineParts = end
+          ? (y + 1) % blockHeight === 0
+            ? parts.mid
+            : parts.texelMid
+          : parts.bot;
+        lines.push(`   ${makeRow(blockPaddedWidth, width, lineParts)}`);
       }
-      lines.push(`   +${range(width, () => blockHCell).join('')}`);
 
       const pad2 = (n: number) => n.toString().padStart(2);
       const pad3 = (n: number) => n.toString().padStart(3);
