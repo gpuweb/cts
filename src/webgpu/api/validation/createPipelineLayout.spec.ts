@@ -176,61 +176,25 @@ g.test('bind_group_layouts,null_bind_group_layouts')
     u //
       .combine('bindGroupLayoutCount', [1, 2, 3, 4] as const)
       .combine('bindGroupLayout0', MaybeNullBindGroupLayoutTypes)
-      .combine('bindGroupLayout1', MaybeNullBindGroupLayoutTypes)
-      .combine('bindGroupLayout2', MaybeNullBindGroupLayoutTypes)
-      .combine('bindGroupLayout3', MaybeNullBindGroupLayoutTypes)
-      .filter(t => {
-        switch (t.bindGroupLayoutCount) {
-          case 1:
-            // Only bindGroupLayout0 is valid and represents null bind group layout, and we don't
-            // need to care about the other bind group layouts.
-            return (
-              (t.bindGroupLayout0 === 'Null' || t.bindGroupLayout0 === 'Undefined') &&
-              t.bindGroupLayout1 === 'Null' &&
-              t.bindGroupLayout2 === 'Null' &&
-              t.bindGroupLayout3 === 'Null'
-            );
-          case 2:
-            // Only bindGroupLayout0 and bindGroupLayout1 are valid and at least one of them
-            // represents null bind group layout, and we don't need to care about the other bind
-            // group layouts.
-            return (
-              (t.bindGroupLayout0 === 'Null' ||
-                t.bindGroupLayout0 === 'Undefined' ||
-                t.bindGroupLayout1 === 'Null' ||
-                t.bindGroupLayout1 === 'Undefined') &&
-              t.bindGroupLayout2 === 'Null' &&
-              t.bindGroupLayout3 === 'Null'
-            );
-          case 3:
-            // Only bindGroupLayout0, bindGroupLayout1 and bindGroupLayout2 are valid and at least
-            // one of them represents null bind group layout, and we don't need to care about
-            // bindGroupLayout3.
-            return (
-              (t.bindGroupLayout0 === 'Null' ||
-                t.bindGroupLayout0 === 'Undefined' ||
-                t.bindGroupLayout1 === 'Null' ||
-                t.bindGroupLayout1 === 'Undefined' ||
-                t.bindGroupLayout2 === 'Null' ||
-                t.bindGroupLayout2 === 'Undefined') &&
-              t.bindGroupLayout3 === 'Null'
-            );
-          case 4:
-            // At lease one of the bindGroupLayout0, bindGroupLayout1, bindGroupLayout2 and
-            // bindGroupLayout3 represents null bind group layout.
-            return (
-              t.bindGroupLayout0 === 'Null' ||
-              t.bindGroupLayout0 === 'Undefined' ||
-              t.bindGroupLayout1 === 'Null' ||
-              t.bindGroupLayout1 === 'Undefined' ||
-              t.bindGroupLayout2 === 'Null' ||
-              t.bindGroupLayout2 === 'Undefined' ||
-              t.bindGroupLayout3 === 'Null' ||
-              t.bindGroupLayout3 === 'Undefined'
-            );
-          default:
-            return false;
-        }
+      .expand('bindGroupLayout1', p =>
+        p.bindGroupLayoutCount > 1 ? MaybeNullBindGroupLayoutTypes : (['Null'] as const)
+      )
+      .expand('bindGroupLayout2', p =>
+        p.bindGroupLayoutCount > 2 ? MaybeNullBindGroupLayoutTypes : (['Null'] as const)
+      )
+      .expand('bindGroupLayout3', p =>
+        p.bindGroupLayoutCount > 3 ? MaybeNullBindGroupLayoutTypes : (['Null'] as const)
+      )
+      .filter(p => {
+        // Only test cases where at least one of the bind group layouts is null.
+        const allBGLs = [
+          p.bindGroupLayout0,
+          p.bindGroupLayout1,
+          p.bindGroupLayout2,
+          p.bindGroupLayout3,
+        ];
+        const bgls = allBGLs.slice(0, p.bindGroupLayoutCount);
+        return bgls.includes('Null') || bgls.includes('Undefined');
       })
   )
   .fn(t => {
