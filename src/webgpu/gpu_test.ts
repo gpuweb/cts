@@ -1473,7 +1473,7 @@ export interface TextureTestMixinType {
    * Effectively it's a Uint8Array to Uint8Array copy that
    * does the same thing as `writeTexture` but because the
    * destination is a buffer you have to provide the parameters
-   * of the destination buffer similarly to how you'esc provide them
+   * of the destination buffer similarly to how you'd provide them
    * to `copyTextureToBuffer`
    */
   updateLinearTextureDataSubBox(
