@@ -379,6 +379,7 @@ const kMaxSize = 128;
  *             * Component 0 is the addition result
  *             * Component 1 is the subgroup_invocation_id
  *             * Component 2 is a unique generated subgroup_id
+ * @param op The type of subgroup addition
  * @param format The framebuffer format
  * @param width The framebuffer width
  * @param height The framebuffer height
