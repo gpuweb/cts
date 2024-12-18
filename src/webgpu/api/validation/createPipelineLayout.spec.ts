@@ -164,7 +164,7 @@ g.test('bind_group_layouts,device_mismatch')
     }, mismatched);
   });
 
-const MaybeNullBindGroupLayoutTypes = ['Null', 'Empty', 'NonEmpty'] as const;
+const MaybeNullBindGroupLayoutTypes = ['Null', 'Undefined', 'Empty', 'NonEmpty'] as const;
 
 g.test('bind_group_layouts,null_bind_group_layouts')
   .desc(
@@ -185,7 +185,7 @@ g.test('bind_group_layouts,null_bind_group_layouts')
             // Only bindGroupLayout0 is valid and represents null bind group layout, and we don't
             // need to care about the other bind group layouts.
             return (
-              t.bindGroupLayout0 === 'Null' &&
+              (t.bindGroupLayout0 === 'Null' || t.bindGroupLayout0 === 'Undefined') &&
               t.bindGroupLayout1 === 'Null' &&
               t.bindGroupLayout2 === 'Null' &&
               t.bindGroupLayout3 === 'Null'
@@ -195,7 +195,10 @@ g.test('bind_group_layouts,null_bind_group_layouts')
             // represents null bind group layout, and we don't need to care about the other bind
             // group layouts.
             return (
-              (t.bindGroupLayout0 === 'Null' || t.bindGroupLayout1 === 'Null') &&
+              (t.bindGroupLayout0 === 'Null' ||
+                t.bindGroupLayout0 === 'Undefined' ||
+                t.bindGroupLayout1 === 'Null' ||
+                t.bindGroupLayout1 === 'Undefined') &&
               t.bindGroupLayout2 === 'Null' &&
               t.bindGroupLayout3 === 'Null'
             );
@@ -205,8 +208,11 @@ g.test('bind_group_layouts,null_bind_group_layouts')
             // bindGroupLayout3.
             return (
               (t.bindGroupLayout0 === 'Null' ||
+                t.bindGroupLayout0 === 'Undefined' ||
                 t.bindGroupLayout1 === 'Null' ||
-                t.bindGroupLayout2 === 'Null') &&
+                t.bindGroupLayout1 === 'Undefined' ||
+                t.bindGroupLayout2 === 'Null' ||
+                t.bindGroupLayout2 === 'Undefined') &&
               t.bindGroupLayout3 === 'Null'
             );
           case 4:
@@ -214,9 +220,13 @@ g.test('bind_group_layouts,null_bind_group_layouts')
             // bindGroupLayout3 represents null bind group layout.
             return (
               t.bindGroupLayout0 === 'Null' ||
+              t.bindGroupLayout0 === 'Undefined' ||
               t.bindGroupLayout1 === 'Null' ||
+              t.bindGroupLayout1 === 'Undefined' ||
               t.bindGroupLayout2 === 'Null' ||
-              t.bindGroupLayout3 === 'Null'
+              t.bindGroupLayout2 === 'Undefined' ||
+              t.bindGroupLayout3 === 'Null' ||
+              t.bindGroupLayout3 === 'Undefined'
             );
           default:
             return false;
@@ -245,7 +255,7 @@ g.test('bind_group_layouts,null_bind_group_layouts')
       ],
     });
 
-    const bindGroupLayouts: (GPUBindGroupLayout | null)[] = [];
+    const bindGroupLayouts: (GPUBindGroupLayout | null | undefined)[] = [];
 
     const AddBindGroupLayout = function (
       bindGroupLayoutType: (typeof MaybeNullBindGroupLayoutTypes)[number]
@@ -253,6 +263,9 @@ g.test('bind_group_layouts,null_bind_group_layouts')
       switch (bindGroupLayoutType) {
         case 'Null':
           bindGroupLayouts.push(null);
+          break;
+        case 'Undefined':
+          bindGroupLayouts.push(undefined);
           break;
         case 'Empty':
           bindGroupLayouts.push(emptyBindGroupLayout);
