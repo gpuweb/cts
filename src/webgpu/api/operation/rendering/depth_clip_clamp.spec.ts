@@ -279,7 +279,7 @@ have unexpected values then get drawn to the color buffer, which is later checke
       });
       pass.setPipeline(testPipeline);
       if (hasStorageBuffers) {
-        pass.setBindGroup(0, testBindGroup!);
+        pass.setBindGroup(0, testBindGroup);
       }
       pass.setViewport(0, 0, kNumTestPoints, 1, kViewportMinDepth, kViewportMaxDepth);
       pass.draw(kNumTestPoints);
