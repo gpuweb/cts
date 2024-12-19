@@ -260,9 +260,9 @@ g.test('bind_group_layouts,null_bind_group_layouts')
 g.test('bind_group_layouts,create_pipeline_with_null_bind_group_layouts')
   .desc(
     `
-  Tests that it is valid to create a render pipeline or compute pipeline layout with a pipeline
-  layout created with null bind group layouts as long as the pipeline layout matches the
-  declarations in the shaders.
+  Tests that it is valid to create a render pipeline or compute pipeline with a pipeline layout
+  created with null bind group layouts as long as the pipeline layout matches the declarations in
+  the shaders.
   `
   )
   .params(u =>
