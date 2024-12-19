@@ -23,6 +23,7 @@ TODO: ensure existing tests cover these notes. Note many of these may be operati
 `;
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
+import { MaxLimitsTestMixin } from '../../../../../gpu_test.js';
 import { ValidationTest } from '../../../validation_test.js';
 
 interface ViewportCall {
@@ -128,7 +129,7 @@ class F extends ValidationTest {
   }
 }
 
-export const g = makeTestGroup(F);
+export const g = makeTestGroup(MaxLimitsTestMixin(F));
 
 g.test('setViewport,width_height_nonnegative')
   .desc(
@@ -139,16 +140,20 @@ TODO Test the first value smaller than -0`
   )
   .paramsSubcasesOnly([
     // Control case: everything to 0 is ok, covers the empty viewport case.
-    { w: 0, h: 0 },
+    { x: 0, y: 0, w: 0, h: 0 },
 
-    // Test -1
-    { w: -1, h: 0 },
-    { w: 0, h: -1 },
+    // Negative width/height is invalid
+    { x: 0, y: 0, w: -1, h: 0 },
+    { x: 0, y: 0, w: 0, h: -1 },
+
+    // Negative width/height is invalid even if the resulting bounds are positive
+    { x: 1, y: 0, w: -1, h: 0 },
+    { x: 0, y: 1, w: 0, h: -1 },
   ])
   .fn(t => {
-    const { w, h } = t.params;
+    const { x, y, w, h } = t.params;
     const success = w >= 0 && h >= 0;
-    t.testViewportCall(success, { x: 0, y: 0, w, h, minDepth: 0, maxDepth: 1 });
+    t.testViewportCall(success, { x, y, w, h, minDepth: 0, maxDepth: 1 });
   });
 
 g.test('setViewport,exceeds_attachment_size')
@@ -172,46 +177,45 @@ g.test('setViewport,xy_rect_contained_in_bounds')
 and that the viewport size cannot exceed the maximum.`
   )
   .paramsSubcasesOnly(u =>
-    u.combineWithParams([
+    u.combine('dimension', [0, 1]).combineWithParams([
       // Control case: max viewport is valid.
-      { mx: 0, my: 0, dx: 0, dy: 0, dw: 0, dh: 0 },
+      { om: 0, od: 0, sd: 0 },
 
       // Other valid cases
-      { mx: -1, my: 0, dx: 0, dy: 0, dw: 0, dh: 0 },
-      { mx: -2, my: 0, dx: 0, dy: 0, dw: 0, dh: 0 },
-      { mx: 1, my: 0, dx: -1, dy: 0, dw: 0, dh: 0 },
-      { mx: 0, my: -1, dx: 0, dy: 0, dw: 0, dh: 0 },
-      { mx: 0, my: -2, dx: 0, dy: 0, dw: 0, dh: 0 },
-      { mx: 0, my: 1, dx: 0, dy: -1, dw: 0, dh: 0 },
-      { mx: 0, my: 0, dx: -1, dy: 0, dw: 0, dh: 0 },
-      { mx: 0, my: 0, dx: 1, dy: 0, dw: 0, dh: 0 },
-      { mx: 0, my: 0, dx: 0, dy: -1, dw: 0, dh: 0 },
-      { mx: 0, my: 0, dx: 0, dy: 1, dw: 0, dh: 0 },
-      { mx: 1, my: 0, dx: 0, dy: 0, dw: -1, dh: 0 },
-      { mx: 0, my: 1, dx: 0, dy: 0, dw: 0, dh: -1 },
+      { om: -1, od: 0, sd: 0 },
+      { om: -2, od: 0, sd: 0 },
+      { om: 1, od: -1, sd: 0 },
+      { om: 0, od: -1, sd: 0 },
+      { om: 0, od: 1, sd: 0 },
+      { om: 1, od: 0, sd: -1 },
 
       // Cases that go outside the allowed bounds
-      { mx: -2, my: 0, dx: -1, dy: 0, dw: 0, dh: 0 },
-      { mx: 0, my: -2, dx: 0, dy: -1, dw: 0, dh: 0 },
-      { mx: 1, my: 0, dx: 0, dy: 0, dw: 0, dh: 0 },
-      { mx: 0, my: 1, dx: 0, dy: 0, dw: 0, dh: 0 },
-      { mx: 1, my: 0, dx: 1, dy: 0, dw: -1, dh: 0 },
-      { mx: 0, my: 1, dx: 0, dy: 1, dw: 0, dh: -1 },
+      { om: -2, od: -1, sd: 0 },
+      { om: 1, od: 0, sd: 0 },
+      { om: 1, od: 1, sd: -1 },
+      { om: 1, od: -0.1, sd: 0 },
 
-      // Cases that exceed the max viewport size
-      { mx: 0, my: 0, dx: 0, dy: 0, dw: 1, dh: 0 },
-      { mx: 0, my: 0, dx: 0, dy: 0, dw: 0, dh: 1 },
+      // Case that exceeds the max viewport size
+      { om: 0, od: 0, sd: 1 },
+      { om: 0, od: 0, sd: 0.1 },
     ])
   )
   .fn(t => {
-    const { mx, my, dx, dy } = t.params;
+    const { dimension, om, od, sd } = t.params;
+
     const maxViewportSize = t.device.limits.maxTextureDimension2D;
     const maxViewportBounds = maxViewportSize * 2;
 
-    const x = maxViewportSize * mx + dx;
-    const y = maxViewportSize * my + dy;
-    const w = maxViewportSize;
-    const h = maxViewportSize;
+    const xy = [0, 0];
+    const wh = [maxViewportSize, maxViewportSize];
+
+    xy[dimension] = maxViewportSize * om + od;
+    wh[dimension] += sd;
+
+    const x = xy[0];
+    const y = xy[1];
+    const w = wh[0];
+    const h = wh[1];
 
     const inBounds =
       x >= -maxViewportBounds &&
