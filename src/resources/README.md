@@ -91,3 +91,16 @@ ffmpeg -display_vflip -i temp.mp4 -c copy four-colors-vp9-bt601-vflip.mp4
 rm temp.mp4
 
 ```
+
+The test video files were generated with by exiftool cmds below:
+```
+// Generate jpg picture with 90 cw rotation metadata
+exiftool -Orientation#=6 four-colors.jpg -o .\four-colors-rotate-90-cw.jpg
+
+// Generate jpg picture with 180 cw rotation metadata
+exiftool -Orientation#=3 four-colors.jpg -o .\four-colors-rotate-180-cw.jpg
+
+// Generate jpg picture with 270 cw rotation metadata
+exiftool -Orientation#=8 four-colors.jpg -o .\four-colors-rotate-270-cw.jpg
+
+```

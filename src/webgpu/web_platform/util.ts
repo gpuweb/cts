@@ -101,6 +101,15 @@ export const kVideoExpectedColors = makeTable({
   },
 } as const);
 
+export const kImageExpectedColors = {
+  srgb: {
+    red: { R: 1.0, G: 0.0, B: 0.0, A: 1.0 },
+    green: { R: 0.0, G: 1.0, B: 0.0, A: 1.0 },
+    blue: { R: 0.0, G: 0.0, B: 1.0, A: 1.0 },
+    yellow: { R: 1.0, G: 1.0, B: 0.0, A: 1.0 },
+  },
+} as const;
+
 // MAINTENANCE_TODO: Add BT.2020 video in table.
 // Video container and codec defines several transform ops to apply to raw decoded frame to display.
 // Our test cases covers 'visible rect' and 'rotation'.
@@ -350,6 +359,47 @@ type VideoName = keyof typeof kVideoInfo;
 export const kVideoNames: readonly VideoName[] = keysOf(kVideoInfo);
 
 export const kPredefinedColorSpace = ['display-p3', 'srgb'] as const;
+
+export const kImageInfo = makeTable({
+  table: {
+    'four-colors.jpg': {
+      display: {
+        topLeftColor: 'yellow',
+        topRightColor: 'red',
+        bottomLeftColor: 'blue',
+        bottomRightColor: 'green',
+      },
+    },
+    'four-colors-rotate-90-cw.jpg': {
+      display: {
+        topLeftColor: 'blue',
+        topRightColor: 'yellow',
+        bottomLeftColor: 'green',
+        bottomRightColor: 'red',
+      },
+    },
+    'four-colors-rotate-180-cw.jpg': {
+      display: {
+        topLeftColor: 'green',
+        topRightColor: 'blue',
+        bottomLeftColor: 'red',
+        bottomRightColor: 'yellow',
+      },
+    },
+    'four-colors-rotate-270-cw.jpg': {
+      display: {
+        topLeftColor: 'red',
+        topRightColor: 'green',
+        bottomLeftColor: 'yellow',
+        bottomRightColor: 'blue',
+      },
+    },
+  },
+} as const);
+
+type ImageName = keyof typeof kImageInfo;
+export const kImageNames: readonly ImageName[] = keysOf(kImageInfo);
+
 /**
  * Starts playing a video and waits for it to be consumable.
  * Returns a promise which resolves after `callback` (which may be async) completes.
