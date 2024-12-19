@@ -16,7 +16,7 @@ import {
   kVertexFormatInfo,
   kVertexFormats,
 } from '../../../capability_info.js';
-import { GPUTest } from '../../../gpu_test.js';
+import { GPUTest, MaxLimitsTestMixin } from '../../../gpu_test.js';
 import { float32ToFloat16Bits, normalizedIntegerAsFloat } from '../../../util/conversion.js';
 import { align, clamp } from '../../../util/math.js';
 
@@ -655,7 +655,7 @@ struct VSOutputs {
   }
 }
 
-export const g = makeTestGroup(VertexStateTest);
+export const g = makeTestGroup(MaxLimitsTestMixin(VertexStateTest));
 
 g.test('vertex_format_to_shader_format_conversion')
   .desc(
