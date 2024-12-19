@@ -1,5 +1,5 @@
 import { unreachable } from '../../../../../common/util/util.js';
-import { GPUTest } from '../../../../gpu_test.js';
+import { GPUTest, GPUTestBase } from '../../../../gpu_test.js';
 import { EncoderType } from '../../../../util/command_buffer_maker.js';
 
 interface BindGroupIndices {
@@ -8,8 +8,30 @@ interface BindGroupIndices {
   out: number;
 }
 
+type CreateEncoderType = ReturnType<
+  typeof GPUTestBase.prototype.createEncoder<'compute pass' | 'render pass' | 'render bundle'>
+>['encoder'];
+
 export class ProgrammableStateTest extends GPUTest {
   private commonBindGroupLayouts: Map<string, GPUBindGroupLayout> = new Map();
+
+  skipIfNeedsStorageBuffersInFragmentStageAndHaveNone(
+    type: GPUBufferBindingType,
+    encoderType: EncoderType
+  ) {
+    if (!this.isCompatibility) {
+      return;
+    }
+
+    const needsStorageBuffersInFragmentStage =
+      type === 'storage' && (encoderType === 'render bundle' || encoderType === 'render pass');
+
+    this.skipIf(
+      needsStorageBuffersInFragmentStage &&
+        !(this.device.limits.maxStorageBuffersInFragmentStage! >= 3),
+      `maxStorageBuffersInFragmentStage(${this.device.limits.maxStorageBuffersInFragmentStage}) < 3`
+    );
+  }
 
   getBindGroupLayout(type: GPUBufferBindingType): GPUBindGroupLayout {
     if (!this.commonBindGroupLayouts.has(type)) {
@@ -29,11 +51,18 @@ export class ProgrammableStateTest extends GPUTest {
     return this.commonBindGroupLayouts.get(type)!;
   }
 
-  getBindGroupLayouts(indices: BindGroupIndices): GPUBindGroupLayout[] {
+  getBindGroupLayouts(
+    indices: BindGroupIndices,
+    type: GPUBufferBindingType,
+    encoderType: EncoderType
+  ): GPUBindGroupLayout[] {
     const bindGroupLayouts: GPUBindGroupLayout[] = [];
-    bindGroupLayouts[indices.a] = this.getBindGroupLayout('read-only-storage');
-    bindGroupLayouts[indices.b] = this.getBindGroupLayout('read-only-storage');
-    bindGroupLayouts[indices.out] = this.getBindGroupLayout('storage');
+    const inputType = type === 'storage' ? 'read-only-storage' : 'uniform';
+    bindGroupLayouts[indices.a] = this.getBindGroupLayout(inputType);
+    bindGroupLayouts[indices.b] = this.getBindGroupLayout(inputType);
+    if (type === 'storage' || encoderType === 'compute pass') {
+      bindGroupLayouts[indices.out] = this.getBindGroupLayout('storage');
+    }
     return bindGroupLayouts;
   }
 
@@ -57,6 +86,7 @@ export class ProgrammableStateTest extends GPUTest {
   createBindingStatePipeline<T extends EncoderType>(
     encoderType: T,
     groups: BindGroupIndices,
+    type: GPUBufferBindingType,
     algorithm: string = 'a.value - b.value'
   ): GPUComputePipeline | GPURenderPipeline {
     switch (encoderType) {
@@ -65,8 +95,8 @@ export class ProgrammableStateTest extends GPUTest {
             value : i32
           };
 
-          @group(${groups.a}) @binding(0) var<storage> a : Data;
-          @group(${groups.b}) @binding(0) var<storage> b : Data;
+          @group(${groups.a}) @binding(0) var<${type}> a : Data;
+          @group(${groups.b}) @binding(0) var<${type}> b : Data;
           @group(${groups.out}) @binding(0) var<storage, read_write> out : Data;
 
           @compute @workgroup_size(1) fn main() {
@@ -77,7 +107,7 @@ export class ProgrammableStateTest extends GPUTest {
 
         return this.device.createComputePipeline({
           layout: this.device.createPipelineLayout({
-            bindGroupLayouts: this.getBindGroupLayouts(groups),
+            bindGroupLayouts: this.getBindGroupLayouts(groups, type, encoderType),
           }),
           compute: {
             module: this.device.createShaderModule({
@@ -92,7 +122,7 @@ export class ProgrammableStateTest extends GPUTest {
         const wgslShaders = {
           vertex: `
             @vertex fn vert_main() -> @builtin(position) vec4<f32> {
-              return vec4<f32>(0.5, 0.5, 0.0, 1.0);
+              return vec4<f32>(0, 0, 0, 1);
             }
           `,
 
@@ -101,20 +131,23 @@ export class ProgrammableStateTest extends GPUTest {
               value : i32
             };
 
-            @group(${groups.a}) @binding(0) var<storage> a : Data;
-            @group(${groups.b}) @binding(0) var<storage> b : Data;
+            @group(${groups.a}) @binding(0) var<${type}> a : Data;
+            @group(${groups.b}) @binding(0) var<${type}> b : Data;
             @group(${groups.out}) @binding(0) var<storage, read_write> out : Data;
 
-            @fragment fn frag_main() -> @location(0) vec4<f32> {
+            @fragment fn frag_main_storage() -> @location(0) vec4<i32> {
               out.value = ${algorithm};
-              return vec4<f32>(1.0, 0.0, 0.0, 1.0);
+              return vec4<i32>(1, 0, 0, 1);
+            }
+            @fragment fn frag_main_uniform() -> @location(0) vec4<i32> {
+              return vec4<i32>(${algorithm});
             }
           `,
         };
 
         return this.device.createRenderPipeline({
           layout: this.device.createPipelineLayout({
-            bindGroupLayouts: this.getBindGroupLayouts(groups),
+            bindGroupLayouts: this.getBindGroupLayouts(groups, type, encoderType),
           }),
           vertex: {
             module: this.device.createShaderModule({
@@ -126,8 +159,8 @@ export class ProgrammableStateTest extends GPUTest {
             module: this.device.createShaderModule({
               code: wgslShaders.fragment,
             }),
-            entryPoint: 'frag_main',
-            targets: [{ format: 'rgba8unorm' }],
+            entryPoint: type === 'uniform' ? 'frag_main_uniform' : 'frag_main_storage',
+            targets: [{ format: 'r32sint' }],
           },
           primitive: { topology: 'point-list' },
         });
@@ -135,6 +168,57 @@ export class ProgrammableStateTest extends GPUTest {
       default:
         unreachable();
     }
+  }
+
+  createEncoderForStateTest(
+    type: GPUBufferBindingType,
+    out: GPUBuffer,
+    ...params: Parameters<typeof GPUTestBase.prototype.createEncoder>
+  ): {
+    encoder: CreateEncoderType;
+    validateFinishAndSubmit: (shouldBeValid: boolean, submitShouldSucceedIfValid: boolean) => void;
+  } {
+    const encoderType = params[0];
+    const renderTarget = this.createTextureTracked({
+      size: [1, 1],
+      format: 'r32sint',
+      usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
+    });
+
+    // Note: This nightmare of gibberish is trying the result of 2 hours of
+    // trying to get typescript to accept the code. Originally the code was
+    // effectively just
+    //
+    //  const { encoder, validateFinishAndSubmit } = this.createEncoder(...);
+    //  const fn = (b0, b1) => { validateFinishAndSubmit(b1, b1); if (...) { ... copyT2B ... } }
+    //  return { encoder: e__, validateFinishAndSubmit: fn };
+    //
+    // But TS didn't like it. I couldn't figure out why.
+    const encoderAndFinish = this.createEncoder(encoderType, {
+      attachmentInfo: { colorFormats: ['r32sint'] },
+      targets: [renderTarget.createView()],
+    });
+
+    const validateFinishAndSubmit = (
+      shouldBeValid: boolean,
+      submitShouldSucceedIfValid: boolean
+    ) => {
+      encoderAndFinish.validateFinishAndSubmit(shouldBeValid, submitShouldSucceedIfValid);
+
+      if (
+        type === 'uniform' &&
+        (encoderType === 'render pass' || encoderType === 'render bundle')
+      ) {
+        const encoder = this.device.createCommandEncoder();
+        encoder.copyTextureToBuffer({ texture: renderTarget }, { buffer: out }, [1, 1]);
+        this.device.queue.submit([encoder.finish()]);
+      }
+    };
+
+    return {
+      encoder: encoderAndFinish.encoder as CreateEncoderType,
+      validateFinishAndSubmit,
+    };
   }
 
   setPipeline(pass: GPUBindingCommandsMixin, pipeline: GPUComputePipeline | GPURenderPipeline) {
