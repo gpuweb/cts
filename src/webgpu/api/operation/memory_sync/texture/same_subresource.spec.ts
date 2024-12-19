@@ -9,7 +9,7 @@ Memory Synchronization Tests for Texture: read before write, read after write, a
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { assert, memcpy, unreachable } from '../../../../../common/util/util.js';
 import { EncodableTextureFormat } from '../../../../format_info.js';
-import { GPUTest } from '../../../../gpu_test.js';
+import { GPUTest, MaxLimitsTestMixin } from '../../../../gpu_test.js';
 import { align } from '../../../../util/math.js';
 import { getTextureCopyLayout } from '../../../../util/texture/layout.js';
 import {
@@ -31,7 +31,7 @@ import {
   kOpInfo,
 } from './texture_sync_test.js';
 
-export const g = makeTestGroup(GPUTest);
+export const g = makeTestGroup(MaxLimitsTestMixin(GPUTest));
 
 const fullscreenQuadWGSL = `
   struct VertexOutput {
@@ -53,6 +53,18 @@ const fullscreenQuadWGSL = `
   }
 `;
 
+function readOpNeedsStorageTexture({ op, in: context }: { op: Op; in: OperationContext }) {
+  return (
+    op === 'sample' && (context === 'render-pass-encoder' || context === 'render-bundle-encoder')
+  );
+}
+
+function writeOpNeedsStorageTexture({ op, in: context }: { op: Op; in: OperationContext }) {
+  return (
+    op === 'storage' && (context === 'render-pass-encoder' || context === 'render-bundle-encoder')
+  );
+}
+
 class TextureSyncTestHelper extends OperationContextHelper {
   private texture: GPUTexture;
 
@@ -71,6 +83,29 @@ class TextureSyncTestHelper extends OperationContextHelper {
       format: this.kTextureFormat,
       ...textureCreationParams,
     });
+  }
+
+  static skipIfNeedStorageTexturesAndNoStorageTextures(
+    t: GPUTest,
+    reads: { op: Op; in: OperationContext }[],
+    writes: { op: Op; in: OperationContext }[]
+  ) {
+    if (!t.isCompatibility) {
+      return;
+    }
+
+    if (t.device.limits.maxStorageTexturesInFragmentStage! >= 1) {
+      return;
+    }
+
+    const needStorageTexture =
+      reads.reduce((need, read) => need || readOpNeedsStorageTexture(read), false) ||
+      writes.reduce((need, write) => need || writeOpNeedsStorageTexture(write), false);
+
+    t.skipIf(
+      needStorageTexture,
+      `maxStorageTexturesInFragmentStage(${t.device.limits.maxStorageTexturesInFragmentStage}) < 1`
+    );
   }
 
   /**
@@ -558,6 +593,11 @@ g.test('rw')
       })
   )
   .fn(t => {
+    TextureSyncTestHelper.skipIfNeedStorageTexturesAndNoStorageTextures(
+      t,
+      [t.params.read],
+      [t.params.write]
+    );
     const helper = new TextureSyncTestHelper(t, {
       usage:
         GPUTextureUsage.COPY_DST |
@@ -610,6 +650,11 @@ g.test('wr')
       })
   )
   .fn(t => {
+    TextureSyncTestHelper.skipIfNeedStorageTexturesAndNoStorageTextures(
+      t,
+      [t.params.read],
+      [t.params.write]
+    );
     const helper = new TextureSyncTestHelper(t, {
       usage: kOpInfo[t.params.read.op].readUsage | kOpInfo[t.params.write.op].writeUsage,
     });
@@ -654,6 +699,12 @@ g.test('ww')
       })
   )
   .fn(t => {
+    TextureSyncTestHelper.skipIfNeedStorageTexturesAndNoStorageTextures(
+      t,
+      [],
+      [t.params.first, t.params.second]
+    );
+
     const helper = new TextureSyncTestHelper(t, {
       usage:
         GPUTextureUsage.COPY_SRC |
