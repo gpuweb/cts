@@ -127,6 +127,21 @@ context)
   return true;
 }
 
+function readOpUsesStorageBufferInFragmentShader(readOp) {
+  return (
+    readOp === 'storage-read' ||
+    readOp === 'input-vertex' ||
+    readOp === 'input-index' ||
+    readOp === 'input-indirect' ||
+    readOp === 'input-indirect-index' ||
+    readOp === 'constant-uniform');
+
+}
+
+function writeOpUsesStorageBufferInFragmentShader(writeOp) {
+  return writeOp === 'storage' || writeOp === 'write-buffer';
+}
+
 const kDummyVertexShader = `
 @vertex fn vert_main() -> @builtin(position) vec4<f32> {
   return vec4<f32>(0.5, 0.5, 0.0, 1.0);
@@ -144,6 +159,40 @@ export class BufferSyncTest extends GPUTest {
   // There can be at most 2 write op
   tmpValueBuffers = [undefined, undefined];
   tmpValueTextures = [undefined, undefined];
+
+  skipIfNoSupportForStorageBuffersInFragmentStage() {
+    if (this.isCompatibility) {
+      this.skipIf(
+        !(this.device.limits.maxStorageBuffersInFragmentStage >= 2),
+        `maxStorageBuffersInFragmentStage(${this.device.limits.maxStorageBuffersInFragmentStage}) < 2`
+      );
+    }
+  }
+
+  skipIfReadOpsOrWriteOpsUsesStorageBufferInFragmentStageAndNoSupportStorageBuffersInFragmentShaders(
+  readOp,
+  writeOp)
+  {
+    if (this.isCompatibility) {
+      const readOps = Array.isArray(readOp) ? readOp : [readOp];
+      const writeOps = Array.isArray(writeOp) ? writeOp : [writeOp];
+      const readOpsUseStorageBuffersInFragmentStage = readOps.reduce(
+        (uses, op) => uses || readOpUsesStorageBufferInFragmentShader(op),
+        false
+      );
+      const writeOpsUseStorageBuffersInFragmentStage = writeOps.reduce(
+        (uses, op) => uses || writeOpUsesStorageBufferInFragmentShader(op),
+        false
+      );
+      const usesStorageBuffersInFragmentStage =
+      readOpsUseStorageBuffersInFragmentStage || writeOpsUseStorageBuffersInFragmentStage;
+      this.skipIf(
+        usesStorageBuffersInFragmentStage &&
+        !(this.device.limits.maxStorageBuffersInFragmentStage >= 2),
+        `maxStorageBuffersInFragmentStage(${this.device.limits.maxStorageBuffersInFragmentStage}) < 2`
+      );
+    }
+  }
 
   // These intermediate buffers/textures are created before any read/write op
   // to avoid extra memory synchronization between ops introduced by await on buffer/texture creations.
