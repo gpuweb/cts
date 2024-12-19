@@ -92,7 +92,7 @@ rm temp.mp4
 
 ```
 
-The test video files were generated with by exiftool cmds below:
+The test jpg files were generated with by exiftool cmds below:
 ```
 // Generate jpg picture with 90 cw rotation metadata
 exiftool -Orientation#=6 four-colors.jpg -o .\four-colors-rotate-90-cw.jpg
