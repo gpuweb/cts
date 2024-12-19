@@ -256,4 +256,128 @@ fn((t) => {
     t.device.createPipelineLayout({ bindGroupLayouts });
   }, kShouldError);
 });
+
+g.test('bind_group_layouts,create_pipeline_with_null_bind_group_layouts').
+desc(
+  `
+  Tests that it is valid to create a render pipeline or compute pipeline with a pipeline layout
+  created with null bind group layouts as long as the pipeline layout matches the declarations in
+  the shaders.
+  `
+).
+params((u) =>
+u.
+combine('pipelineType', ['Render', 'Compute']).
+combine('emptyBindGroupLayoutType', ['Null', 'Undefined']).
+combine('emptyBindGroupLayoutIndex', [0, 1, 2, 3]).
+combine('emptyBindGroupLayoutIndexMissedInShader', [true, false])
+).
+fn((t) => {
+  const {
+    pipelineType,
+    emptyBindGroupLayoutType,
+    emptyBindGroupLayoutIndex,
+    emptyBindGroupLayoutIndexMissedInShader
+  } = t.params;
+
+  const bindGroupLayouts = [];
+  for (let i = 0; i < 4; ++i) {
+    if (i === emptyBindGroupLayoutIndex) {
+      switch (emptyBindGroupLayoutType) {
+        case 'Null':
+          bindGroupLayouts.push(null);
+          break;
+        case 'Undefined':
+          bindGroupLayouts.push(undefined);
+          break;
+      }
+    } else {
+      const nonEmptyBindGroupLayout = t.device.createBindGroupLayout({
+        entries: [
+        {
+          binding: 0,
+          visibility: GPUConst.ShaderStage.COMPUTE | GPUConst.ShaderStage.FRAGMENT,
+          buffer: {
+            type: 'uniform'
+          }
+        }]
+
+      });
+      bindGroupLayouts.push(nonEmptyBindGroupLayout);
+    }
+  }
+  const layout = t.device.createPipelineLayout({ bindGroupLayouts });
+
+  let declarations = '';
+  let statement = '_ = 1';
+  for (let i = 0; i < 4; ++i) {
+    if (emptyBindGroupLayoutIndexMissedInShader && i === emptyBindGroupLayoutIndex) {
+      continue;
+    }
+    declarations += `@group(${i}) @binding(0) var<uniform> input${i} : u32;\n`;
+    statement += ` + input${i}`;
+  }
+
+  const shouldError = !emptyBindGroupLayoutIndexMissedInShader;
+
+  switch (pipelineType) {
+    case 'Render':{
+        const code = `
+        ${declarations}
+        @vertex
+        fn vert_main() -> @builtin(position) vec4f {
+            return vec4f(0.0, 0.0, 0.0, 1.0);
+        }
+
+        @fragment
+        fn frag_main() -> @location(0) vec4f {
+            ${statement};
+            return vec4f(0.0, 0.0, 0.0, 1.0);
+        }
+        `;
+        const shaderModule = t.device.createShaderModule({
+          code
+        });
+
+        t.expectValidationError(() => {
+          t.device.createRenderPipeline({
+            layout,
+            vertex: {
+              module: shaderModule
+            },
+            fragment: {
+              module: shaderModule,
+              targets: [
+              {
+                format: 'rgba8unorm'
+              }]
+
+            }
+          });
+        }, shouldError);
+        break;
+      }
+
+    case 'Compute':{
+        const code = `
+        ${declarations}
+        @compute @workgroup_size(1) fn cs_main() {
+          ${statement};
+        }
+        `;
+        const shaderModule = t.device.createShaderModule({
+          code
+        });
+        t.expectValidationError(() => {
+          t.device.createComputePipeline({
+            layout,
+            compute: {
+              module: shaderModule
+            }
+          });
+        }, shouldError);
+        break;
+      }
+  }
+});
 //# sourceMappingURL=createPipelineLayout.spec.js.map
