@@ -252,6 +252,152 @@ for several combinations of video format, video color spaces and dst color space
     });
   });
 
+g.test('importExternalTexture,loadAndDimensions')
+  .desc(
+    `
+Tests that we can import an HTMLVideoElement/VideoFrame into a GPUExternalTexture, textureLoad from it
+for several combinations of video format, video color spaces and dst color spaces, and get the correct textureDimensions()
+in the shader.
+`
+  )
+  .params(u =>
+    u //
+      .combine('videoName', kVideoNames)
+      .combine('sourceType', ['VideoElement', 'VideoFrame'] as const)
+  )
+  .fn(async t => {
+    const { videoName, sourceType } = t.params;
+    const kDstColorSpace = 'srgb';
+
+    if (sourceType === 'VideoFrame' && typeof VideoFrame === 'undefined') {
+      t.skip('WebCodec is not supported');
+    }
+
+    const videoElement = getVideoElement(t, videoName);
+
+    await startPlayingAndWaitForVideo(videoElement, async () => {
+      // Get the video source and its size
+      let source: HTMLVideoElement | VideoFrame = videoElement;
+      let expectedWidth = videoElement.videoWidth;
+      let expectedHeight = videoElement.videoHeight;
+      if (sourceType === 'VideoFrame') {
+        const frame = await getVideoFrameFromVideoElement(t, source);
+        source = frame;
+        expectedWidth = frame.displayWidth;
+        expectedHeight = frame.displayHeight;
+      }
+
+      // Create the pipeline
+      const module = t.device.createShaderModule({
+        code: `
+          @vertex fn vs(@builtin(vertex_index) i : u32) -> @builtin(position) vec4f {
+            const pos = array(
+              vec2(2, 0),
+              vec2(-1, 3),
+              vec2(-1, -3),
+            );
+            return vec4f(vec2f(pos[i]), 0, 1);
+          }
+
+          @group(0) @binding(0) var<storage, read_write> dimension : vec2u;
+          @group(0) @binding(1) var t : texture_external;
+          @fragment fn fs(@builtin(position) pos : vec4f) -> @location(0) vec4f {
+            dimension = textureDimensions(t);
+            let normCoord = pos.xy / vec2f(${kWidth}, ${kHeight});
+            let loadCoord = normCoord * vec2f(dimension - vec2u(1, 1));
+            return textureLoad(t, vec2u(loadCoord));
+          }
+        `,
+      });
+      const pipeline = t.device.createRenderPipeline({
+        layout: 'auto',
+        vertex: { module },
+        fragment: { module, targets: [{ format: kFormat }] },
+      });
+
+      // Create the test resources
+      const dimensionsBuffer = t.device.createBufferTracked({
+        size: 8,
+        usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
+      });
+
+      const bindGroup = t.device.createBindGroup({
+        layout: pipeline.getBindGroupLayout(0),
+        entries: [
+          {
+            binding: 0,
+            resource: { buffer: dimensionsBuffer },
+          },
+          {
+            binding: 1,
+            resource: t.device.importExternalTexture({ source, colorSpace: kDstColorSpace }),
+          },
+        ],
+      });
+
+      // Run the test
+      const colorAttachment = t.createTextureTracked({
+        format: kFormat,
+        size: { width: kWidth, height: kHeight, depthOrArrayLayers: 1 },
+        usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
+      });
+
+      const commandEncoder = t.device.createCommandEncoder();
+      const passEncoder = commandEncoder.beginRenderPass({
+        colorAttachments: [
+          {
+            view: colorAttachment.createView(),
+            clearValue: { r: 0.0, g: 0.0, b: 0.0, a: 1.0 },
+            loadOp: 'clear',
+            storeOp: 'store',
+          },
+        ],
+      });
+      passEncoder.setPipeline(pipeline);
+      passEncoder.setBindGroup(0, bindGroup);
+      passEncoder.draw(6);
+      passEncoder.end();
+      t.device.queue.submit([commandEncoder.finish()]);
+
+      const srcColorSpace = kVideoInfo[videoName].colorSpace;
+      const presentColors = kVideoExpectedColors[srcColorSpace][kDstColorSpace];
+
+      // visible rect is whole frame, no clipping.
+      const expect = kVideoInfo[videoName].display;
+
+      // For validation, we sample a few pixels away from the edges to avoid compression
+      // artifacts.
+      t.expectSinglePixelComparisonsAreOkInTexture({ texture: colorAttachment }, [
+        // Top-left.
+        {
+          coord: { x: kWidth * 0.25, y: kHeight * 0.25 },
+          exp: convertToUnorm8(presentColors[expect.topLeftColor]),
+        },
+        // Top-right.
+        {
+          coord: { x: kWidth * 0.75, y: kHeight * 0.25 },
+          exp: convertToUnorm8(presentColors[expect.topRightColor]),
+        },
+        // Bottom-left.
+        {
+          coord: { x: kWidth * 0.25, y: kHeight * 0.75 },
+          exp: convertToUnorm8(presentColors[expect.bottomLeftColor]),
+        },
+        // Bottom-right.
+        {
+          coord: { x: kWidth * 0.75, y: kHeight * 0.75 },
+          exp: convertToUnorm8(presentColors[expect.bottomRightColor]),
+        },
+      ]);
+
+      // Check that we got the correct values reflected in textureDimensions
+      t.expectGPUBufferValuesEqual(
+        dimensionsBuffer,
+        new Uint32Array([expectedWidth, expectedHeight])
+      );
+    });
+  });
+
 g.test('importExternalTexture,sample_non_YUV_video_frame')
   .desc(
     `
