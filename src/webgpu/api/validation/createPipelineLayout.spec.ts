@@ -265,7 +265,7 @@ g.test('bind_group_layouts,create_pipeline_with_null_bind_group_layouts')
   the shaders.
   `
   )
-  .params(u =>
+  .paramsSubcasesOnly(u =>
     u
       .combine('pipelineType', ['Render', 'Compute'] as const)
       .combine('emptyBindGroupLayoutType', ['Null', 'Undefined'] as const)
@@ -375,6 +375,181 @@ g.test('bind_group_layouts,create_pipeline_with_null_bind_group_layouts')
               module: shaderModule,
             },
           });
+        }, shouldError);
+        break;
+      }
+    }
+  });
+
+g.test('bind_group_layouts,set_pipeline_with_null_bind_group_layouts')
+  .desc(
+    `
+  Tests that it is valid to use a render pipeline or compute pipeline with null bind group layouts
+  used in the pipeline layout in a render pass encoder or compute pass encoder.
+`
+  )
+  .paramsSubcasesOnly(u =>
+    u
+      .combine('pipelineType', ['Render', 'Compute'] as const)
+      .combine('emptyBindGroupLayoutType', ['Null', 'Undefined'] as const)
+      .combine('emptyBindGroupLayoutIndex', [0, 1, 2, 3] as const)
+      .combine('setBindGroupOnEmptyBindGroupLayoutIndex', [true, false])
+  )
+  .fn(t => {
+    const {
+      pipelineType,
+      emptyBindGroupLayoutType,
+      emptyBindGroupLayoutIndex,
+      setBindGroupOnEmptyBindGroupLayoutIndex,
+    } = t.params;
+
+    const nonEmptyBindGroupLayout = t.device.createBindGroupLayout({
+      entries: [
+        {
+          binding: 0,
+          visibility: GPUConst.ShaderStage.COMPUTE | GPUConst.ShaderStage.FRAGMENT,
+          buffer: {
+            type: 'uniform',
+          },
+        },
+      ],
+    });
+    const bindGroups: GPUBindGroup[] = [];
+    const bindGroupLayouts: (GPUBindGroupLayout | null | undefined)[] = [];
+    let declarations = '';
+    let statement = '_ = 1';
+    for (let i = 0; i < 4; ++i) {
+      if (i === emptyBindGroupLayoutIndex) {
+        switch (emptyBindGroupLayoutType) {
+          case 'Null':
+            bindGroupLayouts.push(null);
+            break;
+          case 'Undefined':
+            bindGroupLayouts.push(undefined);
+            break;
+        }
+      } else {
+        bindGroupLayouts.push(nonEmptyBindGroupLayout);
+        declarations += `@group(${i}) @binding(0) var<uniform> input${i} : u32;\n`;
+        statement += ` + input${i}`;
+      }
+
+      const buffer = t.createBufferTracked({
+        usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.UNIFORM,
+        size: 4,
+      });
+      const bindGroup = t.device.createBindGroup({
+        layout: nonEmptyBindGroupLayout,
+        entries: [
+          {
+            binding: 0,
+            resource: {
+              buffer,
+            },
+          },
+        ],
+      });
+      bindGroups.push(bindGroup);
+    }
+    const layout = t.device.createPipelineLayout({ bindGroupLayouts });
+
+    const shouldError = false;
+    switch (pipelineType) {
+      case 'Render': {
+        const code = `
+      ${declarations}
+      @vertex
+      fn vert_main() -> @builtin(position) vec4f {
+          return vec4f(0.0, 0.0, 0.0, 1.0);
+      }
+      @fragment
+      fn frag_main() -> @location(0) vec4f {
+          ${statement};
+          return vec4f(0.0, 0.0, 0.0, 1.0);
+      }
+      `;
+        const shaderModule = t.device.createShaderModule({
+          code,
+        });
+
+        const format = 'rgba8unorm';
+        const renderPipeline = t.device.createRenderPipeline({
+          layout,
+          vertex: {
+            module: shaderModule,
+          },
+          fragment: {
+            module: shaderModule,
+            targets: [
+              {
+                format,
+              },
+            ],
+          },
+        });
+
+        const renderTarget = t.createTextureTracked({
+          usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
+          size: [4, 4, 1],
+          format,
+        });
+        const commandEncoder = t.device.createCommandEncoder();
+        const renderPassEncoder = commandEncoder.beginRenderPass({
+          colorAttachments: [
+            {
+              view: renderTarget.createView(),
+              loadOp: 'load',
+              storeOp: 'store',
+            },
+          ],
+        });
+        for (let i = 0; i < 4; ++i) {
+          if (!setBindGroupOnEmptyBindGroupLayoutIndex && i === emptyBindGroupLayoutIndex) {
+            continue;
+          }
+          renderPassEncoder.setBindGroup(i, bindGroups[i]);
+        }
+        renderPassEncoder.setPipeline(renderPipeline);
+        renderPassEncoder.draw(1);
+        renderPassEncoder.end();
+
+        t.expectValidationError(() => {
+          t.queue.submit([commandEncoder.finish()]);
+        }, shouldError);
+        break;
+      }
+
+      case 'Compute': {
+        const code = `
+      ${declarations}
+      @compute @workgroup_size(1) fn cs_main() {
+        ${statement};
+      }
+      `;
+        const shaderModule = t.device.createShaderModule({
+          code,
+        });
+
+        const computePipeline = t.device.createComputePipeline({
+          layout,
+          compute: {
+            module: shaderModule,
+          },
+        });
+        const commandEncoder = t.device.createCommandEncoder();
+        const computePassEncoder = commandEncoder.beginComputePass();
+        for (let i = 0; i < 4; ++i) {
+          if (!setBindGroupOnEmptyBindGroupLayoutIndex && i === emptyBindGroupLayoutIndex) {
+            continue;
+          }
+          computePassEncoder.setBindGroup(i, bindGroups[i]);
+        }
+        computePassEncoder.setPipeline(computePipeline);
+        computePassEncoder.dispatchWorkgroups(1);
+        computePassEncoder.end();
+
+        t.expectValidationError(() => {
+          t.queue.submit([commandEncoder.finish()]);
         }, shouldError);
         break;
       }
