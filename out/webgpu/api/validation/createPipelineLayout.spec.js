@@ -5,6 +5,7 @@ createPipelineLayout validation tests.
 
 TODO: review existing tests, write descriptions, and make sure tests are complete.
 `;import { makeTestGroup } from '../../../common/framework/test_group.js';
+import { count } from '../../../common/util/util.js';
 import { bufferBindingTypeInfo, kBufferBindingTypes } from '../../capability_info.js';
 import { GPUConst } from '../../constants.js';
 
@@ -174,41 +175,17 @@ desc(
 ).
 paramsSubcasesOnly((u) =>
 u //
-.combine('bindGroupLayoutCount', [1, 2, 3, 4]).
-combine('bindGroupLayout0', MaybeNullBindGroupLayoutTypes).
-expand('bindGroupLayout1', (p) =>
-p.bindGroupLayoutCount > 1 ? MaybeNullBindGroupLayoutTypes : ['Null']
-).
-expand('bindGroupLayout2', (p) =>
-p.bindGroupLayoutCount > 2 ? MaybeNullBindGroupLayoutTypes : ['Null']
-).
-expand('bindGroupLayout3', (p) =>
-p.bindGroupLayoutCount > 3 ? MaybeNullBindGroupLayoutTypes : ['Null']
-).
-filter((p) => {
-  // Only test cases where at least one of the bind group layouts is null.
-  const allBGLs = [
-  p.bindGroupLayout0,
-  p.bindGroupLayout1,
-  p.bindGroupLayout2,
-  p.bindGroupLayout3];
-
-  const bgls = allBGLs.slice(0, p.bindGroupLayoutCount);
-  return bgls.includes('Null') || bgls.includes('Undefined');
-})
+.combine('_bglCount', [1, 2, 3, 4]).
+combine('_bgl0', MaybeNullBindGroupLayoutTypes).
+expand('_bgl1', (p) => p._bglCount > 1 ? MaybeNullBindGroupLayoutTypes : ['Null']).
+expand('_bgl2', (p) => p._bglCount > 2 ? MaybeNullBindGroupLayoutTypes : ['Null']).
+expand('_bgl3', (p) => p._bglCount > 3 ? MaybeNullBindGroupLayoutTypes : ['Null'])
+// Flatten the result down into a single subcase arg which is an array of BGL types.
+.expand('bindGroupLayouts', (p) => [[p._bgl0, p._bgl1, p._bgl2, p._bgl3].slice(0, p._bglCount)])
+// Only test combinations where exactly one of the BGLs is null|undefined|empty.
+.filter((p) => count(p.bindGroupLayouts, (x) => x !== 'NonEmpty') === 1)
 ).
 fn((t) => {
-  const {
-    bindGroupLayoutCount,
-    bindGroupLayout0,
-    bindGroupLayout1,
-    bindGroupLayout2,
-    bindGroupLayout3
-  } = t.params;
-
-  const emptyBindGroupLayout = t.device.createBindGroupLayout({
-    entries: []
-  });
   const nonEmptyBindGroupLayout = t.device.createBindGroupLayout({
     entries: [
     {
@@ -219,37 +196,18 @@ fn((t) => {
 
   });
 
-  const bindGroupLayouts = [];
-
-  const AddBindGroupLayout = function (
-  bindGroupLayoutType)
-  {
+  const bindGroupLayouts = t.params.bindGroupLayouts.map((bindGroupLayoutType) => {
     switch (bindGroupLayoutType) {
       case 'Null':
-        bindGroupLayouts.push(null);
-        break;
+        return null;
       case 'Undefined':
-        bindGroupLayouts.push(undefined);
-        break;
+        return undefined;
       case 'Empty':
-        bindGroupLayouts.push(emptyBindGroupLayout);
-        break;
+        return t.device.createBindGroupLayout({ entries: [] });
       case 'NonEmpty':
-        bindGroupLayouts.push(nonEmptyBindGroupLayout);
-        break;
+        return nonEmptyBindGroupLayout;
     }
-  };
-
-  AddBindGroupLayout(bindGroupLayout0);
-  if (bindGroupLayoutCount > 1) {
-    AddBindGroupLayout(bindGroupLayout1);
-  }
-  if (bindGroupLayoutCount > 2) {
-    AddBindGroupLayout(bindGroupLayout2);
-  }
-  if (bindGroupLayoutCount > 3) {
-    AddBindGroupLayout(bindGroupLayout3);
-  }
+  });
 
   const kShouldError = false;
   t.expectValidationError(() => {
