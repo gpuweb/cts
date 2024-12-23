@@ -92,15 +92,24 @@ rm temp.mp4
 
 ```
 
-The test jpg files were generated with by exiftool cmds below:
+The test jpg files were generated with by exiftool cmds and other image tools in below steps:
 ```
+// Generate four-colors.jpg with no orientation metadata
+Use a image tool (e.g. "Paint" app on Windows) to create four-colors.jpg from four-colors.png and check with exiftool to ensure no orientation metadata been set.
+
 // Generate jpg picture with 90 cw rotation metadata
+Use a image tool (e.g. "Paint" app on Windows) to create four-colors-hard-rotate-90-ccw.jpg and check with exiftool to ensure no orientation metadata been set.
 exiftool -Orientation#=6 four-colors.jpg -o .\four-colors-rotate-90-cw.jpg
+rm four-clors-hard-rotate-90-ccw.jpg
 
 // Generate jpg picture with 180 cw rotation metadata
+Use a image tool (e.g. "Paint" app on Windows) to create four-colors-hard-rotate-180-ccw.jpg and check with exiftool to ensure no orientation metadata been set.
 exiftool -Orientation#=3 four-colors.jpg -o .\four-colors-rotate-180-cw.jpg
+rm four-clors-hard-rotate-180-ccw.jpg
 
 // Generate jpg picture with 270 cw rotation metadata
+Use a image tool (e.g. "Paint" app on Windows) to create four-colors-hard-rotate-270-ccw.jpg and check with exiftool to ensure no orientation metadata been set.
 exiftool -Orientation#=8 four-colors.jpg -o .\four-colors-rotate-270-cw.jpg
+rm four-colors-hard-rotate-270-ccw.jpg
 
 ```

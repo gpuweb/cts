@@ -360,46 +360,6 @@ export const kVideoNames: readonly VideoName[] = keysOf(kVideoInfo);
 
 export const kPredefinedColorSpace = ['display-p3', 'srgb'] as const;
 
-export const kImageInfo = makeTable({
-  table: {
-    'four-colors.jpg': {
-      display: {
-        topLeftColor: 'yellow',
-        topRightColor: 'red',
-        bottomLeftColor: 'blue',
-        bottomRightColor: 'green',
-      },
-    },
-    'four-colors-rotate-90-cw.jpg': {
-      display: {
-        topLeftColor: 'blue',
-        topRightColor: 'yellow',
-        bottomLeftColor: 'green',
-        bottomRightColor: 'red',
-      },
-    },
-    'four-colors-rotate-180-cw.jpg': {
-      display: {
-        topLeftColor: 'green',
-        topRightColor: 'blue',
-        bottomLeftColor: 'red',
-        bottomRightColor: 'yellow',
-      },
-    },
-    'four-colors-rotate-270-cw.jpg': {
-      display: {
-        topLeftColor: 'red',
-        topRightColor: 'green',
-        bottomLeftColor: 'yellow',
-        bottomRightColor: 'blue',
-      },
-    },
-  },
-} as const);
-
-type ImageName = keyof typeof kImageInfo;
-export const kImageNames: readonly ImageName[] = keysOf(kImageInfo);
-
 /**
  * Starts playing a video and waits for it to be consumable.
  * Returns a promise which resolves after `callback` (which may be async) completes.
@@ -655,4 +615,125 @@ export async function captureCameraFrame(test: GPUTest): Promise<VideoFrame> {
   test.trackForCleanup(frame);
 
   return frame;
+}
+
+export const kImageInfo = makeTable({
+  table: {
+    'four-colors.jpg': {
+      coded: {
+        topLeftColor: 'yellow',
+        topRightColor: 'red',
+        bottomLeftColor: 'blue',
+        bottomRightColor: 'green',
+      },
+      display: {
+        topLeftColor: 'yellow',
+        topRightColor: 'red',
+        bottomLeftColor: 'blue',
+        bottomRightColor: 'green',
+      },
+    },
+    'four-colors-rotate-90-cw.jpg': {
+      coded: {
+        topLeftColor: 'red',
+        topRightColor: 'green',
+        bottomLeftColor: 'yellow',
+        bottomRightColor: 'blue',
+      },
+      display: {
+        topLeftColor: 'yellow',
+        topRightColor: 'red',
+        bottomLeftColor: 'blue',
+        bottomRightColor: 'green',
+      },
+    },
+    'four-colors-rotate-180-cw.jpg': {
+      coded: {
+        topLeftColor: 'green',
+        topRightColor: 'blue',
+        bottomLeftColor: 'red',
+        bottomRightColor: 'yellow',
+      },
+      display: {
+        topLeftColor: 'yellow',
+        topRightColor: 'red',
+        bottomLeftColor: 'blue',
+        bottomRightColor: 'green',
+      },
+    },
+    'four-colors-rotate-270-cw.jpg': {
+      coded: {
+        topLeftColor: 'blue',
+        topRightColor: 'yellow',
+        bottomLeftColor: 'green',
+        bottomRightColor: 'red',
+      },
+      display: {
+        topLeftColor: 'yellow',
+        topRightColor: 'red',
+        bottomLeftColor: 'blue',
+        bottomRightColor: 'green',
+      },
+    },
+  },
+} as const);
+
+type ImageName = keyof typeof kImageInfo;
+export const kImageNames: readonly ImageName[] = keysOf(kImageInfo);
+
+type ObjectTypeFromFile = (typeof kObjectTypeFromFiles)[number];
+export const kObjectTypeFromFiles = ['imageBitmap', 'image', 'blob'] as const;
+
+/**
+ * Load image file(e.g. *.jpg) from ImageBitmap, blob or HTMLImageElement. And
+ * convert the result to valid source that GPUCopyExternalImageSource supported.
+ *
+ * @param imageName: Required image name
+ * @param objectTypeFromFile: The object to load image file, e.g. ImageBitmap, blob
+ *
+ */
+export async function GetSourceFromImageFile(
+  imageName: ImageName,
+  objectTypeFromFile: ObjectTypeFromFile
+): Promise<ImageBitmap | HTMLImageElement> {
+  const image = new Image();
+  const imageUrl = getResourcePath(imageName);
+  let imageBitmap: ImageBitmap;
+
+  if (objectTypeFromFile === 'blob') {
+    // Load image file through fetch.
+    const blob = await loadXHR(imageUrl);
+    imageBitmap = await createImageBitmap(blob, { imageOrientation: 'from-image' });
+    return imageBitmap;
+  } else {
+    // Load image file through HTMLImageElement.
+    image.src = imageUrl;
+    await raceWithRejectOnTimeout(image.decode(), 5000, 'decode image timeout');
+    if (objectTypeFromFile === 'image') {
+      return image;
+    }
+
+    imageBitmap = await createImageBitmap(image, { imageOrientation: 'from-image' });
+    return imageBitmap;
+  }
+}
+
+// Use fetch() to load image file as blob
+function loadXHR(url: string): Promise<Blob> {
+  return new Promise<Blob>((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', url);
+    xhr.responseType = 'blob';
+    xhr.onerror = function () {
+      reject(new Error('Network error.'));
+    };
+    xhr.onload = function () {
+      if (xhr.status === 200) {
+        resolve(xhr.response);
+      } else {
+        reject(new Error('Loading error:' + xhr.statusText));
+      }
+    };
+    xhr.send();
+  });
 }

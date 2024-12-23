@@ -10,17 +10,9 @@ TODO: Test ImageBitmap generated from all possible ImageBitmapSource, relevant I
 TODO: Test zero-sized copies from all sources (just make sure params cover it) (e.g. 0x0, 0x4, 4x0).
 `;
 
-import { getResourcePath } from '../../../common/framework/resources.js';
 import { makeTestGroup } from '../../../common/framework/test_group.js';
-import { raceWithRejectOnTimeout } from '../../../common/util/util.js';
 import { kTextureFormatInfo, kValidTextureFormatsForCopyE2T } from '../../format_info.js';
 import { TextureUploadingUtils, kCopySubrectInfo } from '../../util/copy_to_texture.js';
-import {
-  convertToUnorm8,
-  kImageNames,
-  kImageInfo,
-  kImageExpectedColors,
-} from '../../web_platform/util.js';
 
 import { kTestColorsAll, kTestColorsOpaque, makeTestColorsTexelView } from './util.js';
 
@@ -548,122 +540,4 @@ g.test('copy_subrect_from_2D_Canvas')
       // allow diffs of 1ULP since that's the generally-appropriate threshold.
       { maxDiffULPsForFloatFormat: 1, maxDiffULPsForNormFormat: 1 }
     );
-  });
-
-g.test('from_rotated_image')
-  .desc(
-    `
-        Test HTMLImageElements with rotation metadata can be copied to WebGPU texture correctly.
-
-          It creates ImageBitmap with images under Resource folder, with orientation flag set to
-          'from-image'.
-
-          Then call copyExternalImageToTexture() to do a full copy to the 0 mipLevel
-          of dst texture, and read one pixel out to compare with the manually documented expected color.
-
-          If 'flipY' in 'GPUCopyExternalImageSourceInfo' is set to 'true', copy will ensure the result
-          is flipped.
-
-          The tests covers:
-          - Image with rotation metadata
-          - Valid 'flipY' config in 'GPUCopyExternalImageSourceInfo' (named 'srcDoFlipYDuringCopy' in cases)
-          - TODO: partial copy tests should be added
-          - TODO: all valid dstColorFormat tests should be added.
-          - TODO: all valid imageOrientation flags tests should be added
-        TODO: all valid dstColorFormat tests should be added.
-    `
-  )
-  .params(u =>
-    u //
-      .combine('imageName', kImageNames)
-      .combine('srcDoFlipYDuringCopy', [true, false])
-  )
-  .fn(async t => {
-    const { imageName, srcDoFlipYDuringCopy } = t.params;
-    const kColorFormat = 'rgba8unorm';
-
-    // Load image.
-    const image = new Image();
-    const imageUrl = getResourcePath(imageName);
-    image.src = imageUrl;
-    await raceWithRejectOnTimeout(image.decode(), 5000, 'decode image timeout');
-
-    const imageBitmap = await createImageBitmap(image, {
-      imageOrientation: 'from-image',
-    });
-
-    const width = imageBitmap.width;
-    const height = imageBitmap.height;
-
-    const dstTexture = t.createTextureTracked({
-      size: { width, height },
-      format: kColorFormat,
-      usage:
-        GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
-    });
-
-    t.device.queue.copyExternalImageToTexture(
-      {
-        source: imageBitmap,
-        flipY: srcDoFlipYDuringCopy,
-      },
-      {
-        texture: dstTexture,
-      },
-      {
-        width,
-        height,
-      }
-    );
-
-    const expect = kImageInfo[imageName].display;
-    const presentColors = kImageExpectedColors.srgb;
-
-    if (srcDoFlipYDuringCopy) {
-      t.expectSinglePixelComparisonsAreOkInTexture({ texture: dstTexture }, [
-        // Flipped top-left.
-        {
-          coord: { x: width * 0.25, y: height * 0.25 },
-          exp: convertToUnorm8(presentColors[expect.bottomLeftColor]),
-        },
-        // Flipped top-right.
-        {
-          coord: { x: width * 0.75, y: height * 0.25 },
-          exp: convertToUnorm8(presentColors[expect.bottomRightColor]),
-        },
-        // Flipped bottom-left.
-        {
-          coord: { x: width * 0.25, y: height * 0.75 },
-          exp: convertToUnorm8(presentColors[expect.topLeftColor]),
-        },
-        // Flipped bottom-right.
-        {
-          coord: { x: width * 0.75, y: height * 0.75 },
-          exp: convertToUnorm8(presentColors[expect.topRightColor]),
-        },
-      ]);
-    } else {
-      t.expectSinglePixelComparisonsAreOkInTexture({ texture: dstTexture }, [
-        // Top-left.
-        {
-          coord: { x: width * 0.25, y: height * 0.25 },
-          exp: convertToUnorm8(presentColors[expect.topLeftColor]),
-        },
-        // Top-right.
-        {
-          coord: { x: width * 0.75, y: height * 0.25 },
-          exp: convertToUnorm8(presentColors[expect.topRightColor]),
-        },
-        // Bottom-left.
-        {
-          coord: { x: width * 0.25, y: height * 0.75 },
-          exp: convertToUnorm8(presentColors[expect.bottomLeftColor]),
-        },
-        // Bottom-right.
-        {
-          coord: { x: width * 0.75, y: height * 0.75 },
-          exp: convertToUnorm8(presentColors[expect.bottomRightColor]),
-        },
-      ]);
-    }
   });
