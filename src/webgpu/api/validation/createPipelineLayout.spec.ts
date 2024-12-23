@@ -448,7 +448,7 @@ g.test('bind_group_layouts,set_pipeline_with_null_bind_group_layouts')
 
         const renderTarget = t.createTextureTracked({
           usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
-          size: [4, 4, 1],
+          size: [1, 1, 1],
           format,
         });
         const commandEncoder = t.device.createCommandEncoder();
