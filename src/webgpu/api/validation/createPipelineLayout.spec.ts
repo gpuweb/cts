@@ -223,7 +223,7 @@ g.test('bind_group_layouts,create_pipeline_with_null_bind_group_layouts')
   the shaders.
   `
   )
-  .params(u =>
+  .paramsSubcasesOnly(u =>
     u
       .combine('pipelineType', ['Render', 'Compute'] as const)
       .combine('emptyBindGroupLayoutType', ['Null', 'Undefined'] as const)
