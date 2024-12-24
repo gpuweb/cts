@@ -34,24 +34,8 @@ works correctly.
     let declarations = '';
     let statement = 'return vec4(0.0, 0.0, 0.0, 0.0)';
     const bindGroupLayouts: (GPUBindGroupLayout | null | undefined)[] = [];
-    const bindGroups: (GPUBindGroup | null)[] = [];
+    const bindGroups: GPUBindGroup[] = [];
     for (let bindGroupIndex = 0; bindGroupIndex < 4; ++bindGroupIndex) {
-      if (bindGroupIndex === emptyBindGroupLayoutIndex) {
-        switch (emptyBindGroupLayoutType) {
-          case 'Null':
-            bindGroupLayouts.push(null);
-            break;
-          case 'Undefined':
-            bindGroupLayouts.push(undefined);
-            break;
-        }
-        bindGroups.push(null);
-        continue;
-      }
-
-      declarations += `@group(${bindGroupIndex}) @binding(0) var<uniform> input${bindGroupIndex} : vec4f;\n`;
-      statement += ` + input${bindGroupIndex}`;
-
       const bindGroupLayout = t.device.createBindGroupLayout({
         entries: [
           {
@@ -64,7 +48,6 @@ works correctly.
           },
         ],
       });
-      bindGroupLayouts.push(bindGroupLayout);
 
       const color = colors[bindGroupIndex];
       const buffer = t.createBufferTracked({
@@ -75,11 +58,11 @@ works correctly.
       const bufferData = new Float32Array(buffer.getMappedRange());
       for (let i = 0; i < color.length; ++i) {
         bufferData[i] = color[i];
-
-        outputColor[i] += color[i];
       }
       buffer.unmap();
 
+      // Still create and set the bind group when the corresponding bind group layout in the
+      // pipeline is null. The output color should not be affected by the buffer in this bind group
       const bindGroup = t.device.createBindGroup({
         layout: bindGroupLayout,
         entries: [
@@ -92,6 +75,30 @@ works correctly.
         ],
       });
       bindGroups.push(bindGroup);
+
+      // Set `null` or `undefined` in `bindGroupLayouts` which is used in the creation of pipeline
+      // layout
+      if (bindGroupIndex === emptyBindGroupLayoutIndex) {
+        switch (emptyBindGroupLayoutType) {
+          case 'Null':
+            bindGroupLayouts.push(null);
+            break;
+          case 'Undefined':
+            bindGroupLayouts.push(undefined);
+            break;
+        }
+        continue;
+      }
+
+      // Set the uniform buffers used in the shader
+      bindGroupLayouts.push(bindGroupLayout);
+      declarations += `@group(${bindGroupIndex}) @binding(0) var<uniform> input${bindGroupIndex} : vec4f;\n`;
+      statement += ` + input${bindGroupIndex}`;
+
+      // Compute the expected output color
+      for (let i = 0; i < color.length; ++i) {
+        outputColor[i] += color[i];
+      }
     }
 
     const pipelineLayout = t.device.createPipelineLayout({
@@ -186,25 +193,9 @@ works correctly.
     let expectedValue = 0;
 
     const bindGroupLayouts: (GPUBindGroupLayout | null | undefined)[] = [];
-    const bindGroups: (GPUBindGroup | null)[] = [];
+    const bindGroups: GPUBindGroup[] = [];
     let outputDeclared = false;
     for (let bindGroupIndex = 0; bindGroupIndex < 4; ++bindGroupIndex) {
-      if (bindGroupIndex === emptyBindGroupLayoutIndex) {
-        switch (emptyBindGroupLayoutType) {
-          case 'Null':
-            bindGroupLayouts.push(null);
-            break;
-          case 'Undefined':
-            bindGroupLayouts.push(undefined);
-            break;
-        }
-        bindGroups.push(null);
-        continue;
-      }
-
-      declarations += `@group(${bindGroupIndex}) @binding(0) var<uniform> input${bindGroupIndex} : u32;\n`;
-      statement += ` + input${bindGroupIndex}`;
-
       const inputBuffer = t.createBufferTracked({
         usage: GPUBufferUsage.UNIFORM,
         size: 4,
@@ -212,7 +203,6 @@ works correctly.
       });
       const bufferData = new Uint32Array(inputBuffer.getMappedRange());
       bufferData[0] = bindGroupIndex + 1;
-      expectedValue += bindGroupIndex + 1;
       inputBuffer.unmap();
 
       const bindGroupLayoutEntries: GPUBindGroupLayoutEntry[] = [];
@@ -232,6 +222,35 @@ works correctly.
         },
       });
 
+      // Set `null` or `undefined` in `bindGroupLayouts` which is used in the creation of pipeline
+      // layout
+      if (bindGroupIndex === emptyBindGroupLayoutIndex) {
+        switch (emptyBindGroupLayoutType) {
+          case 'Null':
+            bindGroupLayouts.push(null);
+            break;
+          case 'Undefined':
+            bindGroupLayouts.push(undefined);
+            break;
+        }
+
+        // Still create and set the bind group when the corresponding bind group layout in the
+        // compute pipeline is null. The value in the output buffer should not be affected by the
+        // buffer in this bind group
+        const bindGroup = t.device.createBindGroup({
+          layout: t.device.createBindGroupLayout({
+            entries: bindGroupLayoutEntries,
+          }),
+          entries: bindGroupEntries,
+        });
+        bindGroups.push(bindGroup);
+        continue;
+      }
+
+      declarations += `@group(${bindGroupIndex}) @binding(0) var<uniform> input${bindGroupIndex} : u32;\n`;
+      statement += ` + input${bindGroupIndex}`;
+
+      // Set the output storage buffer
       if (!outputDeclared) {
         bindGroupLayoutEntries.push({
           binding: 1,
@@ -251,6 +270,7 @@ works correctly.
         outputDeclared = true;
       }
 
+      // Set the input uniform buffers
       const bindGroupLayout = t.device.createBindGroupLayout({
         entries: bindGroupLayoutEntries,
       });
@@ -261,6 +281,9 @@ works correctly.
         entries: bindGroupEntries,
       });
       bindGroups.push(bindGroup);
+
+      // Compute the expected output value in the output storage buffer
+      expectedValue += bindGroupIndex + 1;
     }
 
     const pipelineLayout = t.device.createPipelineLayout({
