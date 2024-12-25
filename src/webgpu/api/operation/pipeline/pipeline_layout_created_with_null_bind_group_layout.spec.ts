@@ -17,7 +17,7 @@ works correctly.
   )
   .params(u =>
     u
-      .combine('emptyBindGroupLayoutType', ['Null', 'Undefined'] as const)
+      .combine('emptyBindGroupLayoutType', ['Null', 'Undefined', 'Empty'] as const)
       .combine('emptyBindGroupLayoutIndex', [0, 1, 2, 3] as const)
   )
   .fn(t => {
@@ -76,8 +76,8 @@ works correctly.
       });
       bindGroups.push(bindGroup);
 
-      // Set `null` or `undefined` in `bindGroupLayouts` which is used in the creation of pipeline
-      // layout
+      // Set `null`, `undefined` or empty bind group layout in `bindGroupLayouts` which is used in
+      // the creation of pipeline layout
       if (bindGroupIndex === emptyBindGroupLayoutIndex) {
         switch (emptyBindGroupLayoutType) {
           case 'Null':
@@ -85,6 +85,13 @@ works correctly.
             break;
           case 'Undefined':
             bindGroupLayouts.push(undefined);
+            break;
+          case 'Empty':
+            bindGroupLayouts.push(
+              t.device.createBindGroupLayout({
+                entries: [],
+              })
+            );
             break;
         }
         continue;
@@ -177,7 +184,7 @@ works correctly.
   )
   .params(u =>
     u
-      .combine('emptyBindGroupLayoutType', ['Null', 'Undefined'] as const)
+      .combine('emptyBindGroupLayoutType', ['Null', 'Undefined', 'Empty'] as const)
       .combine('emptyBindGroupLayoutIndex', [0, 1, 2, 3] as const)
   )
   .fn(t => {
@@ -222,8 +229,8 @@ works correctly.
         },
       });
 
-      // Set `null` or `undefined` in `bindGroupLayouts` which is used in the creation of pipeline
-      // layout
+      // Set `null`, `undefined` or empty bind group layout in `bindGroupLayouts` which is used in
+      // the creation of pipeline layout
       if (bindGroupIndex === emptyBindGroupLayoutIndex) {
         switch (emptyBindGroupLayoutType) {
           case 'Null':
@@ -231,6 +238,13 @@ works correctly.
             break;
           case 'Undefined':
             bindGroupLayouts.push(undefined);
+            break;
+          case 'Empty':
+            bindGroupLayouts.push(
+              t.device.createBindGroupLayout({
+                entries: [],
+              })
+            );
             break;
         }
 
