@@ -5068,7 +5068,7 @@ ${stageWGSL}
         entries: [
         {
           binding: 0,
-          visibility: GPUShaderStage.FRAGMENT | GPUShaderStage.COMPUTE,
+          visibility: GPUShaderStage.COMPUTE,
           buffer: {
             type: 'storage'
           }
