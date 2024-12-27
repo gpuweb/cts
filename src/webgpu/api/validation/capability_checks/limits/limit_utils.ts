@@ -45,6 +45,20 @@ export function getPipelineTypeForBindingCombination(bindingCombination: Binding
   }
 }
 
+export function getStageVisibilityForBinidngCombination(bindingCombination: BindingCombination) {
+  switch (bindingCombination) {
+    case 'vertex':
+      return GPUShaderStage.VERTEX;
+    case 'fragment':
+      return GPUShaderStage.FRAGMENT;
+    case 'vertexAndFragmentWithPossibleVertexStageOverflow':
+    case 'vertexAndFragmentWithPossibleFragmentStageOverflow':
+      return GPUShaderStage.FRAGMENT | GPUShaderStage.VERTEX;
+    case 'compute':
+      return GPUShaderStage.COMPUTE;
+  }
+}
+
 function getBindGroupIndex(bindGroupTest: BindGroupTest, numBindGroups: number, i: number) {
   switch (bindGroupTest) {
     case 'sameGroup':
@@ -1099,6 +1113,35 @@ export class LimitTestsImpl extends GPUTestBase {
     `;
     const module = device.createShaderModule({ code });
     return { module, code };
+  }
+
+  skipIfNotEnoughStorageBuffersInStage(visibility: GPUShaderStageFlags, numRequired: number) {
+    const { device } = this;
+    this.skipIf(
+      this.isCompatibility &&
+        // If we're using the fragment stage
+        (visibility & GPUShaderStage.FRAGMENT) !== 0 &&
+        // If perShaderStage and inFragment stage are equal we want to
+        // allow the test to run as otherwise we can't test overMaximum and overLimit
+        device.limits.maxStorageBuffersPerShaderStage >
+          device.limits.maxStorageBuffersInFragmentStage! &&
+        // They aren't equal so if there aren't enough supported in the fragment then skip
+        !(device.limits.maxStorageBuffersInFragmentStage! >= numRequired),
+      `maxStorageBuffersInFragmentShader = ${device.limits.maxStorageBuffersInFragmentStage} which is less than ${numRequired}`
+    );
+
+    this.skipIf(
+      this.isCompatibility &&
+        // If we're using the vertex stage
+        (visibility & GPUShaderStage.VERTEX) !== 0 &&
+        // If perShaderStage and inVertex stage are equal we want to
+        // allow the test to run as otherwise we can't test overMaximum and overLimit
+        device.limits.maxStorageBuffersPerShaderStage >
+          device.limits.maxStorageBuffersInVertexStage! &&
+        // They aren't equal so if there aren't enough supported in the vertex then skip
+        !(device.limits.maxStorageBuffersInVertexStage! >= numRequired),
+      `maxStorageBuffersInVertexShader = ${device.limits.maxStorageBuffersInVertexStage} which is less than ${numRequired}`
+    );
   }
 }
 
