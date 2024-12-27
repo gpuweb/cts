@@ -274,7 +274,7 @@ g.test('limits,supported')
         result = value;
         break;
       case 'adapter':
-        value = adapter.limits[limit];
+        value = adapter.limits[limit]!;
         result = value;
         break;
       case 'undefined':
@@ -283,11 +283,27 @@ g.test('limits,supported')
         break;
     }
 
-    const device = await t.requestDeviceTracked(adapter, { requiredLimits: { [limit]: value } });
+    const requiredLimits: Record<string, number | undefined> = { [limit]: value };
+
+    if (
+      limit === 'maxStorageBuffersInFragmentStage' ||
+      limit === 'maxStorageBuffersInVertexStage'
+    ) {
+      requiredLimits['maxStorageBuffersPerShaderStage'] = value;
+    }
+
+    if (
+      limit === 'maxStorageTexturesInFragmentStage' ||
+      limit === 'maxStorageTexturesInVertexStage'
+    ) {
+      requiredLimits['maxStorageTexturesPerShaderStage'] = value;
+    }
+
+    const device = await t.requestDeviceTracked(adapter, { requiredLimits });
     assert(device !== null);
     t.expect(
       device.limits[limit] === result,
-      'Devices reported limit should match the required limit'
+      `Devices reported limit for ${limit}(${device.limits[limit]}) should match the required limit (${result})`
     );
   });
 
@@ -327,7 +343,7 @@ g.test('limit,better_than_supported')
     assert(adapter !== null);
 
     const limitInfo = getDefaultLimitsForAdapter(adapter);
-    const value = adapter.limits[limit] * mul + add;
+    const value = adapter.limits[limit]! * mul + add;
     const requiredLimits = {
       [limit]: clamp(value, { min: 0, max: limitInfo[limit].maximumValue }),
     };
@@ -381,7 +397,7 @@ g.test('limit,out_of_range')
     const errorName =
       value < 0 || value > Number.MAX_SAFE_INTEGER
         ? 'TypeError'
-        : limitInfo.class === 'maximum' && value > adapter.limits[limit]
+        : limitInfo.class === 'maximum' && value > adapter.limits[limit]!
         ? 'OperationError'
         : limitInfo.class === 'alignment' && (value > 2 ** 31 || !isPowerOfTwo(value))
         ? 'OperationError'
