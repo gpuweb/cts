@@ -10,7 +10,10 @@ TODO:
 - test that a shader that has more than min(maxSamplersPerShaderStage, maxSampledTexturesPerShaderStage)
   texture+sampler combinations generates a validation error.
 `;import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { kShaderStages } from '../../../shader/validation/decl/util.js';
+import {
+  kShortShaderStages,
+  kShortShaderStageToShaderStage } from
+'../../../shader/execution/expression/call/builtin/texture_utils.js';
 import { CompatibilityTest } from '../../compatibility_test.js';
 
 export const g = makeTestGroup(CompatibilityTest);
@@ -85,12 +88,13 @@ u //
   textureType: 'texture_depth_2d_array'
 }]
 ).
-combine('stage', kShaderStages).
-filter((t) => t.sampleWGSL.startsWith('textureGather') || t.stage === 'fragment').
+combine('stage', kShortShaderStages).
+filter((t) => t.sampleWGSL.startsWith('textureGather') || t.stage === 'f').
 combine('async', [false, true])
 ).
 fn((t) => {
-  const { sampleWGSL, textureType, stage, async } = t.params;
+  const { sampleWGSL, textureType, stage: shortStage, async } = t.params;
+  const stage = kShortShaderStageToShaderStage[shortStage];
 
   const usageWGSL = `_ = ${sampleWGSL};`;
   const module = t.device.createShaderModule({
