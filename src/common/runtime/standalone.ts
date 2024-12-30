@@ -52,6 +52,7 @@ const { runnow, powerPreference, compatibility, forceFallbackAdapter } = options
 globalTestConfig.enableDebugLogs = options.debug;
 globalTestConfig.unrollConstEvalLoops = options.unrollConstEvalLoops;
 globalTestConfig.compatibility = compatibility;
+globalTestConfig.enforceDefaultLimits = options.enforceDefaultLimits;
 globalTestConfig.logToWebSocket = options.logToWebSocket;
 
 const logger = new Logger();
