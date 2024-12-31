@@ -503,24 +503,27 @@ export const kTextureSampleTypes = [
 
 assertTypeTrue();
 
-/** Binding type info (including class limits) for the specified GPUStorageTextureBindingLayout. */
+/** Binding type info (including class limits) for the specified GPUStorageTextureAccess. */
 export function storageTextureBindingTypeInfo(d) {
   switch (d.access) {
     case undefined:
     case 'write-only':
       return {
+        wgslAccess: 'write',
         usage: GPUConst.TextureUsage.STORAGE_BINDING,
         ...kBindingKind.writeonlyStorageTex,
         ...kValidStagesStorageWrite
       };
     case 'read-only':
       return {
+        wgslAccess: 'read',
         usage: GPUConst.TextureUsage.STORAGE_BINDING,
         ...kBindingKind.readonlyStorageTex,
         ...kValidStagesAll
       };
     case 'read-write':
       return {
+        wgslAccess: 'read_write',
         usage: GPUConst.TextureUsage.STORAGE_BINDING,
         ...kBindingKind.readwriteStorageTex,
         ...kValidStagesStorageWrite

@@ -14,8 +14,9 @@ import {
   kBindGroupTests,
   kBindingCombinations,
   getPipelineTypeForBindingCombination,
-  getPerStageWGSLForBindingCombination } from
+  getPerStageWGSLForBindingCombination,
 
+  getStageVisibilityForBinidngCombination } from
 './limit_utils.js';
 
 const kExtraLimits = {
@@ -35,7 +36,7 @@ type,
 order,
 numBindings)
 {
-  return device.createBindGroupLayout({
+  const bindGroupLayoutDescription = {
     entries: reorder(
       order,
       range(numBindings, (i) => ({
@@ -44,7 +45,8 @@ numBindings)
         buffer: { type }
       }))
     )
-  });
+  };
+  return device.createBindGroupLayout(bindGroupLayoutDescription);
 }
 
 g.test('createBindGroupLayout,at_over').
@@ -77,6 +79,8 @@ fn(async (t) => {
         t.adapter.limits.maxBindingsPerBindGroup < testValue,
         `maxBindingsPerBindGroup = ${t.adapter.limits.maxBindingsPerBindGroup} which is less than ${testValue}`
       );
+
+      t.skipIfNotEnoughStorageBuffersInStage(visibility, testValue);
 
       await t.expectValidationError(() => {
         createBindGroupLayout(device, visibility, type, order, testValue);
@@ -112,10 +116,13 @@ fn(async (t) => {
     limitTest,
     testValueName,
     async ({ device, testValue, shouldError, actualLimit }) => {
+      t.skipIfNotEnoughStorageBuffersInStage(visibility, testValue);
+
       const maxBindingsPerBindGroup = Math.min(
         t.device.limits.maxBindingsPerBindGroup,
         actualLimit
       );
+
       const kNumGroups = Math.ceil(testValue / maxBindingsPerBindGroup);
 
       // Not sure what to do in this case but best we get notified if it happens.
@@ -151,6 +158,7 @@ params(
   kMaximumLimitBaseParams.
   combine('async', [false, true]).
   combine('bindingCombination', kBindingCombinations).
+  beginSubcases().
   combine('order', kReorderOrderKeys).
   combine('bindGroupTest', kBindGroupTests)
 ).
@@ -167,23 +175,8 @@ fn(async (t) => {
         `can not test ${testValue} bindings in same group because maxBindingsPerBindGroup = ${device.limits.maxBindingsPerBindGroup}`
       );
 
-      if (t.isCompatibility) {
-        t.skipIf(
-          (bindingCombination === 'fragment' ||
-          bindingCombination === 'vertexAndFragmentWithPossibleVertexStageOverflow' ||
-          bindingCombination === 'vertexAndFragmentWithPossibleFragmentStageOverflow') &&
-          testValue > device.limits.maxStorageBuffersInFragmentStage,
-          `can not test ${testValue} bindings as it is more than maxStorageBuffersInFragmentStage(${device.limits.maxStorageBuffersInFragmentStage})`
-        );
-
-        t.skipIf(
-          (bindingCombination === 'vertex' ||
-          bindingCombination === 'vertexAndFragmentWithPossibleVertexStageOverflow' ||
-          bindingCombination === 'vertexAndFragmentWithPossibleFragmentStageOverflow') &&
-          testValue > device.limits.maxStorageBuffersInVertexStage,
-          `can not test ${testValue} bindings as it is more than maxStorageBuffersInVertexStage(${device.limits.maxStorageBuffersInVertexStage})`
-        );
-      }
+      const visibility = getStageVisibilityForBinidngCombination(bindingCombination);
+      t.skipIfNotEnoughStorageBuffersInStage(visibility, testValue);
 
       const code = getPerStageWGSLForBindingCombination(
         bindingCombination,
