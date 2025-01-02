@@ -2,6 +2,7 @@ import { GPUTest } from '../../../../../gpu_test.js';
 import { anyOf } from '../../../../../util/compare.js';
 import { Type, Value } from '../../../../../util/conversion.js';
 import { FPInterval } from '../../../../../util/floating_point.js';
+import { align } from '../../../../../util/math.js';
 import { Case } from '../../case.js';
 import { toComparator } from '../../expectation.js';
 
@@ -13,7 +14,7 @@ import { toComparator } from '../../expectation.js';
  * @param non_uniform_discard if true, one of each pair of invocations will discard
  * @param vectorize if defined, the vector width to use (2, 3, or 4)
  */
-export function runFWidthTest(
+export function runFWidthTestCases(
   t: GPUTest,
   cases: Case[],
   builtin: string,
@@ -22,14 +23,13 @@ export function runFWidthTest(
 ) {
   ////////////////////////////////////////////////////////////////
   // The four input values for a given case are distributed to across the invocations in a quad.
-  // We will populate a storage buffer with these input values laid out sequentially:
+  // We will populate a uniform buffer with these input values laid out sequentially:
   // [ case0_input0, case0_input1, case0_input2, case0_input3, ...]
   //
   // The render pipeline will be launched several times over a viewport size of (2, 2). Each draw
   // call will execute a single quad (four fragment invocation), which will exercise one test case.
   // Each of these draw calls will use a different instance index, which is forwarded to the
-  // fragment shader. Each invocation will determine its index into the storage buffer using its
-  // fragment position and the instance index for that draw call.
+  // fragment shader. The results are the output from the fragment shader.
   //
   // Consider two draw calls that test 2 cases (c0, c1).
   //
@@ -46,13 +46,23 @@ export function runFWidthTest(
   }
 
   // Determine the WGSL type to use in the shader, and the stride in bytes between values.
-  let valueStride = 4;
-  let wgslType = 'f32';
+  const valueStride = 16;
+  let conversionFromInput = 'input.x';
+  let conversionToOutput = `vec4f(v, 0, 0, 0)`;
   if (vectorize) {
-    wgslType = `vec${vectorize}f`;
-    valueStride = vectorize * 4;
-    if (vectorize === 3) {
-      valueStride = 16;
+    switch (vectorize) {
+      case 2:
+        conversionFromInput = 'input.xy';
+        conversionToOutput = 'vec4f(v, 0, 0)';
+        break;
+      case 3:
+        conversionFromInput = 'input.xyz';
+        conversionToOutput = 'vec4f(v, 0)';
+        break;
+      case 4:
+        conversionFromInput = 'input';
+        conversionToOutput = 'v';
+        break;
     }
   }
 
@@ -76,16 +86,16 @@ fn vert(@builtin(vertex_index) vertex_idx: u32,
   return CaseInfo(vec4(kVertices[vertex_idx], 0, 1), instance_idx);
 }
 
-@group(0) @binding(0) var<storage, read> inputs : array<${wgslType}>;
-@group(0) @binding(1) var<storage, read_write> outputs : array<${wgslType}>;
+@group(0) @binding(0) var<uniform> inputs : array<vec4f, ${cases.length}>;
 
 @fragment
-fn frag(info : CaseInfo) {
+fn frag(info : CaseInfo) -> @location(0) vec4u {
   let inv_idx = u32(info.position.x) + u32(info.position.y)*2;
   let index = info.quad_idx*4 + inv_idx;
   let input = inputs[index];
   ${non_uniform_discard ? 'if inv_idx == 0 { discard; }' : ''}
-  outputs[index] = ${builtin}(input);
+  let v = ${builtin}(${conversionFromInput});
+  return bitcast<vec4u>(${conversionToOutput});
 }
 `;
 
@@ -94,22 +104,18 @@ fn frag(info : CaseInfo) {
   const pipeline = t.device.createRenderPipeline({
     layout: 'auto',
     vertex: { module },
-    fragment: { module, targets: [{ format: 'rgba8unorm', writeMask: 0 }] },
+    fragment: { module, targets: [{ format: 'rgba32uint' }] },
   });
 
   // Create storage buffers to hold the inputs and outputs.
   const bufferSize = cases.length * 4 * valueStride;
   const inputBuffer = t.createBufferTracked({
     size: bufferSize,
-    usage: GPUBufferUsage.STORAGE,
+    usage: GPUBufferUsage.UNIFORM,
     mappedAtCreation: true,
   });
-  const outputBuffer = t.createBufferTracked({
-    size: bufferSize,
-    usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
-  });
 
-  // Populate the input storage buffer with case input values.
+  // Populate the input uniform buffer with case input values.
   const valuesData = new Uint8Array(inputBuffer.getMappedRange());
   for (let i = 0; i < cases.length / vectorWidth; i++) {
     for (let v = 0; v < vectorWidth; v++) {
@@ -127,10 +133,7 @@ fn frag(info : CaseInfo) {
 
   // Create a bind group for the storage buffers.
   const group = t.device.createBindGroup({
-    entries: [
-      { binding: 0, resource: { buffer: inputBuffer } },
-      { binding: 1, resource: { buffer: outputBuffer } },
-    ],
+    entries: [{ binding: 0, resource: { buffer: inputBuffer } }],
     layout: pipeline.getBindGroupLayout(0),
   });
 
@@ -138,52 +141,67 @@ fn frag(info : CaseInfo) {
   // We only need this for launching the desired number of fragment invocations.
   const colorAttachment = t.createTextureTracked({
     size: { width: 2, height: 2 },
-    format: 'rgba8unorm',
-    usage: GPUTextureUsage.RENDER_ATTACHMENT,
+    format: 'rgba32uint',
+    usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
   });
+  const bytesPerRow = align(valueStride * colorAttachment.width, 256);
 
   // Submit the render pass to the device.
+  const results = [];
   const encoder = t.device.createCommandEncoder();
-  const pass = encoder.beginRenderPass({
-    colorAttachments: [
-      {
-        view: colorAttachment.createView(),
-        loadOp: 'clear',
-        storeOp: 'discard',
-      },
-    ],
-  });
-  pass.setPipeline(pipeline);
-  pass.setBindGroup(0, group);
-  for (let quad = 0; quad < cases.length / vectorWidth; quad++) {
+  for (let quad = 0; quad / vectorWidth; quad++) {
+    const pass = encoder.beginRenderPass({
+      colorAttachments: [
+        {
+          view: colorAttachment.createView(),
+          loadOp: 'clear',
+          storeOp: 'store',
+        },
+      ],
+    });
+    pass.setPipeline(pipeline);
+    pass.setBindGroup(0, group);
     pass.draw(3, 1, undefined, quad);
+    pass.end();
+    const outputBuffer = t.createBufferTracked({
+      size: bytesPerRow * colorAttachment.height,
+      usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC,
+    });
+    results.push(outputBuffer);
+    encoder.copyTextureToBuffer(
+      { texture: colorAttachment },
+      { buffer: outputBuffer, bytesPerRow },
+      [colorAttachment.width, colorAttachment.height]
+    );
   }
-  pass.end();
   t.queue.submit([encoder.finish()]);
 
   // Check the outputs match the expected results.
-  t.expectGPUBufferValuesPassCheck(
-    outputBuffer,
-    (outputData: Uint8Array) => {
-      for (let i = 0; i < cases.length / vectorWidth; i++) {
-        for (let v = 0; v < vectorWidth; v++) {
-          const index = i * vectorWidth + v;
-          if (index >= cases.length) {
-            break;
-          }
-          const c = cases[index];
-
-          for (let x = 0; x < 4; x++) {
+  results.forEach((outputBuffer, quadNdx) => {
+    t.expectGPUBufferValuesPassCheck(
+      outputBuffer,
+      (outputData: Uint8Array) => {
+        for (let i = 0; i < 4; ++i) {
+          const tx = i % 2;
+          const ty = (i / 2) | 0;
+          const x = tx + ty * 2;
+          for (let v = 0; v < vectorWidth; v++) {
             if (non_uniform_discard && x === 0) {
               continue;
             }
 
-            const index = (i * 4 + x) * valueStride + v * 4;
+            const caseNdx = quadNdx * 4 + x;
+            if (caseNdx >= cases.length) {
+              break;
+            }
+
+            const c = cases[quadNdx * 4 + x];
+            const index = ty * bytesPerRow + tx * valueStride + v * 4;
             const result = Type.f32.read(outputData, index);
 
             let expected = c.expected;
             if (builtin.endsWith('Fine')) {
-              expected = toComparator((expected as FPInterval[])[x]);
+              expected = toComparator((expected as FPInterval[])[v]);
             } else {
               expected = anyOf(...(expected as FPInterval[]));
             }
@@ -191,19 +209,46 @@ fn frag(info : CaseInfo) {
             const cmp = expected.compare(result);
             if (!cmp.matched) {
               return new Error(`
-    inputs: (${(c.input as Value[]).join(', ')})
-  expected: ${cmp.expected}
+      inputs: (${(c.input as Value[]).join(', ')})
+    expected: ${cmp.expected}
 
-  returned: ${result}`);
+    returned: ${result}`);
             }
           }
         }
+        return undefined;
+      },
+      {
+        type: Uint8Array,
+        typedLength: outputBuffer.size,
       }
-      return undefined;
-    },
-    {
-      type: Uint8Array,
-      typedLength: bufferSize,
-    }
-  );
+    );
+  });
+}
+
+/**
+ * Run a test for a fwidth builtin function.
+ * @param t the GPUTest
+ * @param cases list of test cases to run
+ * @param builtin the builtin function to test
+ * @param non_uniform_discard if true, one of each pair of invocations will discard
+ * @param vectorize if defined, the vector width to use (2, 3, or 4)
+ */
+export function runFWidthTest(
+  t: GPUTest,
+  cases: Case[],
+  builtin: string,
+  non_uniform_discard: boolean,
+  vectorize?: number
+) {
+  const numCasesPerUniformBuffer = t.device.limits.maxUniformBufferBindingSize / 64;
+  for (let i = 0; i < cases.length; i += numCasesPerUniformBuffer) {
+    runFWidthTestCases(
+      t,
+      cases.slice(i, i + numCasesPerUniformBuffer),
+      builtin,
+      non_uniform_discard,
+      vectorize
+    );
+  }
 }
