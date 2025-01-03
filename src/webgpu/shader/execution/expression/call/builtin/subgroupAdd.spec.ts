@@ -504,7 +504,7 @@ g.test('fragment')
 enable subgroups;
 
 @group(0) @binding(0)
-var<storage> inputs : array<u32>;
+var<uniform> inputs : array<vec4u, 1>;
 
 @fragment
 fn main(
