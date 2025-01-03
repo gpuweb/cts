@@ -2,7 +2,11 @@
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
 **/import { kUnitCaseParamsBuilder } from '../../../../../common/framework/params_builder.js';import { makeTestGroup } from '../../../../../common/framework/test_group.js';import { getGPU } from '../../../../../common/util/navigator_gpu.js';
 import { assert, range, reorder } from '../../../../../common/util/util.js';
-import { getDefaultLimitsForAdapter } from '../../../../capability_info.js';
+import {
+  getDefaultLimits,
+  getDefaultLimitsForAdapter } from
+
+'../../../../capability_info.js';
 import { GPUTestBase } from '../../../../gpu_test.js';
 
 
@@ -360,6 +364,14 @@ export class LimitTestsImpl extends GPUTestBase {
   get device() {
     assert(this._device !== undefined, 'device is only valid in _testThenDestroyDevice callback');
     return this._device;
+  }
+
+  getDefaultLimits() {
+    return getDefaultLimits(this.isCompatibility ? 'compatibility' : 'core');
+  }
+
+  getDefaultLimit(limit) {
+    return this.getDefaultLimits()[limit].default;
   }
 
   async requestDeviceWithLimits(

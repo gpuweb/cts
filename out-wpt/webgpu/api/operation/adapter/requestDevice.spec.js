@@ -283,11 +283,27 @@ fn(async (t) => {
       break;
   }
 
-  const device = await t.requestDeviceTracked(adapter, { requiredLimits: { [limit]: value } });
+  const requiredLimits = { [limit]: value };
+
+  if (
+  limit === 'maxStorageBuffersInFragmentStage' ||
+  limit === 'maxStorageBuffersInVertexStage')
+  {
+    requiredLimits['maxStorageBuffersPerShaderStage'] = value;
+  }
+
+  if (
+  limit === 'maxStorageTexturesInFragmentStage' ||
+  limit === 'maxStorageTexturesInVertexStage')
+  {
+    requiredLimits['maxStorageTexturesPerShaderStage'] = value;
+  }
+
+  const device = await t.requestDeviceTracked(adapter, { requiredLimits });
   assert(device !== null);
   t.expect(
     device.limits[limit] === result,
-    'Devices reported limit should match the required limit'
+    `Devices reported limit for ${limit}(${device.limits[limit]}) should match the required limit (${result})`
   );
 });
 

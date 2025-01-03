@@ -2,7 +2,11 @@ import { kUnitCaseParamsBuilder } from '../../../../../common/framework/params_b
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { getGPU } from '../../../../../common/util/navigator_gpu.js';
 import { assert, range, reorder, ReorderOrder } from '../../../../../common/util/util.js';
-import { getDefaultLimitsForAdapter } from '../../../../capability_info.js';
+import {
+  getDefaultLimits,
+  getDefaultLimitsForAdapter,
+  kLimits,
+} from '../../../../capability_info.js';
 import { GPUTestBase } from '../../../../gpu_test.js';
 
 type GPUSupportedLimit = keyof GPUSupportedLimits;
@@ -360,6 +364,14 @@ export class LimitTestsImpl extends GPUTestBase {
   override get device(): GPUDevice {
     assert(this._device !== undefined, 'device is only valid in _testThenDestroyDevice callback');
     return this._device;
+  }
+
+  getDefaultLimits() {
+    return getDefaultLimits(this.isCompatibility ? 'compatibility' : 'core');
+  }
+
+  getDefaultLimit(limit: (typeof kLimits)[number]) {
+    return this.getDefaultLimits()[limit].default;
   }
 
   async requestDeviceWithLimits(

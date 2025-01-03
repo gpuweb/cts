@@ -21,12 +21,7 @@ import {
   unreachable } from
 '../common/util/util.js';
 
-import {
-  getDefaultLimits,
-
-  kQueryTypeInfo } from
-
-'./capability_info.js';
+import { kQueryTypeInfo } from './capability_info.js';
 
 import {
   kTextureFormatInfo,
@@ -141,10 +136,6 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
 
   get isCompatibility() {
     return globalTestConfig.compatibility;
-  }
-
-  getDefaultLimits() {
-    return getDefaultLimits(this.isCompatibility ? 'compatibility' : 'core');
   }
 
   /**
@@ -378,14 +369,6 @@ export class GPUTestBase extends Fixture {
 
   get isCompatibility() {
     return globalTestConfig.compatibility;
-  }
-
-  getDefaultLimits() {
-    return getDefaultLimits(this.isCompatibility ? 'compatibility' : 'core');
-  }
-
-  getDefaultLimit(limit) {
-    return this.getDefaultLimits()[limit].default;
   }
 
   makeLimitVariant(limit, variant) {

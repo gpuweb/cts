@@ -6,8 +6,13 @@ createPipelineLayout validation tests.
 TODO: review existing tests, write descriptions, and make sure tests are complete.
 `;import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { count } from '../../../common/util/util.js';
-import { bufferBindingTypeInfo, kBufferBindingTypes } from '../../capability_info.js';
+import {
+  bufferBindingTypeInfo,
+  getBindingLimitForBindingType,
+  kBufferBindingTypes } from
+'../../capability_info.js';
 import { GPUConst } from '../../constants.js';
+import { MaxLimitsTestMixin } from '../../gpu_test.js';
 
 import { ValidationTest } from './validation_test.js';
 
@@ -15,7 +20,7 @@ function clone(descriptor) {
   return JSON.parse(JSON.stringify(descriptor));
 }
 
-export const g = makeTestGroup(ValidationTest);
+export const g = makeTestGroup(MaxLimitsTestMixin(ValidationTest));
 
 g.test('number_of_dynamic_buffers_exceeds_the_maximum_value').
 desc(
@@ -37,11 +42,10 @@ fn((t) => {
   const { type, visibility } = t.params;
   const info = bufferBindingTypeInfo({ type });
   const { maxDynamicLimit } = info.perPipelineLimitClass;
-  const perStageLimit = t.getDefaultLimit(info.perStageLimitClass.maxLimit);
-  const maxDynamic = Math.min(
-    maxDynamicLimit ? t.getDefaultLimit(maxDynamicLimit) : 0,
-    perStageLimit
-  );
+  const limit = getBindingLimitForBindingType(t.device, visibility, { buffer: { type } });
+  const maxDynamic = Math.min(maxDynamicLimit ? t.device.limits[maxDynamicLimit] : 0, limit);
+
+  t.skipIf(limit === 0, `binding limit for ${type} === 0`);
 
   const maxDynamicBufferBindings = [];
   for (let binding = 0; binding < maxDynamic; binding++) {
@@ -60,7 +64,7 @@ fn((t) => {
     entries: [{ binding: 0, visibility, buffer: { type, hasDynamicOffset: false } }]
   };
 
-  if (perStageLimit > maxDynamic) {
+  if (limit > maxDynamic) {
     const goodPipelineLayoutDescriptor = {
       bindGroupLayouts: [
       maxDynamicBufferBindGroupLayout,
