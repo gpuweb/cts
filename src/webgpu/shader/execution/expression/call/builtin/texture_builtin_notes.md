@@ -1,12 +1,29 @@
-# Texture Builtin Notes
+# Texture Builtins Issues
 
-These are known failures for various GPUs. If you find more, please add to this list so developers
-can be aware what does and does not work.
+Various GPUs and drivers have issues (bugs) related sampling textures. Below is a list of known issues. 
+If you'd like to check your own GPU you can run
+[all of the WGSL builtin function tests](https://gpuweb.github.io/cts/standalone/?debug=1&runnow=1&q=webgpu:shader,execution,expression,call,builtin,*)
+or you can run the individual texture builtin function tests
+
+* [textureLoad](https://gpuweb.github.io/cts/standalone/?debug=1&runnow=1&q=webgpu:shader,execution,expression,call,builtin,textureLoad:*)
+* [textureGather](https://gpuweb.github.io/cts/standalone/?debug=1&runnow=1&q=webgpu:shader,execution,expression,call,builtin,textureGather:*)
+* [textureGatherCompare](https://gpuweb.github.io/cts/standalone/?debug=1&runnow=1&q=webgpu:shader,execution,expression,call,builtin,textureGatherCompare:*)
+* [textureSample](https://gpuweb.github.io/cts/standalone/?debug=1&runnow=1&q=webgpu:shader,execution,expression,call,builtin,textureSample:*)
+* [textureSampleBaseClampToEdge](https://gpuweb.github.io/cts/standalone/?debug=1&runnow=1&q=webgpu:shader,execution,expression,call,builtin,textureSampleBaseClampToEdge:*)
+* [textureSampleBias](https://gpuweb.github.io/cts/standalone/?debug=1&runnow=1&q=webgpu:shader,execution,expression,call,builtin,textureSampleBias:*)
+* [textureSampleCompare](https://gpuweb.github.io/cts/standalone/?debug=1&runnow=1&q=webgpu:shader,execution,expression,call,builtin,textureSampleCompare:*)
+* [textureSampleCompareLevel](https://gpuweb.github.io/cts/standalone/?debug=1&runnow=1&q=webgpu:shader,execution,expression,call,builtin,textureSampleCompareLevel:*)
+* [textureSampleGrad](https://gpuweb.github.io/cts/standalone/?debug=1&runnow=1&q=webgpu:shader,execution,expression,call,builtin,textureSampleGrad:*)
+* [textureSampleLevel](https://gpuweb.github.io/cts/standalone/?debug=1&runnow=1&q=webgpu:shader,execution,expression,call,builtin,textureSampleLevel:*)
+* [textureStore](https://gpuweb.github.io/cts/standalone/?debug=1&runnow=1&q=webgpu:shader,execution,expression,call,builtin,textureStore:*)
+
+Note: A failure does not guarantee a bug in the GPU. Rather, the results need to be inspected.
+Some results indicate a bug. Others indicate the test itself might be too sensitive.
 
 ------------------------------------------------------------------------------------------------------------
-## gpu:Intel Comet Lake S UHD Graphics 630 (8086:9bc5-31.0.101.2127)
-## os:Windows-10
-## affected: `textureGather` with cube and cube-arrays.
+* gpu:Intel Comet Lake S UHD Graphics 630 (8086:9bc5-31.0.101.2127)
+* os:Windows-10
+* affected: `textureGather` with cube and cube-arrays.
 
 cube maps never wrap - the GPU scales the conversion from cube coordinates to 2d array coordinates
 such that it never has to sample across 2 faces like the specs require
@@ -95,9 +112,9 @@ webgpu:shader,execution,expression,call,builtin,textureGather:depth_3d_coords:st
 ```
 
 ------------------------------------------------------------------------------------------------------------
-## gpu:Intel Coffee Lake H UHD Graphics 630 (8086:3e9b)
-## os:Mac-14.5
-## affected: `textureGather`, `textureGatherCompare` with cube-arrays with all formats.
+* gpu:Intel Coffee Lake H UHD Graphics 630 (8086:3e9b)
+* os:Mac-14.5
+* affected: `textureGather`, `textureGatherCompare` with cube-arrays with all formats.
 
 Only the first array layer is ever selected. 
 
@@ -220,9 +237,9 @@ webgpu:shader,execution,expression,call,builtin,textureGather:depth_array_3d_coo
 ```
 
 ------------------------------------------------------------------------------------------------------------
-## gpu:Intel Coffee Lake H UHD Graphics 630 (8086:3e9b)
-## os:Mac-14.5
-## affected: `textureGather`, `textureGatherCompare` with cube with stencil8 format
+* gpu:Intel Coffee Lake H UHD Graphics 630 (8086:3e9b)
+* os:Mac-14.5
+* affected: `textureGather`, `textureGatherCompare` with cube with stencil8 format
 
 Results are 0 or garbage.
 
@@ -368,9 +385,9 @@ webgpu:shader,execution,expression,call,builtin,textureGather:sampled_3d_coords:
 ```
 
 ------------------------------------------------------------------------------------------------------------
-## gpu:Intel Coffee Lake H UHD Graphics 630 (8086:3e9b)
-## os:Mac-14.5
-## affected: `textureGather`, `textureGatherCompare` with 2d-array with stencil8 format
+* gpu:Intel Coffee Lake H UHD Graphics 630 (8086:3e9b)
+* os:Mac-14.5
+* affected: `textureGather`, `textureGatherCompare` with 2d-array with stencil8 format
 
 Results are 0 or garbage.
 
@@ -435,9 +452,9 @@ webgpu:shader,execution,expression,call,builtin,textureGather:sampled_array_2d_c
 ```
 
 ------------------------------------------------------------------------------------------------------------
-## gpu:Intel Coffee Lake H UHD Graphics 630 (8086:3e9b)
-## os:Mac-15.0
-## affected: `textureSampleGrad` with offset on 2d bc compressed formats
+* gpu:Intel Coffee Lake H UHD Graphics 630 (8086:3e9b)
+* os:Mac-15.0
+* affected: `textureSampleGrad` with offset on 2d bc compressed formats
 
 Offsets are wrong. Below we can see we start with coords `0.5, 0.5` so center. We computed mip level 6, clamped to the last
 mip level which is 4x4 that means in texel coords we'd have `2.0, 2.0` (center of the mip between texels). The offset is `-2, -3`
@@ -494,9 +511,9 @@ webgpu:shader,execution,expression,call,builtin,textureSampleGrad:sampled_2d_coo
                                                              | mip level (2) weight: 1.00000
 ```
 
-## gpu:Intel Coffee Lake H UHD Graphics 630 (8086:3e9b)
-## os:Mac-15.0
-## affected: `textureSampleGrad` with offset on 3d r16float, r32float, r8snorm, r8unorm, rg11b10ufloat
+* gpu:Intel Coffee Lake H UHD Graphics 630 (8086:3e9b)
+* os:Mac-15.0
+* affected: `textureSampleGrad` with offset on 3d r16float, r32float, r8snorm, r8unorm, rg11b10ufloat
 
 Offsets are wrong
 
@@ -545,9 +562,9 @@ webgpu:shader,execution,expression,call,builtin,textureSampleGrad:sampled_3d_coo
 ```
 
 ------------------------------------------------------------------------------------------------------------
-## gpu:AMD Radeon RX 5500 XT (1002:7340)
-## os:Mac-14.4.1
-## affected: `textureGather` with sint/uint formats - all viewDimensions
+* gpu:AMD Radeon RX 5500 XT (1002:7340)
+* os:Mac-14.4.1
+* affected: `textureGather` with sint/uint formats - all viewDimensions
 
 GPU always samples the top left corner
 
@@ -604,9 +621,9 @@ webgpu:shader,execution,expression,call,builtin,textureGather:sampled_2d_coords:
 ```
 
 ------------------------------------------------------------------------------------------------------------
-## gpu:apple:m1 / m2
-## os:Mac-15.1.1, Mac-14.4.1
-## affected: `textureSampleBias` with 2d and 2d-array coords with offset with repeat or mirror-repeat
+* gpu:apple:m1 / m2
+* os:Mac-15.1.1, Mac-14.4.1
+* affected: `textureSampleBias` with 2d and 2d-array coords with offset with repeat or mirror-repeat
 
 GPU computes incorrect offsets
 
@@ -709,9 +726,9 @@ layer: 3 mip(2) un-sampled                               | layer: 3 mip(2) un-sa
 
 
 ------------------------------------------------------------------------------------------------------------
-## device_type:Pixel 6 (oriole)
-## os:Android
-## affected: all texture builtins that take an offset. 
+* device_type:Pixel 6 (oriole)
+* os:Android
+* affected: all texture builtins that take an offset. 
 
 `mirror-repeat` with offset doesn't work.
 
@@ -778,9 +795,9 @@ webgpu:shader,execution,expression,call,builtin,textureGather:sampled_array_2d_c
 ```
 
 ------------------------------------------------------------------------------------------------------------
-## device_type:Pixel 4 (flame)
-## os:Android
-## affected: `textureSampleGrad` with offset, possible only on 2x2 mip level
+* device_type:Pixel 4 (flame)
+* os:Android
+* affected: `textureSampleGrad` with offset, possible only on 2x2 mip level
 
 GPU returns 0,0,0,0
 
@@ -828,9 +845,9 @@ webgpu:shader,execution,expression,call,builtin,textureSampleGrad:sampled_array_
 ```
 
 ------------------------------------------------------------------------------------------------------------
-## gpu: AMD Radeon Pro WX 3200 (radeonsi polaris12 LLVM 17.0.6)) DRIVER_VENDOR=Mesa, DRIVER_VERSION=24.0.6  
-## os: Linux
-## affected: `textureGather` and `textureGatherCompare` with cube and cube-array and integer texture formats
+* gpu: AMD Radeon Pro WX 3200 (radeonsi polaris12 LLVM 17.0.6)) DRIVER_VENDOR=Mesa, DRIVER_VERSION=24.0.6  
+* os: Linux
+* affected: `textureGather` and `textureGatherCompare` with cube and cube-array and integer texture formats
 
 samples never wrap at edges.
 
