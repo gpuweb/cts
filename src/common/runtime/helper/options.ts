@@ -102,7 +102,10 @@ export const kCTSOptionsInfo: OptionsInfos<CTSOptions> = {
   debug: { description: 'show more info' },
   compatibility: { description: 'run in compatibility mode' },
   forceFallbackAdapter: { description: 'pass forceFallbackAdapter: true to requestAdapter' },
-  enforceDefaultLimits: { description: 'force the adapter limits to the default limits' },
+  enforceDefaultLimits: {
+    description: `force the adapter limits to the default limits.
+Note: May fail on tests for low-power/high-performance`,
+  },
   unrollConstEvalLoops: { description: 'unroll const eval loops in WGSL' },
   powerPreference: {
     description: 'set default powerPreference for some tests',
