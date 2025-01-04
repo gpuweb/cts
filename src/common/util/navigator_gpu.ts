@@ -52,8 +52,6 @@ export function getDefaultRequestAdapterOptions() {
   return defaultRequestAdapterOptions;
 }
 
-let s_wrappedForEnforceDefaultLimits = false;
-
 /**
  * Finds and returns the `navigator.gpu` object (or equivalent, for non-browser implementations).
  * Throws an exception if not found.
@@ -87,40 +85,36 @@ export function getGPU(recorder: TestCaseRecorder | null): GPU {
       return adapter;
     };
 
-    if (!s_wrappedForEnforceDefaultLimits) {
-      s_wrappedForEnforceDefaultLimits = true;
-
-      const enforceDefaultLimits = (adapter: GPUAdapter, desc: GPUDeviceDescriptor | undefined) => {
-        if (desc?.requiredLimits) {
-          const limits = getDefaultLimitsForAdapter(adapter);
-          for (const [key, value] of Object.entries(desc.requiredLimits)) {
-            const info = limits[key as keyof ReturnType<typeof getDefaultLimitsForAdapter>];
-            if (info && value !== undefined) {
-              const [beyondLimit, condition] =
-                info.class === 'maximum'
-                  ? [value > info.default, 'greater']
-                  : [value < info.default, 'less'];
-              if (beyondLimit) {
-                throw new DOMException(
-                  `requestedLimit ${value} for ${key} is ${condition} than adapter limit ${info.default}`,
-                  'OperationError'
-                );
-              }
+    const enforceDefaultLimits = (adapter: GPUAdapter, desc: GPUDeviceDescriptor | undefined) => {
+      if (desc?.requiredLimits) {
+        const limits = getDefaultLimitsForAdapter(adapter);
+        for (const [key, value] of Object.entries(desc.requiredLimits)) {
+          const info = limits[key as keyof ReturnType<typeof getDefaultLimitsForAdapter>];
+          if (info && value !== undefined) {
+            const [beyondLimit, condition] =
+              info.class === 'maximum'
+                ? [value > info.default, 'greater']
+                : [value < info.default, 'less'];
+            if (beyondLimit) {
+              throw new DOMException(
+                `requestedLimit ${value} for ${key} is ${condition} than adapter limit ${info.default}`,
+                'OperationError'
+              );
             }
           }
         }
-      };
+      }
+    };
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
-      const origFn = GPUAdapter.prototype.requestDevice;
-      GPUAdapter.prototype.requestDevice = async function (
-        this: GPUAdapter,
-        desc?: GPUDeviceDescriptor | undefined
-      ) {
-        enforceDefaultLimits(this, desc);
-        return await origFn.call(this, desc);
-      };
-    }
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    const origFn = GPUAdapter.prototype.requestDevice;
+    GPUAdapter.prototype.requestDevice = async function (
+      this: GPUAdapter,
+      desc?: GPUDeviceDescriptor | undefined
+    ) {
+      enforceDefaultLimits(this, desc);
+      return await origFn.call(this, desc);
+    };
   }
 
   if (defaultRequestAdapterOptions) {
