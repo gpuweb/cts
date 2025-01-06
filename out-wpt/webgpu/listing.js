@@ -1689,6 +1689,22 @@ export const listing = [
       "compat",
       "api",
       "validation",
+      "createBindGroupLayout_limits"
+    ]
+  },
+  {
+    "file": [
+      "compat",
+      "api",
+      "validation",
+      "createPipelineLayout"
+    ]
+  },
+  {
+    "file": [
+      "compat",
+      "api",
+      "validation",
       "encoding",
       "cmds",
       "copyTextureToBuffer"
@@ -1738,6 +1754,15 @@ export const listing = [
       "validation",
       "render_pipeline",
       "fragment_state"
+    ]
+  },
+  {
+    "file": [
+      "compat",
+      "api",
+      "validation",
+      "render_pipeline",
+      "in_stage_limits"
     ]
   },
   {

@@ -1298,36 +1298,102 @@ function getAdapterLimitsAsDeviceRequiredLimits(adapter) {
   return requiredLimits;
 }
 
-function setAllLimitsToAdapterLimits(
+/**
+ * Removes limits that don't exist on the adapter.
+ * A test might request a new limit that not all implementions support. The test itself
+ * should check the requested limit using code that expects undefined.
+ *
+ * ```ts
+ *    t.skipIf(limit < 2);     // BAD! Doesn't skip if unsupported beause undefined is never less than 2.
+ *    t.skipIf(!(limit >= 2)); // Good. Skips if limits is not >= 2. undefined is not >= 2.
+ * ```
+ */
+function removeNonExistantLimits(adapter, limits) {
+  const filteredLimits = {};
+  const adapterLimits = adapter.limits;
+  for (const [limit, value] of Object.entries(limits)) {
+    if (adapterLimits[limit] !== undefined) {
+      filteredLimits[limit] = value;
+    }
+  }
+  return filteredLimits;
+}
+
+function applyLimitsToDescriptor(
 adapter,
-desc)
+desc,
+getRequiredLimits)
 {
   const descWithMaxLimits = {
     requiredFeatures: [],
     defaultQueue: {},
     ...desc,
-    requiredLimits: getAdapterLimitsAsDeviceRequiredLimits(adapter)
+    requiredLimits: removeNonExistantLimits(adapter, getRequiredLimits(adapter))
   };
   return descWithMaxLimits;
 }
 
 /**
- * Used by MaxLimitsTest to request a device with all the max limits of the adapter.
+ * Used by RequiredLimitsTestMixin to allow you to request specific limits
+ *
+ * Supply a `getRequiredLimits` function that given a GPUAdapter, turns the limits
+ * you want.
+ *
+ * Also supply a key function that returns a device key. You should generally return
+ * the name of each limit you request and any math you did on the limit. For example
+ *
+ * ```js
+ * {
+ *   getRequiredLimits(adapter) {
+ *     return {
+ *       maxBindGroups: adapter.limits.maxBindGroups / 2,
+ *       maxTextureDimensions2D: Math.max(adapter.limits.maxTextureDimensions2D, 8192),
+ *     },
+ *   },
+ *   key() {
+ *     return `
+ *       maxBindGroups / 2,
+ *       max(maxTextureDimension2D, 8192),
+ *     `;
+ *   },
+ * }
+ * ```
+ *
+ * Its important to note, the key is used BEFORE knowing the adapter limits to get a device
+ * that was already created with the same key.
  */
-export class MaxLimitsGPUTestSubcaseBatchState extends GPUTestSubcaseBatchState {
+
+
+
+
+
+/**
+ * Used by RequiredLimitsTest to request a device with all requested limits of the adapter.
+ */
+export class RequiredLimitsGPUTestSubcaseBatchState extends GPUTestSubcaseBatchState {
+
+  constructor(
+  recorder,
+  params,
+  requiredLimitsHelper)
+  {
+    super(recorder, params);this.recorder = recorder;this.params = params;
+    this.requiredLimitsHelper = requiredLimitsHelper;
+  }
   selectDeviceOrSkipTestCase(
   descriptor,
   descriptorModifier)
   {
+    const requiredLimitsHelper = this.requiredLimitsHelper;
     const mod = {
       descriptorModifier(adapter, desc) {
         desc = descriptorModifier?.descriptorModifier ?
         descriptorModifier.descriptorModifier(adapter, desc) :
         desc;
-        return setAllLimitsToAdapterLimits(adapter, desc);
+        return applyLimitsToDescriptor(adapter, desc, requiredLimitsHelper.getRequiredLimits);
       },
       keyModifier(baseKey) {
-        return `${baseKey}:MaxLimits`;
+        return `${baseKey}:${requiredLimitsHelper.key()}`;
       }
     };
     super.selectDeviceOrSkipTestCase(initUncanonicalizedDeviceDescriptor(descriptor), mod);
@@ -1338,10 +1404,14 @@ export class MaxLimitsGPUTestSubcaseBatchState extends GPUTestSubcaseBatchState 
 
 
 
-export function MaxLimitsTestMixin(
-Base)
+/**
+ * A text mixin to make it relatively easy to request specific limits.
+ */
+export function RequiredLimitsTestMixin(
+Base,
+requiredLimitsHelper)
 {
-  class MaxLimitsImpl extends
+  class RequiredLimitsImpl extends
   Base
 
   {
@@ -1350,11 +1420,23 @@ Base)
     recorder,
     params)
     {
-      return new MaxLimitsGPUTestSubcaseBatchState(recorder, params);
+      return new RequiredLimitsGPUTestSubcaseBatchState(recorder, params, requiredLimitsHelper);
     }
   }
 
-  return MaxLimitsImpl;
+  return RequiredLimitsImpl;
+}
+
+/**
+ * Requests all the max limits from the adapter.
+ */
+export function MaxLimitsTestMixin(Base) {
+  return RequiredLimitsTestMixin(Base, {
+    getRequiredLimits: getAdapterLimitsAsDeviceRequiredLimits,
+    key() {
+      return 'AllLimits';
+    }
+  });
 }
 
 /**
