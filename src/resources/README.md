@@ -99,17 +99,17 @@ Use a image tool (e.g. "Paint" app on Windows) to create four-colors.jpg from fo
 
 // Generate jpg picture with 90 cw rotation metadata
 Use a image tool (e.g. "Paint" app on Windows) to create four-colors-hard-rotate-90-ccw.jpg and check with exiftool to ensure no orientation metadata been set.
-exiftool -Orientation#=6 four-colors.jpg -o .\four-colors-rotate-90-cw.jpg
-rm four-clors-hard-rotate-90-ccw.jpg
+exiftool -Orientation#=6 four-colors-hard-rotate-90-ccw.jpg -o four-colors-rotate-90-cw.jpg
+rm four-colors-hard-rotate-90-ccw.jpg
 
 // Generate jpg picture with 180 cw rotation metadata
 Use a image tool (e.g. "Paint" app on Windows) to create four-colors-hard-rotate-180-ccw.jpg and check with exiftool to ensure no orientation metadata been set.
-exiftool -Orientation#=3 four-colors.jpg -o .\four-colors-rotate-180-cw.jpg
-rm four-clors-hard-rotate-180-ccw.jpg
+exiftool -Orientation#=3 four-colors-hard-rotate-180-ccw.jpg -o four-colors-rotate-180-cw.jpg
+rm four-colors-hard-rotate-180-ccw.jpg
 
 // Generate jpg picture with 270 cw rotation metadata
 Use a image tool (e.g. "Paint" app on Windows) to create four-colors-hard-rotate-270-ccw.jpg and check with exiftool to ensure no orientation metadata been set.
-exiftool -Orientation#=8 four-colors.jpg -o .\four-colors-rotate-270-cw.jpg
+exiftool -Orientation#=8 four-colors-hard-rotate-270-ccw.jpg -o four-colors-rotate-270-cw.jpg
 rm four-colors-hard-rotate-270-ccw.jpg
 
 ```
