@@ -20,7 +20,7 @@ g.test('from_orientation_metadata_file')
     `
     Test HTMLImageElements with rotation metadata can be copied to WebGPU texture correctly.
 
-    It creates Images with images under Resource folder.
+    It creates an ImageBitmap or HTMLImageElement using images in the 'resources' folder.
 
     Then call copyExternalImageToTexture() to do a full copy to the 0 mipLevel
     of dst texture, and read one pixel out to compare with the manually documented expected color.
