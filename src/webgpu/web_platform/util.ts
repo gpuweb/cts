@@ -650,6 +650,7 @@ export const kObjectTypeFromFiles = [
  * convert the result to valid source that GPUCopyExternalImageSource supported.
  */
 export async function GetSourceFromImageFile(
+  test: GPUTest,
   imageName: ImageName,
   objectTypeFromFile: ObjectTypeFromFile
 ): Promise<ImageBitmap | HTMLImageElement> {
@@ -657,17 +658,30 @@ export async function GetSourceFromImageFile(
 
   switch (objectTypeFromFile) {
     case 'ImageBitmap-from-Blob': {
+      // MAINTENANCE_TODO: resource folder path when using service worker is not correct. Return
+      // the correct path to load resource in correct place.
+      // The wrong path: /out/webgpu/webworker/web_platform/copyToTexture/resources
+      if (globalThis.constructor.name === 'ServiceWorkerGlobalScope') {
+        test.skip('Try to load image resource from serivce worker but the path is not correct.');
+      }
       // Load image file through fetch.
       const response = await fetch(imageUrl);
       return createImageBitmap(await response.blob());
     }
     case 'ImageBitmap-from-Image':
     case 'Image': {
+      // Skip test if HTMLImageElement is not available, e.g. in worker.
+      if (typeof HTMLImageElement === 'undefined') {
+        test.skip(
+          'Try to use HTMLImage do image file decoding but HTMLImageElement not available.'
+        );
+      }
+
       // Load image file through HTMLImageElement.
       const image = new Image();
       image.src = imageUrl;
+      await raceWithRejectOnTimeout(image.decode(), 5000, 'decode image timeout');
       if (objectTypeFromFile === 'Image') {
-        await raceWithRejectOnTimeout(image.decode(), 5000, 'decode image timeout');
         return image;
       }
 

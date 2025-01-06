@@ -46,7 +46,7 @@ g.test('from_orientation_metadata_file')
     const kColorFormat = 'rgba8unorm';
 
     // Load image file.
-    const source = await GetSourceFromImageFile(imageName, objectTypeFromFile);
+    const source = await GetSourceFromImageFile(t, imageName, objectTypeFromFile);
     const width = source.width;
     const height = source.height;
 
