@@ -617,64 +617,21 @@ export async function captureCameraFrame(test: GPUTest): Promise<VideoFrame> {
   return frame;
 }
 
+const kFourColorsInfo = {
+  display: {
+    topLeftColor: 'yellow',
+    topRightColor: 'red',
+    bottomLeftColor: 'blue',
+    bottomRightColor: 'green',
+  },
+} as const;
+
 export const kImageInfo = makeTable({
   table: {
-    'four-colors.jpg': {
-      coded: {
-        topLeftColor: 'yellow',
-        topRightColor: 'red',
-        bottomLeftColor: 'blue',
-        bottomRightColor: 'green',
-      },
-      display: {
-        topLeftColor: 'yellow',
-        topRightColor: 'red',
-        bottomLeftColor: 'blue',
-        bottomRightColor: 'green',
-      },
-    },
-    'four-colors-rotate-90-cw.jpg': {
-      coded: {
-        topLeftColor: 'red',
-        topRightColor: 'green',
-        bottomLeftColor: 'yellow',
-        bottomRightColor: 'blue',
-      },
-      display: {
-        topLeftColor: 'yellow',
-        topRightColor: 'red',
-        bottomLeftColor: 'blue',
-        bottomRightColor: 'green',
-      },
-    },
-    'four-colors-rotate-180-cw.jpg': {
-      coded: {
-        topLeftColor: 'green',
-        topRightColor: 'blue',
-        bottomLeftColor: 'red',
-        bottomRightColor: 'yellow',
-      },
-      display: {
-        topLeftColor: 'yellow',
-        topRightColor: 'red',
-        bottomLeftColor: 'blue',
-        bottomRightColor: 'green',
-      },
-    },
-    'four-colors-rotate-270-cw.jpg': {
-      coded: {
-        topLeftColor: 'blue',
-        topRightColor: 'yellow',
-        bottomLeftColor: 'green',
-        bottomRightColor: 'red',
-      },
-      display: {
-        topLeftColor: 'yellow',
-        topRightColor: 'red',
-        bottomLeftColor: 'blue',
-        bottomRightColor: 'green',
-      },
-    },
+    'four-colors.jpg': kFourColorsInfo,
+    'four-colors-rotate-90-cw.jpg': kFourColorsInfo,
+    'four-colors-rotate-180-cw.jpg': kFourColorsInfo,
+    'four-colors-rotate-270-cw.jpg': kFourColorsInfo,
   },
 } as const);
 
