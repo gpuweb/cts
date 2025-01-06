@@ -639,58 +639,39 @@ type ImageName = keyof typeof kImageInfo;
 export const kImageNames: readonly ImageName[] = keysOf(kImageInfo);
 
 type ObjectTypeFromFile = (typeof kObjectTypeFromFiles)[number];
-export const kObjectTypeFromFiles = ['imageBitmap', 'image', 'blob'] as const;
+export const kObjectTypeFromFiles = [
+  'ImageBitmap-from-Blob',
+  'ImageBitmap-from-Image',
+  'Image',
+] as const;
 
 /**
  * Load image file(e.g. *.jpg) from ImageBitmap, blob or HTMLImageElement. And
  * convert the result to valid source that GPUCopyExternalImageSource supported.
- *
- * @param imageName: Required image name
- * @param objectTypeFromFile: The object to load image file, e.g. ImageBitmap, blob
- *
  */
 export async function GetSourceFromImageFile(
   imageName: ImageName,
   objectTypeFromFile: ObjectTypeFromFile
 ): Promise<ImageBitmap | HTMLImageElement> {
-  const image = new Image();
   const imageUrl = getResourcePath(imageName);
-  let imageBitmap: ImageBitmap;
 
-  if (objectTypeFromFile === 'blob') {
-    // Load image file through fetch.
-    const blob = await loadXHR(imageUrl);
-    imageBitmap = await createImageBitmap(blob, { imageOrientation: 'from-image' });
-    return imageBitmap;
-  } else {
-    // Load image file through HTMLImageElement.
-    image.src = imageUrl;
-    await raceWithRejectOnTimeout(image.decode(), 5000, 'decode image timeout');
-    if (objectTypeFromFile === 'image') {
-      return image;
+  switch (objectTypeFromFile) {
+    case 'ImageBitmap-from-Blob': {
+      // Load image file through fetch.
+      const response = await fetch(imageUrl);
+      return createImageBitmap(await response.blob());
     }
-
-    imageBitmap = await createImageBitmap(image, { imageOrientation: 'from-image' });
-    return imageBitmap;
-  }
-}
-
-// Use fetch() to load image file as blob
-function loadXHR(url: string): Promise<Blob> {
-  return new Promise<Blob>((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open('GET', url);
-    xhr.responseType = 'blob';
-    xhr.onerror = function () {
-      reject(new Error('Network error.'));
-    };
-    xhr.onload = function () {
-      if (xhr.status === 200) {
-        resolve(xhr.response);
-      } else {
-        reject(new Error('Loading error:' + xhr.statusText));
+    case 'ImageBitmap-from-Image':
+    case 'Image': {
+      // Load image file through HTMLImageElement.
+      const image = new Image();
+      image.src = imageUrl;
+      if (objectTypeFromFile === 'Image') {
+        await raceWithRejectOnTimeout(image.decode(), 5000, 'decode image timeout');
+        return image;
       }
-    };
-    xhr.send();
-  });
+
+      return createImageBitmap(image);
+    }
+  }
 }
