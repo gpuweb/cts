@@ -63,12 +63,12 @@ g.test('maxStorageBuffersTexturesInVertexFragmentStage')
       : 'maxStorageTexturesPerShaderStage';
     const perStageLimit = device.limits[perStageLimitName];
 
-    t.debug(`{${limit}(${inStageLimit}), ${perStageLimitName}(${perStageLimit}})`);
+    t.debug(`${limit}(${inStageLimit}), ${perStageLimitName}(${perStageLimit})`);
 
     t.skipIf(inStageLimit === 0, `${limit} is 0`);
     t.skipIf(
       !(inStageLimit < perStageLimit),
-      `{${limit}(${inStageLimit}) is not less than ${perStageLimitName}(${perStageLimit}})`
+      `${limit}(${inStageLimit}) is not less than ${perStageLimitName}(${perStageLimit})`
     );
 
     const typeWGSLFn = isBuffer

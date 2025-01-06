@@ -1298,6 +1298,27 @@ function getAdapterLimitsAsDeviceRequiredLimits(adapter: GPUAdapter) {
   return requiredLimits;
 }
 
+/**
+ * Removes limits that don't exist on the adapter.
+ * A test might request a new limit that not all implementions support. The test itself
+ * should check the requested limit using code that expects undefined.
+ *
+ * ```ts
+ *    t.skipIf(limit < 2);     // BAD! Doesn't skip if unsupported beause undefined is never less than 2.
+ *    t.skipIf(!(limit >= 2)); // Good. Skips if limits is not >= 2. undefined is not >= 2.
+ * ```
+ */
+function removeNonExistantLimits(adapter: GPUAdapter, limits: Record<string, GPUSize64>) {
+  const filteredLimits: Record<string, GPUSize64> = {};
+  const adapterLimits = adapter.limits as unknown as Record<string, GPUSize64>;
+  for (const [limit, value] of Object.entries(limits)) {
+    if (adapterLimits[limit] !== undefined) {
+      filteredLimits[limit] = value;
+    }
+  }
+  return filteredLimits;
+}
+
 function applyLimitsToDescriptor(
   adapter: GPUAdapter,
   desc: CanonicalDeviceDescriptor | undefined,
@@ -1307,7 +1328,7 @@ function applyLimitsToDescriptor(
     requiredFeatures: [],
     defaultQueue: {},
     ...desc,
-    requiredLimits: getRequiredLimits(adapter),
+    requiredLimits: removeNonExistantLimits(adapter, getRequiredLimits(adapter)),
   };
   return descWithMaxLimits;
 }
