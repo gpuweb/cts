@@ -6082,6 +6082,13 @@ export const listing = [
     "file": [
       "web_platform",
       "copyToTexture",
+      "image_file"
+    ]
+  },
+  {
+    "file": [
+      "web_platform",
+      "copyToTexture",
       "video"
     ]
   },
