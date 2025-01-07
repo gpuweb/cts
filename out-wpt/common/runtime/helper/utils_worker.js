@@ -19,6 +19,7 @@ export function setupWorkerEnvironment(ctsOptions) {
   globalTestConfig.enableDebugLogs = ctsOptions.debug;
   globalTestConfig.unrollConstEvalLoops = ctsOptions.unrollConstEvalLoops;
   globalTestConfig.compatibility = compatibility;
+  globalTestConfig.enforceDefaultLimits = ctsOptions.enforceDefaultLimits;
   globalTestConfig.logToWebSocket = ctsOptions.logToWebSocket;
 
   const log = new Logger();
