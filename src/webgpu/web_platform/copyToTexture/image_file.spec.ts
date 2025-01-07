@@ -33,6 +33,7 @@ g.test('from_orientation_metadata_file')
     - Valid 'flipY' config in 'GPUCopyExternalImageSourceInfo' (named 'srcDoFlipYDuringCopy' in cases)
     - TODO: partial copy tests should be added
     - TODO: all valid dstColorFormat tests should be added.
+    - TODO(#4108): Make this work in service workers (see GetSourceFromImageFile)
   `
   )
   .params(u =>
