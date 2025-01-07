@@ -71,17 +71,13 @@ WPT disallows console.log and doesn't support logs on passing tests, so this doe
         if (value === undefined || value === null) return null;
         if (typeof value !== 'object') return value;
         if (value instanceof Array) return value;
+        if (Symbol.iterator in value) return Array.from(value as Iterable<unknown>);
 
         const valueObj = value as Record<string, unknown>;
         return Object.fromEntries(
           (function* () {
             for (const key in valueObj) {
-              const value = valueObj[key];
-              if (value instanceof Object && Symbol.iterator in value) {
-                yield [key, Array.from(value as Iterable<unknown>)];
-              } else {
-                yield [key, value];
-              }
+              yield [key, valueObj[key]];
             }
           })()
         );
