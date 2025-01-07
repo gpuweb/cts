@@ -528,29 +528,6 @@ g.test('fragment')
     t.skipIf(innerTexels < subgroupMinSize, 'Too few texels to be reliable');
     t.skipIf(subgroupMaxSize === 4 && t.params.quadIndex !== 0, 'Duplicate test');
 
-    const fsShader = `
-enable subgroups;
-
-@group(0) @binding(0)
-var<storage> inputs : array<u32>;
-
-@fragment
-fn main(
-  @builtin(position) pos : vec4f,
-  @builtin(subgroup_invocation_id) id : u32
-) -> @location(0) vec4u {
-  let linear = u32(pos.x) + u32(pos.y) * ${t.params.size[0]};
-  let subgroup_id = subgroupBroadcastFirst(linear + 1);
-
-  // Filter out possible helper invocations.
-  let x_in_range = u32(pos.x) < (${t.params.size[0]} - 1);
-  let y_in_range = u32(pos.y) < (${t.params.size[1]} - 1);
-  let in_range = x_in_range && y_in_range;
-
-  let value = select(${kIdentity}, inputs[linear], in_range);
-  return vec4u(${t.params.op}(value), id, subgroup_id, 0);
-};`;
-
     // Max possible subgroup size is 128 which is too large so we reduce the
     // multiplication by a factor of 4. We populate one element of each quad with a
     // non-identity value. subgroupMaxSize of 4 is a special case where all
@@ -568,6 +545,29 @@ fn main(
         }
       }),
     ]);
+
+    const fsShader = `
+enable subgroups;
+
+@group(0) @binding(0)
+var<uniform> inputs : array<vec4u, ${inputData.length}>;
+
+@fragment
+fn main(
+  @builtin(position) pos : vec4f,
+  @builtin(subgroup_invocation_id) id : u32
+) -> @location(0) vec4u {
+  let linear = u32(pos.x) + u32(pos.y) * ${t.params.size[0]};
+  let subgroup_id = subgroupBroadcastFirst(linear + 1);
+
+  // Filter out possible helper invocations.
+  let x_in_range = u32(pos.x) < (${t.params.size[0]} - 1);
+  let y_in_range = u32(pos.y) < (${t.params.size[1]} - 1);
+  let in_range = x_in_range && y_in_range;
+
+  let value = select(${kIdentity}, inputs[linear].x, in_range);
+  return vec4u(${t.params.op}(value), id, subgroup_id, 0);
+};`;
 
     await runFragmentTest(
       t,
