@@ -64,6 +64,7 @@ WPT disallows console.log and doesn't support logs on passing tests, so this doe
         adapter: t.adapter,
         defaultDevice: defaultDeviceProperties,
       },
+      // - Replace `undefined` with `null`.
       // - Expand iterable things into arrays.
       // - Flatten objects with prototype chains into plain objects, using `for..in`. (Otherwise,
       //   properties from the prototype chain will be ignored and things will print as `{}`.)
