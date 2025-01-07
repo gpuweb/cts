@@ -98,7 +98,7 @@ export const kCTSOptionsInfo: OptionsInfos<CTSOptions> = {
     ],
   },
   debug: { description: 'show more info' },
-  compatibility: { description: 'run in compatibility mode' },
+  compatibility: { description: 'request adapters with featureLevel: "compatibility"' },
   forceFallbackAdapter: { description: 'pass forceFallbackAdapter: true to requestAdapter' },
   unrollConstEvalLoops: { description: 'unroll const eval loops in WGSL' },
   powerPreference: {
