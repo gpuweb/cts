@@ -802,11 +802,15 @@ export function getDefaultLimits(featureLevel: FeatureLevel) {
 
 export function getDefaultLimitsForAdapter(adapter: GPUAdapter) {
   // MAINTENANCE_TODO: Remove casts when GPUAdapter IDL has isCompatibilityMode.
-  return getDefaultLimits(
-    (adapter as unknown as { isCompatibilityMode: boolean }).isCompatibilityMode
+  const adapterExtensions = adapter as unknown as {
+    isCompatibilityMode?: boolean;
+    featureLevel?: string;
+  };
+  const featureLevel =
+    adapterExtensions.featureLevel === 'compatibility' || adapterExtensions.isCompatibilityMode
       ? 'compatibility'
-      : 'core'
-  );
+      : 'core';
+  return getDefaultLimits(featureLevel);
 }
 
 const kEachStage = [
