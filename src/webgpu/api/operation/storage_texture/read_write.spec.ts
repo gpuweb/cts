@@ -326,7 +326,7 @@ g.test('basic')
         t.skipIf(
           !(t.device.limits.maxStorageTexturesInFragmentStage! > 0),
           `maxStorageTexturesInFragmentStage(${t.device.limits
-            .maxStorageTexturesInFragmentStage!}) is not >= 0`
+            .maxStorageTexturesInFragmentStage!}) is not > 0`
         );
       }
     }

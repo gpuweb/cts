@@ -567,13 +567,13 @@ g.test('basic')
         t.skipIf(
           !(t.device.limits.maxStorageTexturesInFragmentStage! > 0),
           `maxStorageTexturesInFragmentStage(${t.device.limits
-            .maxStorageTexturesInFragmentStage!}) is not >= 0`
+            .maxStorageTexturesInFragmentStage!}) is not > 0`
         );
       } else if (shaderStage === 'vertex') {
         t.skipIf(
           !(t.device.limits.maxStorageTexturesInVertexStage! > 0),
           `maxStorageTexturesInVertexStage(${t.device.limits
-            .maxStorageTexturesInVertexStage!}) is not >= 0`
+            .maxStorageTexturesInVertexStage!}) is not > 0`
         );
       }
     }
