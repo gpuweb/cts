@@ -96,6 +96,8 @@ for (let i = 0; i < sys.args.length; ++i) {
       emitCoverage = true;
     } else if (a === '--force-fallback-adapter') {
       globalTestConfig.forceFallbackAdapter = true;
+    } else if (a === '--enforce-default-limits') {
+      globalTestConfig.enforceDefaultLimits = true;
     } else if (a === '--log-to-websocket') {
       globalTestConfig.logToWebSocket = true;
     } else if (a === '--gpu-provider') {
