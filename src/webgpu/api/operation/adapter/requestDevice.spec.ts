@@ -525,7 +525,8 @@ g.test('always_returns_device')
           !adapterExtensions.isCompatibilityMode &&
             // Current version of Compat design, as of this writing.
             adapterExtensions.featureLevel !== 'compatibility' &&
-            // An unlanded proposed change to the Compat design, but it doesn't hurt to just check.
+            // An as-yet-unlanded proposed change to the Compat design, but for now it doesn't hurt
+            // to just check. Unlanded PR: https://github.com/gpuweb/gpuweb/pull/5036
             !device.features.has('webgpu-core'),
           'must not get a Compatibility adapter if not requested'
         );

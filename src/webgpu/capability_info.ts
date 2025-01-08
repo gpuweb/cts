@@ -801,7 +801,8 @@ export function getDefaultLimits(featureLevel: FeatureLevel) {
 }
 
 export function getDefaultLimitsForAdapter(adapter: GPUAdapter) {
-  // MAINTENANCE_TODO: Remove casts when GPUAdapter IDL has isCompatibilityMode.
+  // MAINTENANCE_TODO: Remove casts once we have a standardized way to do this
+  // (see https://github.com/gpuweb/gpuweb/pull/5037#issuecomment-2576110161).
   const adapterExtensions = adapter as unknown as {
     isCompatibilityMode?: boolean;
     featureLevel?: string;
