@@ -123,7 +123,7 @@ for (let i = 0; i < sys.args.length; ++i) {
 let codeCoverage: CodeCoverageProvider | undefined = undefined;
 
 if (globalTestConfig.compatibility || globalTestConfig.forceFallbackAdapter) {
-  // MAINTENANCE_TODO: remove the cast once compatibilityMode is officially added
+  // MAINTENANCE_TODO: remove compatibilityMode (and the typecast) once no longer needed.
   setDefaultRequestAdapterOptions({
     compatibilityMode: globalTestConfig.compatibility,
     featureLevel: globalTestConfig.compatibility ? 'compatibility' : 'core',
