@@ -1130,7 +1130,9 @@ export class GPUTestBase extends Fixture {
   encoderType,
   {
     attachmentInfo,
-    occlusionQuerySet
+    occlusionQuerySet,
+    targets
+
 
 
 
@@ -1155,7 +1157,7 @@ export class GPUTestBase extends Fixture {
       case 'render bundle':{
           const device = this.device;
           const rbEncoder = device.createRenderBundleEncoder(fullAttachmentInfo);
-          const pass = this.createEncoder('render pass', { attachmentInfo });
+          const pass = this.createEncoder('render pass', { attachmentInfo, targets });
 
           return new CommandBufferMaker(this, rbEncoder, () => {
             pass.encoder.executeBundles([rbEncoder.finish()]);
@@ -1205,10 +1207,10 @@ export class GPUTestBase extends Fixture {
             }
           }
           const passDesc = {
-            colorAttachments: Array.from(fullAttachmentInfo.colorFormats, (format) =>
+            colorAttachments: Array.from(fullAttachmentInfo.colorFormats, (format, i) =>
             format ?
             {
-              view: makeAttachmentView(format),
+              view: targets ? targets[i] : makeAttachmentView(format),
               clearValue: [0, 0, 0, 0],
               loadOp: 'clear',
               storeOp: 'store'
