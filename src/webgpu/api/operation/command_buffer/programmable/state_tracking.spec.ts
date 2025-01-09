@@ -43,7 +43,12 @@ g.test('bind_group_indices')
     const { encoderType, groupIndices, type } = t.params;
     t.skipIfNeedsStorageBuffersInFragmentStageAndHaveNone(type, encoderType);
 
-    const pipeline = t.createBindingStatePipeline(encoderType, groupIndices, type);
+    const pipeline = t.createBindingStatePipeline(
+      encoderType,
+      groupIndices,
+      type,
+      'a.value - b.value'
+    );
 
     const inputType: GPUBufferBindingType = type === 'storage' ? 'read-only-storage' : 'uniform';
     const out = t.makeBufferWithContents(new Int32Array([0]), kBufferUsage);
@@ -105,7 +110,12 @@ g.test('bind_group_order')
     t.skipIfNeedsStorageBuffersInFragmentStageAndHaveNone(type, encoderType);
 
     const groupIndices = { a: 0, b: 1, out: 2 };
-    const pipeline = t.createBindingStatePipeline(encoderType, groupIndices, type);
+    const pipeline = t.createBindingStatePipeline(
+      encoderType,
+      groupIndices,
+      type,
+      'a.value - b.value'
+    );
 
     const out = t.makeBufferWithContents(new Int32Array([0]), kBufferUsage);
     const inputType: GPUBufferBindingType = type === 'storage' ? 'read-only-storage' : 'uniform';
@@ -166,7 +176,12 @@ g.test('bind_group_before_pipeline')
     t.skipIfNeedsStorageBuffersInFragmentStageAndHaveNone(type, encoderType);
 
     const groupIndices = { a: 0, b: 1, out: 2 };
-    const pipeline = t.createBindingStatePipeline(encoderType, groupIndices, type);
+    const pipeline = t.createBindingStatePipeline(
+      encoderType,
+      groupIndices,
+      type,
+      'a.value - b.value'
+    );
 
     const out = t.makeBufferWithContents(new Int32Array([0]), kBufferUsage);
     const inputType: GPUBufferBindingType = type === 'storage' ? 'read-only-storage' : 'uniform';
@@ -225,7 +240,12 @@ g.test('one_bind_group_multiple_slots')
     const { encoderType, type } = t.params;
     t.skipIfNeedsStorageBuffersInFragmentStageAndHaveNone(type, encoderType);
 
-    const pipeline = t.createBindingStatePipeline(encoderType, { a: 0, b: 1, out: 2 }, type);
+    const pipeline = t.createBindingStatePipeline(
+      encoderType,
+      { a: 0, b: 1, out: 2 },
+      type,
+      'a.value - b.value'
+    );
 
     const out = t.makeBufferWithContents(new Int32Array([1]), kBufferUsage);
     const inputType: GPUBufferBindingType = type === 'storage' ? 'read-only-storage' : 'uniform';
@@ -274,7 +294,12 @@ g.test('bind_group_multiple_sets')
     const { encoderType, type } = t.params;
     t.skipIfNeedsStorageBuffersInFragmentStageAndHaveNone(type, encoderType);
 
-    const pipeline = t.createBindingStatePipeline(encoderType, { a: 0, b: 1, out: 2 }, type);
+    const pipeline = t.createBindingStatePipeline(
+      encoderType,
+      { a: 0, b: 1, out: 2 },
+      type,
+      'a.value - b.value'
+    );
 
     const badOut = t.makeBufferWithContents(new Int32Array([-1]), kBufferUsage);
     const out = t.makeBufferWithContents(new Int32Array([0]), kBufferUsage);
@@ -340,7 +365,12 @@ g.test('compatible_pipelines')
     const { encoderType } = t.params;
     t.skipIfNeedsStorageBuffersInFragmentStageAndHaveNone('storage', encoderType);
 
-    const pipelineA = t.createBindingStatePipeline(encoderType, { a: 0, b: 1, out: 2 }, 'storage');
+    const pipelineA = t.createBindingStatePipeline(
+      encoderType,
+      { a: 0, b: 1, out: 2 },
+      'storage',
+      'a.value - b.value'
+    );
     const pipelineB = t.createBindingStatePipeline(
       encoderType,
       { a: 0, b: 1, out: 2 },
