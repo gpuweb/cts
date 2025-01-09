@@ -50,16 +50,7 @@ works correctly.
       });
 
       const color = colors[bindGroupIndex];
-      const buffer = t.createBufferTracked({
-        usage: GPUBufferUsage.UNIFORM,
-        size: 16,
-        mappedAtCreation: true,
-      });
-      const bufferData = new Float32Array(buffer.getMappedRange());
-      for (let i = 0; i < color.length; ++i) {
-        bufferData[i] = color[i];
-      }
-      buffer.unmap();
+      const buffer = t.makeBufferWithContents(new Float32Array(color), GPUBufferUsage.UNIFORM);
 
       // Still create and set the bind group when the corresponding bind group layout in the
       // pipeline is null. The output color should not be affected by the buffer in this bind group
@@ -203,14 +194,10 @@ works correctly.
     const bindGroups: GPUBindGroup[] = [];
     let outputDeclared = false;
     for (let bindGroupIndex = 0; bindGroupIndex < 4; ++bindGroupIndex) {
-      const inputBuffer = t.createBufferTracked({
-        usage: GPUBufferUsage.UNIFORM,
-        size: 4,
-        mappedAtCreation: true,
-      });
-      const bufferData = new Uint32Array(inputBuffer.getMappedRange());
-      bufferData[0] = bindGroupIndex + 1;
-      inputBuffer.unmap();
+      const inputBuffer = t.makeBufferWithContents(
+        new Uint32Array([bindGroupIndex + 1]),
+        GPUBufferUsage.UNIFORM
+      );
 
       const bindGroupLayoutEntries: GPUBindGroupLayoutEntry[] = [];
       const bindGroupEntries: GPUBindGroupEntry[] = [];
@@ -332,7 +319,6 @@ works correctly.
 
     t.queue.submit([commandEncoder.finish()]);
 
-    const expectedValues = new Uint32Array(1);
-    expectedValues[0] = expectedValue;
+    const expectedValues = new Uint32Array([expectedValue]);
     t.expectGPUBufferValuesEqual(outputBuffer, expectedValues);
   });
