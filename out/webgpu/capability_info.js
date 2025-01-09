@@ -801,12 +801,17 @@ export function getDefaultLimits(featureLevel) {
 }
 
 export function getDefaultLimitsForAdapter(adapter) {
-  // MAINTENANCE_TODO: Remove casts when GPUAdapter IDL has isCompatibilityMode.
-  return getDefaultLimits(
-    adapter.isCompatibilityMode ?
-    'compatibility' :
-    'core'
-  );
+  // MAINTENANCE_TODO: Remove casts once we have a standardized way to do this
+  // (see https://github.com/gpuweb/gpuweb/pull/5037#issuecomment-2576110161).
+  const adapterExtensions = adapter;
+
+
+
+  const featureLevel =
+  adapterExtensions.featureLevel === 'compatibility' || adapterExtensions.isCompatibilityMode ?
+  'compatibility' :
+  'core';
+  return getDefaultLimits(featureLevel);
 }
 
 const kEachStage = [
