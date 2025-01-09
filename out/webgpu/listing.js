@@ -293,6 +293,14 @@ export const listing = [
     "file": [
       "api",
       "operation",
+      "pipeline",
+      "pipeline_layout_created_with_null_bind_group_layout"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "operation",
       "queue",
       "writeBuffer"
     ]
