@@ -417,10 +417,12 @@ export class LimitTestsImpl extends GPUTestBase {
     if (extraLimits) {
       for (const [extraLimitStr, limitMode] of Object.entries(extraLimits)) {
         const extraLimit = extraLimitStr;
-        requiredLimits[extraLimit] =
-        limitMode === 'defaultLimit' ?
-        getDefaultLimitForAdapter(adapter, extraLimit) :
-        adapter.limits[extraLimit];
+        if (adapter.limits[extraLimit] !== undefined) {
+          requiredLimits[extraLimit] =
+          limitMode === 'defaultLimit' ?
+          getDefaultLimitForAdapter(adapter, extraLimit) :
+          adapter.limits[extraLimit];
+        }
       }
     }
 
