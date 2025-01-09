@@ -11,11 +11,7 @@ import {
   memcpy,
   unreachable,
 } from '../../../../common/util/util.js';
-import {
-  kPerStageBindingLimits,
-  kVertexFormatInfo,
-  kVertexFormats,
-} from '../../../capability_info.js';
+import { kVertexFormatInfo, kVertexFormats } from '../../../capability_info.js';
 import { GPUTest, MaxLimitsTestMixin } from '../../../gpu_test.js';
 import { float32ToFloat16Bits, normalizedIntegerAsFloat } from '../../../util/conversion.js';
 import { align, clamp } from '../../../util/math.js';
@@ -105,18 +101,6 @@ class VertexStateTest extends GPUTest {
     vertexCount: number,
     instanceCount: number
   ): string {
-    // In the base WebGPU spec maxVertexAttributes is larger than maxUniformBufferPerStage. We'll
-    // use a combination of uniform and storage buffers to cover all possible attributes. This
-    // happens to work because maxUniformBuffer + maxStorageBuffer = 12 + 8 = 20 which is larger
-    // than maxVertexAttributes = 16.
-    // However this might not work in the future for implementations that allow even more vertex
-    // attributes so there will need to be larger changes when that happens.
-    const maxUniformBuffers = this.getDefaultLimit(kPerStageBindingLimits['uniformBuf'].maxLimit);
-    assert(
-      maxUniformBuffers + this.getDefaultLimit(kPerStageBindingLimits['storageBuf'].maxLimit) >=
-        this.device.limits.maxVertexAttributes
-    );
-
     let vsInputs = '';
     let vsChecks = '';
     let providedDataDefs = '';

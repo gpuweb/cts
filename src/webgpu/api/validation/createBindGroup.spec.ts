@@ -8,6 +8,7 @@ import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { assert, makeValueTestVariant, unreachable } from '../../../common/util/util.js';
 import {
   allBindingEntries,
+  BGLEntry,
   BindableResource,
   bindingTypeInfo,
   bufferBindingEntries,
@@ -24,7 +25,7 @@ import {
 } from '../../capability_info.js';
 import { GPUConst } from '../../constants.js';
 import { kAllTextureFormats, kTextureFormatInfo } from '../../format_info.js';
-import { kResourceStates } from '../../gpu_test.js';
+import { kResourceStates, MaxLimitsTestMixin } from '../../gpu_test.js';
 import { getTextureDimensionFromView } from '../../util/texture/base.js';
 
 import { ValidationTest } from './validation_test.js';
@@ -33,7 +34,40 @@ function clone<T extends GPUTextureDescriptor>(descriptor: T): T {
   return JSON.parse(JSON.stringify(descriptor));
 }
 
-export const g = makeTestGroup(ValidationTest);
+function skipIfResourceNotSupportedInStages(
+  t: ValidationTest,
+  entry: BGLEntry,
+  visibility: number
+) {
+  if (t.isCompatibility) {
+    t.skipIf(
+      (visibility & GPUShaderStage.FRAGMENT) !== 0 &&
+        (entry.buffer?.type === 'storage' || entry.buffer?.type === 'read-only-storage') &&
+        !(t.device.limits.maxStorageBuffersInFragmentStage! >= 2),
+      `maxStorageBuffersInFragmentStage(${t.device.limits.maxStorageBuffersInFragmentStage}) < 2`
+    );
+    t.skipIf(
+      (visibility & GPUShaderStage.FRAGMENT) !== 0 &&
+        entry.storageTexture !== undefined &&
+        !(t.device.limits.maxStorageTexturesInFragmentStage! >= 1),
+      `maxStorageTexturesInFragmentStage(${t.device.limits.maxStorageTexturesInFragmentStage}) < 1`
+    );
+    t.skipIf(
+      (visibility & GPUShaderStage.VERTEX) !== 0 &&
+        (entry.buffer?.type === 'storage' || entry.buffer?.type === 'read-only-storage') &&
+        !(t.device.limits.maxStorageBuffersInVertexStage! >= 2),
+      `maxStorageBuffersInVertexStage(${t.device.limits.maxStorageBuffersInVertexStage}) < 2`
+    );
+    t.skipIf(
+      (visibility & GPUShaderStage.VERTEX) !== 0 &&
+        entry.storageTexture !== undefined &&
+        !(t.device.limits.maxStorageTexturesInVertexStage! >= 1),
+      `maxStorageTexturesInVertexStage(${t.device.limits.maxStorageTexturesInVertexStage}) < 1`
+    );
+  }
+}
+
+export const g = makeTestGroup(MaxLimitsTestMixin(ValidationTest));
 
 const kStorageTextureFormats = kAllTextureFormats.filter(f => kTextureFormatInfo[f].color?.storage);
 
@@ -174,7 +208,7 @@ g.test('texture_binding_must_have_correct_usage')
     const info = texBindingTypeInfo(entry);
 
     const bindGroupLayout = t.device.createBindGroupLayout({
-      entries: [{ binding: 0, visibility: GPUShaderStage.FRAGMENT, ...entry }],
+      entries: [{ binding: 0, visibility: GPUShaderStage.COMPUTE, ...entry }],
     });
 
     // The `RENDER_ATTACHMENT` usage must be specified if sampleCount > 1 according to WebGPU SPEC.
@@ -304,12 +338,12 @@ g.test('texture_must_have_correct_dimension')
         usage === GPUTextureUsage.TEXTURE_BINDING
           ? {
               binding: 0,
-              visibility: GPUShaderStage.FRAGMENT,
+              visibility: GPUShaderStage.COMPUTE,
               texture: { viewDimension },
             }
           : {
               binding: 0,
-              visibility: GPUShaderStage.FRAGMENT,
+              visibility: GPUShaderStage.COMPUTE,
               storageTexture: { access: 'write-only', format: 'rgba8unorm', viewDimension },
             },
       ],
@@ -374,7 +408,7 @@ g.test('multisampled_validation')
       entries: [
         {
           binding: 0,
-          visibility: GPUShaderStage.FRAGMENT,
+          visibility: GPUShaderStage.COMPUTE,
           texture: { multisampled, sampleType: multisampled ? 'unfilterable-float' : undefined },
         },
       ],
@@ -482,7 +516,7 @@ g.test('minBindingSize')
       entries: [
         {
           binding: 0,
-          visibility: GPUShaderStage.FRAGMENT,
+          visibility: GPUShaderStage.COMPUTE,
           buffer: {
             type: 'storage',
             minBindingSize,
@@ -512,23 +546,32 @@ g.test('minBindingSize')
     );
   });
 
+const kAllShaderStages =
+  GPUConst.ShaderStage.COMPUTE | GPUConst.ShaderStage.FRAGMENT | GPUConst.ShaderStage.VERTEX;
+
 g.test('buffer,resource_state')
   .desc('Test bind group creation with various buffer resource states')
   .paramsSubcasesOnly(u =>
-    u.combine('state', kResourceStates).combine('entry', bufferBindingEntries(true))
+    u
+      .combine('state', kResourceStates)
+      .combine('entry', bufferBindingEntries(true))
+      .combine('visibilityMask', [kAllShaderStages, GPUConst.ShaderStage.COMPUTE] as const)
   )
   .fn(t => {
-    const { state, entry } = t.params;
+    const { state, entry, visibilityMask } = t.params;
 
     assert(entry.buffer !== undefined);
     const info = bufferBindingTypeInfo(entry.buffer);
+
+    const visibility = info.validStages & visibilityMask;
+    skipIfResourceNotSupportedInStages(t, entry, visibility);
 
     const bgl = t.device.createBindGroupLayout({
       entries: [
         {
           ...entry,
           binding: 0,
-          visibility: info.validStages,
+          visibility,
         },
       ],
     });
@@ -556,18 +599,24 @@ g.test('buffer,resource_state')
 g.test('texture,resource_state')
   .desc('Test bind group creation with various texture resource states')
   .paramsSubcasesOnly(u =>
-    u.combine('state', kResourceStates).combine('entry', sampledAndStorageBindingEntries(true))
+    u
+      .combine('state', kResourceStates)
+      .combine('entry', sampledAndStorageBindingEntries(true))
+      .combine('visibilityMask', [kAllShaderStages, GPUConst.ShaderStage.COMPUTE] as const)
   )
   .fn(t => {
-    const { state, entry } = t.params;
+    const { state, entry, visibilityMask } = t.params;
     const info = texBindingTypeInfo(entry);
+
+    const visibility = info.validStages & visibilityMask;
+    skipIfResourceNotSupportedInStages(t, entry, visibility);
 
     const bgl = t.device.createBindGroupLayout({
       entries: [
         {
           ...entry,
           binding: 0,
-          visibility: info.validStages,
+          visibility,
         },
       ],
     });
@@ -619,7 +668,7 @@ g.test('bind_group_layout,device_mismatch')
       entries: [
         {
           binding: 0,
-          visibility: GPUConst.ShaderStage.VERTEX,
+          visibility: GPUConst.ShaderStage.COMPUTE,
           buffer: {},
         },
       ],
@@ -665,14 +714,17 @@ g.test('binding_resources,device_mismatch')
         { resource0Mismatched: true, resource1Mismatched: false },
         { resource0Mismatched: false, resource1Mismatched: true },
       ])
+      .combine('visibilityMask', [kAllShaderStages, GPUConst.ShaderStage.COMPUTE] as const)
   )
   .beforeAllSubcases(t => {
     t.selectMismatchedDeviceOrSkipTestCase(undefined);
   })
   .fn(t => {
-    const { entry, resource0Mismatched, resource1Mismatched } = t.params;
+    const { entry, resource0Mismatched, resource1Mismatched, visibilityMask } = t.params;
 
     const info = bindingTypeInfo(entry);
+    const visibility = info.validStages & visibilityMask;
+    skipIfResourceNotSupportedInStages(t, entry, visibility);
 
     const resource0 = resource0Mismatched
       ? t.getDeviceMismatchedBindingResource(info.resource)
@@ -685,12 +737,12 @@ g.test('binding_resources,device_mismatch')
       entries: [
         {
           binding: 0,
-          visibility: info.validStages,
+          visibility,
           ...entry,
         },
         {
           binding: 1,
-          visibility: info.validStages,
+          visibility,
           ...entry,
         },
       ],
@@ -736,7 +788,7 @@ g.test('storage_texture,usage')
       entries: [
         {
           binding: 0,
-          visibility: GPUShaderStage.FRAGMENT,
+          visibility: GPUShaderStage.COMPUTE,
           storageTexture: { access: 'write-only', format: 'rgba8unorm' },
         },
       ],
@@ -779,7 +831,7 @@ g.test('storage_texture,mip_level_count')
       entries: [
         {
           binding: 0,
-          visibility: GPUShaderStage.FRAGMENT,
+          visibility: GPUShaderStage.COMPUTE,
           storageTexture: { access: 'write-only', format: 'rgba8unorm' },
         },
       ],
@@ -826,7 +878,7 @@ g.test('storage_texture,format')
       entries: [
         {
           binding: 0,
-          visibility: GPUShaderStage.FRAGMENT,
+          visibility: GPUShaderStage.COMPUTE,
           storageTexture: { access: 'write-only', format: storageTextureFormat },
         },
       ],
@@ -1089,7 +1141,7 @@ g.test('sampler,device_mismatch')
       entries: [
         {
           binding: 0,
-          visibility: GPUShaderStage.FRAGMENT,
+          visibility: GPUShaderStage.COMPUTE,
           sampler: { type: 'filtering' as const },
         },
       ],
@@ -1125,7 +1177,7 @@ g.test('sampler,compare_function_with_binding_type')
       entries: [
         {
           binding: 0,
-          visibility: GPUShaderStage.FRAGMENT,
+          visibility: GPUShaderStage.COMPUTE,
           sampler: { type: bgType },
         },
       ],

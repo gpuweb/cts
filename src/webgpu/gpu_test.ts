@@ -21,12 +21,7 @@ import {
   unreachable,
 } from '../common/util/util.js';
 
-import {
-  getDefaultLimits,
-  kLimits,
-  kQueryTypeInfo,
-  WGSLLanguageFeature,
-} from './capability_info.js';
+import { kLimits, kQueryTypeInfo, WGSLLanguageFeature } from './capability_info.js';
 import { InterpolationType, InterpolationSampling } from './constants.js';
 import {
   kTextureFormatInfo,
@@ -141,10 +136,6 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
 
   get isCompatibility() {
     return globalTestConfig.compatibility;
-  }
-
-  getDefaultLimits() {
-    return getDefaultLimits(this.isCompatibility ? 'compatibility' : 'core');
   }
 
   /**
@@ -380,16 +371,8 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
     return globalTestConfig.compatibility;
   }
 
-  getDefaultLimits() {
-    return getDefaultLimits(this.isCompatibility ? 'compatibility' : 'core');
-  }
-
-  getDefaultLimit(limit: (typeof kLimits)[number]) {
-    return this.getDefaultLimits()[limit].default;
-  }
-
   makeLimitVariant(limit: (typeof kLimits)[number], variant: ValueTestVariant) {
-    return makeValueTestVariant(this.device.limits[limit], variant);
+    return makeValueTestVariant(this.device.limits[limit]!, variant);
   }
 
   canCallCopyTextureToBufferWithTextureFormat(format: GPUTextureFormat) {
@@ -1315,63 +1298,145 @@ function getAdapterLimitsAsDeviceRequiredLimits(adapter: GPUAdapter) {
   return requiredLimits;
 }
 
-function setAllLimitsToAdapterLimits(
+/**
+ * Removes limits that don't exist on the adapter.
+ * A test might request a new limit that not all implementions support. The test itself
+ * should check the requested limit using code that expects undefined.
+ *
+ * ```ts
+ *    t.skipIf(limit < 2);     // BAD! Doesn't skip if unsupported beause undefined is never less than 2.
+ *    t.skipIf(!(limit >= 2)); // Good. Skips if limits is not >= 2. undefined is not >= 2.
+ * ```
+ */
+function removeNonExistantLimits(adapter: GPUAdapter, limits: Record<string, GPUSize64>) {
+  const filteredLimits: Record<string, GPUSize64> = {};
+  const adapterLimits = adapter.limits as unknown as Record<string, GPUSize64>;
+  for (const [limit, value] of Object.entries(limits)) {
+    if (adapterLimits[limit] !== undefined) {
+      filteredLimits[limit] = value;
+    }
+  }
+  return filteredLimits;
+}
+
+function applyLimitsToDescriptor(
   adapter: GPUAdapter,
-  desc: CanonicalDeviceDescriptor | undefined
+  desc: CanonicalDeviceDescriptor | undefined,
+  getRequiredLimits: (adapter: GPUAdapter) => Record<string, number>
 ) {
   const descWithMaxLimits: CanonicalDeviceDescriptor = {
     requiredFeatures: [],
     defaultQueue: {},
     ...desc,
-    requiredLimits: getAdapterLimitsAsDeviceRequiredLimits(adapter),
+    requiredLimits: removeNonExistantLimits(adapter, getRequiredLimits(adapter)),
   };
   return descWithMaxLimits;
 }
 
 /**
- * Used by MaxLimitsTest to request a device with all the max limits of the adapter.
+ * Used by RequiredLimitsTestMixin to allow you to request specific limits
+ *
+ * Supply a `getRequiredLimits` function that given a GPUAdapter, turns the limits
+ * you want.
+ *
+ * Also supply a key function that returns a device key. You should generally return
+ * the name of each limit you request and any math you did on the limit. For example
+ *
+ * ```js
+ * {
+ *   getRequiredLimits(adapter) {
+ *     return {
+ *       maxBindGroups: adapter.limits.maxBindGroups / 2,
+ *       maxTextureDimensions2D: Math.max(adapter.limits.maxTextureDimensions2D, 8192),
+ *     },
+ *   },
+ *   key() {
+ *     return `
+ *       maxBindGroups / 2,
+ *       max(maxTextureDimension2D, 8192),
+ *     `;
+ *   },
+ * }
+ * ```
+ *
+ * Its important to note, the key is used BEFORE knowing the adapter limits to get a device
+ * that was already created with the same key.
  */
-export class MaxLimitsGPUTestSubcaseBatchState extends GPUTestSubcaseBatchState {
+interface RequiredLimitsHelper {
+  getRequiredLimits: (adapter: GPUAdapter) => Record<string, number>;
+  key(): string;
+}
+
+/**
+ * Used by RequiredLimitsTest to request a device with all requested limits of the adapter.
+ */
+export class RequiredLimitsGPUTestSubcaseBatchState extends GPUTestSubcaseBatchState {
+  private requiredLimitsHelper: RequiredLimitsHelper;
+  constructor(
+    protected override readonly recorder: TestCaseRecorder,
+    public override readonly params: TestParams,
+    requiredLimitsHelper: RequiredLimitsHelper
+  ) {
+    super(recorder, params);
+    this.requiredLimitsHelper = requiredLimitsHelper;
+  }
   override selectDeviceOrSkipTestCase(
     descriptor: DeviceSelectionDescriptor,
     descriptorModifier?: DescriptorModifier
   ): void {
+    const requiredLimitsHelper = this.requiredLimitsHelper;
     const mod: DescriptorModifier = {
       descriptorModifier(adapter: GPUAdapter, desc: CanonicalDeviceDescriptor | undefined) {
         desc = descriptorModifier?.descriptorModifier
           ? descriptorModifier.descriptorModifier(adapter, desc)
           : desc;
-        return setAllLimitsToAdapterLimits(adapter, desc);
+        return applyLimitsToDescriptor(adapter, desc, requiredLimitsHelper.getRequiredLimits);
       },
       keyModifier(baseKey: string) {
-        return `${baseKey}:MaxLimits`;
+        return `${baseKey}:${requiredLimitsHelper.key()}`;
       },
     };
     super.selectDeviceOrSkipTestCase(initUncanonicalizedDeviceDescriptor(descriptor), mod);
   }
 }
 
-export type MaxLimitsTestMixinType = {
+export type RequiredLimitsTestMixinType = {
   // placeholder. Change to an interface if we need MaxLimits specific methods.
 };
 
-export function MaxLimitsTestMixin<F extends FixtureClass<GPUTestBase>>(
-  Base: F
-): FixtureClassWithMixin<F, MaxLimitsTestMixinType> {
-  class MaxLimitsImpl
+/**
+ * A text mixin to make it relatively easy to request specific limits.
+ */
+export function RequiredLimitsTestMixin<F extends FixtureClass<GPUTestBase>>(
+  Base: F,
+  requiredLimitsHelper: RequiredLimitsHelper
+): FixtureClassWithMixin<F, RequiredLimitsTestMixinType> {
+  class RequiredLimitsImpl
     extends (Base as FixtureClassInterface<GPUTestBase>)
-    implements MaxLimitsTestMixinType
+    implements RequiredLimitsTestMixinType
   {
     //
     public static override MakeSharedState(
       recorder: TestCaseRecorder,
       params: TestParams
     ): GPUTestSubcaseBatchState {
-      return new MaxLimitsGPUTestSubcaseBatchState(recorder, params);
+      return new RequiredLimitsGPUTestSubcaseBatchState(recorder, params, requiredLimitsHelper);
     }
   }
 
-  return MaxLimitsImpl as unknown as FixtureClassWithMixin<F, MaxLimitsTestMixinType>;
+  return RequiredLimitsImpl as unknown as FixtureClassWithMixin<F, RequiredLimitsTestMixinType>;
+}
+
+/**
+ * Requests all the max limits from the adapter.
+ */
+export function MaxLimitsTestMixin<F extends FixtureClass<GPUTestBase>>(Base: F) {
+  return RequiredLimitsTestMixin(Base, {
+    getRequiredLimits: getAdapterLimitsAsDeviceRequiredLimits,
+    key() {
+      return 'AllLimits';
+    },
+  });
 }
 
 /**

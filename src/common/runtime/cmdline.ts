@@ -107,6 +107,8 @@ for (let i = 0; i < sys.args.length; ++i) {
       globalTestConfig.compatibility = true;
     } else if (a === '--force-fallback-adapter') {
       globalTestConfig.forceFallbackAdapter = true;
+    } else if (a === '--enforce-default-limits') {
+      globalTestConfig.enforceDefaultLimits = true;
     } else if (a === '--log-to-websocket') {
       globalTestConfig.logToWebSocket = true;
     } else {
@@ -121,7 +123,7 @@ for (let i = 0; i < sys.args.length; ++i) {
 let codeCoverage: CodeCoverageProvider | undefined = undefined;
 
 if (globalTestConfig.compatibility || globalTestConfig.forceFallbackAdapter) {
-  // MAINTENANCE_TODO: remove the cast once compatibilityMode is officially added
+  // MAINTENANCE_TODO: remove compatibilityMode (and the typecast) once no longer needed.
   setDefaultRequestAdapterOptions({
     compatibilityMode: globalTestConfig.compatibility,
     featureLevel: globalTestConfig.compatibility ? 'compatibility' : 'core',
