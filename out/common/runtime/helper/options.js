@@ -100,7 +100,7 @@ export const kCTSOptionsInfo = {
 
   },
   debug: { description: 'show more info' },
-  compatibility: { description: 'run in compatibility mode' },
+  compatibility: { description: 'request adapters with featureLevel: "compatibility"' },
   forceFallbackAdapter: { description: 'pass forceFallbackAdapter: true to requestAdapter' },
   enforceDefaultLimits: {
     description: `force the adapter limits to the default limits.
