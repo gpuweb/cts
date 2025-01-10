@@ -7,6 +7,7 @@ import {
   getDefaultLimitsForAdapter } from
 
 '../../../../capability_info.js';
+import { GPUConst } from '../../../../constants.js';
 import { GPUTestBase } from '../../../../gpu_test.js';
 
 
@@ -52,14 +53,14 @@ export function getPipelineTypeForBindingCombination(bindingCombination) {
 export function getStageVisibilityForBinidngCombination(bindingCombination) {
   switch (bindingCombination) {
     case 'vertex':
-      return GPUShaderStage.VERTEX;
+      return GPUConst.ShaderStage.VERTEX;
     case 'fragment':
-      return GPUShaderStage.FRAGMENT;
+      return GPUConst.ShaderStage.FRAGMENT;
     case 'vertexAndFragmentWithPossibleVertexStageOverflow':
     case 'vertexAndFragmentWithPossibleFragmentStageOverflow':
-      return GPUShaderStage.FRAGMENT | GPUShaderStage.VERTEX;
+      return GPUConst.ShaderStage.FRAGMENT | GPUConst.ShaderStage.VERTEX;
     case 'compute':
-      return GPUShaderStage.COMPUTE;
+      return GPUConst.ShaderStage.COMPUTE;
   }
 }
 
@@ -338,6 +339,53 @@ export const kMinimumLimitBaseParams = kUnitCaseParamsBuilder.
 combine('limitTest', kMinimumLimitValueTests).
 combine('testValueName', kMinimumTestValues);
 
+/**
+ * Adds a maximum limit upto a dependent limit.
+ *
+ * Example:
+ *   You want to test `maxStorageBuffersPerShaderStage` in fragment stage
+ *   so you need `maxStorageBuffersInFragmentStage` set as well. But, you
+ *   don't know exactly what value will be used for `maxStorageBuffersPerShaderStage`
+ *   since that is defined by an enum like `underDefault`.
+ *
+ *   So, you want `maxStorageBuffersInFragmentStage` to be set as high as possible.
+ *   You can't just set it to it's maximum value (adapter.limits.maxStorageBuffersInFragmentStage)
+ *   because if it's greater than `maxStorageBuffersPerShaderStage` you'll get an error.
+ *
+ *   So, use this function
+ *
+ *   const limits: LimitsRequest = {};
+ *   addMaximumLimitUpToDependentLimit(
+ *     adapter,
+ *     limits,
+ *     limit: 'maxStorageBuffersInFragmentStage', // the limit we want to add
+ *     dependentLimitName: 'maxStorageBuffersPerShaderStage', // what the previous limit is dependent on
+ *     dependentLimitTest: 'underDefault', // the enum used to decide the dependent limit
+ *   )
+ */
+export function addMaximumLimitUpToDependentLimit(
+adapter,
+limits,
+limit,
+dependentLimitName,
+dependentLimitTest)
+{
+  if (!(limit in adapter.limits)) {
+    return;
+  }
+
+  const limitMaximum = adapter.limits[limit];
+  const dependentLimitMaximum = adapter.limits[dependentLimitName];
+  const testValue = getLimitValue(
+    getDefaultLimitForAdapter(adapter, dependentLimitName),
+    dependentLimitMaximum,
+    dependentLimitTest
+  );
+
+  const value = Math.min(testValue, dependentLimitMaximum, limitMaximum);
+  limits[limit] = value;
+}
+
 export class LimitTestsImpl extends GPUTestBase {
   _adapter = null;
   _device = undefined;
@@ -415,11 +463,13 @@ export class LimitTestsImpl extends GPUTestBase {
     requiredLimits[limit] = requestedLimit;
 
     if (extraLimits) {
-      for (const [extraLimitStr, limitMode] of Object.entries(extraLimits)) {
+      for (const [extraLimitStr, limitModeOrNumber] of Object.entries(extraLimits)) {
         const extraLimit = extraLimitStr;
         if (adapter.limits[extraLimit] !== undefined) {
           requiredLimits[extraLimit] =
-          limitMode === 'defaultLimit' ?
+          typeof limitModeOrNumber === 'number' ?
+          limitModeOrNumber :
+          limitModeOrNumber === 'defaultLimit' ?
           getDefaultLimitForAdapter(adapter, extraLimit) :
           adapter.limits[extraLimit];
         }

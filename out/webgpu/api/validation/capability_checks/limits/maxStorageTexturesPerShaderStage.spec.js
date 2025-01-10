@@ -21,13 +21,14 @@ import {
 
 
   kBindingCombinations,
-  getStageVisibilityForBinidngCombination } from
+  getStageVisibilityForBinidngCombination,
+
+  addMaximumLimitUpToDependentLimit } from
 './limit_utils.js';
 
 const kExtraLimits = {
   maxBindingsPerBindGroup: 'adapterLimit',
-  maxBindGroups: 'adapterLimit',
-  maxStorageTexturesInFragmentStage: 'adapterLimit'
+  maxBindGroups: 'adapterLimit'
 };
 
 const limit = 'maxStorageTexturesPerShaderStage';
@@ -92,6 +93,37 @@ function skipIfAccessNotSupported(t, access) {
   );
 }
 
+function filterWriteAccessInVertexStage(
+visibility,
+access)
+{
+  return access === 'read-only' || (visibility & GPUConst.ShaderStage.VERTEX) === 0;
+}
+
+function addExtraRequiredLimits(
+adapter,
+limits,
+limitTest)
+{
+  const newLimits = { ...limits };
+
+  addMaximumLimitUpToDependentLimit(
+    adapter,
+    newLimits,
+    'maxStorageTexturesInFragmentStage',
+    limit,
+    limitTest
+  );
+  addMaximumLimitUpToDependentLimit(
+    adapter,
+    newLimits,
+    'maxStorageTexturesInVertexStage',
+    limit,
+    limitTest
+  );
+
+  return newLimits;
+}
 g.test('createBindGroupLayout,at_over').
 desc(
   `
@@ -105,6 +137,7 @@ params(
   kMaximumLimitBaseParams.
   combine('visibility', kShaderStageCombinationsWithStage).
   combine('access', kStorageTextureAccessValues).
+  filter((t) => filterWriteAccessInVertexStage(t.visibility, t.access)).
   combine('order', kReorderOrderKeys)
 ).
 fn(async (t) => {
@@ -126,7 +159,7 @@ fn(async (t) => {
         shouldError
       );
     },
-    kExtraLimits
+    addExtraRequiredLimits(t.adapter, kExtraLimits, limitTest)
   );
 });
 
@@ -143,6 +176,7 @@ params(
   kMaximumLimitBaseParams.
   combine('visibility', kShaderStageCombinationsWithStage).
   combine('access', kStorageTextureAccessValues).
+  filter((t) => filterWriteAccessInVertexStage(t.visibility, t.access)).
   combine('order', kReorderOrderKeys)
 ).
 fn(async (t) => {
@@ -178,7 +212,7 @@ fn(async (t) => {
         shouldError
       );
     },
-    kExtraLimits
+    addExtraRequiredLimits(t.adapter, kExtraLimits, limitTest)
   );
 });
 
@@ -196,6 +230,12 @@ params(
   combine('async', [false, true]).
   combine('bindingCombination', kBindingCombinations).
   combine('access', kStorageTextureAccessValues).
+  filter((t) =>
+  filterWriteAccessInVertexStage(
+    getStageVisibilityForBinidngCombination(t.bindingCombination),
+    t.access
+  )
+  ).
   beginSubcases().
   combine('order', kReorderOrderKeys).
   combine('bindGroupTest', kBindGroupTests)
@@ -244,7 +284,7 @@ fn(async (t) => {
         `actualLimit: ${actualLimit}, testValue: ${testValue}\n:${code}`
       );
     },
-    kExtraLimits
+    addExtraRequiredLimits(t.adapter, kExtraLimits, limitTest)
   );
 });
 //# sourceMappingURL=maxStorageTexturesPerShaderStage.spec.js.map
