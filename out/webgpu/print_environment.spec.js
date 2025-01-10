@@ -54,7 +54,7 @@ fn((t) => {
 
   const info = JSON.stringify(
     {
-      userAgent: navigator.userAgent,
+      userAgent: globalThis.navigator?.userAgent,
       globalScope: Object.getPrototypeOf(globalThis).constructor.name,
       globalTestConfig,
       baseResourcePath: getResourcePath(''),
