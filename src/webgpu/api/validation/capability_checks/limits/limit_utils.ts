@@ -7,9 +7,10 @@ import {
   getDefaultLimitsForAdapter,
   kLimits,
 } from '../../../../capability_info.js';
+import { GPUConst } from '../../../../constants.js';
 import { GPUTestBase } from '../../../../gpu_test.js';
 
-type GPUSupportedLimit = keyof GPUSupportedLimits;
+type GPUSupportedLimit = keyof Omit<GPUSupportedLimits, '__brand'>;
 
 export const kCreatePipelineTypes = [
   'createRenderPipeline',
@@ -52,14 +53,14 @@ export function getPipelineTypeForBindingCombination(bindingCombination: Binding
 export function getStageVisibilityForBinidngCombination(bindingCombination: BindingCombination) {
   switch (bindingCombination) {
     case 'vertex':
-      return GPUShaderStage.VERTEX;
+      return GPUConst.ShaderStage.VERTEX;
     case 'fragment':
-      return GPUShaderStage.FRAGMENT;
+      return GPUConst.ShaderStage.FRAGMENT;
     case 'vertexAndFragmentWithPossibleVertexStageOverflow':
     case 'vertexAndFragmentWithPossibleFragmentStageOverflow':
-      return GPUShaderStage.FRAGMENT | GPUShaderStage.VERTEX;
+      return GPUConst.ShaderStage.FRAGMENT | GPUConst.ShaderStage.VERTEX;
     case 'compute':
-      return GPUShaderStage.COMPUTE;
+      return GPUConst.ShaderStage.COMPUTE;
   }
 }
 
@@ -245,7 +246,7 @@ export function getPerStageWGSLForBindingCombinationStorageTextures(
 
 export const kLimitModes = ['defaultLimit', 'adapterLimit'] as const;
 export type LimitMode = (typeof kLimitModes)[number];
-export type LimitsRequest = Record<string, LimitMode>;
+export type LimitsRequest = Record<string, LimitMode | number>;
 
 export const kMaximumTestValues = ['atLimit', 'overLimit'] as const;
 export type MaximumTestValue = (typeof kMaximumTestValues)[number];
@@ -338,6 +339,53 @@ export const kMinimumLimitBaseParams = kUnitCaseParamsBuilder
   .combine('limitTest', kMinimumLimitValueTests)
   .combine('testValueName', kMinimumTestValues);
 
+/**
+ * Adds a maximum limit upto a dependent limit.
+ *
+ * Example:
+ *   You want to test `maxStorageBuffersPerShaderStage` in fragment stagee
+ *   so you need `maxStorageBuffersInFragmentStage` set as well. But, you
+ *   don't know exactly what value will be used for `maxStorageBuffersPerShaderStage`
+ *   since that is defined by an enum like `underDefault`.
+ *
+ *   So, you want `maxStorageBuffersInFragmentStage` to be set as high as possible.
+ *   You can't just set it to it's maximum value (adapter.limits.maxStorageBuffersInFragmentStage)
+ *   because if it's greater than `maxStorageBuffersPerShaderStage` you'll get an error.
+ *
+ *   So, use this function
+ *
+ *   const limits: LimitsRequest = {};
+ *   addMaximumLimitUpToDependentLimit(
+ *     adapter,
+ *     limits,
+ *     limit: 'maxStorageBuffersInFragmentStage', // the limit we want to add
+ *     dependentLimitName: 'maxStorageBuffersPerShaderStage', // what the previous limit is dependent on
+ *     dependentLimitTest: 'underDefault', // the enum used to decide the dependent limit
+ *   )
+ */
+export function addMaximumLimitUpToDependentLimit(
+  adapter: GPUAdapter,
+  limits: LimitsRequest,
+  limit: GPUSupportedLimit,
+  dependentLimitName: GPUSupportedLimit,
+  dependentLimitTest: MaximumLimitValueTest
+) {
+  if (!(limit in adapter.limits)) {
+    return;
+  }
+
+  const limitMaximum: number = adapter.limits[limit]!;
+  const dependentLimitMaximum: number = adapter.limits[dependentLimitName]!;
+  const testValue = getLimitValue(
+    getDefaultLimitForAdapter(adapter, dependentLimitName),
+    dependentLimitMaximum,
+    dependentLimitTest
+  );
+
+  const value = Math.min(testValue, dependentLimitMaximum, limitMaximum);
+  limits[limit] = value;
+}
+
 export class LimitTestsImpl extends GPUTestBase {
   _adapter: GPUAdapter | null = null;
   _device: GPUDevice | undefined = undefined;
@@ -415,11 +463,13 @@ export class LimitTestsImpl extends GPUTestBase {
     requiredLimits[limit] = requestedLimit;
 
     if (extraLimits) {
-      for (const [extraLimitStr, limitMode] of Object.entries(extraLimits)) {
+      for (const [extraLimitStr, limitModeOrNumber] of Object.entries(extraLimits)) {
         const extraLimit = extraLimitStr as GPUSupportedLimit;
         if (adapter.limits[extraLimit] !== undefined) {
           requiredLimits[extraLimit] =
-            limitMode === 'defaultLimit'
+            typeof limitModeOrNumber === 'number'
+              ? limitModeOrNumber
+              : limitModeOrNumber === 'defaultLimit'
               ? getDefaultLimitForAdapter(adapter, extraLimit)
               : (adapter.limits[extraLimit] as number);
         }

@@ -17,13 +17,13 @@ import {
   getPerStageWGSLForBindingCombination,
   LimitsRequest,
   getStageVisibilityForBinidngCombination,
+  addMaximumLimitUpToDependentLimit,
+  MaximumLimitValueTest,
 } from './limit_utils.js';
 
 const kExtraLimits: LimitsRequest = {
   maxBindingsPerBindGroup: 'adapterLimit',
   maxBindGroups: 'adapterLimit',
-  maxStorageBuffersInFragmentStage: 'adapterLimit',
-  maxStorageBuffersInVertexStage: 'adapterLimit',
 };
 
 const limit = 'maxStorageBuffersPerShaderStage';
@@ -47,6 +47,31 @@ function createBindGroupLayout(
     ),
   };
   return device.createBindGroupLayout(bindGroupLayoutDescription);
+}
+
+function addExtraRequiredLimits(
+  adapter: GPUAdapter,
+  limits: LimitsRequest,
+  limitTest: MaximumLimitValueTest
+) {
+  const newLimits: LimitsRequest = { ...limits };
+
+  addMaximumLimitUpToDependentLimit(
+    adapter,
+    newLimits,
+    'maxStorageBuffersInFragmentStage',
+    limit,
+    limitTest
+  );
+  addMaximumLimitUpToDependentLimit(
+    adapter,
+    newLimits,
+    'maxStorageBuffersInVertexStage',
+    limit,
+    limitTest
+  );
+
+  return newLimits;
 }
 
 g.test('createBindGroupLayout,at_over')
@@ -86,7 +111,7 @@ g.test('createBindGroupLayout,at_over')
           createBindGroupLayout(device, visibility, type, order, testValue);
         }, shouldError);
       },
-      kExtraLimits
+      addExtraRequiredLimits(t.adapter, kExtraLimits, limitTest)
     );
   });
 
@@ -141,7 +166,7 @@ g.test('createPipelineLayout,at_over')
           shouldError
         );
       },
-      kExtraLimits
+      addExtraRequiredLimits(t.adapter, kExtraLimits, limitTest)
     );
   });
 
@@ -197,6 +222,6 @@ g.test('createPipeline,at_over')
           `actualLimit: ${actualLimit}, testValue: ${testValue}\n:${code}`
         );
       },
-      kExtraLimits
+      addExtraRequiredLimits(t.adapter, kExtraLimits, limitTest)
     );
   });
