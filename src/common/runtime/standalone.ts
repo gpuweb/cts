@@ -52,6 +52,7 @@ const { runnow, powerPreference, compatibility, forceFallbackAdapter } = options
 globalTestConfig.enableDebugLogs = options.debug;
 globalTestConfig.unrollConstEvalLoops = options.unrollConstEvalLoops;
 globalTestConfig.compatibility = compatibility;
+globalTestConfig.enforceDefaultLimits = options.enforceDefaultLimits;
 globalTestConfig.logToWebSocket = options.logToWebSocket;
 
 const logger = new Logger();
@@ -84,7 +85,7 @@ stopButtonElem.addEventListener('click', () => {
 if (powerPreference || compatibility || forceFallbackAdapter) {
   setDefaultRequestAdapterOptions({
     ...(powerPreference && { powerPreference }),
-    // MAINTENANCE_TODO: Change this to whatever the option ends up being
+    // MAINTENANCE_TODO: remove compatibilityMode once no longer needed.
     ...(compatibility && { compatibilityMode: true, featureLevel: 'compatibility' }),
     ...(forceFallbackAdapter && { forceFallbackAdapter: true }),
   });
