@@ -31,6 +31,9 @@ Options:
   --gpu-provider            Path to node module that provides the GPU implementation.
   --gpu-provider-flag       Flag to set on the gpu-provider as <flag>=<value>
   --unroll-const-eval-loops Unrolls loops in constant-evaluation shader execution tests
+  --enforce-default-limits  Enforce the default limits (note: powerPreference tests may fail)
+  --force-fallback-adapter  Force a fallback adapter
+  --log-to-websocket        Log to a websocket
   --u                       Flag to set on the gpu-provider as <flag>=<value>
 
 Provides an HTTP server used for running tests via an HTTP RPC interface
