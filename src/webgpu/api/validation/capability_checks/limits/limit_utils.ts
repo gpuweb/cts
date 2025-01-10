@@ -343,7 +343,7 @@ export const kMinimumLimitBaseParams = kUnitCaseParamsBuilder
  * Adds a maximum limit upto a dependent limit.
  *
  * Example:
- *   You want to test `maxStorageBuffersPerShaderStage` in fragment stagee
+ *   You want to test `maxStorageBuffersPerShaderStage` in fragment stage
  *   so you need `maxStorageBuffersInFragmentStage` set as well. But, you
  *   don't know exactly what value will be used for `maxStorageBuffersPerShaderStage`
  *   since that is defined by an enum like `underDefault`.
