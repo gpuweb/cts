@@ -858,7 +858,43 @@ export const listing = [
       "validation",
       "capability_checks",
       "limits",
+      "maxStorageBuffersInFragmentStage"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
+      "capability_checks",
+      "limits",
+      "maxStorageBuffersInVertexStage"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
+      "capability_checks",
+      "limits",
       "maxStorageBuffersPerShaderStage"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
+      "capability_checks",
+      "limits",
+      "maxStorageTexturesInFragmentStage"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
+      "capability_checks",
+      "limits",
+      "maxStorageTexturesInVertexStage"
     ]
   },
   {

@@ -386,10 +386,19 @@ dependentLimitTest)
   limits[limit] = value;
 }
 
+
+
+
+
+
+
+
+
 export class LimitTestsImpl extends GPUTestBase {
   _adapter = null;
   _device = undefined;
   limit = '';
+  limitTestParams = {};
   defaultLimit = 0;
   adapterLimit = 0;
 
@@ -398,6 +407,11 @@ export class LimitTestsImpl extends GPUTestBase {
     const gpu = getGPU(this.rec);
     this._adapter = await gpu.requestAdapter();
     const limit = this.limit;
+    // MAINTENANCE_TODO: consider removing this skip if the spec has no optional limits.
+    this.skipIf(
+      this._adapter?.limits[limit] === undefined && !!this.limitTestParams.limitOptional,
+      `${limit} is missing but optional for now`
+    );
     this.defaultLimit = getDefaultLimitForAdapter(this.adapter, limit);
     this.adapterLimit = this.adapter.limits[limit];
     assert(!Number.isNaN(this.defaultLimit));
@@ -504,16 +518,21 @@ export class LimitTestsImpl extends GPUTestBase {
           );
         }
       } else {
-        if (requestedLimit <= defaultLimit) {
-          this.expect(
-            actualLimit === defaultLimit,
-            `expected actual actualLimit: ${actualLimit} to equal defaultLimit: ${defaultLimit}`
-          );
-        } else {
-          this.expect(
-            actualLimit === requestedLimit,
-            `expected actual actualLimit: ${actualLimit} to equal requestedLimit: ${requestedLimit}`
-          );
+        const checked = this.limitTestParams.limitCheckFn ?
+        this.limitTestParams.limitCheckFn(this, device, { limit, actualLimit, defaultLimit }) :
+        false;
+        if (!checked) {
+          if (requestedLimit <= defaultLimit) {
+            this.expect(
+              actualLimit === defaultLimit,
+              `expected actual actualLimit: ${actualLimit} to equal defaultLimit: ${defaultLimit}`
+            );
+          } else {
+            this.expect(
+              actualLimit === requestedLimit,
+              `expected actual actualLimit: ${actualLimit} to equal requestedLimit: ${requestedLimit}`
+            );
+          }
         }
       }
     }
@@ -534,6 +553,10 @@ export class LimitTestsImpl extends GPUTestBase {
     const { defaultLimit, adapterLimit: maximumLimit } = this;
 
     const requestedLimit = getLimitValue(defaultLimit, maximumLimit, limitValueTest);
+    this.skipIf(
+      requestedLimit < 0 && limitValueTest === 'underDefault',
+      `requestedLimit(${requestedLimit}) for ${this.limit} is < 0`
+    );
     return this._getDeviceWithSpecificLimit(requestedLimit, extraLimits, features);
   }
 
@@ -1209,12 +1232,21 @@ export class LimitTestsImpl extends GPUTestBase {
   }
 }
 
+
+
+
+
+
 /**
  * Makes a new LimitTest class so that the tests have access to `limit`
  */
-function makeLimitTestFixture(limit) {
+function makeLimitTestFixture(
+limit,
+params)
+{
   class LimitTests extends LimitTestsImpl {
     limit = limit;
+    limitTestParams = params ?? {};
   }
 
   return LimitTests;
@@ -1225,9 +1257,80 @@ function makeLimitTestFixture(limit) {
  * writing these tests where I'd copy a test, need to rename a limit in 3-4 places,
  * forget one place, and then spend 20-30 minutes wondering why the test was failing.
  */
-export function makeLimitTestGroup(limit) {
+export function makeLimitTestGroup(limit, params) {
   const description = `API Validation Tests for ${limit}.`;
-  const g = makeTestGroup(makeLimitTestFixture(limit));
+  const g = makeTestGroup(makeLimitTestFixture(limit, params));
   return { g, description, limit };
+}
+
+/**
+ * Test that limit must be less than dependentLimitName when requesting a device.
+ */
+export function testMaxStorageXXXInYYYStageDeviceCreationWithDependentLimit(
+g,
+limit,
+
+
+
+
+dependentLimitName)
+{
+  g.test(`validate,${dependentLimitName}`).
+  desc(
+    `Test that adapter.limit.${limit} and requiredLimits.${limit} must be <= ${dependentLimitName}`
+  ).
+  params((u) => u.combine('useMax', [true, false])) // true case should not reject.
+  .fn(async (t) => {
+    const { useMax } = t.params;
+    const { adapterLimit: maximumLimit, adapter } = t;
+
+    const dependentLimit = adapter.limits[dependentLimitName];
+    t.expect(
+      maximumLimit <= dependentLimit,
+      `maximumLimit(${maximumLimit}) is <= adapter.limits.${dependentLimitName}(${dependentLimit})`
+    );
+
+    const dependentEffectiveLimits = useMax ?
+    dependentLimit :
+    t.getDefaultLimit(dependentLimitName);
+    const shouldReject = maximumLimit > dependentEffectiveLimits;
+    t.debug(
+      `${limit}(${maximumLimit}) > ${dependentLimitName}(${dependentEffectiveLimits}) shouldReject: ${shouldReject}`
+    );
+    const device = await t.requestDeviceWithLimits(
+      adapter,
+      {
+        [limit]: maximumLimit,
+        ...(useMax && {
+          [dependentLimitName]: dependentLimit
+        })
+      },
+      shouldReject
+    );
+    device?.destroy();
+  });
+
+  g.test(`auto_upgrade,${dependentLimitName}`).
+  desc(
+    `Test that adapter.limit.${limit} is automatically upgraded to ${dependentLimitName} except in compat.`
+  ).
+  fn(async (t) => {
+    const { adapter, defaultLimit } = t;
+    const dependentAdapterLimit = adapter.limits[dependentLimitName];
+    const shouldReject = false;
+    const device = await t.requestDeviceWithLimits(
+      adapter,
+      {
+        [dependentLimitName]: dependentAdapterLimit
+      },
+      shouldReject
+    );
+
+    const expectedLimit = t.isCompatibility ? defaultLimit : dependentAdapterLimit;
+    t.expect(
+      device.limits[limit] === expectedLimit,
+      `${limit}(${device.limits[limit]}) === ${expectedLimit}`
+    );
+  });
 }
 //# sourceMappingURL=limit_utils.js.map
