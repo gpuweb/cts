@@ -565,14 +565,6 @@ export const listing = [
       "api",
       "operation",
       "texture_view",
-      "read"
-    ]
-  },
-  {
-    "file": [
-      "api",
-      "operation",
-      "texture_view",
       "write"
     ]
   },
