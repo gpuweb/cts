@@ -179,7 +179,7 @@ g.test('format')
         format,
       });
       const configuration = ctx.getConfiguration();
-      t.expect(configuration.format === format);
+      t.expect(configuration!.format === format);
     } else {
       t.shouldThrow('TypeError', () => {
         ctx.configure({
@@ -224,7 +224,7 @@ g.test('usage')
     });
 
     const configuration = ctx.getConfiguration();
-    t.expect(configuration.usage === usage);
+    t.expect(configuration!.usage === usage);
 
     const currentTexture = ctx.getCurrentTexture();
     t.expect(currentTexture instanceof GPUTexture);
@@ -343,7 +343,7 @@ g.test('alpha_mode')
     });
 
     const configuration = ctx.getConfiguration();
-    t.expect(configuration.alphaMode === alphaMode);
+    t.expect(configuration!.alphaMode === alphaMode);
 
     const currentTexture = ctx.getCurrentTexture();
     t.expect(currentTexture instanceof GPUTexture);
