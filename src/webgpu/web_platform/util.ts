@@ -626,7 +626,7 @@ const kFourColorsInfo = {
   },
 } as const;
 
-export const kImageInfo = makeTable({
+export const kEXIFImageInfo = makeTable({
   table: {
     'four-colors.jpg': kFourColorsInfo,
     'four-colors-rotate-90-cw.jpg': kFourColorsInfo,
@@ -635,8 +635,24 @@ export const kImageInfo = makeTable({
   },
 } as const);
 
+export const kImageInfo = makeTable({
+  table: {
+    'four-colors.jpg': kFourColorsInfo,
+    'four-colors.png': kFourColorsInfo,
+    'four-colors.bmp': kFourColorsInfo,
+    'four-colors.webp': kFourColorsInfo,
+    'four-colors.gif': kFourColorsInfo,
+    'four-colors.avif': kFourColorsInfo,
+    'four-colors.ico': kFourColorsInfo,
+    'four-colors.svg': kFourColorsInfo,
+  },
+} as const);
+
 type ImageName = keyof typeof kImageInfo;
 export const kImageNames: readonly ImageName[] = keysOf(kImageInfo);
+
+type EXIFImageName = keyof typeof kEXIFImageInfo;
+export const kEXIFImageNames: readonly EXIFImageName[] = keysOf(kEXIFImageInfo);
 
 type ObjectTypeFromFile = (typeof kObjectTypeFromFiles)[number];
 export const kObjectTypeFromFiles = [
@@ -649,12 +665,12 @@ export const kObjectTypeFromFiles = [
  * Load image file(e.g. *.jpg) from ImageBitmap, blob or HTMLImageElement. And
  * convert the result to valid source that GPUCopyExternalImageSource supported.
  */
-export async function GetSourceFromImageFile(
+export async function GetSourceFromEXIFImageFile(
   test: GPUTest,
-  imageName: ImageName,
+  exifImageName: EXIFImageName,
   objectTypeFromFile: ObjectTypeFromFile
 ): Promise<ImageBitmap | HTMLImageElement> {
-  const imageUrl = getResourcePath(imageName);
+  const imageUrl = getResourcePath(exifImageName);
 
   switch (objectTypeFromFile) {
     case 'ImageBitmap-from-Blob': {
@@ -688,4 +704,45 @@ export async function GetSourceFromImageFile(
       return createImageBitmap(image);
     }
   }
+}
+
+/**
+ * Create HTMLImageElement and load image file and waits for it to be loaded.
+ * Returns a promise which resolves after `callback` (which may be async) completes.
+ *
+ * @param imageName An valid imageName in kkImageInfo table .
+ * @param callback Function to call when HTMLImageElement is loaded.
+ *
+ */
+export function loadImageFileAndRun(
+  test: GPUTest,
+  imageName: ImageName,
+  callback: (image: HTMLImageElement) => unknown | Promise<unknown>
+): Promise<void> {
+  return raceWithRejectOnTimeout(
+    new Promise((resolve, reject) => {
+      const callbackAndResolve = (image: HTMLImageElement) =>
+        void (async () => {
+          try {
+            await callback(image);
+            resolve();
+          } catch (ex) {
+            reject(ex);
+          }
+        })();
+      // Skip test if HTMLImageElement is not available, e.g. in worker.
+      if (typeof HTMLImageElement === 'undefined') {
+        test.skip(
+          'Try to use HTMLImage do image file decoding but HTMLImageElement not available.'
+        );
+      }
+      const image = new Image();
+      image.src = getResourcePath(imageName);
+      image.onload = () => {
+        callbackAndResolve(image);
+      };
+    }),
+    2000,
+    'Video never became ready'
+  );
 }
