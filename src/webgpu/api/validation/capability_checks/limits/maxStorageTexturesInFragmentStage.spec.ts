@@ -5,73 +5,62 @@ import {
   ReorderOrder,
   assert,
 } from '../../../../../common/util/util.js';
-import { kShaderStageCombinationsWithStage } from '../../../../capability_info.js';
-import { GPUConst } from '../../../../constants.js';
+import { kStorageTextureAccessValues } from '../../../../capability_info.js';
 
 import {
   kMaximumLimitBaseParams,
   makeLimitTestGroup,
   kBindGroupTests,
-  kBindingCombinations,
   getPipelineTypeForBindingCombination,
   getPerStageWGSLForBindingCombination,
   LimitsRequest,
   getStageVisibilityForBinidngCombination,
-  addMaximumLimitUpToDependentLimit,
-  MaximumLimitValueTest,
+  testMaxStorageXXXInYYYStageDeviceCreationWithDependentLimit,
 } from './limit_utils.js';
+
+const limit = 'maxStorageTexturesInFragmentStage';
+const dependentLimitName = 'maxStorageTexturesPerShaderStage';
 
 const kExtraLimits: LimitsRequest = {
   maxBindingsPerBindGroup: 'adapterLimit',
   maxBindGroups: 'adapterLimit',
+  [dependentLimitName]: 'adapterLimit',
 };
 
-const limit = 'maxStorageBuffersPerShaderStage';
-export const { g, description } = makeLimitTestGroup(limit);
+export const { g, description } = makeLimitTestGroup(limit, {
+  // MAINTAINANCE_TODO: remove once this limit is required.
+  limitOptional: true,
+  limitCheckFn(t, device, { actualLimit }) {
+    if (!t.isCompatibility) {
+      const expectedLimit = device.limits[dependentLimitName];
+      t.expect(
+        actualLimit === expectedLimit,
+        `expected actual actualLimit: ${actualLimit} to equal ${dependentLimitName}: ${expectedLimit}`
+      );
+      return true;
+    }
+    return false;
+  },
+});
 
 function createBindGroupLayout(
   device: GPUDevice,
   visibility: number,
-  type: GPUBufferBindingType,
+  access: GPUStorageTextureAccess,
   order: ReorderOrder,
   numBindings: number
 ) {
-  const bindGroupLayoutDescription = {
+  const bindGroupLayoutDescription: GPUBindGroupLayoutDescriptor = {
     entries: reorder(
       order,
       range(numBindings, i => ({
         binding: i,
         visibility,
-        buffer: { type },
+        storageTexture: { format: 'r32float', access },
       }))
     ),
   };
   return device.createBindGroupLayout(bindGroupLayoutDescription);
-}
-
-function addExtraRequiredLimits(
-  adapter: GPUAdapter,
-  limits: LimitsRequest,
-  limitTest: MaximumLimitValueTest
-) {
-  const newLimits: LimitsRequest = { ...limits };
-
-  addMaximumLimitUpToDependentLimit(
-    adapter,
-    newLimits,
-    'maxStorageBuffersInFragmentStage',
-    limit,
-    limitTest
-  );
-  addMaximumLimitUpToDependentLimit(
-    adapter,
-    newLimits,
-    'maxStorageBuffersInVertexStage',
-    limit,
-    limitTest
-  );
-
-  return newLimits;
 }
 
 g.test('createBindGroupLayout,at_over')
@@ -85,16 +74,11 @@ g.test('createBindGroupLayout,at_over')
   )
   .params(
     kMaximumLimitBaseParams
-      .combine('visibility', kShaderStageCombinationsWithStage)
-      .combine('type', ['storage', 'read-only-storage'] as GPUBufferBindingType[])
+      .combine('access', kStorageTextureAccessValues)
       .combine('order', kReorderOrderKeys)
-      .filter(
-        ({ visibility, type }) =>
-          (visibility & GPUConst.ShaderStage.VERTEX) === 0 || type !== 'storage'
-      )
   )
   .fn(async t => {
-    const { limitTest, testValueName, visibility, order, type } = t.params;
+    const { limitTest, testValueName, order, access } = t.params;
 
     await t.testDeviceWithRequestedMaximumLimits(
       limitTest,
@@ -105,13 +89,12 @@ g.test('createBindGroupLayout,at_over')
           `maxBindingsPerBindGroup = ${t.adapter.limits.maxBindingsPerBindGroup} which is less than ${testValue}`
         );
 
-        t.skipIfNotEnoughStorageBuffersInStage(visibility, testValue);
-
+        const visibility = GPUShaderStage.FRAGMENT;
         await t.expectValidationError(() => {
-          createBindGroupLayout(device, visibility, type, order, testValue);
+          createBindGroupLayout(device, visibility, access, order, testValue);
         }, shouldError);
       },
-      addExtraRequiredLimits(t.adapter, kExtraLimits, limitTest)
+      kExtraLimits
     );
   });
 
@@ -126,22 +109,22 @@ g.test('createPipelineLayout,at_over')
   )
   .params(
     kMaximumLimitBaseParams
-      .combine('visibility', kShaderStageCombinationsWithStage)
-      .combine('type', ['storage', 'read-only-storage'] as GPUBufferBindingType[])
+      .combine('access', kStorageTextureAccessValues)
       .combine('order', kReorderOrderKeys)
-      .filter(
-        ({ visibility, type }) =>
-          (visibility & GPUConst.ShaderStage.VERTEX) === 0 || type !== 'storage'
-      )
   )
   .fn(async t => {
-    const { limitTest, testValueName, visibility, order, type } = t.params;
+    const { limitTest, testValueName, order, access } = t.params;
 
     await t.testDeviceWithRequestedMaximumLimits(
       limitTest,
       testValueName,
       async ({ device, testValue, shouldError, actualLimit }) => {
-        t.skipIfNotEnoughStorageBuffersInStage(visibility, testValue);
+        const visibility = GPUShaderStage.FRAGMENT;
+
+        t.skipIf(
+          actualLimit === 0,
+          `can not make a bindGroupLayout to test createPipelineLaoyout if the actaul limit is 0`
+        );
 
         const maxBindingsPerBindGroup = Math.min(
           t.device.limits.maxBindingsPerBindGroup,
@@ -158,7 +141,7 @@ g.test('createPipelineLayout,at_over')
             testValue - i * maxBindingsPerBindGroup,
             maxBindingsPerBindGroup
           );
-          return createBindGroupLayout(device, visibility, type, order, numInGroup);
+          return createBindGroupLayout(device, visibility, access, order, numInGroup);
         });
 
         await t.expectValidationError(
@@ -166,7 +149,7 @@ g.test('createPipelineLayout,at_over')
           shouldError
         );
       },
-      addExtraRequiredLimits(t.adapter, kExtraLimits, limitTest)
+      kExtraLimits
     );
   });
 
@@ -182,13 +165,13 @@ g.test('createPipeline,at_over')
   .params(
     kMaximumLimitBaseParams
       .combine('async', [false, true] as const)
-      .combine('bindingCombination', kBindingCombinations)
       .beginSubcases()
       .combine('order', kReorderOrderKeys)
       .combine('bindGroupTest', kBindGroupTests)
   )
   .fn(async t => {
-    const { limitTest, testValueName, async, bindingCombination, order, bindGroupTest } = t.params;
+    const { limitTest, testValueName, async, order, bindGroupTest } = t.params;
+    const bindingCombination = 'fragment';
     const pipelineType = getPipelineTypeForBindingCombination(bindingCombination);
 
     await t.testDeviceWithRequestedMaximumLimits(
@@ -207,7 +190,7 @@ g.test('createPipeline,at_over')
           bindingCombination,
           order,
           bindGroupTest,
-          (i, j) => `var<storage> u${j}_${i}: f32`,
+          (i, j) => `var u${j}_${i}: texture_storage_2d<r32float,read>`,
           (i, j) => `_ = u${j}_${i};`,
           device.limits.maxBindGroups,
           testValue
@@ -222,6 +205,8 @@ g.test('createPipeline,at_over')
           `actualLimit: ${actualLimit}, testValue: ${testValue}\n:${code}`
         );
       },
-      addExtraRequiredLimits(t.adapter, kExtraLimits, limitTest)
+      kExtraLimits
     );
   });
+
+testMaxStorageXXXInYYYStageDeviceCreationWithDependentLimit(g, limit, dependentLimitName);
