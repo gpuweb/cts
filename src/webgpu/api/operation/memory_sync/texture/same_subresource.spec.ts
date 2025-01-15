@@ -65,6 +65,12 @@ function writeOpNeedsStorageTexture({ op, in: context }: { op: Op; in: Operation
   );
 }
 
+function getVisibilityForContext(context: OperationContext) {
+  return context === 'render-bundle-encoder' || context === 'render-pass-encoder'
+    ? GPUShaderStage.FRAGMENT
+    : GPUShaderStage.COMPUTE;
+}
+
 class TextureSyncTestHelper extends OperationContextHelper {
   private texture: GPUTexture;
 
@@ -169,19 +175,19 @@ class TextureSyncTestHelper extends OperationContextHelper {
           format: this.kTextureFormat,
           usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.STORAGE_BINDING,
         });
-
+        const visibility = getVisibilityForContext(context);
         const bindGroupLayout = this.device.createBindGroupLayout({
           entries: [
             {
               binding: 0,
-              visibility: GPUShaderStage.FRAGMENT | GPUShaderStage.COMPUTE,
+              visibility,
               texture: {
                 sampleType: 'unfilterable-float',
               },
             },
             {
               binding: 1,
-              visibility: GPUShaderStage.FRAGMENT | GPUShaderStage.COMPUTE,
+              visibility,
               storageTexture: {
                 access: 'write-only',
                 format: this.kTextureFormat,
@@ -440,11 +446,12 @@ class TextureSyncTestHelper extends OperationContextHelper {
         break;
       }
       case 'storage': {
+        const visibility = getVisibilityForContext(context);
         const bindGroupLayout = this.device.createBindGroupLayout({
           entries: [
             {
               binding: 0,
-              visibility: GPUShaderStage.FRAGMENT | GPUShaderStage.COMPUTE,
+              visibility,
               storageTexture: {
                 access: 'write-only',
                 format: this.kTextureFormat,
