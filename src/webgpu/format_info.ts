@@ -1793,6 +1793,10 @@ export function canUseAsRenderTarget(format: GPUTextureFormat) {
   return kTextureFormatInfo[format].colorRender || isDepthOrStencilTextureFormat(format);
 }
 
+export function is16Float(format: GPUTextureFormat) {
+  return format === 'r16float' || format === 'rg16float' || format === 'rgba16float';
+}
+
 export function is32Float(format: GPUTextureFormat) {
   return format === 'r32float' || format === 'rg32float' || format === 'rgba32float';
 }
