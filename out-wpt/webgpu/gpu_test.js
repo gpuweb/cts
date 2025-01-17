@@ -31,7 +31,9 @@ import {
 
   isCompressedTextureFormat,
 
-  isTextureFormatUsableAsStorageFormat } from
+  isTextureFormatUsableAsStorageFormat,
+  is32Float,
+  is16Float } from
 './format_info.js';
 import { checkElementsEqual, checkElementsBetween } from './util/check_contents.js';
 import { CommandBufferMaker } from './util/command_buffer_maker.js';
@@ -227,6 +229,13 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
     this.selectDeviceOrSkipTestCase(features);
   }
 
+  /** Skips test if format is float16 or float32 and not color renderable based on device feature availability. */
+  selectDeviceForRenderableColorFormatOrSkipTestCase(...formats) {
+    this.selectDeviceOrSkipTestCase({
+      requiredFeatures: this.getFloatTextureFormatColorRenderableFeatures(...formats)
+    });
+  }
+
   /** @internal MAINTENANCE_TODO: Make this not visible to test code? */
   acquireMismatchedProvider() {
     return this.mismatchedProvider;
@@ -277,6 +286,21 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
         }
       }
     }
+  }
+
+  getFloatTextureFormatColorRenderableFeatures(...formats) {
+    const requiredFeatures = [];
+    if (this.isCompatibility) {
+      for (const format of formats) {
+        if (format === undefined) continue;
+        if (is32Float(format)) {
+          requiredFeatures.push('float32-renderable');
+        } else if (is16Float(format)) {
+          requiredFeatures.push('float16-renderable');
+        }
+      }
+    }
+    return requiredFeatures;
   }
 
   skipIfCopyTextureToTextureNotSupportedForFormat(...formats) {

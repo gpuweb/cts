@@ -159,6 +159,7 @@ operation)
   }
 }
 
+const kBlendingGPUBlendComponentFormat = 'rgba16float';
 g.test('blending,GPUBlendComponent').
 desc(
   `Test all combinations of parameters for GPUBlendComponent.
@@ -208,9 +209,10 @@ beforeAllSubcases((t) => {
   {
     t.selectDeviceOrSkipTestCase('dual-source-blending');
   }
+  t.selectDeviceForRenderableColorFormatOrSkipTestCase(kBlendingGPUBlendComponentFormat);
 }).
 fn((t) => {
-  const textureFormat = 'rgba16float';
+  const textureFormat = kBlendingGPUBlendComponentFormat;
   const srcColor = t.params.srcColor;
   const srcColor1 = t.params.srcColor1;
   const dstColor = t.params.dstColor;
@@ -393,6 +395,7 @@ u //
 ).
 beforeAllSubcases((t) => {
   t.skipIfTextureFormatNotSupported(t.params.format);
+  t.selectDeviceForRenderableColorFormatOrSkipTestCase(t.params.format);
 }).
 fn((t) => {
   const { format } = t.params;
@@ -797,6 +800,9 @@ u //
 combine('srcValue', [0.4, 0.6, 0.8, 1.0]).
 combine('dstValue', [0.2, 0.4])
 ).
+beforeAllSubcases((t) => {
+  t.selectDeviceForRenderableColorFormatOrSkipTestCase(t.params.format);
+}).
 fn((t) => {
   const { format, srcValue, dstValue } = t.params;
 
