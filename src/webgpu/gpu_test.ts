@@ -92,7 +92,7 @@ export type DeviceSelectionDescriptor =
 
 export function initUncanonicalizedDeviceDescriptor(
   descriptor: DeviceSelectionDescriptor
-): UncanonicalizedDeviceDescriptor | undefined {
+): UncanonicalizedDeviceDescriptor {
   if (typeof descriptor === 'string') {
     return { requiredFeatures: [descriptor] };
   } else if (descriptor instanceof Array) {
@@ -100,7 +100,24 @@ export function initUncanonicalizedDeviceDescriptor(
       requiredFeatures: descriptor.filter(f => f !== undefined) as GPUFeatureName[],
     };
   } else {
-    return descriptor;
+    return descriptor ?? {};
+  }
+}
+
+type DeviceDescriptorSimplified = {
+  requiredFeatures: GPUFeatureName[];
+  requiredLimits: Record<string, number>;
+  defaultQueue: GPUQueueDescriptor;
+};
+
+function mergeDeviceSelectionDescriptorIntoDeviceDescriptor(
+  src: DeviceSelectionDescriptor,
+  dst: DeviceDescriptorSimplified
+) {
+  const srcFixed = initUncanonicalizedDeviceDescriptor(src);
+  if (srcFixed) {
+    dst.requiredFeatures.push(...(srcFixed.requiredFeatures ?? []));
+    Object.assign(dst.requiredLimits, srcFixed.requiredLimits ?? {});
   }
 }
 
@@ -109,6 +126,12 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
   private provider: Promise<DeviceProvider> | undefined;
   /** Provider for mismatched device. */
   private mismatchedProvider: Promise<DeviceProvider> | undefined;
+  /** The accumulated skip-if requirements for this subcase */
+  private skipIfRequirements: DeviceDescriptorSimplified = {
+    requiredFeatures: [],
+    requiredLimits: {},
+    defaultQueue: {},
+  };
 
   override async postInit(): Promise<void> {
     // Skip all subcases if there's no device.
@@ -128,7 +151,7 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
   /** @internal MAINTENANCE_TODO: Make this not visible to test code? */
   acquireProvider(): Promise<DeviceProvider> {
     if (this.provider === undefined) {
-      this.selectDeviceOrSkipTestCase(undefined);
+      this.requestDeviceWithRequiredParametersOrSkip(this.skipIfRequirements);
     }
     assert(this.provider !== undefined);
     return this.provider;
@@ -145,7 +168,7 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
    *
    * If the request isn't supported, throws a SkipTestCase exception to skip the entire test case.
    */
-  selectDeviceOrSkipTestCase(
+  requestDeviceWithRequiredParametersOrSkip(
     descriptor: DeviceSelectionDescriptor,
     descriptorModifier?: DescriptorModifier
   ): void {
@@ -157,6 +180,16 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
     );
     // Suppress uncaught promise rejection (we'll catch it later).
     this.provider.catch(() => {});
+  }
+
+  /**
+   * Some tests or cases need particular feature flags or limits to be enabled.
+   * Call this function with a descriptor or feature name (or `undefined`) to add
+   * features or limits required by the subcase. If the features or limits are not
+   * available a SkipTestCase exception will be thrown to skip the entire test case.
+   */
+  selectDeviceOrSkipTestCase(descriptor: DeviceSelectionDescriptor): void {
+    mergeDeviceSelectionDescriptorIntoDeviceDescriptor(descriptor, this.skipIfRequirements);
   }
 
   /**
@@ -1310,7 +1343,7 @@ function getAdapterLimitsAsDeviceRequiredLimits(adapter: GPUAdapter) {
  *    t.skipIf(!(limit >= 2)); // Good. Skips if limits is not >= 2. undefined is not >= 2.
  * ```
  */
-function removeNonExistantLimits(adapter: GPUAdapter, limits: Record<string, GPUSize64>) {
+function removeNonExistentLimits(adapter: GPUAdapter, limits: Record<string, GPUSize64>) {
   const filteredLimits: Record<string, GPUSize64> = {};
   const adapterLimits = adapter.limits as unknown as Record<string, GPUSize64>;
   for (const [limit, value] of Object.entries(limits)) {
@@ -1330,7 +1363,7 @@ function applyLimitsToDescriptor(
     requiredFeatures: [],
     defaultQueue: {},
     ...desc,
-    requiredLimits: removeNonExistantLimits(adapter, getRequiredLimits(adapter)),
+    requiredLimits: removeNonExistentLimits(adapter, getRequiredLimits(adapter)),
   };
   return descWithMaxLimits;
 }
@@ -1382,7 +1415,7 @@ export class RequiredLimitsGPUTestSubcaseBatchState extends GPUTestSubcaseBatchS
     super(recorder, params);
     this.requiredLimitsHelper = requiredLimitsHelper;
   }
-  override selectDeviceOrSkipTestCase(
+  override requestDeviceWithRequiredParametersOrSkip(
     descriptor: DeviceSelectionDescriptor,
     descriptorModifier?: DescriptorModifier
   ): void {
@@ -1398,7 +1431,10 @@ export class RequiredLimitsGPUTestSubcaseBatchState extends GPUTestSubcaseBatchS
         return `${baseKey}:${requiredLimitsHelper.key()}`;
       },
     };
-    super.selectDeviceOrSkipTestCase(initUncanonicalizedDeviceDescriptor(descriptor), mod);
+    super.requestDeviceWithRequiredParametersOrSkip(
+      initUncanonicalizedDeviceDescriptor(descriptor),
+      mod
+    );
   }
 }
 
