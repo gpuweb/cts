@@ -43,11 +43,8 @@ g.test('uninitialized_texture_is_zero')
   .params(kTestParams)
   .beforeAllSubcases(t => {
     t.skipIfTextureFormatNotSupported(t.params.format);
-    const requiredFeatures = [
-      ...t.getFloatTextureFormatColorRenderableFeatures(t.params.format),
-      ...(kTextureFormatInfo[t.params.format].feature ?? []),
-    ] as GPUFeatureName[];
-    t.selectDeviceOrSkipTestCase(requiredFeatures);
+    t.selectDeviceForRenderableColorFormatOrSkipTestCase(t.params.format);
+    t.selectDeviceOrSkipTestCase(kTextureFormatInfo[t.params.format].feature);
   })
   .fn(t => {
     const usage = getRequiredTextureUsage(

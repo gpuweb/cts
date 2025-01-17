@@ -229,6 +229,13 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
     this.selectDeviceOrSkipTestCase(features);
   }
 
+  /** Skips test if format is float16 or float32 and not color renderable based on device feature availability. */
+  selectDeviceForRenderableColorFormatOrSkipTestCase(...formats: (GPUTextureFormat | undefined)[]) {
+    this.selectDeviceOrSkipTestCase({
+      requiredFeatures: this.getFloatTextureFormatColorRenderableFeatures(...formats),
+    });
+  }
+
   /** @internal MAINTENANCE_TODO: Make this not visible to test code? */
   acquireMismatchedProvider(): Promise<DeviceProvider> | undefined {
     return this.mismatchedProvider;
@@ -294,15 +301,6 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
       }
     }
     return requiredFeatures;
-  }
-
-  /** Skips test if format is float16 or float32 and not color renderable based on device feature availability. */
-  skipIfFloatTextureFormatNotColorRenderable(...formats: (GPUTextureFormat | undefined)[]) {
-    if (this.isCompatibility) {
-      this.selectDeviceOrSkipTestCase({
-        requiredFeatures: this.getFloatTextureFormatColorRenderableFeatures(...formats),
-      });
-    }
   }
 
   skipIfCopyTextureToTextureNotSupportedForFormat(...formats: (GPUTextureFormat | undefined)[]) {

@@ -192,7 +192,7 @@ g.test('precision')
       ])
   )
   .beforeAllSubcases(t => {
-    t.skipIfFloatTextureFormatNotColorRenderable(kPrecisionTestFormat);
+    t.selectDeviceForRenderableColorFormatOrSkipTestCase(kPrecisionTestFormat);
   })
   .fn(async t => {
     const format = kPrecisionTestFormat;
