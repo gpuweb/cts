@@ -1871,6 +1871,12 @@ export const listing = [
   },
   {
     "file": [
+      "idl",
+      "javascript"
+    ]
+  },
+  {
+    "file": [
       "print_environment"
     ]
   },
