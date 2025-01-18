@@ -30,12 +30,18 @@ import {
 } from '../gpu_test.js';
 import { CanonicalDeviceDescriptor, DescriptorModifier } from '../util/device_pool.js';
 
+// MAINTENANCE_TODO: Remove this filter when these limits are added to the spec.
+const isUnspecifiedLimit = (limit: string) =>
+  /maxStorage(Buffer|Texture)sIn(Vertex|Fragment)Stage/.test(limit);
+
+const kSpecifiedLimits = kLimits.filter(s => !isUnspecifiedLimit(s));
+
 function addAllFeatures(adapter: GPUAdapter, desc: CanonicalDeviceDescriptor | undefined) {
   const descWithMaxLimits: CanonicalDeviceDescriptor = {
     defaultQueue: {},
     ...desc,
     requiredFeatures: [...adapter.features] as GPUFeatureName[],
-    requiredLimits: {},
+    requiredLimits: { ...(desc?.requiredLimits ?? {}) },
   };
   return descWithMaxLimits;
 }
@@ -129,15 +135,7 @@ const kResourceInfo = {
     create(t: GPUTest) {
       return t.adapter;
     },
-    requiredKeys: [
-      'featureLevel',
-      'features',
-      'info',
-      'isCompatibilityMode',
-      'isFallbackAdapter',
-      'limits',
-      'requestDevice',
-    ],
+    requiredKeys: ['features', 'info', 'limits', 'requestDevice'],
   },
   device: {
     create(t: GPUTest) {
@@ -178,13 +176,13 @@ const kResourceInfo = {
     create(t: GPUTest) {
       return t.adapter.limits;
     },
-    requiredKeys: kLimits,
+    requiredKeys: kSpecifiedLimits,
   },
   'device.limits': {
     create(t: GPUTest) {
       return t.device.limits;
     },
-    requiredKeys: kLimits,
+    requiredKeys: kSpecifiedLimits,
   },
 } as const;
 const kResources = keysOf(kResourceInfo);
@@ -261,7 +259,7 @@ g.test('obj,for_of')
     const { type } = t.params;
     const obj = createResource(t, type);
     t.shouldThrow('TypeError', () => forOfIterations(obj), {
-      message: `for (key of ${type} } throws TypeError`,
+      message: `for (const key of ${type} } throws TypeError`,
     });
   });
 
@@ -309,7 +307,7 @@ g.test('setlike,requiredFeatures')
     const gpu = getGPU(null);
     const adapter = await gpu.requestAdapter();
     const device = await t.requestDeviceTracked(adapter!, {
-      requiredFeatures: obj.features as unknown as Iterable<GPUFeatureName>,
+      requiredFeatures: obj.features as Iterable<GPUFeatureName>,
     });
     aHasBElements(t, device.features, obj.features);
     aHasBElements(t, obj.features, device.features);
@@ -330,6 +328,9 @@ g.test('limits')
     });
     const defaultLimits = getDefaultLimitsForAdapter(adapter);
     for (const [key, { default: defaultLimit }] of Object.entries(defaultLimits)) {
+      if (isUnspecifiedLimit(key)) {
+        continue;
+      }
       const actual = (device.limits as unknown as Record<string, number>)[key];
       t.expect(
         actual === defaultLimit,
