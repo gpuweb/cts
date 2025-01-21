@@ -11,6 +11,7 @@ import { getDefaultLimits, kQueryTypes } from '../../../capability_info.js';
 import { GPUConst } from '../../../constants.js';
 import {
   computeBytesPerSampleFromFormats,
+  is32Float,
   kDepthStencilFormats,
   kRenderableColorTextureFormats,
   kTextureFormatInfo,
@@ -211,6 +212,7 @@ g.test('color_attachments,limits,maxColorAttachmentBytesPerSample,aligned')
   )
   .beforeAllSubcases(t => {
     t.skipIfTextureFormatNotSupported(t.params.format);
+    t.selectDeviceForRenderableColorFormatOrSkipTestCase(t.params.format);
   })
   .fn(t => {
     const { format, attachmentCount } = t.params;
@@ -267,6 +269,9 @@ g.test('color_attachments,limits,maxColorAttachmentBytesPerSample,unaligned')
       },
     ])
   )
+  .beforeAllSubcases(t => {
+    t.selectDeviceForRenderableColorFormatOrSkipTestCase('r32float');
+  })
   .fn(t => {
     const { formats } = t.params;
 
@@ -1168,7 +1173,13 @@ g.test('resolveTarget,format_supports_resolve')
       .filter(t => kTextureFormatInfo[t.format].multisample)
   )
   .beforeAllSubcases(t => {
-    t.skipIfTextureFormatNotSupported(t.params.format);
+    const { format } = t.params;
+    t.skipIfTextureFormatNotSupported(format);
+    t.selectDeviceForRenderableColorFormatOrSkipTestCase(format);
+    t.skipIf(
+      t.isCompatibility && (format === 'rgba16float' || is32Float(format)),
+      'Multisample support for this format is not guaranteed in comapt mode'
+    );
   })
   .fn(t => {
     const { format } = t.params;

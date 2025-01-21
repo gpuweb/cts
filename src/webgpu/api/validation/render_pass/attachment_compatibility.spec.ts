@@ -14,6 +14,8 @@ import {
   kTextureFormatInfo,
   filterFormatsByFeature,
   getFeaturesForFormats,
+  is16Float,
+  is32Float,
 } from '../../../format_info.js';
 import { ValidationTest } from '../validation_test.js';
 
@@ -182,6 +184,14 @@ g.test('render_pass_and_bundle,color_format')
     const { passFormat, bundleFormat } = t.params;
 
     t.skipIfTextureFormatNotSupported(passFormat, bundleFormat);
+    // float16 and float32 might miss color renderablity under compat mode
+    t.skipIf(
+      t.isCompatibility &&
+        (is16Float(passFormat) ||
+          is32Float(passFormat) ||
+          is16Float(bundleFormat) ||
+          is32Float(bundleFormat))
+    );
 
     const bundleEncoder = t.device.createRenderBundleEncoder({
       colorFormats: [bundleFormat],
@@ -358,7 +368,7 @@ g.test('render_pass_and_bundle,device_mismatch')
     const { mismatched } = t.params;
     const sourceDevice = mismatched ? t.mismatchedDevice : t.device;
 
-    const format = 'r16float';
+    const format = 'r16uint';
     const bundleEncoder = sourceDevice.createRenderBundleEncoder({
       colorFormats: [format],
     });
@@ -390,6 +400,14 @@ Test that color attachment formats in render passes or bundles match the pipelin
     const { encoderType, encoderFormat, pipelineFormat } = t.params;
 
     t.skipIfTextureFormatNotSupported(encoderFormat, pipelineFormat);
+    // float16 and float32 might miss color renderablity under compat mode
+    t.skipIf(
+      t.isCompatibility &&
+        (is16Float(encoderFormat) ||
+          is32Float(encoderFormat) ||
+          is16Float(pipelineFormat) ||
+          is32Float(pipelineFormat))
+    );
 
     const pipeline = t.createRenderPipeline([{ format: pipelineFormat, writeMask: 0 }]);
 

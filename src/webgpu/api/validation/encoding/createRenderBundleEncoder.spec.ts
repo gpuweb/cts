@@ -63,6 +63,7 @@ g.test('attachment_state,limits,maxColorAttachmentBytesPerSample,aligned')
   )
   .beforeAllSubcases(t => {
     t.skipIfTextureFormatNotSupported(t.params.format);
+    t.selectDeviceForRenderableColorFormatOrSkipTestCase(t.params.format);
   })
   .fn(t => {
     const { format, colorFormatCount } = t.params;
@@ -118,6 +119,9 @@ g.test('attachment_state,limits,maxColorAttachmentBytesPerSample,unaligned')
       },
     ])
   )
+  .beforeAllSubcases(t => {
+    t.selectDeviceForRenderableColorFormatOrSkipTestCase('r32float');
+  })
   .fn(t => {
     const { formats } = t.params;
 
@@ -168,6 +172,7 @@ g.test('valid_texture_formats')
   .beforeAllSubcases(t => {
     const { format } = t.params;
     t.selectDeviceForTextureFormatOrSkipTestCase(format);
+    t.selectDeviceForRenderableColorFormatOrSkipTestCase(format);
   })
   .fn(t => {
     const { format, attachment } = t.params;
