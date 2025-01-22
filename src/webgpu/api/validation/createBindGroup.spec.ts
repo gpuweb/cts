@@ -206,14 +206,16 @@ g.test('texture_binding_must_have_correct_usage')
       })
   )
   .beforeAllSubcases(t => {
-    t.skipIf(
-      t.isCompatibility,
-      "The test requires 'r32float' renderable and multisampled support which compat mode doesn't guarantee."
-    );
+    t.selectDeviceForRenderableColorFormatOrSkipTestCase(kTestFormat);
   })
   .fn(t => {
     const { entry, usage } = t.params;
     const info = texBindingTypeInfo(entry);
+
+    t.skipIf(
+      t.isCompatibility && info.resource === 'sampledTexMS',
+      "The test requires 'r32float' multisampled support which compat mode doesn't guarantee."
+    );
 
     const bindGroupLayout = t.device.createBindGroupLayout({
       entries: [{ binding: 0, visibility: GPUShaderStage.COMPUTE, ...entry }],

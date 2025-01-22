@@ -11,7 +11,6 @@ import { getDefaultLimits, kQueryTypes } from '../../../capability_info.js';
 import { GPUConst } from '../../../constants.js';
 import {
   computeBytesPerSampleFromFormats,
-  is32Float,
   kDepthStencilFormats,
   kRenderableColorTextureFormats,
   kTextureFormatInfo,
@@ -1175,11 +1174,8 @@ g.test('resolveTarget,format_supports_resolve')
   .beforeAllSubcases(t => {
     const { format } = t.params;
     t.skipIfTextureFormatNotSupported(format);
+    t.skipIfMultisampleNotSupportedForFormat(format);
     t.selectDeviceForRenderableColorFormatOrSkipTestCase(format);
-    t.skipIf(
-      t.isCompatibility && (format === 'rgba16float' || is32Float(format)),
-      'Multisample support for this format is not guaranteed in comapt mode'
-    );
   })
   .fn(t => {
     const { format } = t.params;

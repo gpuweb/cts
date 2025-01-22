@@ -16,7 +16,6 @@ import {
   viewCompatible,
   textureDimensionAndFormatCompatible,
   isTextureFormatUsableAsStorageFormat,
-  is32Float,
 } from '../../format_info.js';
 import { maxMipLevelCount } from '../../util/texture/base.js';
 
@@ -362,10 +361,9 @@ g.test('sampleCount,valid_sampleCount_with_other_parameter_varies')
     const { dimension, sampleCount, format, mipLevelCount, arrayLayerCount, usage } = t.params;
     const { blockWidth, blockHeight } = kTextureFormatInfo[format];
 
-    t.skipIf(
-      sampleCount === 4 && t.isCompatibility && (format === 'rgba16float' || is32Float(format)),
-      'Multisample support for this format is not guaranteed in comapt mode'
-    );
+    if (sampleCount > 1) {
+      t.skipIfMultisampleNotSupportedForFormat(format);
+    }
 
     const size =
       dimension === '1d'
