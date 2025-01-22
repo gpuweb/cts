@@ -592,16 +592,22 @@ export function textureBindingEntries(includeUndefined: boolean): readonly BGLEn
  *
  * Note: Generates different `access` options, but not `format` or `viewDimension` options.
  */
-export function storageTextureBindingEntries(): readonly BGLEntry[] {
+export function storageTextureBindingEntries(format: GPUTextureFormat): readonly BGLEntry[] {
   return [
-    { storageTexture: { access: 'write-only', format: 'r32float' } },
-    { storageTexture: { access: 'read-only', format: 'r32float' } },
-    { storageTexture: { access: 'read-write', format: 'r32float' } },
+    { storageTexture: { access: 'write-only', format } },
+    { storageTexture: { access: 'read-only', format } },
+    { storageTexture: { access: 'read-write', format } },
   ] as const;
 }
 /** Generate a list of possible texture-or-storageTexture-typed BGLEntry values. */
-export function sampledAndStorageBindingEntries(includeUndefined: boolean): readonly BGLEntry[] {
-  return [...textureBindingEntries(includeUndefined), ...storageTextureBindingEntries()] as const;
+export function sampledAndStorageBindingEntries(
+  includeUndefined: boolean,
+  format: GPUTextureFormat = 'r32float'
+): readonly BGLEntry[] {
+  return [
+    ...textureBindingEntries(includeUndefined),
+    ...storageTextureBindingEntries(format),
+  ] as const;
 }
 /**
  * Generate a list of possible BGLEntry values of every type, but not variants with different:
@@ -610,11 +616,14 @@ export function sampledAndStorageBindingEntries(includeUndefined: boolean): read
  * - texture.viewDimension
  * - storageTexture.viewDimension
  */
-export function allBindingEntries(includeUndefined: boolean): readonly BGLEntry[] {
+export function allBindingEntries(
+  includeUndefined: boolean,
+  format: GPUTextureFormat = 'r32float'
+): readonly BGLEntry[] {
   return [
     ...bufferBindingEntries(includeUndefined),
     ...samplerBindingEntries(includeUndefined),
-    ...sampledAndStorageBindingEntries(includeUndefined),
+    ...sampledAndStorageBindingEntries(includeUndefined, format),
   ] as const;
 }
 
