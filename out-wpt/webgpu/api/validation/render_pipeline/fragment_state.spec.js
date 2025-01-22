@@ -181,6 +181,7 @@ combine('isAsync', [false, true])
 ).
 beforeAllSubcases((t) => {
   t.skipIfTextureFormatNotSupported(t.params.format);
+  t.selectDeviceForRenderableColorFormatOrSkipTestCase(t.params.format);
 }).
 fn((t) => {
   const { format, attachmentCount, isAsync } = t.params;
@@ -228,6 +229,9 @@ combineWithParams([
 beginSubcases().
 combine('isAsync', [false, true])
 ).
+beforeAllSubcases((t) => {
+  t.selectDeviceForRenderableColorFormatOrSkipTestCase('r32float');
+}).
 fn((t) => {
   const { formats, isAsync } = t.params;
 
@@ -394,6 +398,7 @@ p.format !== undefined && p.shaderOutput !== undefined ? [0, 0x1, 0x2, 0x4, 0x8]
 ).
 beforeAllSubcases((t) => {
   t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
+  t.selectDeviceForRenderableColorFormatOrSkipTestCase(t.params.format);
 }).
 fn((t) => {
   const { isAsync, format, writeMask, shaderOutput } = t.params;

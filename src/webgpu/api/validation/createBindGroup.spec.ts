@@ -30,6 +30,8 @@ import { getTextureDimensionFromView } from '../../util/texture/base.js';
 
 import { ValidationTest } from './validation_test.js';
 
+const kTestFormat: GPUTextureFormat = 'r32float';
+
 function clone<T extends GPUTextureDescriptor>(descriptor: T): T {
   return JSON.parse(JSON.stringify(descriptor));
 }
@@ -144,7 +146,7 @@ g.test('binding_must_contain_resource_defined_in_layout')
   .params(u =>
     u //
       .combine('resourceType', kBindableResources)
-      .combine('entry', allBindingEntries(false))
+      .combine('entry', allBindingEntries(false, kTestFormat))
   )
   .fn(t => {
     const { resourceType, entry } = t.params;
@@ -195,7 +197,7 @@ g.test('texture_binding_must_have_correct_usage')
   .desc('Tests that texture bindings must have the correct usage.')
   .paramsSubcasesOnly(u =>
     u //
-      .combine('entry', sampledAndStorageBindingEntries(false))
+      .combine('entry', sampledAndStorageBindingEntries(false, kTestFormat))
       .combine('usage', kTextureUsages)
       .unless(({ entry, usage }) => {
         const info = texBindingTypeInfo(entry);
@@ -203,9 +205,17 @@ g.test('texture_binding_must_have_correct_usage')
         return usage === GPUConst.TextureUsage.STORAGE_BINDING && info.resource === 'sampledTexMS';
       })
   )
+  .beforeAllSubcases(t => {
+    t.selectDeviceForRenderableColorFormatOrSkipTestCase(kTestFormat);
+  })
   .fn(t => {
     const { entry, usage } = t.params;
     const info = texBindingTypeInfo(entry);
+
+    t.skipIf(
+      t.isCompatibility && info.resource === 'sampledTexMS',
+      "The test requires 'r32float' multisampled support which compat mode doesn't guarantee."
+    );
 
     const bindGroupLayout = t.device.createBindGroupLayout({
       entries: [{ binding: 0, visibility: GPUShaderStage.COMPUTE, ...entry }],
@@ -217,7 +227,7 @@ g.test('texture_binding_must_have_correct_usage')
 
     const descriptor = {
       size: { width: 16, height: 16, depthOrArrayLayers: 1 },
-      format: 'r32float' as const,
+      format: kTestFormat,
       usage: appliedUsage,
       sampleCount: info.resource === 'sampledTexMS' ? 4 : 1,
     };
@@ -601,7 +611,7 @@ g.test('texture,resource_state')
   .paramsSubcasesOnly(u =>
     u
       .combine('state', kResourceStates)
-      .combine('entry', sampledAndStorageBindingEntries(true))
+      .combine('entry', sampledAndStorageBindingEntries(true, kTestFormat))
       .combine('visibilityMask', [kAllShaderStages, GPUConst.ShaderStage.COMPUTE] as const)
   )
   .fn(t => {

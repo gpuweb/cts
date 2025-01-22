@@ -11,16 +11,16 @@ import {
 } from './limit_utils.js';
 
 const kFormatsToUseBySize: GPUTextureFormat[] = [
-  'rgba32float',
-  'rgba16float',
+  'rgba32uint',
+  'rgba16uint',
   'rgba8unorm',
   'rg8unorm',
   'r8unorm',
 ];
 
 const kInterleaveFormats: GPUTextureFormat[] = [
-  'rgba16float',
-  'rg16float',
+  'rgba16uint',
+  'rg16uint',
   'rgba8unorm',
   'rg8unorm',
   'r8unorm',
