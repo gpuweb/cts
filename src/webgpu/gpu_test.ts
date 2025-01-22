@@ -309,6 +309,26 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
     }
   }
 
+  skipIfColorRenderableNotSupportedForFormat(...formats: (GPUTextureFormat | undefined)[]) {
+    if (this.isCompatibility) {
+      for (const format of formats) {
+        if (format === undefined) continue;
+        if (is16Float(format) || is32Float(format)) {
+          this.skip(
+            `texture format '${format} is not guaranteed to be color renderable in compat mode`
+          );
+        }
+      }
+    }
+
+    for (const format of formats) {
+      if (format === undefined) continue;
+      if (!kAllTextureFormatInfo[format].color) {
+        this.skip(`texture format '${format} is not color renderable`);
+      }
+    }
+  }
+
   getFloatTextureFormatColorRenderableFeatures(...formats: (GPUTextureFormat | undefined)[]) {
     const requiredFeatures: GPUFeatureName[] = [];
     if (this.isCompatibility) {
@@ -580,6 +600,26 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
       if (format === undefined) continue;
       if (!isMultisampledTextureFormat(format)) {
         this.skip(`texture format '${format} is not supported to be multisampled`);
+      }
+    }
+  }
+
+  skipIfColorRenderableNotSupportedForFormat(...formats: (GPUTextureFormat | undefined)[]) {
+    if (this.isCompatibility) {
+      for (const format of formats) {
+        if (format === undefined) continue;
+        if (is16Float(format) || is32Float(format)) {
+          this.skip(
+            `texture format '${format} is not guaranteed to be color renderable in compat mode`
+          );
+        }
+      }
+    }
+
+    for (const format of formats) {
+      if (format === undefined) continue;
+      if (!kAllTextureFormatInfo[format].color) {
+        this.skip(`texture format '${format} is not color renderable`);
       }
     }
   }
