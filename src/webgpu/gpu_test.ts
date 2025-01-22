@@ -323,7 +323,7 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
 
     for (const format of formats) {
       if (format === undefined) continue;
-      if (!kAllTextureFormatInfo[format].color) {
+      if (!kTextureFormatInfo[format].color) {
         this.skip(`texture format '${format} is not color renderable`);
       }
     }
@@ -618,7 +618,7 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
 
     for (const format of formats) {
       if (format === undefined) continue;
-      if (!kAllTextureFormatInfo[format].color) {
+      if (!kTextureFormatInfo[format].color) {
         this.skip(`texture format '${format} is not color renderable`);
       }
     }
