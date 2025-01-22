@@ -184,14 +184,7 @@ g.test('render_pass_and_bundle,color_format')
     const { passFormat, bundleFormat } = t.params;
 
     t.skipIfTextureFormatNotSupported(passFormat, bundleFormat);
-    // float16 and float32 might miss color renderablity under compat mode
-    t.skipIf(
-      t.isCompatibility &&
-        (is16Float(passFormat) ||
-          is32Float(passFormat) ||
-          is16Float(bundleFormat) ||
-          is32Float(bundleFormat))
-    );
+    t.skipIfMultisampleNotSupportedForFormat(passFormat, bundleFormat);
 
     const bundleEncoder = t.device.createRenderBundleEncoder({
       colorFormats: [bundleFormat],
@@ -400,14 +393,7 @@ Test that color attachment formats in render passes or bundles match the pipelin
     const { encoderType, encoderFormat, pipelineFormat } = t.params;
 
     t.skipIfTextureFormatNotSupported(encoderFormat, pipelineFormat);
-    // float16 and float32 might miss color renderablity under compat mode
-    t.skipIf(
-      t.isCompatibility &&
-        (is16Float(encoderFormat) ||
-          is32Float(encoderFormat) ||
-          is16Float(pipelineFormat) ||
-          is32Float(pipelineFormat))
-    );
+    t.skipIfMultisampleNotSupportedForFormat(encoderFormat, pipelineFormat);
 
     const pipeline = t.createRenderPipeline([{ format: pipelineFormat, writeMask: 0 }]);
 
