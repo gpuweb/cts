@@ -373,10 +373,11 @@ Parameters:
       .combine('S', ['i32', 'u32'] as const)
   )
   .beforeAllSubcases(t => {
-    const { format } = t.params;
+    const { format, texture_type } = t.params;
     t.skipIfTextureFormatNotSupported(format);
-    t.skipIfTextureLoadNotSupportedForTextureType(t.params.texture_type);
-    t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
+    t.skipIfTextureLoadNotSupportedForTextureType(texture_type);
+    t.selectDeviceForRenderableColorFormatOrSkipTestCase(format);
+    t.selectDeviceForTextureFormatOrSkipTestCase(format);
   })
   .fn(async t => {
     const { texture_type, format, stage, samplePoints, C, S } = t.params;
@@ -627,10 +628,11 @@ Parameters:
       ] as const)
   )
   .beforeAllSubcases(t => {
-    const { format } = t.params;
+    const { format, texture_type } = t.params;
     t.skipIfTextureFormatNotSupported(format);
-    t.skipIfTextureLoadNotSupportedForTextureType(t.params.texture_type);
-    t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
+    t.skipIfTextureLoadNotSupportedForTextureType(texture_type);
+    t.selectDeviceForRenderableColorFormatOrSkipTestCase(format);
+    t.selectDeviceForTextureFormatOrSkipTestCase(format);
   })
   .fn(async t => {
     const { texture_type, format, stage, samplePoints, C, A, L } = t.params;
