@@ -470,9 +470,7 @@ export async function getVideoFrameFromVideoElement(
   test: Fixture,
   video: HTMLVideoElement
 ): Promise<VideoFrame> {
-  if (video.captureStream === undefined) {
-    test.skip('HTMLVideoElement.captureStream is not supported');
-  }
+  test.skipIf(video.captureStream === undefined, 'HTMLVideoElement.captureStream is not supported');
 
   return raceWithRejectOnTimeout(
     new Promise<VideoFrame>(resolve => {
@@ -569,19 +567,17 @@ function callbackHelper(
  *
  */
 export async function captureCameraFrame(test: GPUTest): Promise<VideoFrame> {
-  if (
+  test.skipIf(typeof navigator === 'undefined', 'navigator does not exist in this environment');
+  test.skipIf(
     typeof navigator.mediaDevices === 'undefined' ||
-    typeof navigator.mediaDevices.getUserMedia === 'undefined'
-  ) {
-    test.skip("Browser doesn't support capture frame from camera.");
-  }
+      typeof navigator.mediaDevices.getUserMedia === 'undefined',
+    "Browser doesn't support capture frame from camera."
+  );
 
   const stream = await navigator.mediaDevices.getUserMedia({ video: true });
   const track = stream.getVideoTracks()[0] as MediaStreamVideoTrack;
 
-  if (!track) {
-    test.skip("Doesn't have valid camera captured stream for testing.");
-  }
+  test.skipIf(!track, "Doesn't have valid camera captured stream for testing.");
 
   // Use MediaStreamTrackProcessor and ReadableStream to generate video frame directly.
   if (typeof MediaStreamTrackProcessor !== 'undefined') {
@@ -604,9 +600,10 @@ export async function captureCameraFrame(test: GPUTest): Promise<VideoFrame> {
   }
 
   // Fallback to using HTMLVideoElement to do capture.
-  if (typeof HTMLVideoElement === 'undefined') {
-    test.skip('Try to use HTMLVideoElement do capture but HTMLVideoElement not available.');
-  }
+  test.skipIf(
+    typeof HTMLVideoElement === 'undefined',
+    'Try to use HTMLVideoElement do capture but HTMLVideoElement not available.'
+  );
 
   const video = document.createElement('video');
   video.srcObject = stream;
@@ -665,7 +662,7 @@ export const kObjectTypeFromFiles = [
  * Load image file(e.g. *.jpg) from ImageBitmap, blob or HTMLImageElement. And
  * convert the result to valid source that GPUCopyExternalImageSource supported.
  */
-export async function GetSourceFromEXIFImageFile(
+export async function getSourceFromEXIFImageFile(
   test: GPUTest,
   exifImageName: EXIFImageName,
   objectTypeFromFile: ObjectTypeFromFile
@@ -677,9 +674,14 @@ export async function GetSourceFromEXIFImageFile(
       // MAINTENANCE_TODO: resource folder path when using service worker is not correct. Return
       // the correct path to load resource in correct place.
       // The wrong path: /out/webgpu/webworker/web_platform/copyToTexture/resources
-      if (globalThis.constructor.name === 'ServiceWorkerGlobalScope') {
-        test.skip('Try to load image resource from serivce worker but the path is not correct.');
-      }
+      test.skipIf(
+        globalThis.constructor.name === 'ServiceWorkerGlobalScope',
+        'Try to load image resource from serivce worker but the path is not correct.'
+      );
+      test.skipIf(
+        typeof createImageBitmap === 'undefined',
+        'createImageBitmap does not exist in this environment'
+      );
       // Load image file through fetch.
       const response = await fetch(imageUrl);
       return createImageBitmap(await response.blob());
@@ -687,11 +689,10 @@ export async function GetSourceFromEXIFImageFile(
     case 'ImageBitmap-from-Image':
     case 'Image': {
       // Skip test if HTMLImageElement is not available, e.g. in worker.
-      if (typeof HTMLImageElement === 'undefined') {
-        test.skip(
-          'Try to use HTMLImage do image file decoding but HTMLImageElement not available.'
-        );
-      }
+      test.skipIf(
+        typeof HTMLImageElement === 'undefined',
+        'Try to use HTMLImage do image file decoding but HTMLImageElement not available.'
+      );
 
       // Load image file through HTMLImageElement.
       const image = new Image();
@@ -731,11 +732,10 @@ export function loadImageFileAndRun(
           }
         })();
       // Skip test if HTMLImageElement is not available, e.g. in worker.
-      if (typeof HTMLImageElement === 'undefined') {
-        test.skip(
-          'Try to use HTMLImage do image file decoding but HTMLImageElement not available.'
-        );
-      }
+      test.skipIf(
+        typeof HTMLImageElement === 'undefined',
+        'Try to use HTMLImage do image file decoding but HTMLImageElement not available.'
+      );
       const image = new Image();
       image.src = getResourcePath(imageName);
       image.onload = () => {

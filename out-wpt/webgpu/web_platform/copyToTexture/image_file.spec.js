@@ -6,7 +6,7 @@ copyExternalImageToTexture from ImageFiles like *.png, *.jpg source.
 import { TextureUploadingUtils } from '../../util/copy_to_texture.js';
 import {
   convertToUnorm8,
-  GetSourceFromEXIFImageFile,
+  getSourceFromEXIFImageFile,
   kImageNames,
   kImageInfo,
   kImageExpectedColors,
@@ -50,7 +50,7 @@ fn(async (t) => {
   const kColorFormat = 'rgba8unorm';
 
   // Load image file.
-  const source = await GetSourceFromEXIFImageFile(t, imageName, objectTypeFromFile);
+  const source = await getSourceFromEXIFImageFile(t, imageName, objectTypeFromFile);
   const width = source.width;
   const height = source.height;
 
