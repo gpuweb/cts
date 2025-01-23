@@ -787,15 +787,15 @@ fn((t) => {
   t.params;
 
   t.skipIf(
-    t.isCompatibility &&
-    resourceIsStorageTexture(plResourceType) &&
+    t.isCompatibility && (
+    resourceIsStorageTexture(plResourceType) || resourceIsStorageTexture(bgResourceType)) &&
     !(t.device.limits.maxStorageTexturesInFragmentStage >= 1),
     `maxStorageTexturesInFragmentStage(${t.device.limits.maxStorageTexturesInFragmentStage}) is not >= 1`
   );
 
   t.skipIf(
-    t.isCompatibility &&
-    resourceIsStorageBuffer(plResourceType) &&
+    t.isCompatibility && (
+    resourceIsStorageBuffer(plResourceType) || resourceIsStorageBuffer(bgResourceType)) &&
     !(t.device.limits.maxStorageBuffersInFragmentStage >= 1),
     `maxStorageBuffersInFragmentStage(${t.device.limits.maxStorageBuffersInFragmentStage}) is not >= 1`
   );
