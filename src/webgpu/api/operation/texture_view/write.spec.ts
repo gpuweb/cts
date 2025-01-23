@@ -351,6 +351,8 @@ TODO: Test rgb10a2uint when TexelRepresentation.numericRange is made per-compone
         t.skipIfTextureFormatNotUsableAsStorageTexture(format);
         break;
     }
+
+    t.selectDeviceForRenderableColorFormatOrSkipTestCase(format);
   })
   .fn(t => {
     const { format, method, sampleCount, viewUsageMethod } = t.params;
