@@ -215,6 +215,7 @@ fn(async (t) => {
   const calls = generateTextureBuiltinInputs2D(50, {
     method: samplePoints,
     descriptor,
+    mipLevel: { num: texture.mipLevelCount, type: L },
     hashInputs: [stage, format, samplePoints, C, L]
   }).map(({ coords, mipLevel }) => {
     return {
