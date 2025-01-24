@@ -157,6 +157,7 @@ g.test('format')
   )
   .beforeAllSubcases(t => {
     t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
+    t.selectDeviceForRenderableColorFormatOrSkipTestCase(t.params.format);
   })
   .fn(t => {
     const { canvasType, format } = t.params;
@@ -446,6 +447,7 @@ g.test('viewFormats')
       )
   )
   .beforeAllSubcases(t => {
+    t.selectDeviceForRenderableColorFormatOrSkipTestCase(t.params.format);
     t.selectDeviceOrSkipTestCase([t.params.viewFormatFeature]);
   })
   .fn(t => {
