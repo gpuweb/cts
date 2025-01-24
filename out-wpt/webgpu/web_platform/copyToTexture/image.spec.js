@@ -63,6 +63,7 @@ combine('height', [1, 2, 4, 15, 255, 256])
 beforeAllSubcases((t) => {
   t.skipIfTextureFormatNotSupported(t.params.dstColorFormat);
   if (typeof HTMLImageElement === 'undefined') t.skip('HTMLImageElement not available');
+  t.selectDeviceForRenderableColorFormatOrSkipTestCase(t.params.dstColorFormat);
 }).
 fn(async (t) => {
   const { width, height, dstColorFormat, dstPremultiplied, srcDoFlipYDuringCopy } = t.params;

@@ -157,6 +157,7 @@ combine('format', kAllTextureFormats)
 ).
 beforeAllSubcases((t) => {
   t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
+  t.selectDeviceForRenderableColorFormatOrSkipTestCase(t.params.format);
 }).
 fn((t) => {
   const { canvasType, format } = t.params;
@@ -446,6 +447,7 @@ filterFormatsByFeature(viewFormatFeature, kAllTextureFormats)
 )
 ).
 beforeAllSubcases((t) => {
+  t.selectDeviceForRenderableColorFormatOrSkipTestCase(t.params.format);
   t.selectDeviceOrSkipTestCase([t.params.viewFormatFeature]);
 }).
 fn((t) => {
