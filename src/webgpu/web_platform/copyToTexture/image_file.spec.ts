@@ -6,7 +6,7 @@ import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { TextureUploadingUtils } from '../../util/copy_to_texture.js';
 import {
   convertToUnorm8,
-  getSourceFromEXIFImageFile,
+  GetSourceFromEXIFImageFile,
   kImageNames,
   kImageInfo,
   kImageExpectedColors,
@@ -50,7 +50,7 @@ g.test('from_orientation_metadata_file')
     const kColorFormat = 'rgba8unorm';
 
     // Load image file.
-    const source = await getSourceFromEXIFImageFile(t, imageName, objectTypeFromFile);
+    const source = await GetSourceFromEXIFImageFile(t, imageName, objectTypeFromFile);
     const width = source.width;
     const height = source.height;
 

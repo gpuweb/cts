@@ -172,14 +172,9 @@ g.test('multiple_frames')
   )
   .beforeAllSubcases(t => {
     const { canvasType } = t.params;
-    t.skipIf(
-      canvasType === 'offscreen' && typeof OffscreenCanvas === 'undefined',
-      'OffscreenCanvas does not exist in this environment'
-    );
-    t.skipIf(
-      canvasType === 'offscreen' && !('transferToImageBitmap' in OffscreenCanvas.prototype),
-      'transferToImageBitmap not supported'
-    );
+    if (canvasType === 'offscreen' && !('transferToImageBitmap' in OffscreenCanvas.prototype)) {
+      throw new SkipTestCase('transferToImageBitmap not supported');
+    }
   })
   .fn(t => {
     const { canvasType, clearTexture } = t.params;

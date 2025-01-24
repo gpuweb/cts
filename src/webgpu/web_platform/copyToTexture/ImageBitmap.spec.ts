@@ -59,7 +59,6 @@ g.test('from_ImageData')
       .combine('height', [1, 2, 4, 15, 255, 256])
   )
   .beforeAllSubcases(t => {
-    t.skipIf(typeof ImageData === 'undefined', 'ImageData does not exist in this environment');
     t.skipIfTextureFormatNotSupported(t.params.dstFormat);
     t.selectDeviceForRenderableColorFormatOrSkipTestCase(t.params.dstFormat);
   })
@@ -181,7 +180,6 @@ g.test('from_canvas')
       .combine('height', [1, 2, 4, 15, 255, 256])
   )
   .beforeAllSubcases(t => {
-    t.skipIf(typeof ImageData === 'undefined', 'ImageData does not exist in this environment');
     t.skipIfTextureFormatNotSupported(t.params.dstFormat);
     t.selectDeviceForRenderableColorFormatOrSkipTestCase(t.params.dstFormat);
   })
@@ -212,7 +210,7 @@ g.test('from_canvas')
     } else {
       imageCanvas = new OffscreenCanvas(width, height);
     }
-    const imageCanvasContext = imageCanvas.getContext('2d') as OffscreenCanvasRenderingContext2D;
+    const imageCanvasContext = imageCanvas.getContext('2d');
     if (imageCanvasContext === null) {
       t.skip('OffscreenCanvas "2d" context not available');
       return;
@@ -330,9 +328,6 @@ g.test('copy_subrect_from_ImageData')
       .beginSubcases()
       .combine('copySubRectInfo', kCopySubrectInfo)
   )
-  .beforeAllSubcases(t => {
-    t.skipIf(typeof ImageData === 'undefined', 'ImageData does not exist in this environment');
-  })
   .fn(async t => {
     const {
       copySubRectInfo,
