@@ -341,7 +341,7 @@ TODO: Test rgb10a2uint when TexelRepresentation.numericRange is made per-compone
       .combine('viewUsageMethod', kTextureViewUsageMethods)
   )
   .beforeAllSubcases(t => {
-    const { format, method } = t.params;
+    const { format, method, sampleCount } = t.params;
     t.skipIfTextureFormatNotSupported(format);
 
     switch (method) {
@@ -349,10 +349,17 @@ TODO: Test rgb10a2uint when TexelRepresentation.numericRange is made per-compone
       case 'storage-write-fragment':
         // Still need to filter again for compat mode.
         t.skipIfTextureFormatNotUsableAsStorageTexture(format);
+        if (sampleCount > 1) {
+          t.skipIfMultisampleNotSupportedForFormat(format);
+        }
+        break;
+      case 'render-pass-resolve':
+      case 'render-pass-store':
+        // Requires multisample in `writeTextureAndGetExpectedTexelView`
+        t.skipIfMultisampleNotSupportedForFormat(format);
+        t.selectDeviceForRenderableColorFormatOrSkipTestCase(format);
         break;
     }
-
-    t.selectDeviceForRenderableColorFormatOrSkipTestCase(format);
   })
   .fn(t => {
     const { format, method, sampleCount, viewUsageMethod } = t.params;
