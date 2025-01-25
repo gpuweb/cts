@@ -161,6 +161,7 @@ g.test('color,component_count')
   .beforeAllSubcases(t => {
     const info = kTextureFormatInfo[t.params.format];
     t.skipIfTextureFormatNotSupported(t.params.format);
+    t.selectDeviceForRenderableColorFormatOrSkipTestCase(t.params.format);
     t.selectDeviceOrSkipTestCase(info.feature);
   })
   .fn(t => {

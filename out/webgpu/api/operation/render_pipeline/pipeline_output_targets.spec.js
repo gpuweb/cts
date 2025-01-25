@@ -161,6 +161,7 @@ filter((x) => x.componentCount >= kTexelRepresentationInfo[x.format].componentOr
 beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[t.params.format];
   t.skipIfTextureFormatNotSupported(t.params.format);
+  t.selectDeviceForRenderableColorFormatOrSkipTestCase(t.params.format);
   t.selectDeviceOrSkipTestCase(info.feature);
 }).
 fn((t) => {
