@@ -290,21 +290,10 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
   }
 
   skipIfMultisampleNotSupportedForFormat(...formats: (GPUTextureFormat | undefined)[]) {
-    if (this.isCompatibility) {
-      for (const format of formats) {
-        if (format === undefined) continue;
-        if (format === 'rgba16float' || is32Float(format)) {
-          this.skip(
-            `texture format '${format} is not guaranteed to be multisampled support in compat mode`
-          );
-        }
-      }
-    }
-
     for (const format of formats) {
       if (format === undefined) continue;
-      if (!isMultisampledTextureFormat(format)) {
-        this.skip(`texture format '${format} is not supported to be multisampled`);
+      if (!isMultisampledTextureFormat(format, this.isCompatibility)) {
+        this.skip(`texture format '${format}' is not supported to be multisampled`);
       }
     }
   }
@@ -585,21 +574,10 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
   }
 
   skipIfMultisampleNotSupportedForFormat(...formats: (GPUTextureFormat | undefined)[]) {
-    if (this.isCompatibility) {
-      for (const format of formats) {
-        if (format === undefined) continue;
-        if (format === 'rgba16float' || is32Float(format)) {
-          this.skip(
-            `texture format '${format} is not guaranteed to be multisampled support in compat mode`
-          );
-        }
-      }
-    }
-
     for (const format of formats) {
       if (format === undefined) continue;
-      if (!isMultisampledTextureFormat(format)) {
-        this.skip(`texture format '${format} is not supported to be multisampled`);
+      if (!isMultisampledTextureFormat(format, this.isCompatibility)) {
+        this.skip(`texture format '${format}' is not supported to be multisampled`);
       }
     }
   }
