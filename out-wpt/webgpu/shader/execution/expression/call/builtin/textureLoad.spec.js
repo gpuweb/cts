@@ -19,7 +19,6 @@ If an out of bounds access occurs, the built-in function returns one of:
 
 `;import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import {
-  canUseAsRenderTarget,
   isCompressedFloatTextureFormat,
   isDepthTextureFormat,
   isMultisampledTextureFormat,
@@ -360,7 +359,7 @@ combine('texture_type', [
 'texture_depth_multisampled_2d']
 ).
 combine('format', kAllTextureFormats).
-filter((t) => isMultisampledTextureFormat(t.format)).
+filter((t) => isMultisampledTextureFormat(t.format, false)).
 filter((t) => !isStencilTextureFormat(t.format))
 // Filter out texture_depth_multisampled_2d with non-depth formats
 .filter(
@@ -373,10 +372,11 @@ combine('C', ['i32', 'u32']).
 combine('S', ['i32', 'u32'])
 ).
 beforeAllSubcases((t) => {
-  const { format } = t.params;
+  const { format, texture_type } = t.params;
   t.skipIfTextureFormatNotSupported(format);
-  t.skipIfTextureLoadNotSupportedForTextureType(t.params.texture_type);
-  t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
+  t.skipIfTextureLoadNotSupportedForTextureType(texture_type);
+  t.skipIfMultisampleNotSupportedForFormat(format);
+  t.selectDeviceForTextureFormatOrSkipTestCase(format);
 }).
 fn(async (t) => {
   const { texture_type, format, stage, samplePoints, C, S } = t.params;
@@ -385,10 +385,7 @@ fn(async (t) => {
   const descriptor = {
     format,
     size: [8, 8],
-    usage:
-    GPUTextureUsage.COPY_DST |
-    GPUTextureUsage.TEXTURE_BINDING |
-    GPUTextureUsage.RENDER_ATTACHMENT,
+    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
     sampleCount
   };
   const { texels, texture } = await createTextureWithRandomDataAndGetTexels(t, descriptor);
@@ -627,10 +624,10 @@ combineWithParams([
 )
 ).
 beforeAllSubcases((t) => {
-  const { format } = t.params;
+  const { format, texture_type } = t.params;
   t.skipIfTextureFormatNotSupported(format);
-  t.skipIfTextureLoadNotSupportedForTextureType(t.params.texture_type);
-  t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
+  t.skipIfTextureLoadNotSupportedForTextureType(texture_type);
+  t.selectDeviceForTextureFormatOrSkipTestCase(format);
 }).
 fn(async (t) => {
   const { texture_type, format, stage, samplePoints, C, A, L } = t.params;
@@ -640,10 +637,7 @@ fn(async (t) => {
   const descriptor = {
     format,
     size,
-    usage:
-    GPUTextureUsage.COPY_DST |
-    GPUTextureUsage.TEXTURE_BINDING | (
-    canUseAsRenderTarget(format) ? GPUTextureUsage.RENDER_ATTACHMENT : 0),
+    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
     mipLevelCount: maxMipLevelCount({ size })
   };
   const { texels, texture } = await createTextureWithRandomDataAndGetTexels(t, descriptor);

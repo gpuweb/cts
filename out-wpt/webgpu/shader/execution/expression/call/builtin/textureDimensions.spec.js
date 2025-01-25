@@ -300,6 +300,11 @@ expand('textureDimensionsLevel', textureDimensionsLevel)
 beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[t.params.format];
   t.skipIfTextureFormatNotSupported(t.params.format);
+  if (t.params.samples > 1) {
+    // multisampled texture requires GPUTextureUsage.RENDER_ATTACHMENT usage
+    t.skipIfMultisampleNotSupportedForFormat(t.params.format);
+    t.selectDeviceForRenderableColorFormatOrSkipTestCase(t.params.format);
+  }
   t.selectDeviceOrSkipTestCase(info.feature);
 }).
 fn((t) => {
