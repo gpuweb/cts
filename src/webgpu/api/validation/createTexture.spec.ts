@@ -16,6 +16,7 @@ import {
   viewCompatible,
   textureDimensionAndFormatCompatible,
   isTextureFormatUsableAsStorageFormat,
+  isMultisampledTextureFormat,
 } from '../../format_info.js';
 import { maxMipLevelCount } from '../../util/texture/base.js';
 
@@ -281,6 +282,7 @@ g.test('sampleCount,various_sampleCount_with_all_formats')
     const { format } = t.params;
     const info = kTextureFormatInfo[format];
     t.skipIfTextureFormatNotSupported(format);
+    t.selectDeviceForRenderableColorFormatOrSkipTestCase(format);
     t.selectDeviceOrSkipTestCase(info.feature);
   })
   .fn(t => {
@@ -299,7 +301,9 @@ g.test('sampleCount,various_sampleCount_with_all_formats')
       usage,
     };
 
-    const success = sampleCount === 1 || (sampleCount === 4 && info.multisample);
+    const success =
+      sampleCount === 1 ||
+      (sampleCount === 4 && isMultisampledTextureFormat(format, t.isCompatibility));
 
     t.expectValidationError(() => {
       t.createTextureTracked(descriptor);
@@ -361,10 +365,6 @@ g.test('sampleCount,valid_sampleCount_with_other_parameter_varies')
     const { dimension, sampleCount, format, mipLevelCount, arrayLayerCount, usage } = t.params;
     const { blockWidth, blockHeight } = kTextureFormatInfo[format];
 
-    if (sampleCount > 1) {
-      t.skipIfMultisampleNotSupportedForFormat(format);
-    }
-
     const size =
       dimension === '1d'
         ? [32 * blockWidth, 1 * blockHeight, 1]
@@ -387,6 +387,7 @@ g.test('sampleCount,valid_sampleCount_with_other_parameter_varies')
     const success =
       (sampleCount === 1 && satisfyWithStorageUsageRequirement) ||
       (sampleCount === 4 &&
+        isMultisampledTextureFormat(format, t.isCompatibility) &&
         (dimension === '2d' || dimension === undefined) &&
         kTextureFormatInfo[format].multisample &&
         mipLevelCount === 1 &&

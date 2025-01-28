@@ -269,6 +269,7 @@ g.test('targets_format_filterable')
     const { format } = t.params;
     const info = kTextureFormatInfo[format];
     t.skipIfTextureFormatNotSupported(format);
+    t.selectDeviceForRenderableColorFormatOrSkipTestCase(format);
     t.selectDeviceOrSkipTestCase(info.feature);
   })
   .fn(t => {
