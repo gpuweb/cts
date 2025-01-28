@@ -16,6 +16,7 @@ import {
   viewCompatible,
   textureDimensionAndFormatCompatible,
   isTextureFormatUsableAsStorageFormat,
+  isMultisampledTextureFormat,
 } from '../../format_info.js';
 import { maxMipLevelCount } from '../../util/texture/base.js';
 
@@ -288,10 +289,6 @@ g.test('sampleCount,various_sampleCount_with_all_formats')
     const { dimension, sampleCount, format } = t.params;
     const info = kTextureFormatInfo[format];
 
-    if (sampleCount > 1) {
-      t.skipIfMultisampleNotSupportedForFormat(format);
-    }
-
     const usage =
       sampleCount > 1
         ? GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT
@@ -304,7 +301,9 @@ g.test('sampleCount,various_sampleCount_with_all_formats')
       usage,
     };
 
-    const success = sampleCount === 1 || (sampleCount === 4 && info.multisample);
+    const success =
+      sampleCount === 1 ||
+      (sampleCount === 4 && isMultisampledTextureFormat(format, t.isCompatibility));
 
     t.expectValidationError(() => {
       t.createTextureTracked(descriptor);
