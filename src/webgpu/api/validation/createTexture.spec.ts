@@ -288,7 +288,7 @@ g.test('sampleCount,various_sampleCount_with_all_formats')
     const { dimension, sampleCount, format } = t.params;
     const info = kTextureFormatInfo[format];
 
-    if(sampleCount > 1) {
+    if (sampleCount > 1) {
       t.skipIfMultisampleNotSupportedForFormat(format);
     }
 
