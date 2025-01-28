@@ -621,7 +621,8 @@ combineWithParams([
 { C: 'u32', A: 'u32', L: 'u32' },
 { C: 'u32', A: 'i32', L: 'u32' },
 { C: 'u32', A: 'u32', L: 'i32' }]
-)
+).
+combine('depthOrArrayLayers', [1, 8])
 ).
 beforeAllSubcases((t) => {
   const { format, texture_type } = t.params;
@@ -630,15 +631,17 @@ beforeAllSubcases((t) => {
   t.selectDeviceForTextureFormatOrSkipTestCase(format);
 }).
 fn(async (t) => {
-  const { texture_type, format, stage, samplePoints, C, A, L } = t.params;
+  const { texture_type, format, stage, samplePoints, C, A, L, depthOrArrayLayers } = t.params;
 
   // We want at least 4 blocks or something wide enough for 3 mip levels.
-  const size = chooseTextureSize({ minSize: 8, minBlocks: 4, format, viewDimension: '3d' });
+  const [width, height] = chooseTextureSize({ minSize: 8, minBlocks: 4, format });
+  const size = { width, height, depthOrArrayLayers };
   const descriptor = {
     format,
     size,
     usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
-    mipLevelCount: maxMipLevelCount({ size })
+    mipLevelCount: maxMipLevelCount({ size }),
+    ...(t.isCompatibility && { textureBindingViewDimension: '2d-array' })
   };
   const { texels, texture } = await createTextureWithRandomDataAndGetTexels(t, descriptor);
 
@@ -660,7 +663,7 @@ fn(async (t) => {
     };
   });
   const textureType = appendComponentTypeForFormatToTextureType(texture_type, texture.format);
-  const viewDescriptor = {};
+  const viewDescriptor = { dimension: '2d-array' };
   const sampler = undefined;
   const results = await doTextureCalls(
     t,
@@ -866,7 +869,8 @@ combineWithParams([...TexelFormats, { format: 'bgra8unorm' }]).
 beginSubcases().
 combine('samplePoints', kSamplePointMethods).
 combine('C', ['i32', 'u32']).
-combine('A', ['i32', 'u32'])
+combine('A', ['i32', 'u32']).
+combine('depthOrArrayLayers', [1, 8])
 ).
 beforeAllSubcases((t) => {
   t.skipIf(!t.hasLanguageFeature('readonly_and_readwrite_storage_textures'));
@@ -877,16 +881,18 @@ beforeAllSubcases((t) => {
   }
 }).
 fn(async (t) => {
-  const { format, stage, samplePoints, C, A } = t.params;
+  const { format, stage, samplePoints, C, A, depthOrArrayLayers } = t.params;
 
   skipIfStorageTexturesNotSupportedInStage(t, stage);
 
   // We want at least 3 blocks or something wide enough for 3 mip levels.
-  const size = chooseTextureSize({ minSize: 8, minBlocks: 4, format, viewDimension: '3d' });
+  const [width, height] = chooseTextureSize({ minSize: 8, minBlocks: 4, format });
+  const size = { width, height, depthOrArrayLayers };
   const descriptor = {
     format,
     size,
-    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.STORAGE_BINDING
+    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.STORAGE_BINDING,
+    ...(t.isCompatibility && { textureBindingViewDimension: '2d-array' })
   };
   const { texels, texture } = await createTextureWithRandomDataAndGetTexels(t, descriptor);
 
