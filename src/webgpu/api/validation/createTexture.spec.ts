@@ -365,10 +365,6 @@ g.test('sampleCount,valid_sampleCount_with_other_parameter_varies')
     const { dimension, sampleCount, format, mipLevelCount, arrayLayerCount, usage } = t.params;
     const { blockWidth, blockHeight } = kTextureFormatInfo[format];
 
-    if (sampleCount > 1) {
-      t.skipIfMultisampleNotSupportedForFormat(format);
-    }
-
     const size =
       dimension === '1d'
         ? [32 * blockWidth, 1 * blockHeight, 1]
@@ -391,6 +387,7 @@ g.test('sampleCount,valid_sampleCount_with_other_parameter_varies')
     const success =
       (sampleCount === 1 && satisfyWithStorageUsageRequirement) ||
       (sampleCount === 4 &&
+        isMultisampledTextureFormat(format, t.isCompatibility) &&
         (dimension === '2d' || dimension === undefined) &&
         kTextureFormatInfo[format].multisample &&
         mipLevelCount === 1 &&

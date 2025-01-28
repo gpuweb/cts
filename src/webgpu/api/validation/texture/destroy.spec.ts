@@ -43,7 +43,7 @@ g.test('invalid_texture')
     invalidTexture.destroy();
   });
 
-const kColorTextureFormat: GPUTextureFormat = 'rgba32float';
+const kColorTextureFormat: GPUTextureFormat = 'rgba8unorm';
 
 g.test('submit_a_destroyed_texture_as_attachment')
   .desc(
@@ -66,9 +66,6 @@ that was destroyed {before, after} encoding finishes.
         'destroyedAfterEncode',
       ] as const)
   )
-  .beforeAllSubcases(t => {
-    t.selectDeviceForRenderableColorFormatOrSkipTestCase(kColorTextureFormat);
-  })
   .fn(t => {
     const { colorTextureState, depthStencilTextureAspect, depthStencilTextureState } = t.params;
 
