@@ -43,6 +43,8 @@ g.test('invalid_texture')
     invalidTexture.destroy();
   });
 
+const kColorTextureFormat: GPUTextureFormat = 'rgba32float';
+
 g.test('submit_a_destroyed_texture_as_attachment')
   .desc(
     `
@@ -64,12 +66,14 @@ that was destroyed {before, after} encoding finishes.
         'destroyedAfterEncode',
       ] as const)
   )
+  .beforeAllSubcases(t => {
+    t.selectDeviceForRenderableColorFormatOrSkipTestCase(kColorTextureFormat);
+  })
   .fn(t => {
     const { colorTextureState, depthStencilTextureAspect, depthStencilTextureState } = t.params;
 
     const isSubmitSuccess = colorTextureState === 'valid' && depthStencilTextureState === 'valid';
 
-    const colorTextureFormat: GPUTextureFormat = 'rgba32float';
     const depthStencilTextureFormat: GPUTextureFormat =
       depthStencilTextureAspect === 'all'
         ? 'depth24plus-stencil8'
@@ -79,7 +83,7 @@ that was destroyed {before, after} encoding finishes.
 
     const colorTextureDesc: GPUTextureDescriptor = {
       size: { width: 16, height: 16, depthOrArrayLayers: 1 },
-      format: colorTextureFormat,
+      format: kColorTextureFormat,
       usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
     };
 

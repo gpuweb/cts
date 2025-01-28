@@ -281,11 +281,16 @@ g.test('sampleCount,various_sampleCount_with_all_formats')
     const { format } = t.params;
     const info = kTextureFormatInfo[format];
     t.skipIfTextureFormatNotSupported(format);
+    t.selectDeviceForRenderableColorFormatOrSkipTestCase(format);
     t.selectDeviceOrSkipTestCase(info.feature);
   })
   .fn(t => {
     const { dimension, sampleCount, format } = t.params;
     const info = kTextureFormatInfo[format];
+
+    if(sampleCount > 1) {
+      t.skipIfMultisampleNotSupportedForFormat(format);
+    }
 
     const usage =
       sampleCount > 1

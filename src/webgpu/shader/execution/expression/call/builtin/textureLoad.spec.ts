@@ -376,6 +376,7 @@ Parameters:
     t.skipIfTextureFormatNotSupported(format);
     t.skipIfTextureLoadNotSupportedForTextureType(texture_type);
     t.skipIfMultisampleNotSupportedForFormat(format);
+    t.selectDeviceForRenderableColorFormatOrSkipTestCase(format);
     t.selectDeviceForTextureFormatOrSkipTestCase(format);
   })
   .fn(async t => {
