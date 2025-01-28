@@ -289,31 +289,17 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
     }
   }
 
-  skipIfMultisampleNotSupportedForFormat(...formats) {
+  skipIfMultisampleNotSupportedForFormatOrSelectDevice(
+  ...formats)
+  {
     for (const format of formats) {
       if (format === undefined) continue;
       if (!isMultisampledTextureFormat(format, this.isCompatibility)) {
         this.skip(`texture format '${format}' is not supported to be multisampled`);
       }
-    }
-  }
-
-  skipIfColorRenderableNotSupportedForFormat(...formats) {
-    if (this.isCompatibility) {
-      for (const format of formats) {
-        if (format === undefined) continue;
-        if (is16Float(format) || is32Float(format)) {
-          this.skip(
-            `texture format '${format} is not guaranteed to be color renderable in compat mode`
-          );
-        }
-      }
-    }
-
-    for (const format of formats) {
-      if (format === undefined) continue;
-      if (!kTextureFormatInfo[format].color) {
-        this.skip(`texture format '${format} is not color renderable`);
+      // float16 and float32 format need to be color renderable first to support multisampled in compat mode
+      if (is16Float(format) || is32Float(format)) {
+        this.selectDeviceForRenderableColorFormatOrSkipTestCase(format);
       }
     }
   }
@@ -573,23 +559,17 @@ export class GPUTestBase extends Fixture {
     }
   }
 
-  skipIfMultisampleNotSupportedForFormat(...formats) {
-    for (const format of formats) {
-      if (format === undefined) continue;
-      if (!isMultisampledTextureFormat(format, this.isCompatibility)) {
-        this.skip(`texture format '${format}' is not supported to be multisampled`);
-      }
-    }
-  }
-
   skipIfColorRenderableNotSupportedForFormat(...formats) {
     if (this.isCompatibility) {
+      const is16FloatRenderable = this.device.features.has('float16-renderable');
+      const is32FloatRenderable = this.device.features.has('float32-renderable');
       for (const format of formats) {
         if (format === undefined) continue;
-        if (is16Float(format) || is32Float(format)) {
-          this.skip(
-            `texture format '${format} is not guaranteed to be color renderable in compat mode`
-          );
+        if (
+        is16Float(format) && !is16FloatRenderable ||
+        is32Float(format) && !is32FloatRenderable)
+        {
+          this.skip(`texture format '${format} is not color renderable in compat mode`);
         }
       }
     }

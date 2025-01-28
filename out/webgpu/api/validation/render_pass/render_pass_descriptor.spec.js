@@ -1174,8 +1174,7 @@ filter((t) => kTextureFormatInfo[t.format].multisample)
 beforeAllSubcases((t) => {
   const { format } = t.params;
   t.skipIfTextureFormatNotSupported(format);
-  t.skipIfMultisampleNotSupportedForFormat(format);
-  t.selectDeviceForRenderableColorFormatOrSkipTestCase(format);
+  t.skipIfMultisampleNotSupportedForFormatOrSelectDevice(format);
 }).
 fn((t) => {
   const { format } = t.params;

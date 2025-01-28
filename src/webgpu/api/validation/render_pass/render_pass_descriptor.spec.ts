@@ -1174,8 +1174,7 @@ g.test('resolveTarget,format_supports_resolve')
   .beforeAllSubcases(t => {
     const { format } = t.params;
     t.skipIfTextureFormatNotSupported(format);
-    t.skipIfMultisampleNotSupportedForFormat(format);
-    t.selectDeviceForRenderableColorFormatOrSkipTestCase(format);
+    t.skipIfMultisampleNotSupportedForFormatOrSelectDevice(format);
   })
   .fn(t => {
     const { format } = t.params;

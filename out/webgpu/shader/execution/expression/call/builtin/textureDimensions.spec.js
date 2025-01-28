@@ -302,8 +302,7 @@ beforeAllSubcases((t) => {
   t.skipIfTextureFormatNotSupported(t.params.format);
   if (t.params.samples > 1) {
     // multisampled texture requires GPUTextureUsage.RENDER_ATTACHMENT usage
-    t.skipIfMultisampleNotSupportedForFormat(t.params.format);
-    t.selectDeviceForRenderableColorFormatOrSkipTestCase(t.params.format);
+    t.skipIfMultisampleNotSupportedForFormatOrSelectDevice(t.params.format);
   }
   t.selectDeviceOrSkipTestCase(info.feature);
 }).
