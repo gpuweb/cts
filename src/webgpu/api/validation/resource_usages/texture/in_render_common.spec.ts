@@ -116,9 +116,7 @@ g.test('subresources,color_attachments')
       .unless(t => t.inSamePass && t.level0 !== t.level1)
   )
   .beforeAllSubcases(t => {
-    if (t.isCompatibility) {
-      t.selectDeviceForRenderableColorFormatOrSkipTestCase('r32float');
-    }
+    t.selectDeviceForRenderableColorFormatOrSkipTestCase('r32float');
   })
   .fn(t => {
     const { layer0, level0, layer1, level1, inSamePass } = t.params;
