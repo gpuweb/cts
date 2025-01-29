@@ -532,20 +532,6 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
   }
 
   skipIfColorRenderableNotSupportedForFormat(...formats: (GPUTextureFormat | undefined)[]) {
-    if (this.isCompatibility) {
-      const is16FloatRenderable = this.device.features.has('float16-renderable');
-      const is32FloatRenderable = this.device.features.has('float32-renderable');
-      for (const format of formats) {
-        if (format === undefined) continue;
-        if (
-          (is16Float(format) && !is16FloatRenderable) ||
-          (is32Float(format) && !is32FloatRenderable)
-        ) {
-          this.skip(`texture format '${format} is not color renderable in compat mode`);
-        }
-      }
-    }
-
     for (const format of formats) {
       if (format === undefined) continue;
       if (!kTextureFormatInfo[format].color) {
