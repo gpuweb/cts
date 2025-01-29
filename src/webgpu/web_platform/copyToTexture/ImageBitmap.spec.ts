@@ -61,7 +61,7 @@ g.test('from_ImageData')
   .beforeAllSubcases(t => {
     t.skipIf(typeof ImageData === 'undefined', 'ImageData does not exist in this environment');
     t.skipIfTextureFormatNotSupported(t.params.dstFormat);
-    t.selectDeviceForRenderableColorFormatOrSkipTestCase(t.params.dstFormat);
+    t.skipIfColorRenderableNotSupportedForFormat(t.params.dstFormat);
   })
   .fn(async t => {
     const {
@@ -183,7 +183,7 @@ g.test('from_canvas')
   .beforeAllSubcases(t => {
     t.skipIf(typeof ImageData === 'undefined', 'ImageData does not exist in this environment');
     t.skipIfTextureFormatNotSupported(t.params.dstFormat);
-    t.selectDeviceForRenderableColorFormatOrSkipTestCase(t.params.dstFormat);
+    t.skipIfColorRenderableNotSupportedForFormat(t.params.dstFormat);
   })
   .fn(async t => {
     const {

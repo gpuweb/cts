@@ -211,7 +211,7 @@ g.test('color_attachments,limits,maxColorAttachmentBytesPerSample,aligned')
   )
   .beforeAllSubcases(t => {
     t.skipIfTextureFormatNotSupported(t.params.format);
-    t.selectDeviceForRenderableColorFormatOrSkipTestCase(t.params.format);
+    t.skipIfColorRenderableNotSupportedForFormat(t.params.format);
   })
   .fn(t => {
     const { format, attachmentCount } = t.params;
@@ -269,7 +269,7 @@ g.test('color_attachments,limits,maxColorAttachmentBytesPerSample,unaligned')
     ])
   )
   .beforeAllSubcases(t => {
-    t.selectDeviceForRenderableColorFormatOrSkipTestCase('r32float');
+    t.skipIfColorRenderableNotSupportedForFormat('r32float');
   })
   .fn(t => {
     const { formats } = t.params;
@@ -1174,7 +1174,7 @@ g.test('resolveTarget,format_supports_resolve')
   .beforeAllSubcases(t => {
     const { format } = t.params;
     t.skipIfTextureFormatNotSupported(format);
-    t.skipIfMultisampleNotSupportedForFormatOrSelectDevice(format);
+    t.skipIfMultisampleNotSupportedForFormat(format);
   })
   .fn(t => {
     const { format } = t.params;

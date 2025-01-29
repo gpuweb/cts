@@ -263,7 +263,7 @@ g.test('onscreenCanvas,snapshot')
   )
   .beforeAllSubcases(t => {
     // rgba16float may not be color-renderable in compat mode
-    t.selectDeviceForRenderableColorFormatOrSkipTestCase(t.params.format);
+    t.skipIfColorRenderableNotSupportedForFormat(t.params.format);
   })
   .fn(async t => {
     const canvas = initWebGPUCanvasContent(
@@ -329,7 +329,7 @@ g.test('offscreenCanvas,snapshot')
   )
   .beforeAllSubcases(t => {
     // rgba16float may not be color-renderable in compat mode
-    t.selectDeviceForRenderableColorFormatOrSkipTestCase(t.params.format);
+    t.skipIfColorRenderableNotSupportedForFormat(t.params.format);
   })
   .fn(async t => {
     const offscreenCanvas = initWebGPUCanvasContent(
@@ -388,7 +388,7 @@ g.test('onscreenCanvas,uploadToWebGL')
   )
   .beforeAllSubcases(t => {
     // rgba16float may not be color-renderable in compat mode
-    t.selectDeviceForRenderableColorFormatOrSkipTestCase(t.params.format);
+    t.skipIfColorRenderableNotSupportedForFormat(t.params.format);
   })
   .fn(t => {
     const { format, webgl, upload } = t.params;
@@ -473,7 +473,7 @@ g.test('drawTo2DCanvas')
   )
   .beforeAllSubcases(t => {
     // rgba16float may not be color-renderable in compat mode
-    t.selectDeviceForRenderableColorFormatOrSkipTestCase(t.params.format);
+    t.skipIfColorRenderableNotSupportedForFormat(t.params.format);
   })
   .fn(t => {
     const { format, webgpuCanvasType, alphaMode, colorSpace, canvas2DType } = t.params;

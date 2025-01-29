@@ -96,7 +96,7 @@ g.test('readTextureToTexelViews')
   .beforeAllSubcases(t => {
     t.skipIfTextureViewDimensionNotSupported(t.params.viewDimension);
     // recheck if multisampled is supported with compat mode flag
-    t.skipIfMultisampleNotSupportedForFormatOrSelectDevice(t.params.srcFormat);
+    t.skipIfMultisampleNotSupportedForFormat(t.params.srcFormat);
   })
   .fn(async t => {
     const { srcFormat, texelViewFormat, viewDimension, sampleCount } = t.params;

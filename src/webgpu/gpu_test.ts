@@ -32,8 +32,6 @@ import {
   isCompressedTextureFormat,
   ColorTextureFormat,
   isTextureFormatUsableAsStorageFormat,
-  is32Float,
-  is16Float,
   isMultisampledTextureFormat,
 } from './format_info.js';
 import { checkElementsEqual, checkElementsBetween } from './util/check_contents.js';
@@ -230,13 +228,6 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
     this.selectDeviceOrSkipTestCase(features);
   }
 
-  /** Skips test if format is float16 or float32 and not color renderable based on device feature availability. */
-  selectDeviceForRenderableColorFormatOrSkipTestCase(...formats: (GPUTextureFormat | undefined)[]) {
-    this.selectDeviceOrSkipTestCase({
-      requiredFeatures: this.getFloatTextureFormatColorRenderableFeatures(...formats),
-    });
-  }
-
   /** @internal MAINTENANCE_TODO: Make this not visible to test code? */
   acquireMismatchedProvider(): Promise<DeviceProvider> | undefined {
     return this.mismatchedProvider;
@@ -289,34 +280,24 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
     }
   }
 
-  skipIfMultisampleNotSupportedForFormatOrSelectDevice(
-    ...formats: (GPUTextureFormat | undefined)[]
-  ) {
+  skipIfMultisampleNotSupportedForFormat(...formats: (GPUTextureFormat | undefined)[]) {
     for (const format of formats) {
       if (format === undefined) continue;
       if (!isMultisampledTextureFormat(format, this.isCompatibility)) {
         this.skip(`texture format '${format}' is not supported to be multisampled`);
       }
-      // float16 and float32 format need to be color renderable first to support multisampled in compat mode
-      if (is16Float(format) || is32Float(format)) {
-        this.selectDeviceForRenderableColorFormatOrSkipTestCase(format);
-      }
     }
+
+    this.skipIfColorRenderableNotSupportedForFormat(...formats);
   }
 
-  getFloatTextureFormatColorRenderableFeatures(...formats: (GPUTextureFormat | undefined)[]) {
-    const requiredFeatures: GPUFeatureName[] = [];
-    if (this.isCompatibility) {
-      for (const format of formats) {
-        if (format === undefined) continue;
-        if (is32Float(format)) {
-          requiredFeatures.push('float32-renderable' as GPUFeatureName);
-        } else if (is16Float(format)) {
-          requiredFeatures.push('float16-renderable' as GPUFeatureName);
-        }
+  skipIfColorRenderableNotSupportedForFormat(...formats: (GPUTextureFormat | undefined)[]) {
+    for (const format of formats) {
+      if (format === undefined) continue;
+      if (!kTextureFormatInfo[format].color) {
+        this.skip(`texture format '${format} is not color renderable`);
       }
     }
-    return requiredFeatures;
   }
 
   skipIfCopyTextureToTextureNotSupportedForFormat(...formats: (GPUTextureFormat | undefined)[]) {
@@ -560,20 +541,6 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
   }
 
   skipIfColorRenderableNotSupportedForFormat(...formats: (GPUTextureFormat | undefined)[]) {
-    if (this.isCompatibility) {
-      const is16FloatRenderable = this.device.features.has('float16-renderable');
-      const is32FloatRenderable = this.device.features.has('float32-renderable');
-      for (const format of formats) {
-        if (format === undefined) continue;
-        if (
-          (is16Float(format) && !is16FloatRenderable) ||
-          (is32Float(format) && !is32FloatRenderable)
-        ) {
-          this.skip(`texture format '${format} is not color renderable in compat mode`);
-        }
-      }
-    }
-
     for (const format of formats) {
       if (format === undefined) continue;
       if (!kTextureFormatInfo[format].color) {
