@@ -385,7 +385,7 @@ g.test('getter_replacement')
       // check replacing the getter on constructor works.
       const ctorPrototype = obj.constructor.prototype;
       const origProperties = Object.getOwnPropertyDescriptor(ctorPrototype, getter);
-      t.expect(
+      assert(
         !!origProperties,
         `Object.getOwnPropertyDescriptor(${type}, '${getter}') !== undefined`
       );
@@ -401,14 +401,17 @@ g.test('getter_replacement')
           `replacing getter: '${getter}' on ${type} returns test value`
         );
       } finally {
-        Object.defineProperty(ctorPrototype, getter, origProperties!);
+        Object.defineProperty(ctorPrototype, getter, origProperties);
       }
 
       // Check it turns the same value after restoring as before restoring.
       const afterValue = (obj as unknown as Record<string, () => unknown>)[getter];
-      t.expect(
-        afterValue === origValue,
-        `able to restore getter for instance of ${type}.${getter}`
+      assert(afterValue === origValue, `able to restore getter for instance of ${type}.${getter}`);
+
+      // Check getOwnProperty also returns the value we got before.
+      assert(
+        Object.getOwnPropertyDescriptor(ctorPrototype, getter)!.get === origProperties.get,
+        `getOwnPropertyDescriptor(${type}, '${getter}').get is original function`
       );
     }
   });
@@ -456,7 +459,7 @@ g.test('method_replacement')
       }
 
       // Check the function the prototype and the one on the object are the same after restoring.
-      t.expect(
+      assert(
         (obj as unknown as Record<string, unknown>)[method] === origFunc,
         `instance of ${type}.${method} === ${type}.prototype.${method}`
       );
