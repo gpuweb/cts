@@ -97,8 +97,9 @@ const kResourceInfo = {
     'mapState',
     'size',
     'unmap',
-    'usage']
+    'usage'],
 
+    getters: ['label', 'mapState', 'size', 'usage']
   },
   texture: {
     create(t) {
@@ -119,6 +120,17 @@ const kResourceInfo = {
     'mipLevelCount',
     'sampleCount',
     'usage',
+    'width'],
+
+    getters: [
+    'depthOrArrayLayers',
+    'dimension',
+    'format',
+    'height',
+    'label',
+    'mipLevelCount',
+    'sampleCount',
+    'usage',
     'width']
 
   },
@@ -129,13 +141,15 @@ const kResourceInfo = {
         count: 2
       });
     },
-    requiredKeys: ['count', 'destroy', 'label', 'type']
+    requiredKeys: ['count', 'destroy', 'label', 'type'],
+    getters: ['count', 'label', 'type']
   },
   adapter: {
     create(t) {
       return t.adapter;
     },
-    requiredKeys: ['features', 'info', 'limits', 'requestDevice']
+    requiredKeys: ['features', 'info', 'limits', 'requestDevice'],
+    getters: ['features', 'info', 'limits']
   },
   device: {
     create(t) {
@@ -169,20 +183,23 @@ const kResourceInfo = {
     'popErrorScope',
     'pushErrorScope',
     'queue',
-    'removeEventListener']
+    'removeEventListener'],
 
+    getters: ['adapterInfo', 'features', 'label', 'limits', 'lost', 'onuncapturederror', 'queue']
   },
   'adapter.limits': {
     create(t) {
       return t.adapter.limits;
     },
-    requiredKeys: kSpecifiedLimits
+    requiredKeys: kSpecifiedLimits,
+    getters: kSpecifiedLimits
   },
   'device.limits': {
     create(t) {
       return t.device.limits;
     },
-    requiredKeys: kSpecifiedLimits
+    requiredKeys: kSpecifiedLimits,
+    getters: kSpecifiedLimits
   }
 };
 const kResources = keysOf(kResourceInfo);
@@ -231,7 +248,7 @@ params((u) => u.combine('type', kResources)).
 fn((t) => {
   const { type } = t.params;
   const obj = createResource(t, type);
-  t.expect(objectEquals([...Object.keys(obj)], []), `Object.keys([...${type}] === []`);
+  t.expect(objectEquals([...Object.keys(obj)], []), `[...Object.keys(${type})] === []`);
 });
 
 g.test('obj,spread').
@@ -335,6 +352,116 @@ fn(async (t) => {
     t.expect(
       actual === defaultLimit,
       `expected device.limits.${key}(${actual}) === ${defaultLimit}`
+    );
+  }
+});
+
+g.test('getter_replacement').
+desc(
+  `
+    Test that replacing getters on class prototypes works
+
+    This is a common pattern for shims and debugging libraries so make sure this pattern works.
+    `
+).
+params((u) => u.combine('type', kResources)).
+fn((t) => {
+  const { type } = t.params;
+  const { getters } = kResourceInfo[type];
+
+  const obj = createResource(t, type);
+  for (const getter of getters) {
+    // Check it's not 'ownProperty`
+    const properties = Object.getOwnPropertyDescriptor(obj, getter);
+    t.expect(
+      properties === undefined,
+      `Object.getOwnPropertyDescriptor(instance of ${type}, '${getter}') === undefined`
+    );
+
+    // Check it's actually a getter that returns a non-function value.
+    const origValue = obj[getter];
+    t.expect(typeof origValue !== 'function', `instance of ${type}.${getter} !== 'function'`);
+
+    // check replacing the getter on constructor works.
+    const ctorPrototype = obj.constructor.prototype;
+    const origProperties = Object.getOwnPropertyDescriptor(ctorPrototype, getter);
+    assert(
+      !!origProperties,
+      `Object.getOwnPropertyDescriptor(${type}, '${getter}') !== undefined`
+    );
+    try {
+      Object.defineProperty(ctorPrototype, getter, {
+        get() {
+          return 'testGetterValue';
+        }
+      });
+      const value = obj[getter];
+      t.expect(
+        value === 'testGetterValue',
+        `replacing getter: '${getter}' on ${type} returns test value`
+      );
+    } finally {
+      Object.defineProperty(ctorPrototype, getter, origProperties);
+    }
+
+    // Check it turns the same value after restoring as before restoring.
+    const afterValue = obj[getter];
+    assert(afterValue === origValue, `able to restore getter for instance of ${type}.${getter}`);
+
+    // Check getOwnProperty also returns the value we got before.
+    assert(
+      Object.getOwnPropertyDescriptor(ctorPrototype, getter).get === origProperties.get,
+      `getOwnPropertyDescriptor(${type}, '${getter}').get is original function`
+    );
+  }
+});
+
+g.test('method_replacement').
+desc(
+  `
+    Test that replacing methods on class prototypes works
+
+    This is a common pattern for shims and debugging libraries so make sure this pattern works.
+    `
+).
+params((u) => u.combine('type', kResources)).
+fn((t) => {
+  const { type } = t.params;
+  const { requiredKeys, getters } = kResourceInfo[type];
+  const gettersSet = new Set(getters);
+  const methods = requiredKeys.filter((k) => !gettersSet.has(k));
+
+  const obj = createResource(t, type);
+  for (const method of methods) {
+    const ctorPrototype = obj.constructor.prototype;
+    const origFunc = ctorPrototype[method];
+
+    t.expect(typeof origFunc === 'function', `${type}.prototype.${method} is a function`);
+
+    // Check the function the prototype and the one on the object are the same
+    t.expect(
+      obj[method] === origFunc,
+      `instance of ${type}.${method} === ${type}.prototype.${method}`
+    );
+
+    // Check replacing the method on constructor works.
+    try {
+      ctorPrototype[method] = function () {
+        return 'testMethodValue';
+      };
+      const value = obj[method]();
+      t.expect(
+        value === 'testMethodValue',
+        `replacing method: '${method}' on ${type} returns test value`
+      );
+    } finally {
+      ctorPrototype[method] = origFunc;
+    }
+
+    // Check the function the prototype and the one on the object are the same after restoring.
+    assert(
+      obj[method] === origFunc,
+      `instance of ${type}.${method} === ${type}.prototype.${method}`
     );
   }
 });
