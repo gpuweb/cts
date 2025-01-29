@@ -375,7 +375,7 @@ Parameters:
     const { format, texture_type } = t.params;
     t.skipIfTextureFormatNotSupported(format);
     t.skipIfTextureLoadNotSupportedForTextureType(texture_type);
-    t.skipIfMultisampleNotSupportedForFormatOrSelectDevice(format);
+    t.skipIfMultisampleNotSupportedForFormat(format);
   })
   .fn(async t => {
     const { texture_type, format, stage, samplePoints, C, S } = t.params;

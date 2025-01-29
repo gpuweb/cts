@@ -282,9 +282,7 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
     }
   }
 
-  skipIfMultisampleNotSupportedForFormatOrSelectDevice(
-    ...formats: (GPUTextureFormat | undefined)[]
-  ) {
+  skipIfMultisampleNotSupportedForFormat(...formats: (GPUTextureFormat | undefined)[]) {
     for (const format of formats) {
       if (format === undefined) continue;
       if (!isMultisampledTextureFormat(format, this.isCompatibility)) {
