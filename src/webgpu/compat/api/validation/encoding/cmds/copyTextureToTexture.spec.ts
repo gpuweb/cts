@@ -58,6 +58,9 @@ g.test('multisample')
         return info.multisample && !info.feature;
       })
   )
+  .beforeAllSubcases(t => {
+    t.skipIfMultisampleNotSupportedForFormat(t.params.format);
+  })
   .fn(t => {
     const { format } = t.params;
     const { blockWidth, blockHeight } = kTextureFormatInfo[format];

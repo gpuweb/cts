@@ -211,6 +211,7 @@ g.test('color_attachments,limits,maxColorAttachmentBytesPerSample,aligned')
   )
   .beforeAllSubcases(t => {
     t.skipIfTextureFormatNotSupported(t.params.format);
+    t.skipIfColorRenderableNotSupportedForFormat(t.params.format);
   })
   .fn(t => {
     const { format, attachmentCount } = t.params;
@@ -267,6 +268,9 @@ g.test('color_attachments,limits,maxColorAttachmentBytesPerSample,unaligned')
       },
     ])
   )
+  .beforeAllSubcases(t => {
+    t.skipIfColorRenderableNotSupportedForFormat('r32float');
+  })
   .fn(t => {
     const { formats } = t.params;
 

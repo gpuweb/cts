@@ -287,6 +287,17 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
         this.skip(`texture format '${format}' is not supported to be multisampled`);
       }
     }
+
+    this.skipIfColorRenderableNotSupportedForFormat(...formats);
+  }
+
+  skipIfColorRenderableNotSupportedForFormat(...formats: (GPUTextureFormat | undefined)[]) {
+    for (const format of formats) {
+      if (format === undefined) continue;
+      if (!kTextureFormatInfo[format].color) {
+        this.skip(`texture format '${format} is not color renderable`);
+      }
+    }
   }
 
   skipIfCopyTextureToTextureNotSupportedForFormat(...formats: (GPUTextureFormat | undefined)[]) {
