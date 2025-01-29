@@ -181,7 +181,7 @@ g.test('limits,maxColorAttachmentBytesPerSample,aligned')
   )
   .beforeAllSubcases(t => {
     t.skipIfTextureFormatNotSupported(t.params.format);
-    t.selectDeviceForRenderableColorFormatOrSkipTestCase(t.params.format);
+    t.skipIfColorRenderableNotSupportedForFormat(t.params.format);
   })
   .fn(t => {
     const { format, attachmentCount, isAsync } = t.params;
@@ -230,7 +230,7 @@ g.test('limits,maxColorAttachmentBytesPerSample,unaligned')
       .combine('isAsync', [false, true])
   )
   .beforeAllSubcases(t => {
-    t.selectDeviceForRenderableColorFormatOrSkipTestCase('r32float');
+    t.skipIfColorRenderableNotSupportedForFormat('r32float');
   })
   .fn(t => {
     const { formats, isAsync } = t.params;
@@ -269,7 +269,7 @@ g.test('targets_format_filterable')
     const { format } = t.params;
     const info = kTextureFormatInfo[format];
     t.skipIfTextureFormatNotSupported(format);
-    t.selectDeviceForRenderableColorFormatOrSkipTestCase(format);
+    t.skipIfColorRenderableNotSupportedForFormat(format);
     t.selectDeviceOrSkipTestCase(info.feature);
   })
   .fn(t => {
@@ -399,7 +399,7 @@ g.test('pipeline_output_targets')
   )
   .beforeAllSubcases(t => {
     t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
-    t.selectDeviceForRenderableColorFormatOrSkipTestCase(t.params.format);
+    t.skipIfColorRenderableNotSupportedForFormat(t.params.format);
   })
   .fn(t => {
     const { isAsync, format, writeMask, shaderOutput } = t.params;

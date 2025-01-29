@@ -152,7 +152,7 @@ combine('arrayLayer', kArrayLayers)
 ).
 beforeAllSubcases((t) => {
   t.skipIfTextureFormatNotSupported(t.params.colorFormat);
-  t.selectDeviceForRenderableColorFormatOrSkipTestCase(t.params.colorFormat);
+  t.skipIfColorRenderableNotSupportedForFormat(t.params.colorFormat);
 }).
 fn((t) => {
   const colorAttachment = t.createTextureTracked({

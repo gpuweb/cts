@@ -379,7 +379,7 @@ beforeAllSubcases((t) => {
     t.skipIfTextureFormatNotUsableAsStorageTexture(format);
   }
   if (textureUsage & GPUTextureUsage.RENDER_ATTACHMENT) {
-    t.selectDeviceForRenderableColorFormatOrSkipTestCase(format);
+    t.skipIfColorRenderableNotSupportedForFormat(format);
   }
 }).
 fn((t) => {

@@ -206,7 +206,7 @@ unless(({ entry, usage }) => {
 })
 ).
 beforeAllSubcases((t) => {
-  t.selectDeviceForRenderableColorFormatOrSkipTestCase(kTestFormat);
+  t.skipIfColorRenderableNotSupportedForFormat(kTestFormat);
 }).
 fn((t) => {
   const { entry, usage } = t.params;

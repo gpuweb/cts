@@ -209,7 +209,7 @@ g.test('blending,GPUBlendComponent')
     ) {
       t.selectDeviceOrSkipTestCase('dual-source-blending');
     }
-    t.selectDeviceForRenderableColorFormatOrSkipTestCase(kBlendingGPUBlendComponentFormat);
+    t.skipIfColorRenderableNotSupportedForFormat(kBlendingGPUBlendComponentFormat);
   })
   .fn(t => {
     const textureFormat: GPUTextureFormat = kBlendingGPUBlendComponentFormat;
@@ -395,7 +395,7 @@ g.test('blending,formats')
   )
   .beforeAllSubcases(t => {
     t.skipIfTextureFormatNotSupported(t.params.format);
-    t.selectDeviceForRenderableColorFormatOrSkipTestCase(t.params.format);
+    t.skipIfColorRenderableNotSupportedForFormat(t.params.format);
   })
   .fn(t => {
     const { format } = t.params;
@@ -801,7 +801,7 @@ g.test('blending,clamping')
       .combine('dstValue', [0.2, 0.4])
   )
   .beforeAllSubcases(t => {
-    t.selectDeviceForRenderableColorFormatOrSkipTestCase(t.params.format);
+    t.skipIfColorRenderableNotSupportedForFormat(t.params.format);
   })
   .fn(t => {
     const { format, srcValue, dstValue } = t.params;

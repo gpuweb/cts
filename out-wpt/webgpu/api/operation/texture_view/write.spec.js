@@ -350,13 +350,13 @@ beforeAllSubcases((t) => {
       // Still need to filter again for compat mode.
       t.skipIfTextureFormatNotUsableAsStorageTexture(format);
       if (sampleCount > 1) {
-        t.skipIfMultisampleNotSupportedForFormatOrSelectDevice(format);
+        t.skipIfMultisampleNotSupportedForFormat(format);
       }
       break;
     case 'render-pass-resolve':
     case 'render-pass-store':
       // Requires multisample in `writeTextureAndGetExpectedTexelView`
-      t.skipIfMultisampleNotSupportedForFormatOrSelectDevice(format);
+      t.skipIfMultisampleNotSupportedForFormat(format);
       break;
   }
 }).

@@ -211,7 +211,7 @@ combine(
 ).
 beforeAllSubcases((t) => {
   t.skipIfTextureFormatNotSupported(t.params.format);
-  t.selectDeviceForRenderableColorFormatOrSkipTestCase(t.params.format);
+  t.skipIfColorRenderableNotSupportedForFormat(t.params.format);
 }).
 fn((t) => {
   const { format, attachmentCount } = t.params;
@@ -269,7 +269,7 @@ u.combineWithParams([
 )
 ).
 beforeAllSubcases((t) => {
-  t.selectDeviceForRenderableColorFormatOrSkipTestCase('r32float');
+  t.skipIfColorRenderableNotSupportedForFormat('r32float');
 }).
 fn((t) => {
   const { formats } = t.params;
@@ -1174,7 +1174,7 @@ filter((t) => kTextureFormatInfo[t.format].multisample)
 beforeAllSubcases((t) => {
   const { format } = t.params;
   t.skipIfTextureFormatNotSupported(format);
-  t.skipIfMultisampleNotSupportedForFormatOrSelectDevice(format);
+  t.skipIfMultisampleNotSupportedForFormat(format);
 }).
 fn((t) => {
   const { format } = t.params;

@@ -209,7 +209,7 @@ beforeAllSubcases((t) => {
   {
     t.selectDeviceOrSkipTestCase('dual-source-blending');
   }
-  t.selectDeviceForRenderableColorFormatOrSkipTestCase(kBlendingGPUBlendComponentFormat);
+  t.skipIfColorRenderableNotSupportedForFormat(kBlendingGPUBlendComponentFormat);
 }).
 fn((t) => {
   const textureFormat = kBlendingGPUBlendComponentFormat;
@@ -395,7 +395,7 @@ u //
 ).
 beforeAllSubcases((t) => {
   t.skipIfTextureFormatNotSupported(t.params.format);
-  t.selectDeviceForRenderableColorFormatOrSkipTestCase(t.params.format);
+  t.skipIfColorRenderableNotSupportedForFormat(t.params.format);
 }).
 fn((t) => {
   const { format } = t.params;
@@ -801,7 +801,7 @@ combine('srcValue', [0.4, 0.6, 0.8, 1.0]).
 combine('dstValue', [0.2, 0.4])
 ).
 beforeAllSubcases((t) => {
-  t.selectDeviceForRenderableColorFormatOrSkipTestCase(t.params.format);
+  t.skipIfColorRenderableNotSupportedForFormat(t.params.format);
 }).
 fn((t) => {
   const { format, srcValue, dstValue } = t.params;

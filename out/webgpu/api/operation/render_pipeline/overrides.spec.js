@@ -192,7 +192,7 @@ combineWithParams([
 )
 ).
 beforeAllSubcases((t) => {
-  t.selectDeviceForRenderableColorFormatOrSkipTestCase(kPrecisionTestFormat);
+  t.skipIfColorRenderableNotSupportedForFormat(kPrecisionTestFormat);
 }).
 fn(async (t) => {
   const format = kPrecisionTestFormat;

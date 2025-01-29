@@ -481,7 +481,7 @@ combine('addressModeV', kAddressModes)
 ).
 beforeAllSubcases((t) => {
   t.skipIfTextureFormatNotSupported(t.params.format);
-  t.selectDeviceForRenderableColorFormatOrSkipTestCase(t.params.format);
+  t.skipIfColorRenderableNotSupportedForFormat(t.params.format);
   if (kTextureFormatInfo[t.params.format].color.type === 'unfilterable-float') {
     t.selectDeviceOrSkipTestCase('float32-filterable');
   }
@@ -605,7 +605,7 @@ combine('addressModeV', kAddressModes)
 ).
 beforeAllSubcases((t) => {
   t.skipIfTextureFormatNotSupported(t.params.format);
-  t.selectDeviceForRenderableColorFormatOrSkipTestCase(t.params.format);
+  t.skipIfColorRenderableNotSupportedForFormat(t.params.format);
   if (kTextureFormatInfo[t.params.format].color.type === 'unfilterable-float') {
     t.selectDeviceOrSkipTestCase('float32-filterable');
   }
@@ -741,7 +741,7 @@ combine('addressModeV', kAddressModes)
 ).
 beforeAllSubcases((t) => {
   t.skipIfTextureFormatNotSupported(t.params.format);
-  t.selectDeviceForRenderableColorFormatOrSkipTestCase(t.params.format);
+  t.skipIfColorRenderableNotSupportedForFormat(t.params.format);
   if (kTextureFormatInfo[t.params.format].color.type === 'unfilterable-float') {
     t.selectDeviceOrSkipTestCase('float32-filterable');
   }
@@ -875,7 +875,7 @@ combine('addressModeV', kAddressModes)
 ).
 beforeAllSubcases((t) => {
   t.skipIfTextureFormatNotSupported(t.params.format);
-  t.selectDeviceForRenderableColorFormatOrSkipTestCase(t.params.format);
+  t.skipIfColorRenderableNotSupportedForFormat(t.params.format);
   if (kTextureFormatInfo[t.params.format].color.type === 'unfilterable-float') {
     t.selectDeviceOrSkipTestCase('float32-filterable');
   }
@@ -972,7 +972,7 @@ combine('filterMode', kMipmapFilterModes)
 ).
 beforeAllSubcases((t) => {
   t.skipIfTextureFormatNotSupported(t.params.format);
-  t.selectDeviceForRenderableColorFormatOrSkipTestCase(t.params.format);
+  t.skipIfColorRenderableNotSupportedForFormat(t.params.format);
   if (kTextureFormatInfo[t.params.format].color.type === 'unfilterable-float') {
     t.selectDeviceOrSkipTestCase('float32-filterable');
   }

@@ -206,7 +206,7 @@ g.test('texture_binding_must_have_correct_usage')
       })
   )
   .beforeAllSubcases(t => {
-    t.selectDeviceForRenderableColorFormatOrSkipTestCase(kTestFormat);
+    t.skipIfColorRenderableNotSupportedForFormat(kTestFormat);
   })
   .fn(t => {
     const { entry, usage } = t.params;

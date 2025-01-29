@@ -30,7 +30,7 @@ beforeAllSubcases((t) => {
   if (t.params.enabled) {
     t.selectDeviceOrSkipTestCase('float32-blendable');
   }
-  t.selectDeviceForRenderableColorFormatOrSkipTestCase('r32float');
+  t.skipIfColorRenderableNotSupportedForFormat('r32float');
 }).
 fn((t) => {
   const { isAsync, enabled, hasBlend, format } = t.params;

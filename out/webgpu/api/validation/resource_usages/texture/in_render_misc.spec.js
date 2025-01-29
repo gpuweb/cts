@@ -521,7 +521,7 @@ filter(
 )
 ).
 beforeAllSubcases((t) => {
-  t.selectDeviceForRenderableColorFormatOrSkipTestCase('r32float');
+  t.skipIfColorRenderableNotSupportedForFormat('r32float');
 }).
 fn((t) => {
   const { usage0, usage1 } = t.params;
@@ -620,7 +620,7 @@ combine('viewUsage', [0, ...kTextureUsages])
 ).
 beforeAllSubcases((t) => {
   if (t.params.bindingType === 'color-attachment') {
-    t.selectDeviceForRenderableColorFormatOrSkipTestCase('r32float');
+    t.skipIfColorRenderableNotSupportedForFormat('r32float');
   }
 }).
 fn((t) => {

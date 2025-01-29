@@ -63,7 +63,7 @@ combine(
 ).
 beforeAllSubcases((t) => {
   t.skipIfTextureFormatNotSupported(t.params.format);
-  t.selectDeviceForRenderableColorFormatOrSkipTestCase(t.params.format);
+  t.skipIfColorRenderableNotSupportedForFormat(t.params.format);
 }).
 fn((t) => {
   const { format, colorFormatCount } = t.params;
@@ -120,7 +120,7 @@ u.combineWithParams([
 )
 ).
 beforeAllSubcases((t) => {
-  t.selectDeviceForRenderableColorFormatOrSkipTestCase('r32float');
+  t.skipIfColorRenderableNotSupportedForFormat('r32float');
 }).
 fn((t) => {
   const { formats } = t.params;
@@ -172,7 +172,7 @@ combine('attachment', ['color', 'depthStencil'])
 beforeAllSubcases((t) => {
   const { format } = t.params;
   t.selectDeviceForTextureFormatOrSkipTestCase(format);
-  t.selectDeviceForRenderableColorFormatOrSkipTestCase(format);
+  t.skipIfColorRenderableNotSupportedForFormat(format);
 }).
 fn((t) => {
   const { format, attachment } = t.params;

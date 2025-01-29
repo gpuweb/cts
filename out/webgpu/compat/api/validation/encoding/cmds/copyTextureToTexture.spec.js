@@ -59,7 +59,7 @@ filter(({ format }) => {
 })
 ).
 beforeAllSubcases((t) => {
-  t.selectDeviceForRenderableColorFormatOrSkipTestCase(t.params.format);
+  t.skipIfMultisampleNotSupportedForFormat(t.params.format);
 }).
 fn((t) => {
   const { format } = t.params;

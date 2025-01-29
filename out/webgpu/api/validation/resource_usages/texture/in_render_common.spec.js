@@ -116,7 +116,7 @@ combine('inSamePass', [true, false]).
 unless((t) => t.inSamePass && t.level0 !== t.level1)
 ).
 beforeAllSubcases((t) => {
-  t.selectDeviceForRenderableColorFormatOrSkipTestCase('r32float');
+  t.skipIfColorRenderableNotSupportedForFormat('r32float');
 }).
 fn((t) => {
   const { layer0, level0, layer1, level1, inSamePass } = t.params;
@@ -197,7 +197,7 @@ beforeAllSubcases((t) => {
       t.params.bgLayerCount !== kTextureLayers,
       'view array layers must equal texture array layers in compatibility mode'
     );
-    t.selectDeviceForRenderableColorFormatOrSkipTestCase('r32float');
+    t.skipIfColorRenderableNotSupportedForFormat('r32float');
   }
 }).
 fn((t) => {
@@ -476,7 +476,7 @@ beforeAllSubcases((t) => {
       t.params.bg0Layers.count !== kTextureLayers || t.params.bg1Layers.count !== kTextureLayers,
       'view array layers must equal texture array layers in compatibility mode'
     );
-    t.selectDeviceForRenderableColorFormatOrSkipTestCase('r32float');
+    t.skipIfColorRenderableNotSupportedForFormat('r32float');
   }
 }).
 fn((t) => {

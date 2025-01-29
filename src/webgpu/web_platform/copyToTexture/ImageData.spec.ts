@@ -49,7 +49,7 @@ g.test('from_ImageData')
   .beforeAllSubcases(t => {
     t.skipIf(typeof ImageData === 'undefined', 'ImageData does not exist in this environment');
     t.skipIfTextureFormatNotSupported(t.params.dstColorFormat);
-    t.selectDeviceForRenderableColorFormatOrSkipTestCase(t.params.dstColorFormat);
+    t.skipIfColorRenderableNotSupportedForFormat(t.params.dstColorFormat);
   })
   .fn(t => {
     const { width, height, dstColorFormat, dstPremultiplied, srcDoFlipYDuringCopy } = t.params;
