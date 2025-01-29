@@ -58,9 +58,6 @@ g.test('multisample')
         return info.multisample && !info.feature;
       })
   )
-  .beforeAllSubcases(t => {
-    t.selectDeviceForRenderableColorFormatOrSkipTestCase(t.params.format);
-  })
   .fn(t => {
     const { format } = t.params;
     const { blockWidth, blockHeight } = kTextureFormatInfo[format];

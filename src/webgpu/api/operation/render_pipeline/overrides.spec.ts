@@ -191,9 +191,6 @@ g.test('precision')
         },
       ])
   )
-  .beforeAllSubcases(t => {
-    t.selectDeviceForRenderableColorFormatOrSkipTestCase(kPrecisionTestFormat);
-  })
   .fn(async t => {
     const format = kPrecisionTestFormat;
     await t.ExpectShaderOutputWithConstants(

@@ -152,7 +152,6 @@ g.test('render_pass_store_op,color_attachment_only')
   )
   .beforeAllSubcases(t => {
     t.skipIfTextureFormatNotSupported(t.params.colorFormat);
-    t.selectDeviceForRenderableColorFormatOrSkipTestCase(t.params.colorFormat);
   })
   .fn(t => {
     const colorAttachment = t.createTextureTracked({

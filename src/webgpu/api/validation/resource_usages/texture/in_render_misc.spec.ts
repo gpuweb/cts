@@ -520,9 +520,6 @@ g.test('subresources,texture_usages_in_copy_and_render_pass')
           usage1 === 'copy-dst'
       )
   )
-  .beforeAllSubcases(t => {
-    t.selectDeviceForRenderableColorFormatOrSkipTestCase('r32float');
-  })
   .fn(t => {
     const { usage0, usage1 } = t.params;
 
@@ -618,11 +615,6 @@ g.test('subresources,texture_view_usages')
       .combine('bindingType', ['color-attachment', ...kTextureBindingTypes] as const)
       .combine('viewUsage', [0, ...kTextureUsages])
   )
-  .beforeAllSubcases(t => {
-    if (t.params.bindingType === 'color-attachment') {
-      t.selectDeviceForRenderableColorFormatOrSkipTestCase('r32float');
-    }
-  })
   .fn(t => {
     const { bindingType, viewUsage } = t.params;
 

@@ -282,7 +282,6 @@ g.test('sampleCount,various_sampleCount_with_all_formats')
     const { format } = t.params;
     const info = kTextureFormatInfo[format];
     t.skipIfTextureFormatNotSupported(format);
-    t.selectDeviceForRenderableColorFormatOrSkipTestCase(format);
     t.selectDeviceOrSkipTestCase(info.feature);
   })
   .fn(t => {
@@ -359,7 +358,6 @@ g.test('sampleCount,valid_sampleCount_with_other_parameter_varies')
     const info = kTextureFormatInfo[format];
     t.skipIfTextureFormatNotSupported(format);
     t.selectDeviceOrSkipTestCase(info.feature);
-    t.selectDeviceForRenderableColorFormatOrSkipTestCase(format);
   })
   .fn(t => {
     const { dimension, sampleCount, format, mipLevelCount, arrayLayerCount, usage } = t.params;
@@ -1053,7 +1051,6 @@ g.test('texture_usage')
     const info = kTextureFormatInfo[format];
     t.skipIfTextureFormatNotSupported(format);
     t.selectDeviceOrSkipTestCase(info.feature);
-    t.selectDeviceForRenderableColorFormatOrSkipTestCase(format);
   })
   .fn(t => {
     const { dimension, format, usage0, usage1 } = t.params;
