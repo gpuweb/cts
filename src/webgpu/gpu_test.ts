@@ -32,8 +32,6 @@ import {
   isCompressedTextureFormat,
   ColorTextureFormat,
   isTextureFormatUsableAsStorageFormat,
-  is32Float,
-  is16Float,
   isMultisampledTextureFormat,
 } from './format_info.js';
 import { checkElementsEqual, checkElementsBetween } from './util/check_contents.js';
