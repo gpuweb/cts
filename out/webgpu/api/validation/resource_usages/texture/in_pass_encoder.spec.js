@@ -9,7 +9,8 @@ import { GPUConst } from '../../../../constants.js';
 import {
   kDepthStencilFormats,
   kDepthStencilFormatResolvedAspect,
-  kTextureFormatInfo } from
+  kTextureFormatInfo,
+  isMultisampledTextureFormat } from
 '../../../../format_info.js';
 import { MaxLimitsTestMixin } from '../../../../gpu_test.js';
 import { ValidationTest } from '../../validation_test.js';
@@ -1156,6 +1157,7 @@ fn((t) => {
 
   t.skipIfNeedStorageTexturesByResourceTypeAndNoStorageTextures(type0, GPUShaderStage.FRAGMENT);
   t.skipIfNeedStorageTexturesByResourceTypeAndNoStorageTextures(type1, GPUShaderStage.FRAGMENT);
+  t.skipIf(_sampleCount > 1 && !isMultisampledTextureFormat('r32float', t.isCompatibility));
 
   // Two bindings are attached to the same texture view.
   const usage =
