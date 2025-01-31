@@ -19,28 +19,15 @@ import {
 './limit_utils.js';
 
 const limit = 'maxStorageTexturesInFragmentStage';
-const dependentLimitName = 'maxStorageTexturesPerShaderStage';
 
 const kExtraLimits = {
   maxBindingsPerBindGroup: 'adapterLimit',
-  maxBindGroups: 'adapterLimit',
-  [dependentLimitName]: 'adapterLimit'
+  maxBindGroups: 'adapterLimit'
 };
 
 export const { g, description } = makeLimitTestGroup(limit, {
   // MAINTAINANCE_TODO: remove once this limit is required.
-  limitOptional: true,
-  limitCheckFn(t, device, { actualLimit }) {
-    if (!t.isCompatibility) {
-      const expectedLimit = device.limits[dependentLimitName];
-      t.expect(
-        actualLimit === expectedLimit,
-        `expected actual actualLimit: ${actualLimit} to equal ${dependentLimitName}: ${expectedLimit}`
-      );
-      return true;
-    }
-    return false;
-  }
+  limitOptional: true
 });
 
 function createBindGroupLayout(
@@ -209,5 +196,9 @@ fn(async (t) => {
   );
 });
 
-testMaxStorageXXXInYYYStageDeviceCreationWithDependentLimit(g, limit, dependentLimitName);
+testMaxStorageXXXInYYYStageDeviceCreationWithDependentLimit(
+  g,
+  limit,
+  'maxStorageTexturesPerShaderStage'
+);
 //# sourceMappingURL=maxStorageTexturesInFragmentStage.spec.js.map
