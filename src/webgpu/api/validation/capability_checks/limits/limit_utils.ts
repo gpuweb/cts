@@ -1278,11 +1278,10 @@ export function testMaxStorageXXXInYYYStageDeviceCreationWithDependentLimit(
   g.test(`auto_upgrades_per_stage,${dependentLimitName}`)
     .desc(
       `Test that
-       * adapter.limit.${limit} < adapter.limit${dependentLimitName}
+       * adapter.limit.${limit} < adapter.limit.${dependentLimitName}
        * requiredLimits.${limit} auto-upgrades device.limits.${dependentLimitName}
        `
     )
-    .params(u => u.combine('useMax', [true, false] as const)) // true case should not reject.
     .fn(async t => {
       const { adapterLimit: maximumLimit, adapter } = t;
 
