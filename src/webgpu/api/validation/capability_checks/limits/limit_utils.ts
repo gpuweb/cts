@@ -1275,42 +1275,47 @@ export function testMaxStorageXXXInYYYStageDeviceCreationWithDependentLimit(
     | 'maxStorageTexturesInVertexStage',
   dependentLimitName: 'maxStorageBuffersPerShaderStage' | 'maxStorageTexturesPerShaderStage'
 ) {
-  g.test(`validate,${dependentLimitName}`)
+  g.test(`auto_upgrades_per_stage,${dependentLimitName}`)
     .desc(
-      `Test that adapter.limit.${limit} and requiredLimits.${limit} must be <= ${dependentLimitName}`
+      `Test that
+       * adapter.limit.${limit} < adapter.limit${dependentLimitName}
+       * requiredLimits.${limit} auto-upgrades device.limits.${dependentLimitName}
+       `
     )
     .params(u => u.combine('useMax', [true, false] as const)) // true case should not reject.
     .fn(async t => {
-      const { useMax } = t.params;
       const { adapterLimit: maximumLimit, adapter } = t;
 
-      const dependentLimit = adapter.limits[dependentLimitName]!;
-      t.expect(
-        maximumLimit <= dependentLimit,
-        `maximumLimit(${maximumLimit}) is <= adapter.limits.${dependentLimitName}(${dependentLimit})`
-      );
+      {
+        const dependentLimit = adapter.limits[dependentLimitName]!;
+        t.expect(
+          maximumLimit <= dependentLimit,
+          `maximumLimit(${maximumLimit}) is <= adapter.limits.${dependentLimitName}(${dependentLimit})`
+        );
+      }
 
-      const dependentEffectiveLimits = useMax
-        ? dependentLimit
-        : t.getDefaultLimit(dependentLimitName);
-      const shouldReject = maximumLimit > dependentEffectiveLimits;
-      t.debug(
-        `${limit}(${maximumLimit}) > ${dependentLimitName}(${dependentEffectiveLimits}) shouldReject: ${shouldReject}`
-      );
+      const shouldReject = false;
       const device = await t.requestDeviceWithLimits(
         adapter,
         {
           [limit]: maximumLimit,
-          ...(useMax && {
-            [dependentLimitName]: dependentLimit,
-          }),
         },
         shouldReject
       );
+
+      {
+        const dependentLimit = device!.limits[dependentLimitName]!;
+        const actualLimit = device!.limits[limit]!;
+        t.expect(
+          dependentLimit >= actualLimit,
+          `device.limits.${dependentLimitName}(${dependentLimit}) is >= adapter.limits.${limit}(${actualLimit})`
+        );
+      }
+
       device?.destroy();
     });
 
-  g.test(`auto_upgrade,${dependentLimitName}`)
+  g.test(`auto_upgraded_from_per_stage,${dependentLimitName}`)
     .desc(
       `Test that adapter.limit.${limit} is automatically upgraded to ${dependentLimitName} except in compat.`
     )
