@@ -84,6 +84,12 @@ class AllFeaturesTest extends GPUTest {
   }
 }
 
+
+
+
+
+
+
 const kResourceInfo = {
   buffer: {
     create(t) {
@@ -99,7 +105,8 @@ const kResourceInfo = {
     'unmap',
     'usage'],
 
-    getters: ['label', 'mapState', 'size', 'usage']
+    getters: ['label', 'mapState', 'size', 'usage'],
+    settable: ['label']
   },
   texture: {
     create(t) {
@@ -131,8 +138,9 @@ const kResourceInfo = {
     'mipLevelCount',
     'sampleCount',
     'usage',
-    'width']
+    'width'],
 
+    settable: ['label']
   },
   querySet: {
     create(t) {
@@ -142,14 +150,16 @@ const kResourceInfo = {
       });
     },
     requiredKeys: ['count', 'destroy', 'label', 'type'],
-    getters: ['count', 'label', 'type']
+    getters: ['count', 'label', 'type'],
+    settable: ['label']
   },
   adapter: {
     create(t) {
       return t.adapter;
     },
     requiredKeys: ['features', 'info', 'limits', 'requestDevice'],
-    getters: ['features', 'info', 'limits']
+    getters: ['features', 'info', 'limits'],
+    settable: []
   },
   device: {
     create(t) {
@@ -185,21 +195,24 @@ const kResourceInfo = {
     'queue',
     'removeEventListener'],
 
-    getters: ['adapterInfo', 'features', 'label', 'limits', 'lost', 'onuncapturederror', 'queue']
+    getters: ['adapterInfo', 'features', 'label', 'limits', 'lost', 'onuncapturederror', 'queue'],
+    settable: ['label', 'onuncapturederror']
   },
   'adapter.limits': {
     create(t) {
       return t.adapter.limits;
     },
     requiredKeys: kSpecifiedLimits,
-    getters: kSpecifiedLimits
+    getters: kSpecifiedLimits,
+    settable: []
   },
   'device.limits': {
     create(t) {
       return t.device.limits;
     },
     requiredKeys: kSpecifiedLimits,
-    getters: kSpecifiedLimits
+    getters: kSpecifiedLimits,
+    settable: []
   }
 };
 const kResources = keysOf(kResourceInfo);
@@ -352,6 +365,39 @@ fn(async (t) => {
     t.expect(
       actual === defaultLimit,
       `expected device.limits.${key}(${actual}) === ${defaultLimit}`
+    );
+  }
+});
+
+g.test('readonly_properties').
+desc(
+  `
+    Test that setting a property with no setter throws.
+    `
+).
+params((u) => u.combine('type', kResources)).
+fn((t) => {
+  'use strict'; // This makes setting a readonly property produce a TypeError.
+  const { type } = t.params;
+  const { getters, settable } = kResourceInfo[type];
+  const obj = createResource(t, type);
+  for (const getter of getters) {
+    const origValue = obj[getter];
+
+    // try setting it.
+    const isSettable = settable.includes(getter);
+    t.shouldThrow(
+      isSettable ? false : 'TypeError',
+      () => {
+        obj[getter] = 'test value';
+        // If we were able to set it, restore it.
+        obj[getter] = origValue;
+      },
+      {
+        message: `instanceof ${type}.${getter} = value ${
+        isSettable ? 'does not throw' : 'throws'
+        }`
+      }
     );
   }
 });
