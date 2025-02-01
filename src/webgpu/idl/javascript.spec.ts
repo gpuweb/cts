@@ -377,7 +377,7 @@ g.test('readonly_properties')
   )
   .params(u => u.combine('type', kResources))
   .fn(t => {
-    'use strict';
+    'use strict'; // This makes setting a readonly property produce a TypeError.
     const { type } = t.params;
     const { getters, settable } = kResourceInfo[type];
     const obj = createResource(t, type);
