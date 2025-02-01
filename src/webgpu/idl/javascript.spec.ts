@@ -377,6 +377,7 @@ g.test('readonly_properties')
   )
   .params(u => u.combine('type', kResources))
   .fn(t => {
+    'use strict';
     const { type } = t.params;
     const { getters, settable } = kResourceInfo[type];
     const obj = createResource(t, type);
