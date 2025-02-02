@@ -18,28 +18,15 @@ import {
 } from './limit_utils.js';
 
 const limit = 'maxStorageBuffersInFragmentStage';
-const dependentLimitName = 'maxStorageBuffersPerShaderStage';
 
 const kExtraLimits: LimitsRequest = {
   maxBindingsPerBindGroup: 'adapterLimit',
   maxBindGroups: 'adapterLimit',
-  [dependentLimitName]: 'adapterLimit',
 };
 
 export const { g, description } = makeLimitTestGroup(limit, {
   // MAINTAINANCE_TODO: remove once this limit is required.
   limitOptional: true,
-  limitCheckFn(t, device, { actualLimit }) {
-    if (!t.isCompatibility) {
-      const expectedLimit = device.limits[dependentLimitName];
-      t.expect(
-        actualLimit === expectedLimit,
-        `expected actual actualLimit: ${actualLimit} to equal ${dependentLimitName}: ${expectedLimit}`
-      );
-      return true;
-    }
-    return false;
-  },
 });
 
 function createBindGroupLayout(
@@ -208,4 +195,8 @@ g.test('createPipeline,at_over')
     );
   });
 
-testMaxStorageXXXInYYYStageDeviceCreationWithDependentLimit(g, limit, dependentLimitName);
+testMaxStorageXXXInYYYStageDeviceCreationWithDependentLimit(
+  g,
+  limit,
+  'maxStorageBuffersPerShaderStage'
+);
