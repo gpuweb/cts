@@ -195,7 +195,7 @@ fn main() {
 g.test('invalid_rhs_fn_override')
   .desc(
     `
-Validates that a short-circuiting expression with a const-expression LHS guards the evaluation of its RHS expression.
+Validates that a short-circuiting expression in functions with a override-expression LHS guards the evaluation of its RHS expression.
 `
   )
   .params(u =>
