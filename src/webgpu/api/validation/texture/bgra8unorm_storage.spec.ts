@@ -34,6 +34,12 @@ class BGRA8UnormStorageValidationTests extends ValidationTest {
       });
     }, !success);
   }
+
+  skipIfTextureFormatNotUsableAsStorageTexture(format: GPUTextureFormat, device: GPUDevice): void {
+    if (format === 'bgra8unorm' && !device.features.has('bgra8unorm-storage')) {
+      this.skip('bgra8unorm-storage feature is not supported');
+    }
+  }
 }
 
 export const g = makeTestGroup(BGRA8UnormStorageValidationTests);
