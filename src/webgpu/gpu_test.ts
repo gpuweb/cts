@@ -3,7 +3,6 @@ import {
   FixtureClass,
   FixtureClassInterface,
   FixtureClassWithMixin,
-  SkipTestCase,
   SubcaseBatchState,
   TestCaseRecorder,
   TestParams,
@@ -253,18 +252,6 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
     );
     // Suppress uncaught promise rejection (we'll catch it later).
     this.mismatchedProvider.catch(() => {});
-  }
-
-  /** Throws an exception marking the subcase as skipped. */
-  skip(msg: string): never {
-    throw new SkipTestCase(msg);
-  }
-
-  /** Throws an exception making the subcase as skipped if condition is true */
-  skipIf(cond: boolean, msg: string | (() => string) = '') {
-    if (cond) {
-      this.skip(typeof msg === 'function' ? msg() : msg);
-    }
   }
 
   /**
