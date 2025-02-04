@@ -1,3 +1,4 @@
+import { getGPU } from '../../../../../common/util/navigator_gpu.js';
 import {
   range,
   reorder,
@@ -88,7 +89,7 @@ function skipIfNotEnoughStorageTexturesInStage(
 function skipIfAccessNotSupported(t: LimitTestsImpl, access: GPUStorageTextureAccess) {
   t.skipIf(
     (access === 'read-only' || access === 'read-write') &&
-      !navigator.gpu.wgslLanguageFeatures.has('readonly_and_readwrite_storage_textures'),
+      !getGPU(t.rec).wgslLanguageFeatures.has('readonly_and_readwrite_storage_textures'),
     `access = ${access} but navigator.gpu.wsglLanguageFeatures does not contain 'readonly_and_readwrite_storage_textures'`
   );
 }
