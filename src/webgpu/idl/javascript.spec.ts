@@ -89,8 +89,18 @@ type ResourceInfo = {
   requiredKeys: readonly string[];
   getters: readonly string[];
   settable: readonly string[];
+  sameObject: readonly string[];
 };
 const kResourceInfo: { [key: string]: ResourceInfo } = {
+  gpu: {
+    create(t: GPUTest) {
+      return getGPU(null);
+    },
+    requiredKeys: ['wgslLanguageFeatures', 'requestAdapter'],
+    getters: ['wgslLanguageFeatures'],
+    settable: [],
+    sameObject: ['wgslLanguageFeatures'],
+  },
   buffer: {
     create(t: GPUTest) {
       return t.createBufferTracked({ size: 16, usage: GPUBufferUsage.UNIFORM });
@@ -107,6 +117,7 @@ const kResourceInfo: { [key: string]: ResourceInfo } = {
     ],
     getters: ['label', 'mapState', 'size', 'usage'],
     settable: ['label'],
+    sameObject: [],
   },
   texture: {
     create(t: GPUTest) {
@@ -141,6 +152,7 @@ const kResourceInfo: { [key: string]: ResourceInfo } = {
       'width',
     ],
     settable: ['label'],
+    sameObject: [],
   },
   querySet: {
     create(t: GPUTest) {
@@ -152,6 +164,7 @@ const kResourceInfo: { [key: string]: ResourceInfo } = {
     requiredKeys: ['count', 'destroy', 'label', 'type'],
     getters: ['count', 'label', 'type'],
     settable: ['label'],
+    sameObject: [],
   },
   adapter: {
     create(t: GPUTest) {
@@ -160,6 +173,7 @@ const kResourceInfo: { [key: string]: ResourceInfo } = {
     requiredKeys: ['features', 'info', 'limits', 'requestDevice'],
     getters: ['features', 'info', 'limits'],
     settable: [],
+    sameObject: ['features', 'info', 'limits'],
   },
   device: {
     create(t: GPUTest) {
@@ -197,6 +211,7 @@ const kResourceInfo: { [key: string]: ResourceInfo } = {
     ],
     getters: ['adapterInfo', 'features', 'label', 'limits', 'lost', 'onuncapturederror', 'queue'],
     settable: ['label', 'onuncapturederror'],
+    sameObject: ['adapterInfo', 'features', 'limits', 'queue'],
   },
   'adapter.limits': {
     create(t: GPUTest) {
@@ -205,6 +220,7 @@ const kResourceInfo: { [key: string]: ResourceInfo } = {
     requiredKeys: kSpecifiedLimits,
     getters: kSpecifiedLimits,
     settable: [],
+    sameObject: [],
   },
   'device.limits': {
     create(t: GPUTest) {
@@ -213,6 +229,7 @@ const kResourceInfo: { [key: string]: ResourceInfo } = {
     requiredKeys: kSpecifiedLimits,
     getters: kSpecifiedLimits,
     settable: [],
+    sameObject: [],
   },
 } as const;
 const kResources = keysOf(kResourceInfo);
@@ -305,42 +322,60 @@ g.test('obj,getOwnPropertyDescriptors')
     );
   });
 
+const kSetLikeFeaturesInfo: { [key: string]: (t: GPUTest) => GPUSupportedFeatures } = {
+  adapterFeatures(t: GPUTest) {
+    return t.adapter.features;
+  },
+  deviceFeatures(t: GPUTest) {
+    return t.device.features;
+  },
+};
+const kSetLikeFeatures = keysOf(kSetLikeFeaturesInfo);
+
+const kSetLikeInfo: { [key: string]: (t: GPUTest) => ReadonlySet<string> } = {
+  ...kSetLikeFeaturesInfo,
+  wgslLanguageFeatures() {
+    return getGPU(null).wgslLanguageFeatures;
+  },
+};
+const kSetLikes = keysOf(kSetLikeInfo);
+
 g.test('setlike,spread')
   .desc('obj spreads')
-  .params(u => u.combine('type', ['adapter', 'device'] as const))
+  .params(u => u.combine('type', kSetLikes))
   .fn(t => {
     const { type } = t.params;
-    const obj = type === 'adapter' ? t.adapter : t.device;
-    const copy = [...obj.features];
-    aHasBElements(t, copy, obj.features);
-    aHasBElements(t, obj.features, copy);
+    const setLike = kSetLikeInfo[type](t);
+    const copy = [...setLike];
+    aHasBElements(t, copy, setLike);
+    aHasBElements(t, setLike, copy);
   });
 
 g.test('setlike,set')
   .desc('obj copies to set')
-  .params(u => u.combine('type', ['adapter', 'device'] as const))
+  .params(u => u.combine('type', kSetLikes))
   .fn(t => {
     const { type } = t.params;
-    const obj = type === 'adapter' ? t.adapter : t.device;
-    const copy = new Set(obj.features);
-    aHasBElements(t, copy, obj.features);
-    aHasBElements(t, obj.features, copy);
+    const setLike = kSetLikeInfo[type](t);
+    const copy = new Set(setLike);
+    aHasBElements(t, copy, setLike);
+    aHasBElements(t, setLike, copy);
   });
 
 g.test('setlike,requiredFeatures')
   .desc('can be passed as required features')
-  .params(u => u.combine('type', ['adapter', 'device'] as const))
+  .params(u => u.combine('type', kSetLikeFeatures))
   .fn(async t => {
     const { type } = t.params;
-    const obj = type === 'adapter' ? t.adapter : t.device;
+    const features = kSetLikeFeaturesInfo[type](t);
 
     const gpu = getGPU(null);
     const adapter = await gpu.requestAdapter();
     const device = await t.requestDeviceTracked(adapter!, {
-      requiredFeatures: obj.features as Iterable<GPUFeatureName>,
+      requiredFeatures: features as Iterable<GPUFeatureName>,
     });
-    aHasBElements(t, device.features, obj.features);
-    aHasBElements(t, obj.features, device.features);
+    aHasBElements(t, device.features, features);
+    aHasBElements(t, features, device.features);
   });
 
 g.test('limits')
@@ -509,5 +544,36 @@ g.test('method_replacement')
         (obj as unknown as Record<string, unknown>)[method] === origFunc,
         `instance of ${type}.${method} === ${type}.prototype.${method}`
       );
+    }
+  });
+
+g.test('sameObject')
+  .desc(
+    `
+    Test that property that are supposed to return the sameObject do.
+    `
+  )
+  .params(u => u.combine('type', kResources))
+  .fn(t => {
+    const { type } = t.params;
+    const { sameObject } = kResourceInfo[type];
+    const obj = createResource(t, type);
+    for (const property of sameObject) {
+      const origValue1 = (obj as unknown as Record<string, Record<string, string>>)[property];
+      const origValue2 = (obj as unknown as Record<string, Record<string, string>>)[property];
+      t.expect(typeof origValue1 === 'object');
+      t.expect(typeof origValue2 === 'object');
+      // Seems like this should be enough if they are objects.
+      t.expect(origValue1 === origValue2);
+      // add a property
+      origValue1['foo'] = 'test';
+      // see that it appears on the object.
+      t.expect(origValue1.foo === 'test');
+      t.expect(origValue2.foo === 'test');
+      // Delete the property.
+      delete origValue2.foo;
+      // See it was removed.
+      assert(origValue1.foo === undefined);
+      assert(origValue2.foo === undefined);
     }
   });
