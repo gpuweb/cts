@@ -24,6 +24,7 @@ TODO: ensure existing tests cover these notes. Note many of these may be operati
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { MaxLimitsTestMixin } from '../../../../../gpu_test.js';
+import { nextAfterF32 } from '../../../../../util/math.js';
 import { ValidationTest } from '../../../validation_test.js';
 
 interface ViewportCall {
@@ -179,52 +180,55 @@ and that the viewport size cannot exceed the maximum.`
   .paramsSubcasesOnly(u =>
     u.combine('dimension', [0, 1]).combineWithParams([
       // Control case: max viewport is valid.
-      { om: 0, od: 0, sd: 0 },
+      { om: 0, od: 0, sd: 0, _success: true },
 
       // Other valid cases
-      { om: -1, od: 0, sd: 0 },
-      { om: -2, od: 0, sd: 0 },
-      { om: 1, od: -1, sd: 0 },
-      { om: 0, od: -1, sd: 0 },
-      { om: 0, od: 1, sd: 0 },
-      { om: 1, od: 0, sd: -1 },
+      { om: -1, od: 0, sd: 0, _success: true },
+      { om: -2, od: 0, sd: 0, _success: true },
+      { om: 1, od: -1, sd: 0, _success: true },
+      { om: 0, od: -1, sd: 0, _success: true },
+      { om: 0, od: 1, sd: 0, _success: true },
+      { om: 1, od: 0, sd: -1, _success: true },
 
       // Cases that go outside the allowed bounds
-      { om: -2, od: -1, sd: 0 },
-      { om: 1, od: 0, sd: 0 },
-      { om: 1, od: 1, sd: -1 },
-      { om: 1, od: -0.1, sd: 0 },
+      { om: -2, od: -1, sd: 0, _success: false },
+      { om: 1, od: 0, sd: 0, _success: false },
+      { om: 1, od: 1, sd: -1, _success: false },
+      { om: 1, od: 'negative', sd: 0, _success: false },
 
       // Case that exceeds the max viewport size
-      { om: 0, od: 0, sd: 1 },
-      { om: 0, od: 0, sd: 0.1 },
+      { om: 0, od: 0, sd: 1, _success: false },
+      { om: 0, od: 0, sd: 'positive', _success: false },
     ])
   )
   .fn(t => {
-    const { dimension, om, od, sd } = t.params;
+    const { dimension, om, od, sd, _success } = t.params;
 
     const maxViewportSize = t.device.limits.maxTextureDimension2D;
-    const maxViewportBounds = maxViewportSize * 2;
 
     const xy = [0, 0];
     const wh = [maxViewportSize, maxViewportSize];
 
-    xy[dimension] = maxViewportSize * om + od;
-    wh[dimension] += sd;
+    xy[dimension] = maxViewportSize * om;
+    
+    if (od == 'negative' || od == 'positive') {
+      xy[dimension] = nextAfterF32(xy[dimension], od, 'no-flush');
+    } else {
+      xy[dimension] += od as number;
+    }
+
+    if (sd == 'negative' || sd == 'positive') {
+      wh[dimension] = nextAfterF32(wh[dimension], sd, 'no-flush');
+    } else {
+      wh[dimension] += sd as number;
+    }
 
     const x = xy[0];
     const y = xy[1];
     const w = wh[0];
     const h = wh[1];
 
-    const inBounds =
-      x >= -maxViewportBounds &&
-      y >= -maxViewportBounds &&
-      x + w <= maxViewportBounds - 1 &&
-      y + h <= maxViewportBounds - 1;
-    const validSize = w <= maxViewportSize && h <= maxViewportSize;
-    const success = inBounds && validSize;
-    t.testViewportCall(success, { x, y, w, h, minDepth: 0, maxDepth: 1 });
+    t.testViewportCall(_success, { x, y, w, h, minDepth: 0, maxDepth: 1 });
   });
 
 g.test('setViewport,depth_rangeAndOrder')
