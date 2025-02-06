@@ -210,14 +210,14 @@ and that the viewport size cannot exceed the maximum.`
     const wh = [maxViewportSize, maxViewportSize];
 
     xy[dimension] = maxViewportSize * om;
-    
-    if (od == 'negative' || od == 'positive') {
+
+    if (od === 'negative' || od === 'positive') {
       xy[dimension] = nextAfterF32(xy[dimension], od, 'no-flush');
     } else {
       xy[dimension] += od as number;
     }
 
-    if (sd == 'negative' || sd == 'positive') {
+    if (sd === 'negative' || sd === 'positive') {
       wh[dimension] = nextAfterF32(wh[dimension], sd, 'no-flush');
     } else {
       wh[dimension] += sd as number;
