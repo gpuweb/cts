@@ -43,7 +43,6 @@ g.test('uninitialized_texture_is_zero')
   .params(kTestParams)
   .beforeAllSubcases(t => {
     t.skipIfTextureFormatNotSupported(t.params.format);
-    t.skipIfColorRenderableNotSupportedForFormat(t.params.format);
     t.selectDeviceOrSkipTestCase(kTextureFormatInfo[t.params.format].feature);
   })
   .fn(t => {
