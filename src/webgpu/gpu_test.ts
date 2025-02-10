@@ -1365,6 +1365,25 @@ function applyLimitsToDescriptor(
   return descWithMaxLimits;
 }
 
+function getAdapterFeaturesAsDeviceRequiredFeatures(adapter: GPUAdapter): Iterable<GPUFeatureName> {
+  return adapter.features as Iterable<GPUFeatureName>;
+}
+
+function applyFeaturesToDescriptor(
+  adapter: GPUAdapter,
+  desc: CanonicalDeviceDescriptor | undefined,
+  getRequiredFeatures: (adapter: GPUAdapter) => Iterable<GPUFeatureName>
+) {
+  const existingRequiredFeatures = (desc && desc?.requiredFeatures) ?? [];
+  const descWithRequiredFeatures: CanonicalDeviceDescriptor = {
+    requiredLimits: {},
+    defaultQueue: {},
+    ...desc,
+    requiredFeatures: [...existingRequiredFeatures, ...getRequiredFeatures(adapter)],
+  };
+  return descWithRequiredFeatures;
+}
+
 /**
  * Used by RequiredLimitsTestMixin to allow you to request specific limits
  *
@@ -1472,6 +1491,65 @@ export function MaxLimitsTestMixin<F extends FixtureClass<GPUTestBase>>(Base: F)
       return 'AllLimits';
     },
   });
+}
+
+/**
+ * Used by AllFeaturesMaxLimitsGPUTest to request a device with all limits and features of the adapter.
+ */
+export class AllFeaturesMaxLimitsGPUTestSubcaseBatchState extends GPUTestSubcaseBatchState {
+  constructor(
+    protected override readonly recorder: TestCaseRecorder,
+    public override readonly params: TestParams
+  ) {
+    super(recorder, params);
+  }
+  override requestDeviceWithRequiredParametersOrSkip(
+    descriptor: DeviceSelectionDescriptor,
+    descriptorModifier?: DescriptorModifier
+  ): void {
+    const mod: DescriptorModifier = {
+      descriptorModifier(adapter: GPUAdapter, desc: CanonicalDeviceDescriptor | undefined) {
+        desc = descriptorModifier?.descriptorModifier
+          ? descriptorModifier.descriptorModifier(adapter, desc)
+          : desc;
+        desc = applyLimitsToDescriptor(adapter, desc, getAdapterLimitsAsDeviceRequiredLimits);
+        desc = applyFeaturesToDescriptor(adapter, desc, getAdapterFeaturesAsDeviceRequiredFeatures);
+        return desc;
+      },
+      keyModifier(baseKey: string) {
+        return `${baseKey}:AllFeaturesMaxLimits`;
+      },
+    };
+    super.requestDeviceWithRequiredParametersOrSkip(
+      initUncanonicalizedDeviceDescriptor(descriptor),
+      mod
+    );
+  }
+}
+
+/**
+ * A test that requests all features and maximum limits. This should be the default
+ * test for the majority of tests, otherwise optional features will not be tested.
+ * The exceptions are only tests that explicitly test the absence of a feature or
+ * specific limits such as the tests under validation/capability_checks.
+ *
+ * As a concrete example to demonstrate the issue, texture format `rg11b10ufloat` is
+ * optionally renderable and can optionally be used multisampled. Any test that tests
+ * texture formats should test this format, skipping only if the feature is missing.
+ * So, the default should be that the test tests `kAllTextureFormats` with the appropriate
+ * filters from format_info.ts or the various helpers. This way, `rg11b10ufloat` will
+ * included in the test and fail if not appropriately filtered. If instead you were
+ * to use GPUTest then `rg11b10ufloat` would just be skipped as its never enabled.
+ * You could enable it manually but that spreads enabling to every test instead of being
+ * centralized in one place, here.
+ */
+export class AllFeaturesMaxLimitsGPUTest extends GPUTest {
+  public static override MakeSharedState(
+    recorder: TestCaseRecorder,
+    params: TestParams
+  ): GPUTestSubcaseBatchState {
+    return new AllFeaturesMaxLimitsGPUTestSubcaseBatchState(recorder, params);
+  }
 }
 
 /**

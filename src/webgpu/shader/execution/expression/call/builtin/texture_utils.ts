@@ -14,7 +14,11 @@ import {
   kEncodableTextureFormats,
   kTextureFormatInfo,
 } from '../../../../../format_info.js';
-import { GPUTest, GPUTestSubcaseBatchState } from '../../../../../gpu_test.js';
+import {
+  AllFeaturesMaxLimitsGPUTest,
+  GPUTest,
+  GPUTestSubcaseBatchState,
+} from '../../../../../gpu_test.js';
 import {
   align,
   clamp,
@@ -786,7 +790,7 @@ function getWeightForMipLevel(
 /**
  * Used for textureNumSamples, textureNumLevels, textureNumLayers, textureDimension
  */
-export class WGSLTextureQueryTest extends GPUTest {
+export class WGSLTextureQueryTest extends AllFeaturesMaxLimitsGPUTest {
   skipIfNoStorageTexturesInStage(stage: ShaderStage) {
     if (this.isCompatibility) {
       this.skipIf(

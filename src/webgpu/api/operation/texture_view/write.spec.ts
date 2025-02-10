@@ -22,11 +22,11 @@ import {
   kTextureFormatInfo,
   RegularTextureFormat,
 } from '../../../format_info.js';
-import { GPUTest, MaxLimitsTestMixin, TextureTestMixin } from '../../../gpu_test.js';
+import { AllFeaturesMaxLimitsGPUTest, GPUTest, TextureTestMixin } from '../../../gpu_test.js';
 import { kFullscreenQuadVertexShaderCode } from '../../../util/shader.js';
 import { TexelView } from '../../../util/texture/texel_view.js';
 
-export const g = makeTestGroup(TextureTestMixin(MaxLimitsTestMixin(GPUTest)));
+export const g = makeTestGroup(TextureTestMixin(AllFeaturesMaxLimitsGPUTest));
 
 const kTextureViewWriteMethods = [
   'storage-write-fragment',

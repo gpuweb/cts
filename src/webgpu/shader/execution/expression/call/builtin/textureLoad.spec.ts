@@ -28,7 +28,7 @@ import {
   kTextureFormatInfo,
   textureDimensionAndFormatCompatible,
 } from '../../../../../format_info.js';
-import { GPUTest, MaxLimitsTestMixin } from '../../../../../gpu_test.js';
+import { AllFeaturesMaxLimitsGPUTest, GPUTest } from '../../../../../gpu_test.js';
 import { maxMipLevelCount, virtualMipSize } from '../../../../../util/texture/base.js';
 import { TexelFormats } from '../../../../types.js';
 
@@ -79,7 +79,7 @@ function skipIfStorageTexturesNotSupportedInStage(t: GPUTest, stage: ShortShader
   }
 }
 
-export const g = makeTestGroup(MaxLimitsTestMixin(GPUTest));
+export const g = makeTestGroup(AllFeaturesMaxLimitsGPUTest);
 
 g.test('sampled_1d')
   .specURL('https://www.w3.org/TR/WGSL/#textureload')
