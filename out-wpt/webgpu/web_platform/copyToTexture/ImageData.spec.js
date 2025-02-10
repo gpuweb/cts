@@ -49,7 +49,6 @@ combine('height', [1, 2, 4, 15, 255, 256])
 beforeAllSubcases((t) => {
   t.skipIf(typeof ImageData === 'undefined', 'ImageData does not exist in this environment');
   t.skipIfTextureFormatNotSupported(t.params.dstColorFormat);
-  t.skipIfColorRenderableNotSupportedForFormat(t.params.dstColorFormat);
 }).
 fn((t) => {
   const { width, height, dstColorFormat, dstPremultiplied, srcDoFlipYDuringCopy } = t.params;

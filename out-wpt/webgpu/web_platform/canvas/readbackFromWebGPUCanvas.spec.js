@@ -261,10 +261,6 @@ combine('alphaMode', kCanvasAlphaModes).
 combine('colorSpace', kCanvasColorSpaces).
 combine('snapshotType', ['toDataURL', 'toBlob', 'imageBitmap'])
 ).
-beforeAllSubcases((t) => {
-  // rgba16float may not be color-renderable in compat mode
-  t.skipIfColorRenderableNotSupportedForFormat(t.params.format);
-}).
 fn(async (t) => {
   const canvas = initWebGPUCanvasContent(
     t,
@@ -327,10 +323,6 @@ combine('alphaMode', kCanvasAlphaModes).
 combine('colorSpace', kCanvasColorSpaces).
 combine('snapshotType', ['convertToBlob', 'transferToImageBitmap', 'imageBitmap'])
 ).
-beforeAllSubcases((t) => {
-  // rgba16float may not be color-renderable in compat mode
-  t.skipIfColorRenderableNotSupportedForFormat(t.params.format);
-}).
 fn(async (t) => {
   const offscreenCanvas = initWebGPUCanvasContent(
     t,
@@ -386,10 +378,6 @@ combine('alphaMode', kCanvasAlphaModes).
 combine('webgl', ['webgl', 'webgl2']).
 combine('upload', ['texImage2D', 'texSubImage2D'])
 ).
-beforeAllSubcases((t) => {
-  // rgba16float may not be color-renderable in compat mode
-  t.skipIfColorRenderableNotSupportedForFormat(t.params.format);
-}).
 fn((t) => {
   const { format, webgl, upload } = t.params;
   const canvas = initWebGPUCanvasContent(t, format, t.params.alphaMode, 'srgb', 'onscreen');
@@ -471,10 +459,6 @@ combine('colorSpace', kCanvasColorSpaces).
 combine('webgpuCanvasType', kAllCanvasTypes).
 combine('canvas2DType', kAllCanvasTypes)
 ).
-beforeAllSubcases((t) => {
-  // rgba16float may not be color-renderable in compat mode
-  t.skipIfColorRenderableNotSupportedForFormat(t.params.format);
-}).
 fn((t) => {
   const { format, webgpuCanvasType, alphaMode, colorSpace, canvas2DType } = t.params;
 

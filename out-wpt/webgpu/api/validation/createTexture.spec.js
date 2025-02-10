@@ -282,7 +282,6 @@ beforeAllSubcases((t) => {
   const { format } = t.params;
   const info = kTextureFormatInfo[format];
   t.skipIfTextureFormatNotSupported(format);
-  t.skipIfColorRenderableNotSupportedForFormat(format);
   t.selectDeviceOrSkipTestCase(info.feature);
 }).
 fn((t) => {
@@ -359,7 +358,6 @@ beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[format];
   t.skipIfTextureFormatNotSupported(format);
   t.selectDeviceOrSkipTestCase(info.feature);
-  t.skipIfColorRenderableNotSupportedForFormat(format);
 }).
 fn((t) => {
   const { dimension, sampleCount, format, mipLevelCount, arrayLayerCount, usage } = t.params;
@@ -1053,7 +1051,6 @@ beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[format];
   t.skipIfTextureFormatNotSupported(format);
   t.selectDeviceOrSkipTestCase(info.feature);
-  t.skipIfColorRenderableNotSupportedForFormat(format);
 }).
 fn((t) => {
   const { dimension, format, usage0, usage1 } = t.params;

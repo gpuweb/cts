@@ -520,9 +520,6 @@ filter(
   usage1 === 'copy-dst'
 )
 ).
-beforeAllSubcases((t) => {
-  t.skipIfColorRenderableNotSupportedForFormat('r32float');
-}).
 fn((t) => {
   const { usage0, usage1 } = t.params;
 
@@ -618,11 +615,6 @@ u.
 combine('bindingType', ['color-attachment', ...kTextureBindingTypes]).
 combine('viewUsage', [0, ...kTextureUsages])
 ).
-beforeAllSubcases((t) => {
-  if (t.params.bindingType === 'color-attachment') {
-    t.skipIfColorRenderableNotSupportedForFormat('r32float');
-  }
-}).
 fn((t) => {
   const { bindingType, viewUsage } = t.params;
 

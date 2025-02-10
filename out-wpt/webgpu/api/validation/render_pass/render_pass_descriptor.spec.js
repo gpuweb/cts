@@ -211,7 +211,6 @@ combine(
 ).
 beforeAllSubcases((t) => {
   t.skipIfTextureFormatNotSupported(t.params.format);
-  t.skipIfColorRenderableNotSupportedForFormat(t.params.format);
 }).
 fn((t) => {
   const { format, attachmentCount } = t.params;
@@ -268,9 +267,6 @@ u.combineWithParams([
 }]
 )
 ).
-beforeAllSubcases((t) => {
-  t.skipIfColorRenderableNotSupportedForFormat('r32float');
-}).
 fn((t) => {
   const { formats } = t.params;
 

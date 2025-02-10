@@ -205,9 +205,6 @@ unless(({ entry, usage }) => {
   return usage === GPUConst.TextureUsage.STORAGE_BINDING && info.resource === 'sampledTexMS';
 })
 ).
-beforeAllSubcases((t) => {
-  t.skipIfColorRenderableNotSupportedForFormat(kTestFormat);
-}).
 fn((t) => {
   const { entry, usage } = t.params;
   const info = texBindingTypeInfo(entry);

@@ -63,7 +63,6 @@ g.test('from_image')
   .beforeAllSubcases(t => {
     t.skipIfTextureFormatNotSupported(t.params.dstColorFormat);
     if (typeof HTMLImageElement === 'undefined') t.skip('HTMLImageElement not available');
-    t.skipIfColorRenderableNotSupportedForFormat(t.params.dstColorFormat);
   })
   .fn(async t => {
     const { width, height, dstColorFormat, dstPremultiplied, srcDoFlipYDuringCopy } = t.params;

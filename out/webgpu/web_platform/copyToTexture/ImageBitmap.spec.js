@@ -61,7 +61,6 @@ combine('height', [1, 2, 4, 15, 255, 256])
 beforeAllSubcases((t) => {
   t.skipIf(typeof ImageData === 'undefined', 'ImageData does not exist in this environment');
   t.skipIfTextureFormatNotSupported(t.params.dstFormat);
-  t.skipIfColorRenderableNotSupportedForFormat(t.params.dstFormat);
 }).
 fn(async (t) => {
   const {
@@ -183,7 +182,6 @@ combine('height', [1, 2, 4, 15, 255, 256])
 beforeAllSubcases((t) => {
   t.skipIf(typeof ImageData === 'undefined', 'ImageData does not exist in this environment');
   t.skipIfTextureFormatNotSupported(t.params.dstFormat);
-  t.skipIfColorRenderableNotSupportedForFormat(t.params.dstFormat);
 }).
 fn(async (t) => {
   const {

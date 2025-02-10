@@ -495,7 +495,6 @@ combine('height', [1, 2, 4, 15])
 ).
 beforeAllSubcases((t) => {
   t.skipIfTextureFormatNotSupported(t.params.dstColorFormat);
-  t.skipIfColorRenderableNotSupportedForFormat(t.params.dstColorFormat);
 }).
 fn((t) => {
   const { width, height, canvasType, dstAlphaMode } = t.params;
@@ -560,7 +559,6 @@ combine('height', [1, 2, 4, 15])
 ).
 beforeAllSubcases((t) => {
   t.skipIfTextureFormatNotSupported(t.params.dstColorFormat);
-  t.skipIfColorRenderableNotSupportedForFormat(t.params.dstColorFormat);
 }).
 fn((t) => {
   const { width, height, canvasType, contextName, srcPremultiplied, dstAlphaMode } = t.params;
@@ -630,7 +628,6 @@ combine('height', [1, 2, 4, 15])
 ).
 beforeAllSubcases((t) => {
   t.skipIfTextureFormatNotSupported(t.params.dstColorFormat);
-  t.skipIfColorRenderableNotSupportedForFormat(t.params.dstColorFormat);
   t.selectMismatchedDeviceOrSkipTestCase(undefined);
 }).
 fn((t) => {
@@ -697,7 +694,6 @@ combine('height', [1, 2, 4, 15])
 ).
 beforeAllSubcases((t) => {
   t.skipIfTextureFormatNotSupported(t.params.dstColorFormat);
-  t.skipIfColorRenderableNotSupportedForFormat(t.params.dstColorFormat);
 }).
 fn(async (t) => {
   const { width, height, canvasType, dstAlphaMode } = t.params;
@@ -774,7 +770,6 @@ combine('height', [1, 2, 4, 15, 255, 256])
 ).
 beforeAllSubcases((t) => {
   t.skipIfTextureFormatNotSupported(t.params.dstColorFormat);
-  t.skipIfColorRenderableNotSupportedForFormat(t.params.dstColorFormat);
 }).
 fn((t) => {
   const {

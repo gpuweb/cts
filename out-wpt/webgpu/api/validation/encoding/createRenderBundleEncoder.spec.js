@@ -14,13 +14,14 @@ import {
   kTextureFormatInfo,
   kRenderableColorTextureFormats } from
 '../../../format_info.js';
+import { MaxLimitsTestMixin } from '../../../gpu_test.js';
 import { ValidationTest } from '../validation_test.js';
 
 // MAINTENANCE_TODO: This should be changed to kMaxColorAttachmentsToTest
 // when this is made a MaxLimitTest (see above).
 const kMaxColorAttachments = getDefaultLimits('core').maxColorAttachments.default;
 
-export const g = makeTestGroup(ValidationTest);
+export const g = makeTestGroup(MaxLimitsTestMixin(ValidationTest));
 
 g.test('attachment_state,limits,maxColorAttachments').
 desc(`Tests that attachment state must have <= device.limits.maxColorAttachments.`).
@@ -63,7 +64,6 @@ combine(
 ).
 beforeAllSubcases((t) => {
   t.skipIfTextureFormatNotSupported(t.params.format);
-  t.skipIfColorRenderableNotSupportedForFormat(t.params.format);
 }).
 fn((t) => {
   const { format, colorFormatCount } = t.params;
@@ -119,9 +119,6 @@ u.combineWithParams([
 }]
 )
 ).
-beforeAllSubcases((t) => {
-  t.skipIfColorRenderableNotSupportedForFormat('r32float');
-}).
 fn((t) => {
   const { formats } = t.params;
 
@@ -172,7 +169,6 @@ combine('attachment', ['color', 'depthStencil'])
 beforeAllSubcases((t) => {
   const { format } = t.params;
   t.selectDeviceForTextureFormatOrSkipTestCase(format);
-  t.skipIfColorRenderableNotSupportedForFormat(format);
 }).
 fn((t) => {
   const { format, attachment } = t.params;
