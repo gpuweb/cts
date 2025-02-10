@@ -261,7 +261,7 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
     if (this.isCompatibility) {
       for (const format of formats) {
         if (format === 'bgra8unorm-srgb') {
-          this.skip(`texture format '${format} is not supported`);
+          this.skip(`texture format '${format} is not supported in compatibility mode`);
         }
       }
     }
@@ -274,24 +274,13 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
         this.skip(`texture format '${format}' is not supported to be multisampled`);
       }
     }
-
-    this.skipIfColorRenderableNotSupportedForFormat(...formats);
-  }
-
-  skipIfColorRenderableNotSupportedForFormat(...formats: (GPUTextureFormat | undefined)[]) {
-    for (const format of formats) {
-      if (format === undefined) continue;
-      if (!kTextureFormatInfo[format].color) {
-        this.skip(`texture format '${format} is not color renderable`);
-      }
-    }
   }
 
   skipIfCopyTextureToTextureNotSupportedForFormat(...formats: (GPUTextureFormat | undefined)[]) {
     if (this.isCompatibility) {
       for (const format of formats) {
         if (format && isCompressedTextureFormat(format)) {
-          this.skip(`copyTextureToTexture with ${format} is not supported`);
+          this.skip(`copyTextureToTexture with ${format} is not supported in compatibility mode`);
         }
       }
     }
@@ -523,15 +512,6 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
         if (format === 'bgra8unorm-srgb') {
           this.skip(`texture format '${format} is not supported`);
         }
-      }
-    }
-  }
-
-  skipIfColorRenderableNotSupportedForFormat(...formats: (GPUTextureFormat | undefined)[]) {
-    for (const format of formats) {
-      if (format === undefined) continue;
-      if (!kTextureFormatInfo[format].color) {
-        this.skip(`texture format '${format} is not color renderable`);
       }
     }
   }

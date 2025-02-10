@@ -58,7 +58,6 @@ g.test('color,attachments')
   .beforeAllSubcases(t => {
     const info = kTextureFormatInfo[t.params.format];
     t.skipIfTextureFormatNotSupported(t.params.format);
-    t.skipIfColorRenderableNotSupportedForFormat(t.params.format);
     t.selectDeviceOrSkipTestCase(info.feature);
   })
   .fn(t => {
@@ -161,7 +160,6 @@ g.test('color,component_count')
   .beforeAllSubcases(t => {
     const info = kTextureFormatInfo[t.params.format];
     t.skipIfTextureFormatNotSupported(t.params.format);
-    t.skipIfColorRenderableNotSupportedForFormat(t.params.format);
     t.selectDeviceOrSkipTestCase(info.feature);
   })
   .fn(t => {
