@@ -1,6 +1,6 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
-**/import { unreachable } from '../../../../../common/util/util.js';import { GPUTest } from '../../../../gpu_test.js';
+**/import { unreachable } from '../../../../../common/util/util.js';import { AllFeaturesMaxLimitsGPUTest } from '../../../../gpu_test.js';
 
 
 
@@ -12,7 +12,7 @@
 
 
 
-export class ProgrammableStateTest extends GPUTest {
+export class ProgrammableStateTest extends AllFeaturesMaxLimitsGPUTest {
   commonBindGroupLayouts = new Map();
 
   skipIfNeedsStorageBuffersInFragmentStageAndHaveNone(

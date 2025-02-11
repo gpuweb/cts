@@ -14,7 +14,11 @@ import {
   kEncodableTextureFormats,
   kTextureFormatInfo } from
 '../../../../../format_info.js';
-import { GPUTest } from '../../../../../gpu_test.js';
+import {
+  AllFeaturesMaxLimitsGPUTest,
+  GPUTest } from
+
+'../../../../../gpu_test.js';
 import {
   align,
   clamp,
@@ -786,7 +790,7 @@ mipLevel)
 /**
  * Used for textureNumSamples, textureNumLevels, textureNumLayers, textureDimension
  */
-export class WGSLTextureQueryTest extends GPUTest {
+export class WGSLTextureQueryTest extends AllFeaturesMaxLimitsGPUTest {
   skipIfNoStorageTexturesInStage(stage) {
     if (this.isCompatibility) {
       this.skipIf(

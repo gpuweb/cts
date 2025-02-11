@@ -15,7 +15,7 @@ import {
   kColorTextureFormats,
   kTextureFormatInfo,
 } from '../../../format_info.js';
-import { GPUTest, MaxLimitsTestMixin } from '../../../gpu_test.js';
+import { AllFeaturesMaxLimitsGPUTest } from '../../../gpu_test.js';
 import { kValidShaderStages, TValidShaderStage } from '../../../util/shader.js';
 
 function ComponentCount(format: ColorTextureFormat): number {
@@ -46,7 +46,7 @@ function ComponentCount(format: ColorTextureFormat): number {
   }
 }
 
-class F extends GPUTest {
+class F extends AllFeaturesMaxLimitsGPUTest {
   initTextureAndGetExpectedOutputBufferData(
     storageTexture: GPUTexture,
     format: ColorTextureFormat
@@ -532,7 +532,7 @@ class F extends GPUTest {
   }
 }
 
-export const g = makeTestGroup(MaxLimitsTestMixin(F));
+export const g = makeTestGroup(F);
 
 g.test('basic')
   .desc(

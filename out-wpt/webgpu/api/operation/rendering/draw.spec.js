@@ -11,10 +11,10 @@ import {
 
 
 '../../../../common/util/util.js';
-import { GPUTest, MaxLimitsTestMixin, TextureTestMixin } from '../../../gpu_test.js';
+import { AllFeaturesMaxLimitsGPUTest, TextureTestMixin } from '../../../gpu_test.js';
 
 
-class DrawTest extends TextureTestMixin(MaxLimitsTestMixin(GPUTest)) {
+class DrawTest extends TextureTestMixin(AllFeaturesMaxLimitsGPUTest) {
   checkTriangleDraw(opts)
 
 

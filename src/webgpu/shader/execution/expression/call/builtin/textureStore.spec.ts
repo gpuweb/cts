@@ -14,7 +14,7 @@ If an out-of-bounds access occurs, the built-in function should not be executed.
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { unreachable, iterRange, range } from '../../../../../../common/util/util.js';
 import { kTextureFormatInfo } from '../../../../../format_info.js';
-import { GPUTest, MaxLimitsTestMixin, TextureTestMixin } from '../../../../../gpu_test.js';
+import { AllFeaturesMaxLimitsGPUTest, TextureTestMixin } from '../../../../../gpu_test.js';
 import {
   kFloat32Format,
   kFloat16Format,
@@ -29,7 +29,7 @@ import { TexelFormats } from '../../../../types.js';
 const kDims = ['1d', '2d', '3d'] as const;
 const kViewDimensions = ['1d', '2d', '2d-array', '3d'] as const;
 
-export const g = makeTestGroup(TextureTestMixin(MaxLimitsTestMixin(GPUTest)));
+export const g = makeTestGroup(TextureTestMixin(AllFeaturesMaxLimitsGPUTest));
 
 // We require a few values that are out of range for a given type
 // so we can check clamping behavior.

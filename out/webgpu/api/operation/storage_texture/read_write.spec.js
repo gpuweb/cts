@@ -9,14 +9,14 @@ TODO:
 import { assert, unreachable } from '../../../../common/util/util.js';
 import { kTextureDimensions } from '../../../capability_info.js';
 import { kColorTextureFormats, kTextureFormatInfo } from '../../../format_info.js';
-import { GPUTest, MaxLimitsTestMixin } from '../../../gpu_test.js';
+import { AllFeaturesMaxLimitsGPUTest } from '../../../gpu_test.js';
 import { align } from '../../../util/math.js';
 
 const kShaderStagesForReadWriteStorageTexture = ['fragment', 'compute'];
 
 
 
-class F extends GPUTest {
+class F extends AllFeaturesMaxLimitsGPUTest {
   getInitialData(storageTexture) {
     const format = storageTexture.format;
     const bytesPerBlock = kTextureFormatInfo[format].bytesPerBlock;
@@ -298,7 +298,7 @@ class F extends GPUTest {
   }
 }
 
-export const g = makeTestGroup(MaxLimitsTestMixin(F));
+export const g = makeTestGroup(F);
 
 g.test('basic').
 desc(

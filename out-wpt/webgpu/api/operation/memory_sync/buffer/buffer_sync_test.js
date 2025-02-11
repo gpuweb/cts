@@ -1,6 +1,6 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
-**/import { assert, unreachable } from '../../../../../common/util/util.js';import { GPUTest } from '../../../../gpu_test.js';import { checkElementsEqualEither } from '../../../../util/check_contents.js';
+**/import { assert, unreachable } from '../../../../../common/util/util.js';import { AllFeaturesMaxLimitsGPUTest } from '../../../../gpu_test.js';import { checkElementsEqualEither } from '../../../../util/check_contents.js';
 
 
 export const kAllWriteOps = ['storage', 'b2b-copy', 't2b-copy', 'write-buffer'];
@@ -150,7 +150,7 @@ const kDummyVertexShader = `
 
 // Note: If it would be useful to have any of these helpers be separate from the fixture,
 // they can be refactored into standalone functions.
-export class BufferSyncTest extends GPUTest {
+export class BufferSyncTest extends AllFeaturesMaxLimitsGPUTest {
   // Vertex and index buffers used in read render pass
 
 

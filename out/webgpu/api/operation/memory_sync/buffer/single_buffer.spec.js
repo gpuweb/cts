@@ -14,7 +14,6 @@ Wait on another fence, then call expectContents to verify the dst buffer value.
     - Not every context/boundary combinations are valid. We have the checkOpsValidForContext func to do the filtering.
   - If two writes are in the same passes, render result has loose guarantees.
 `;import { makeTestGroup } from '../../../../../common/framework/test_group.js';
-import { MaxLimitsTestMixin } from '../../../../gpu_test.js';
 import {
   kOperationBoundaries,
   kBoundaryInfo,
@@ -33,7 +32,7 @@ const kSrcValue = 0;
 // The op value is what the read/write operation write into the target buffer.
 const kOpValue = 1;
 
-export const g = makeTestGroup(MaxLimitsTestMixin(BufferSyncTest));
+export const g = makeTestGroup(BufferSyncTest);
 
 g.test('rw').
 desc(
