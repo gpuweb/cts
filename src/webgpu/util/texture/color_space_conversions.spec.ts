@@ -32,9 +32,11 @@ g.test('util_matches_2d_canvas')
       { srcColorSpace: 'display-p3', dstColorSpace: 'srgb' },
     ] as { srcColorSpace: PredefinedColorSpace; dstColorSpace: PredefinedColorSpace }[])
   )
+  .beforeAllSubcases(t => {
+    t.skipIf(typeof ImageData === 'undefined', `ImageData does not exist in this environment`);
+  })
   .fn(t => {
     const { srcColorSpace, dstColorSpace } = t.params;
-    t.skipIf(typeof ImageData === 'undefined', `ImageData does not exist in this environment`);
 
     // putImageData an ImageData(srcColorSpace) in to a canvas2D(dstColorSpace)
     // then call getImageData. This will convert the colors via the canvas 2D API
