@@ -1857,6 +1857,19 @@ export function isSintOrUintFormat(format: GPUTextureFormat) {
  * Returns true of format can be multisampled.
  */
 export const kCompatModeUnsupportedMultisampledTextureFormats: readonly GPUTextureFormat[] = [
+  `r8uint`,
+  `r8sint`,
+  `rg8uint`,
+  `rg8sint`,
+  `rgba8uint`,
+  `rgba8sint`,
+  `r16uint`,
+  `r16sint`,
+  `rg16uint`,
+  `rg16sint`,
+  `rgba16uint`,
+  `rgba16sint`,
+  `rgb10a2uint`,
   'rgba16float',
   'r32float',
 ] as const;
