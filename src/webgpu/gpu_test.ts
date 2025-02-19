@@ -544,6 +544,15 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
     }
   }
 
+  skipIfMultisampleNotSupportedForFormat(...formats: (GPUTextureFormat | undefined)[]) {
+    for (const format of formats) {
+      if (format === undefined) continue;
+      if (!isMultisampledTextureFormat(format, this.isCompatibility)) {
+        this.skip(`texture format '${format}' is not supported to be multisampled`);
+      }
+    }
+  }
+
   /** Skips this test case if the `langFeature` is *not* supported. */
   skipIfLanguageFeatureNotSupported(langFeature: WGSLLanguageFeature) {
     if (!this.hasLanguageFeature(langFeature)) {
