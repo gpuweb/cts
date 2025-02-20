@@ -556,7 +556,7 @@ g.test('basic')
       t.selectDeviceOrSkipTestCase('bgra8unorm-storage');
     }
     if (t.isCompatibility) {
-      t.skipIfTextureFormatNotUsableAsStorageTexture(t.params.format);
+      t.skipIfTextureFormatNotUsableAsStorageTexture(t.params.format, t.device);
     }
   })
   .fn(t => {
