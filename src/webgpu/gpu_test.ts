@@ -31,6 +31,7 @@ import {
   EncodableTextureFormat,
   isCompressedTextureFormat,
   ColorTextureFormat,
+  getRequiredFeatureForTextureFormat,
   isTextureFormatUsableAsStorageFormatDeprecated,
   isMultisampledTextureFormatDeprecated,
   isTextureFormatUsableAsStorageFormat,
@@ -526,11 +527,18 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
    * Skips test if any format is not supported.
    */
   skipIfTextureFormatNotSupported(...formats: (GPUTextureFormat | undefined)[]) {
-    if (isCompatibilityDevice(this.device)) {
-      for (const format of formats) {
-        if (format === 'bgra8unorm-srgb') {
-          this.skip(`texture format '${format} is not supported`);
+    for (const format of formats) {
+      if (format) {
+        if (isCompatibilityDevice(this.device)) {
+          if (format === 'bgra8unorm-srgb') {
+            this.skip(`texture format '${format} is not supported`);
+          }
         }
+        const feature = getRequiredFeatureForTextureFormat(format);
+        this.skipIf(
+          !!feature && !this.device.features.has(feature),
+          `texture format '${format}' requires feature: '${feature}`
+        );
       }
     }
   }
