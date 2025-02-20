@@ -528,18 +528,19 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
    */
   skipIfTextureFormatNotSupported(...formats: (GPUTextureFormat | undefined)[]) {
     for (const format of formats) {
-      if (format) {
-        if (isCompatibilityDevice(this.device)) {
-          if (format === 'bgra8unorm-srgb') {
-            this.skip(`texture format '${format} is not supported`);
-          }
-        }
-        const feature = getRequiredFeatureForTextureFormat(format);
-        this.skipIf(
-          !!feature && !this.device.features.has(feature),
-          `texture format '${format}' requires feature: '${feature}`
-        );
+      if (!format) {
+        continue;
       }
+      if (format === 'bgra8unorm-srgb') {
+        if (isCompatibilityDevice(this.device)) {
+          this.skip(`texture format '${format}' is not supported`);
+        }
+      }
+      const feature = getRequiredFeatureForTextureFormat(format);
+      this.skipIf(
+        !!feature && !this.device.features.has(feature),
+        `texture format '${format}' requires feature: '${feature}`
+      );
     }
   }
 
