@@ -1772,6 +1772,32 @@ export function textureFormatsAreViewCompatible(
     : a === b || a + '-srgb' === b || b + '-srgb' === a;
 }
 
+/**
+ * Gets the block width, height, and bytes per block for a color texture format.
+ */
+export function getBlockInfoForColorTextureFormat(format: ColorTextureFormat) {
+  const info = kTextureFormatInfo[format];
+  return {
+    blockWidth: info.blockWidth,
+    blockHeight: info.blockHeight,
+    bytesPerBlock: info.color.bytes,
+  };
+}
+
+/**
+ * Gets the baseFormat for a texture format.
+ */
+export function getBaseFormatForTextureFormat(format: GPUTextureFormat) {
+  return kTextureFormatInfo[format].baseFormat;
+}
+
+/**
+ * Gets the feature needed for a give texture format or undefined if none.
+ */
+export function getRequiredFeatureForTextureFormat(format: GPUTextureFormat) {
+  return kTextureFormatInfo[format].feature;
+}
+
 export function getFeaturesForFormats<T>(
   formats: readonly (T & (GPUTextureFormat | undefined))[]
 ): readonly (GPUFeatureName | undefined)[] {
