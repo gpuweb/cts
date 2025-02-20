@@ -2567,7 +2567,7 @@ export async function checkCallResults<T extends Dimensionality>(
                     break;
                   case 'textureSampleCompareLevel':
                     debugCall.builtin = 'textureSampleLevel';
-                    debugCall.levelType = 'f';
+                    debugCall.levelType = 'u';
                     debugCall.mipLevel = 0;
                     break;
                   default:
