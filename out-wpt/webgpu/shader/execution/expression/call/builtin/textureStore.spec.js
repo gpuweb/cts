@@ -99,7 +99,7 @@ beforeAllSubcases((t) => {
   if (t.params.format === 'bgra8unorm') {
     t.selectDeviceOrSkipTestCase('bgra8unorm-storage');
   } else {
-    t.skipIfTextureFormatNotUsableAsStorageTexture(t.params.format);
+    t.skipIfTextureFormatNotUsableAsStorageTextureDeprecated(t.params.format);
   }
 }).
 fn((t) => {

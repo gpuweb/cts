@@ -393,7 +393,7 @@ u //
 .combine('format', kBlendableFormats)
 ).
 beforeAllSubcases((t) => {
-  t.skipIfTextureFormatNotSupported(t.params.format);
+  t.skipIfTextureFormatNotSupportedDeprecated(t.params.format);
 }).
 fn((t) => {
   const { format } = t.params;

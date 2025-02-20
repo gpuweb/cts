@@ -1,3 +1,5 @@
+// MAINTENANCE_TODO: Remove all deprecated functions once they are no longer in use.
+import { isCompatibilityDevice } from '../common/framework/test_config.js';
 import { keysOf } from '../common/util/data_tables.js';
 import { assert, unreachable } from '../common/util/util.js';
 
@@ -1521,7 +1523,12 @@ type TextureFormatInfo_TypeCheck = {
     )
 );
 
+// MAINTENANCE_TODO: make this private to avoid tests wrongly trying to
+// filter things on their own. Various features make this hard to do correctly
+// so we'd prefer to put filtering here, in a central place and add other functions
+// to get at this data so that they always have enough info to give the correct answer.
 /** Per-GPUTextureFormat info. */
+/** @deprecated */
 export const kTextureFormatInfo = {
   ...kRegularTextureFormatInfo,
   ...kSizedDepthStencilFormatInfo,
@@ -1743,17 +1750,26 @@ export function textureDimensionAndFormatCompatible(
   );
 }
 
-/**
- * Check if two formats are view format compatible.
- *
- * This function may need to be generalized to use `baseFormat` from `kTextureFormatInfo`.
- */
-export function viewCompatible(
+/** @deprecated */
+export function viewCompatibleDeprecated(
   compatibilityMode: boolean,
   a: GPUTextureFormat,
   b: GPUTextureFormat
 ): boolean {
   return compatibilityMode ? a === b : a === b || a + '-srgb' === b || b + '-srgb' === a;
+}
+
+/**
+ * Check if two formats are view format compatible.
+ */
+export function textureFormatsAreViewCompatible(
+  device: GPUDevice,
+  a: GPUTextureFormat,
+  b: GPUTextureFormat
+) {
+  return isCompatibilityDevice(device)
+    ? a === b
+    : a === b || a + '-srgb' === b || b + '-srgb' === a;
 }
 
 export function getFeaturesForFormats<T>(
@@ -1789,8 +1805,36 @@ export function isEncodableTextureFormat(format: GPUTextureFormat) {
   return kEncodableTextureFormats.includes(format as EncodableTextureFormat);
 }
 
-export function canUseAsRenderTarget(format: GPUTextureFormat) {
+/** @deprecated use isTextureFormatUsableAsRenderAttachment */
+export function canUseAsRenderTargetDeprecated(format: GPUTextureFormat) {
   return kTextureFormatInfo[format].colorRender || isDepthOrStencilTextureFormat(format);
+}
+
+/**
+ * Returns if a texture can be used as a render attachment. some color formats and all
+ * depth textures and stencil textures are usable with usage RENDER_ATTACHMENT.
+ */
+export function isTextureFormatUsableAsRenderAttachment(
+  device: GPUDevice,
+  format: GPUTextureFormat
+) {
+  if (format === 'rg11b10ufloat' && device.features.has('rg11b10ufloat-renderable')) {
+    return true;
+  }
+  return kTextureFormatInfo[format].colorRender || isDepthOrStencilTextureFormat(format);
+}
+
+/**
+ * Returns if a texture can be used as a "colorAttachment".
+ */
+export function isTextureFormatColorRenderable(
+  device: GPUDevice,
+  format: GPUTextureFormat
+): boolean {
+  if (format === 'rg11b10ufloat' && device.features.has('rg11b10ufloat-renderable')) {
+    return true;
+  }
+  return !!kAllTextureFormatInfo[format].colorRender;
 }
 
 export function is16Float(format: GPUTextureFormat) {
@@ -1820,7 +1864,8 @@ export const kCompatModeUnsupportedStorageTextureFormats: readonly GPUTextureFor
   'rg32uint',
 ] as const;
 
-export function isTextureFormatUsableAsStorageFormat(
+/** @deprecated */
+export function isTextureFormatUsableAsStorageFormatDeprecated(
   format: GPUTextureFormat,
   isCompatibilityMode: boolean
 ): boolean {
@@ -1828,6 +1873,22 @@ export function isTextureFormatUsableAsStorageFormat(
     if (kCompatModeUnsupportedStorageTextureFormats.indexOf(format) >= 0) {
       return false;
     }
+  }
+  const info = kTextureFormatInfo[format];
+  return !!(info.color?.storage || info.depth?.storage || info.stencil?.storage);
+}
+
+export function isTextureFormatUsableAsStorageFormat(
+  device: GPUDevice,
+  format: GPUTextureFormat
+): boolean {
+  if (isCompatibilityDevice(device)) {
+    if (kCompatModeUnsupportedStorageTextureFormats.indexOf(format) >= 0) {
+      return false;
+    }
+  }
+  if (format === 'bgra8unorm' && device.features.has('bgra8unorm-storage')) {
+    return true;
   }
   const info = kTextureFormatInfo[format];
   return !!(info.color?.storage || info.depth?.storage || info.stencil?.storage);
@@ -1874,7 +1935,8 @@ export const kCompatModeUnsupportedMultisampledTextureFormats: readonly GPUTextu
   'r32float',
 ] as const;
 
-export function isMultisampledTextureFormat(
+/** @deprecated use isTextureFormatMultisampled */
+export function isMultisampledTextureFormatDeprecated(
   format: GPUTextureFormat,
   isCompatibilityMode: boolean
 ): boolean {
@@ -1884,6 +1946,37 @@ export function isMultisampledTextureFormat(
     }
   }
   return kAllTextureFormatInfo[format].multisample;
+}
+
+/**
+ * Returns true if you can make a multisampled texture from the given format.
+ */
+export function isTextureFormatMultisampled(device: GPUDevice, format: GPUTextureFormat): boolean {
+  if (isCompatibilityDevice(device)) {
+    if (kCompatModeUnsupportedMultisampledTextureFormats.indexOf(format) >= 0) {
+      return false;
+    }
+  }
+  if (format === 'rg11b10ufloat' && device.features.has('rg11b10ufloat-renderable')) {
+    return true;
+  }
+  return kAllTextureFormatInfo[format].multisample;
+}
+
+/**
+ * Returns true of a texture can be "resolved". uint/sint formats can be multisampled but
+ * can not be resolved.
+ */
+export function isTextureFormatResolvable(device: GPUDevice, format: GPUTextureFormat): boolean {
+  if (format === 'rg11b10ufloat' && device.features.has('rg11b10ufloat-renderable')) {
+    return true;
+  }
+  // You can't resolve a non-multisampled format.
+  if (!isTextureFormatMultisampled(device, format)) {
+    return false;
+  }
+  const info = kAllTextureFormatInfo[format];
+  return !!info.colorRender?.resolve;
 }
 
 export const kFeaturesForFormats = getFeaturesForFormats(kAllTextureFormats);

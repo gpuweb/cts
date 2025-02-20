@@ -370,7 +370,7 @@ g.test('texture_must_have_correct_dimension')
       dimension: getTextureDimensionFromView(dimension),
     });
 
-    t.skipIfTextureViewDimensionNotSupported(viewDimension, dimension);
+    t.skipIfTextureViewDimensionNotSupportedDeprecated(viewDimension, dimension);
     if (t.isCompatibility && texture.dimension === '2d') {
       if (depthOrArrayLayers === 1) {
         t.skipIf(
@@ -876,7 +876,7 @@ g.test('storage_texture,format')
   )
   .beforeAllSubcases(t => {
     const { storageTextureFormat, resourceFormat } = t.params;
-    t.skipIfTextureFormatNotUsableAsStorageTexture(storageTextureFormat, resourceFormat);
+    t.skipIfTextureFormatNotUsableAsStorageTextureDeprecated(storageTextureFormat, resourceFormat);
   })
   .fn(t => {
     const { storageTextureFormat, resourceFormat } = t.params;

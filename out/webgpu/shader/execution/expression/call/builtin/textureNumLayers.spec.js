@@ -201,7 +201,7 @@ beforeAllSubcases((t) => {
     t.isCompatibility && t.params.view_type === 'partial',
     'compatibility mode does not support partial layer views'
   );
-  t.skipIfTextureFormatNotUsableAsStorageTexture(t.params.format);
+  t.skipIfTextureFormatNotUsableAsStorageTextureDeprecated(t.params.format);
 }).
 fn((t) => {
   const { stage, format, access_mode, view_type } = t.params;

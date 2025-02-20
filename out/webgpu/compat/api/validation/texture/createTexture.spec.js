@@ -130,7 +130,7 @@ filter(
 ).
 beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[t.params.format];
-  t.skipIfTextureFormatNotSupported(t.params.format);
+  t.skipIfTextureFormatNotSupportedDeprecated(t.params.format);
   t.selectDeviceOrSkipTestCase(info.feature);
 }).
 fn((t) => {

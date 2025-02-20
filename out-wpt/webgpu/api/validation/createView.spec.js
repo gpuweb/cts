@@ -15,7 +15,7 @@ import {
   kAllTextureFormats,
   kFeaturesForFormats,
   filterFormatsByFeature,
-  viewCompatible } from
+  viewCompatibleDeprecated } from
 '../../format_info.js';
 import { kResourceStates } from '../../gpu_test.js';
 import {
@@ -56,10 +56,11 @@ fn((t) => {
   const { textureFormat, viewFormat, useViewFormatList } = t.params;
   const { blockWidth, blockHeight } = kTextureFormatInfo[textureFormat];
 
-  t.skipIfTextureFormatNotSupported(textureFormat, viewFormat);
+  t.skipIfTextureFormatNotSupportedDeprecated(textureFormat, viewFormat);
 
   const compatible =
-  viewFormat === undefined || viewCompatible(t.isCompatibility, textureFormat, viewFormat);
+  viewFormat === undefined ||
+  viewCompatibleDeprecated(t.isCompatibility, textureFormat, viewFormat);
 
   const texture = t.createTextureTracked({
     format: textureFormat,
@@ -94,7 +95,7 @@ combine('textureDimension', kTextureDimensions).
 combine('viewDimension', [...kTextureViewDimensions, undefined])
 ).
 beforeAllSubcases((t) => {
-  t.skipIfTextureViewDimensionNotSupported(t.params.viewDimension);
+  t.skipIfTextureViewDimensionNotSupportedDeprecated(t.params.viewDimension);
 }).
 fn((t) => {
   const { textureDimension, viewDimension } = t.params;
@@ -220,7 +221,7 @@ fn((t) => {
     arrayLayerCount
   } = t.params;
 
-  t.skipIfTextureViewDimensionNotSupported(viewDimension);
+  t.skipIfTextureViewDimensionNotSupportedDeprecated(viewDimension);
 
   const kWidth = 1 << kLevels - 1; // 32
   const textureDescriptor = {
@@ -276,7 +277,7 @@ fn((t) => {
   const { textureDimension, viewDimension, textureLevels, baseMipLevel, mipLevelCount } =
   t.params;
 
-  t.skipIfTextureViewDimensionNotSupported(viewDimension);
+  t.skipIfTextureViewDimensionNotSupportedDeprecated(viewDimension);
 
   const textureDescriptor = {
     format: 'rgba8unorm',
@@ -316,7 +317,7 @@ combine('size', [
 fn((t) => {
   const { dimension, size } = t.params;
 
-  t.skipIfTextureViewDimensionNotSupported(dimension);
+  t.skipIfTextureViewDimensionNotSupportedDeprecated(dimension);
 
   const texture = t.createTextureTracked({
     format: 'rgba8unorm',
@@ -373,10 +374,10 @@ beforeAllSubcases((t) => {
   const { format, textureUsage0, textureUsage1 } = t.params;
   const info = kTextureFormatInfo[format];
   const textureUsage = textureUsage0 | textureUsage1;
-  t.skipIfTextureFormatNotSupported(format);
+  t.skipIfTextureFormatNotSupportedDeprecated(format);
   t.selectDeviceOrSkipTestCase(info.feature);
   if (textureUsage & GPUTextureUsage.STORAGE_BINDING) {
-    t.skipIfTextureFormatNotUsableAsStorageTexture(format);
+    t.skipIfTextureFormatNotUsableAsStorageTextureDeprecated(format);
   }
 }).
 fn((t) => {

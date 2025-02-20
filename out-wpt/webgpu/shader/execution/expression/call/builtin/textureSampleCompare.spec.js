@@ -263,7 +263,7 @@ combine('compare', kCompareFunctions).
 combine('depthOrArrayLayers', [1, 8])
 ).
 beforeAllSubcases((t) => {
-  t.skipIfTextureFormatNotSupported(t.params.format);
+  t.skipIfTextureFormatNotSupportedDeprecated(t.params.format);
   t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
 }).
 fn(async (t) => {
@@ -376,7 +376,7 @@ combine('A', ['i32', 'u32']).
 combine('compare', kCompareFunctions)
 ).
 beforeAllSubcases((t) => {
-  t.skipIfTextureViewDimensionNotSupported('cube-array');
+  t.skipIfTextureViewDimensionNotSupportedDeprecated('cube-array');
   t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
 }).
 fn(async (t) => {

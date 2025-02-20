@@ -27,7 +27,7 @@ combine('access', ['read', 'write', 'read_write'])
 ).
 fn((t) => {
   const { type, format, access } = t.params;
-  t.skipIfTextureFormatNotUsableAsStorageTexture(format.format);
+  t.skipIfTextureFormatNotUsableAsStorageTextureDeprecated(format.format);
 
   const source = `@group(0) @binding(0) var t : ${type}<${format.format}, ${access}>;`;
   const requiresFeature = access !== 'write';

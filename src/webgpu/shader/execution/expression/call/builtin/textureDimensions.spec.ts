@@ -298,15 +298,15 @@ Parameters:
   )
   .beforeAllSubcases(t => {
     const info = kTextureFormatInfo[t.params.format];
-    t.skipIfTextureFormatNotSupported(t.params.format);
+    t.skipIfTextureFormatNotSupportedDeprecated(t.params.format);
     if (t.params.samples > 1) {
       // multisampled texture requires GPUTextureUsage.RENDER_ATTACHMENT usage
-      t.skipIfMultisampleNotSupportedForFormat(t.params.format);
+      t.skipIfMultisampleNotSupportedForFormatDeprecated(t.params.format);
     }
     t.selectDeviceOrSkipTestCase(info.feature);
   })
   .fn(t => {
-    t.skipIfTextureViewDimensionNotSupported(t.params.dimensions);
+    t.skipIfTextureViewDimensionNotSupportedDeprecated(t.params.dimensions);
     const values = testValues(t.params);
     const texture = t.createTextureTracked({
       size: values.size,
@@ -391,11 +391,11 @@ Parameters:
   )
   .beforeAllSubcases(t => {
     const info = kTextureFormatInfo[t.params.format];
-    t.skipIfTextureFormatNotSupported(t.params.format);
+    t.skipIfTextureFormatNotSupportedDeprecated(t.params.format);
     t.selectDeviceOrSkipTestCase(info.feature);
   })
   .fn(t => {
-    t.skipIfTextureViewDimensionNotSupported(t.params.dimensions);
+    t.skipIfTextureViewDimensionNotSupportedDeprecated(t.params.dimensions);
     const values = testValues(t.params);
     const texture = t.createTextureTracked({
       size: values.size,
@@ -484,8 +484,8 @@ Parameters:
   )
   .beforeAllSubcases(t => {
     const info = kTextureFormatInfo[t.params.format];
-    t.skipIfTextureFormatNotSupported(t.params.format);
-    t.skipIfTextureFormatNotUsableAsStorageTexture(t.params.format);
+    t.skipIfTextureFormatNotSupportedDeprecated(t.params.format);
+    t.skipIfTextureFormatNotUsableAsStorageTextureDeprecated(t.params.format);
     t.selectDeviceOrSkipTestCase(info.feature);
   })
   .fn(t => {

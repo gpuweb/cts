@@ -316,7 +316,7 @@ combine('depthOrArrayLayers', [1, 2]).
 unless((p) => p.textureDimension === '1d' && p.depthOrArrayLayers > 1)
 ).
 beforeAllSubcases((t) => {
-  t.skipIfTextureFormatNotUsableAsStorageTexture(t.params.format);
+  t.skipIfTextureFormatNotUsableAsStorageTextureDeprecated(t.params.format);
 }).
 fn((t) => {
   const { format, shaderStage, textureDimension, depthOrArrayLayers } = t.params;

@@ -1423,7 +1423,7 @@ expandWithParams((p) => {
 ).
 beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[t.params.format];
-  t.skipIfTextureFormatNotSupported(t.params.format);
+  t.skipIfTextureFormatNotSupportedDeprecated(t.params.format);
   t.selectDeviceOrSkipTestCase(info.feature);
 }).
 fn((t) => {
@@ -1538,7 +1538,7 @@ unless((p) => p.dimension === '1d' && p.copyDepth !== 1)
 ).
 beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[t.params.format];
-  t.skipIfTextureFormatNotSupported(t.params.format);
+  t.skipIfTextureFormatNotSupportedDeprecated(t.params.format);
   t.selectDeviceOrSkipTestCase(info.feature);
 }).
 fn((t) => {
@@ -1636,7 +1636,7 @@ unless((p) => p.dimension === '1d' && p.coordinateToTest !== 0)
 ).
 beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[t.params.format];
-  t.skipIfTextureFormatNotSupported(t.params.format);
+  t.skipIfTextureFormatNotSupportedDeprecated(t.params.format);
   t.selectDeviceOrSkipTestCase(info.feature);
 }).
 fn((t) => {
@@ -1836,7 +1836,7 @@ expand('textureSize', generateTestTextureSizes)
 ).
 beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[t.params.format];
-  t.skipIfTextureFormatNotSupported(t.params.format);
+  t.skipIfTextureFormatNotSupportedDeprecated(t.params.format);
   t.selectDeviceOrSkipTestCase(info.feature);
 }).
 fn((t) => {

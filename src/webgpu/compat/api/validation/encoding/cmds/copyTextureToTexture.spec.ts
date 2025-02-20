@@ -59,13 +59,13 @@ g.test('multisample')
       })
   )
   .beforeAllSubcases(t => {
-    t.skipIfMultisampleNotSupportedForFormat(t.params.format);
+    t.skipIfMultisampleNotSupportedForFormatDeprecated(t.params.format);
   })
   .fn(t => {
     const { format } = t.params;
     const { blockWidth, blockHeight } = kTextureFormatInfo[format];
 
-    t.skipIfTextureFormatNotSupported(format as GPUTextureFormat);
+    t.skipIfTextureFormatNotSupportedDeprecated(format as GPUTextureFormat);
 
     const srcTexture = t.createTextureTracked({
       size: [blockWidth, blockHeight, 1],

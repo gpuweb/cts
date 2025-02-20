@@ -6,7 +6,7 @@ Test texture views can reinterpret the format of the original texture.
 import {
   kRenderableColorTextureFormats,
   kRegularTextureFormats,
-  viewCompatible } from
+  viewCompatibleDeprecated } from
 
 '../../../format_info.js';
 import { GPUTest, TextureTestMixin } from '../../../gpu_test.js';
@@ -101,12 +101,12 @@ u //
 combine('viewFormat', kRegularTextureFormats).
 filter(
   ({ format, viewFormat }) =>
-  format !== viewFormat && viewCompatible(false, format, viewFormat)
+  format !== viewFormat && viewCompatibleDeprecated(false, format, viewFormat)
 )
 ).
 beforeAllSubcases((t) => {
   const { format, viewFormat } = t.params;
-  t.skipIfTextureFormatNotSupported(format, viewFormat);
+  t.skipIfTextureFormatNotSupportedDeprecated(format, viewFormat);
   // Compatibility mode does not support format reinterpretation.
   t.skipIf(t.isCompatibility);
 }).
@@ -202,13 +202,13 @@ u //
 combine('viewFormat', kRenderableColorTextureFormats).
 filter(
   ({ format, viewFormat }) =>
-  format !== viewFormat && viewCompatible(false, format, viewFormat)
+  format !== viewFormat && viewCompatibleDeprecated(false, format, viewFormat)
 ).
 combine('sampleCount', [1, 4])
 ).
 beforeAllSubcases((t) => {
   const { format, viewFormat } = t.params;
-  t.skipIfTextureFormatNotSupported(format, viewFormat);
+  t.skipIfTextureFormatNotSupportedDeprecated(format, viewFormat);
   // Compatibility mode does not support format reinterpretation.
   t.skipIf(t.isCompatibility);
 }).

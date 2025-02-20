@@ -210,7 +210,7 @@ combine(
 )
 ).
 beforeAllSubcases((t) => {
-  t.skipIfTextureFormatNotSupported(t.params.format);
+  t.skipIfTextureFormatNotSupportedDeprecated(t.params.format);
 }).
 fn((t) => {
   const { format, attachmentCount } = t.params;
@@ -1169,8 +1169,8 @@ filter((t) => kTextureFormatInfo[t.format].multisample)
 ).
 beforeAllSubcases((t) => {
   const { format } = t.params;
-  t.skipIfTextureFormatNotSupported(format);
-  t.skipIfMultisampleNotSupportedForFormat(format);
+  t.skipIfTextureFormatNotSupportedDeprecated(format);
+  t.skipIfMultisampleNotSupportedForFormatDeprecated(format);
 }).
 fn((t) => {
   const { format } = t.params;

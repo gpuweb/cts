@@ -185,7 +185,7 @@ export function skipIfTextureFormatNotSupportedNotAvailableOrNotFilterable(
 t,
 format)
 {
-  t.skipIfTextureFormatNotSupported(format);
+  t.skipIfTextureFormatNotSupportedDeprecated(format);
   const info = kTextureFormatInfo[format];
   if (info.color?.type === 'unfilterable-float') {
     t.selectDeviceOrSkipTestCase('float32-filterable');

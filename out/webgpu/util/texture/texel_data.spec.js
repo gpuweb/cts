@@ -211,7 +211,7 @@ expand('componentData', ({ format }) => {
 })
 ).
 beforeAllSubcases((t) => {
-  t.skipIfTextureFormatNotSupported(t.params.format);
+  t.skipIfTextureFormatNotSupportedDeprecated(t.params.format);
 }).
 fn(doTest);
 

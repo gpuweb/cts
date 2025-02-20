@@ -424,7 +424,7 @@ combine('A', ['i32', 'u32'])
 ).
 beforeAllSubcases((t) => {
   skipIfTextureFormatNotSupportedNotAvailableOrNotFilterable(t, t.params.format);
-  t.skipIfTextureViewDimensionNotSupported('cube-array');
+  t.skipIfTextureViewDimensionNotSupportedDeprecated('cube-array');
 }).
 fn(async (t) => {
   const { format, samplePoints, A, mode, filt: minFilter } = t.params;

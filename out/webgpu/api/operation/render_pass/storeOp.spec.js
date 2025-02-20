@@ -151,7 +151,7 @@ combine('mipLevel', kMipLevel).
 combine('arrayLayer', kArrayLayers)
 ).
 beforeAllSubcases((t) => {
-  t.skipIfTextureFormatNotSupported(t.params.colorFormat);
+  t.skipIfTextureFormatNotSupportedDeprecated(t.params.colorFormat);
 }).
 fn((t) => {
   const colorAttachment = t.createTextureTracked({

@@ -96,7 +96,7 @@ combine('C', ['i32', 'u32']).
 combine('samplePoints', kSamplePointMethods)
 ).
 beforeAllSubcases((t) => {
-  t.skipIfTextureFormatNotSupported(t.params.format);
+  t.skipIfTextureFormatNotSupportedDeprecated(t.params.format);
   skipIfNeedsFilteringAndIsUnfilterableOrSelectDevice(t, t.params.filt, t.params.format);
 }).
 fn(async (t) => {
@@ -192,7 +192,7 @@ combine('C', ['i32', 'u32']).
 combine('samplePoints', kCubeSamplePointMethods)
 ).
 beforeAllSubcases((t) => {
-  t.skipIfTextureFormatNotSupported(t.params.format);
+  t.skipIfTextureFormatNotSupportedDeprecated(t.params.format);
   skipIfNeedsFilteringAndIsUnfilterableOrSelectDevice(t, t.params.filt, t.params.format);
 }).
 fn(async (t) => {
@@ -305,7 +305,7 @@ combine('A', ['i32', 'u32']).
 combine('depthOrArrayLayers', [1, 8])
 ).
 beforeAllSubcases((t) => {
-  t.skipIfTextureFormatNotSupported(t.params.format);
+  t.skipIfTextureFormatNotSupportedDeprecated(t.params.format);
   skipIfNeedsFilteringAndIsUnfilterableOrSelectDevice(t, t.params.filt, t.params.format);
 }).
 fn(async (t) => {
@@ -421,8 +421,8 @@ combine('C', ['i32', 'u32']).
 combine('A', ['i32', 'u32'])
 ).
 beforeAllSubcases((t) => {
-  t.skipIfTextureFormatNotSupported(t.params.format);
-  t.skipIfTextureViewDimensionNotSupported('cube-array');
+  t.skipIfTextureFormatNotSupportedDeprecated(t.params.format);
+  t.skipIfTextureViewDimensionNotSupportedDeprecated('cube-array');
   skipIfNeedsFilteringAndIsUnfilterableOrSelectDevice(t, t.params.filt, t.params.format);
 }).
 fn(async (t) => {
@@ -708,7 +708,7 @@ combine('depthOrArrayLayers', [1, 8])
 ).
 beforeAllSubcases((t) => {
   t.skipIfDepthTextureCanNotBeUsedWithNonComparisonSampler();
-  t.skipIfTextureFormatNotSupported(t.params.format);
+  t.skipIfTextureFormatNotSupportedDeprecated(t.params.format);
   t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
 }).
 fn(async (t) => {
@@ -800,7 +800,7 @@ combine('A', ['i32', 'u32'])
 ).
 beforeAllSubcases((t) => {
   t.skipIfDepthTextureCanNotBeUsedWithNonComparisonSampler();
-  t.skipIfTextureViewDimensionNotSupported('cube-array');
+  t.skipIfTextureViewDimensionNotSupportedDeprecated('cube-array');
   t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
 }).
 fn(async (t) => {

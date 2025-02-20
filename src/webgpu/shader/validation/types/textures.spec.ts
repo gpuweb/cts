@@ -4,7 +4,7 @@ Validation tests for various texture types in shaders.
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import {
-  isTextureFormatUsableAsStorageFormat,
+  isTextureFormatUsableAsStorageFormatDeprecated,
   kAllTextureFormats,
   kColorTextureFormats,
   kTextureFormatInfo,
@@ -30,7 +30,7 @@ g.test('texel_formats')
       t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
     }
 
-    if (!isTextureFormatUsableAsStorageFormat(t.params.format, t.isCompatibility)) {
+    if (!isTextureFormatUsableAsStorageFormatDeprecated(t.params.format, t.isCompatibility)) {
       t.skip('storage usage is unsupported');
     }
   })
@@ -120,7 +120,7 @@ Besides, the shader compilation should always pass regardless of whether the for
     const { format, access, comma } = t.params;
     // bgra8unorm is considered a valid storage format at shader compilation stage
     const isFormatValid =
-      isTextureFormatUsableAsStorageFormat(format, false) || format === 'bgra8unorm';
+      isTextureFormatUsableAsStorageFormatDeprecated(format, false) || format === 'bgra8unorm';
     const isAccessValid = kAccessModes.includes(access);
     const wgsl = `@group(0) @binding(0) var tex: texture_storage_2d<${format}, ${access}${comma}>;`;
     t.expectCompileResult(isFormatValid && isAccessValid, wgsl);

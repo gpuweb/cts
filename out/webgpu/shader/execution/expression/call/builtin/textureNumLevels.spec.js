@@ -74,7 +74,9 @@ combine('view_type', ['full', 'partial'])
 .filter((t) => t.texture_type !== 'texture_1d' || t.view_type !== 'partial')
 ).
 beforeAllSubcases((t) => {
-  t.skipIfTextureViewDimensionNotSupported(kTextureTypeToViewDimension[t.params.texture_type]);
+  t.skipIfTextureViewDimensionNotSupportedDeprecated(
+    kTextureTypeToViewDimension[t.params.texture_type]
+  );
 }).
 fn((t) => {
   const { stage, texture_type, sampled_type, view_type } = t.params;
@@ -147,7 +149,9 @@ beginSubcases().
 combine('stage', kShaderStages)
 ).
 beforeAllSubcases((t) => {
-  t.skipIfTextureViewDimensionNotSupported(kTextureTypeToViewDimension[t.params.texture_type]);
+  t.skipIfTextureViewDimensionNotSupportedDeprecated(
+    kTextureTypeToViewDimension[t.params.texture_type]
+  );
 }).
 fn((t) => {
   const { stage, texture_type, view_type } = t.params;

@@ -438,7 +438,7 @@ combine('A', ['i32', 'u32'])
 ).
 beforeAllSubcases((t) => {
   skipIfTextureFormatNotSupportedNotAvailableOrNotFilterable(t, t.params.format);
-  t.skipIfTextureViewDimensionNotSupported('cube-array');
+  t.skipIfTextureViewDimensionNotSupportedDeprecated('cube-array');
 }).
 fn(async (t) => {
   const { format, stage, samplePoints, A, mode, filt: minFilter } = t.params;
@@ -765,7 +765,7 @@ combine('L', ['i32', 'u32'])
 beforeAllSubcases((t) => {
   t.skipIfDepthTextureCanNotBeUsedWithNonComparisonSampler();
   skipIfTextureFormatNotSupportedNotAvailableOrNotFilterable(t, t.params.format);
-  t.skipIfTextureViewDimensionNotSupported(t.params.viewDimension);
+  t.skipIfTextureViewDimensionNotSupportedDeprecated(t.params.viewDimension);
 }).
 fn(async (t) => {
   const { format, stage, viewDimension, samplePoints, A, L, mode } = t.params;

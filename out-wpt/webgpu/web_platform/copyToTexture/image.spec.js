@@ -61,7 +61,7 @@ combine('width', [1, 2, 4, 15, 255, 256]).
 combine('height', [1, 2, 4, 15, 255, 256])
 ).
 beforeAllSubcases((t) => {
-  t.skipIfTextureFormatNotSupported(t.params.dstColorFormat);
+  t.skipIfTextureFormatNotSupportedDeprecated(t.params.dstColorFormat);
   if (typeof HTMLImageElement === 'undefined') t.skip('HTMLImageElement not available');
 }).
 fn(async (t) => {

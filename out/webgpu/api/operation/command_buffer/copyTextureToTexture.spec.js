@@ -17,7 +17,7 @@ import {
 
 
   isCompressedTextureFormat,
-  viewCompatible,
+  viewCompatibleDeprecated,
 
   isRegularTextureFormat } from
 '../../../format_info.js';
@@ -80,7 +80,7 @@ class F extends TextureTestMixin(GPUTest) {
   srcCopyLevel,
   dstCopyLevel)
   {
-    this.skipIfTextureFormatNotSupported(srcFormat, dstFormat);
+    this.skipIfTextureFormatNotSupportedDeprecated(srcFormat, dstFormat);
 
     // If we're in compatibility mode and it's a compressed texture
     // then we need to render the texture to test the results of the copy.
@@ -208,7 +208,7 @@ class F extends TextureTestMixin(GPUTest) {
     align(dstBlocksPerRow * bytesPerBlock, 4);
 
     if (isCompressedTextureFormat(dstTexture.format) && this.isCompatibility) {
-      assert(viewCompatible(this.isCompatibility, srcFormat, dstFormat));
+      assert(viewCompatibleDeprecated(this.isCompatibility, srcFormat, dstFormat));
       // compare by rendering. We need the expected texture to match
       // the dstTexture so we'll create a texture where we supply
       // all of the data in JavaScript.

@@ -162,7 +162,7 @@ combine('format', kAllTextureFormats)
 ).
 fn((t) => {
   const { returnType, textureType, format } = t.params;
-  t.skipIfTextureFormatNotUsableAsStorageTexture(format);
+  t.skipIfTextureFormatNotUsableAsStorageTextureDeprecated(format);
 
   const returnVarType = kValuesTypes[returnType];
   const { returnType: returnRequiredType, hasLevelArg } =

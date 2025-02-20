@@ -21,7 +21,7 @@ If an out of bounds access occurs, the built-in function returns one of:
 import {
   isCompressedFloatTextureFormat,
   isDepthTextureFormat,
-  isMultisampledTextureFormat,
+  isMultisampledTextureFormatDeprecated,
   isStencilTextureFormat,
   kDepthStencilFormats,
   kAllTextureFormats,
@@ -109,7 +109,7 @@ combine('L', ['i32', 'u32'])
 ).
 beforeAllSubcases((t) => {
   const { format } = t.params;
-  t.skipIfTextureFormatNotSupported(format);
+  t.skipIfTextureFormatNotSupportedDeprecated(format);
   t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
 }).
 fn(async (t) => {
@@ -194,7 +194,7 @@ combine('L', ['i32', 'u32'])
 ).
 beforeAllSubcases((t) => {
   const { format } = t.params;
-  t.skipIfTextureFormatNotSupported(format);
+  t.skipIfTextureFormatNotSupportedDeprecated(format);
   t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
 }).
 fn(async (t) => {
@@ -277,7 +277,7 @@ combine('L', ['i32', 'u32'])
 ).
 beforeAllSubcases((t) => {
   const { format } = t.params;
-  t.skipIfTextureFormatNotSupported(format);
+  t.skipIfTextureFormatNotSupportedDeprecated(format);
   t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
 }).
 fn(async (t) => {
@@ -359,7 +359,7 @@ combine('texture_type', [
 'texture_depth_multisampled_2d']
 ).
 combine('format', kAllTextureFormats).
-filter((t) => isMultisampledTextureFormat(t.format, false)).
+filter((t) => isMultisampledTextureFormatDeprecated(t.format, false)).
 filter((t) => !isStencilTextureFormat(t.format))
 // Filter out texture_depth_multisampled_2d with non-depth formats
 .filter(
@@ -373,9 +373,9 @@ combine('S', ['i32', 'u32'])
 ).
 beforeAllSubcases((t) => {
   const { format, texture_type } = t.params;
-  t.skipIfTextureFormatNotSupported(format);
-  t.skipIfTextureLoadNotSupportedForTextureType(texture_type);
-  t.skipIfMultisampleNotSupportedForFormat(format);
+  t.skipIfTextureFormatNotSupportedDeprecated(format);
+  t.skipIfTextureLoadNotSupportedForTextureTypeDeprecated(texture_type);
+  t.skipIfMultisampleNotSupportedForFormatDeprecated(format);
 }).
 fn(async (t) => {
   const { texture_type, format, stage, samplePoints, C, S } = t.params;
@@ -455,7 +455,7 @@ combine('C', ['i32', 'u32']).
 combine('L', ['i32', 'u32'])
 ).
 beforeAllSubcases((t) => {
-  t.skipIfTextureLoadNotSupportedForTextureType('texture_depth_2d');
+  t.skipIfTextureLoadNotSupportedForTextureTypeDeprecated('texture_depth_2d');
   t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
 }).
 fn(async (t) => {
@@ -625,8 +625,8 @@ combine('depthOrArrayLayers', [1, 8])
 ).
 beforeAllSubcases((t) => {
   const { format, texture_type } = t.params;
-  t.skipIfTextureFormatNotSupported(format);
-  t.skipIfTextureLoadNotSupportedForTextureType(texture_type);
+  t.skipIfTextureFormatNotSupportedDeprecated(format);
+  t.skipIfTextureLoadNotSupportedForTextureTypeDeprecated(texture_type);
   t.selectDeviceForTextureFormatOrSkipTestCase(format);
 }).
 fn(async (t) => {
@@ -712,7 +712,7 @@ beforeAllSubcases((t) => {
   if (t.params.format === 'bgra8unorm') {
     t.selectDeviceOrSkipTestCase('bgra8unorm-storage');
   } else {
-    t.skipIfTextureFormatNotUsableAsStorageTexture(t.params.format);
+    t.skipIfTextureFormatNotUsableAsStorageTextureDeprecated(t.params.format);
   }
 }).
 fn(async (t) => {
@@ -793,7 +793,7 @@ beforeAllSubcases((t) => {
   if (t.params.format === 'bgra8unorm') {
     t.selectDeviceOrSkipTestCase('bgra8unorm-storage');
   } else {
-    t.skipIfTextureFormatNotUsableAsStorageTexture(t.params.format);
+    t.skipIfTextureFormatNotUsableAsStorageTextureDeprecated(t.params.format);
   }
 }).
 fn(async (t) => {
@@ -876,7 +876,7 @@ beforeAllSubcases((t) => {
   if (t.params.format === 'bgra8unorm') {
     t.selectDeviceOrSkipTestCase('bgra8unorm-storage');
   } else {
-    t.skipIfTextureFormatNotUsableAsStorageTexture(t.params.format);
+    t.skipIfTextureFormatNotUsableAsStorageTextureDeprecated(t.params.format);
   }
 }).
 fn(async (t) => {
@@ -962,7 +962,7 @@ beforeAllSubcases((t) => {
   if (t.params.format === 'bgra8unorm') {
     t.selectDeviceOrSkipTestCase('bgra8unorm-storage');
   } else {
-    t.skipIfTextureFormatNotUsableAsStorageTexture(t.params.format);
+    t.skipIfTextureFormatNotUsableAsStorageTextureDeprecated(t.params.format);
   }
 }).
 fn(async (t) => {

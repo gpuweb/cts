@@ -342,21 +342,21 @@ combine('viewUsageMethod', kTextureViewUsageMethods)
 ).
 beforeAllSubcases((t) => {
   const { format, method, sampleCount } = t.params;
-  t.skipIfTextureFormatNotSupported(format);
+  t.skipIfTextureFormatNotSupportedDeprecated(format);
 
   switch (method) {
     case 'storage-write-compute':
     case 'storage-write-fragment':
       // Still need to filter again for compat mode.
-      t.skipIfTextureFormatNotUsableAsStorageTexture(format);
+      t.skipIfTextureFormatNotUsableAsStorageTextureDeprecated(format);
       if (sampleCount > 1) {
-        t.skipIfMultisampleNotSupportedForFormat(format);
+        t.skipIfMultisampleNotSupportedForFormatDeprecated(format);
       }
       break;
     case 'render-pass-resolve':
     case 'render-pass-store':
       // Requires multisample in `writeTextureAndGetExpectedTexelView`
-      t.skipIfMultisampleNotSupportedForFormat(format);
+      t.skipIfMultisampleNotSupportedForFormatDeprecated(format);
       break;
   }
 }).

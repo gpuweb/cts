@@ -14,7 +14,7 @@ import {
   kAllTextureFormats,
   kFeaturesForFormats,
   filterFormatsByFeature,
-  viewCompatible,
+  viewCompatibleDeprecated,
 } from '../../format_info.js';
 import { AllFeaturesMaxLimitsGPUTest } from '../../gpu_test.js';
 import { kAllCanvasTypes, createCanvas } from '../../util/create_elements.js';
@@ -451,13 +451,13 @@ g.test('viewFormats')
   .fn(t => {
     const { canvasType, format, viewFormat } = t.params;
 
-    t.skipIfTextureFormatNotSupported(viewFormat);
+    t.skipIfTextureFormatNotSupportedDeprecated(viewFormat);
 
     const canvas = createCanvas(t, canvasType, 1, 1);
     const ctx = canvas.getContext('webgpu');
     assert(ctx instanceof GPUCanvasContext, 'Failed to get WebGPU context from canvas');
 
-    const compatible = viewCompatible(t.isCompatibility, format, viewFormat);
+    const compatible = viewCompatibleDeprecated(t.isCompatibility, format, viewFormat);
 
     // Test configure() produces an error if the formats aren't compatible.
     t.expectValidationError(() => {
