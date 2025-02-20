@@ -593,7 +593,7 @@ Parameters:
   )
   .beforeAllSubcases(t => {
     skipIfTextureFormatNotSupportedNotAvailableOrNotFilterable(t, t.params.format);
-    t.skipIfTextureViewDimensionNotSupported('cube-array');
+    t.skipIfTextureViewDimensionNotSupportedDeprecated('cube-array');
   })
   .fn(async t => {
     const { format, samplePoints, A, mode, filt: minFilter } = t.params;
@@ -694,7 +694,7 @@ Parameters:
   )
   .beforeAllSubcases(t => {
     t.skipIfDepthTextureCanNotBeUsedWithNonComparisonSampler();
-    t.skipIfTextureViewDimensionNotSupported(t.params.viewDimension);
+    t.skipIfTextureViewDimensionNotSupportedDeprecated(t.params.viewDimension);
     t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
   })
   .fn(async t => {
@@ -893,7 +893,7 @@ Parameters:
   )
   .beforeAllSubcases(t => {
     t.skipIfDepthTextureCanNotBeUsedWithNonComparisonSampler();
-    t.skipIfTextureViewDimensionNotSupported('cube-array');
+    t.skipIfTextureViewDimensionNotSupportedDeprecated('cube-array');
     t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
   })
   .fn(async t => {

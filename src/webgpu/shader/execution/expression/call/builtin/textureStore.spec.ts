@@ -99,7 +99,7 @@ g.test('texel_formats')
     if (t.params.format === 'bgra8unorm') {
       t.selectDeviceOrSkipTestCase('bgra8unorm-storage');
     } else {
-      t.skipIfTextureFormatNotUsableAsStorageTexture(t.params.format as GPUTextureFormat);
+      t.skipIfTextureFormatNotUsableAsStorageTextureDeprecated(t.params.format as GPUTextureFormat);
     }
   })
   .fn(t => {

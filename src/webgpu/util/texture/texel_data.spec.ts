@@ -211,7 +211,7 @@ g.test('unorm_texel_data_in_shader')
       })
   )
   .beforeAllSubcases(t => {
-    t.skipIfTextureFormatNotSupported(t.params.format);
+    t.skipIfTextureFormatNotSupportedDeprecated(t.params.format);
   })
   .fn(doTest);
 

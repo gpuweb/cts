@@ -152,7 +152,7 @@ Validates that only incorrect value arguments are rejected by ${builtin}
   )
   .fn(t => {
     const { textureType, valueType, format, value } = t.params;
-    t.skipIfTextureFormatNotUsableAsStorageTexture(format);
+    t.skipIfTextureFormatNotUsableAsStorageTextureDeprecated(format);
 
     const valueArgType = kValuesTypes[valueType];
     const args = [valueArgType.create(value)];
