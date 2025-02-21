@@ -1785,6 +1785,19 @@ export function getBlockInfoForColorTextureFormat(format: ColorTextureFormat) {
 }
 
 /**
+ * Gets the block width, height, and bytes per block for a color texture format.
+ * Note that bytesPerBlock will be undefined if format's size is undefined.
+ */
+export function getBlockInfoForTextureFormat(format: GPUTextureFormat) {
+  const info = kTextureFormatInfo[format];
+  return {
+    blockWidth: info.blockWidth,
+    blockHeight: info.blockHeight,
+    bytesPerBlock: info.color?.bytes ?? info.depth?.bytes ?? info.stencil?.bytes,
+  };
+}
+
+/**
  * Gets the baseFormat for a texture format.
  */
 export function getBaseFormatForTextureFormat(format: GPUTextureFormat) {
@@ -1861,6 +1874,15 @@ export function isTextureFormatColorRenderable(
     return true;
   }
   return !!kAllTextureFormatInfo[format].colorRender;
+}
+
+/**
+ * Returns true if a texture can possibly be used as a render attachment.
+ * The texture may require certain features to be enabled.
+ */
+export function isTextureFormatPossiblyUsableAsRenderAttachment(format: GPUTextureFormat) {
+  const info = kTextureFormatInfo[format];
+  return format === 'rg11b10ufloat' || isDepthOrStencilTextureFormat(format) || !!info.colorRender;
 }
 
 export function is16Float(format: GPUTextureFormat) {
@@ -1941,7 +1963,7 @@ export function isSintOrUintFormat(format: GPUTextureFormat) {
 }
 
 /**
- * Returns true of format can be multisampled.
+ * Returns true if format can be multisampled.
  */
 export const kCompatModeUnsupportedMultisampledTextureFormats: readonly GPUTextureFormat[] = [
   'r8uint',
@@ -1990,7 +2012,7 @@ export function isTextureFormatMultisampled(device: GPUDevice, format: GPUTextur
 }
 
 /**
- * Returns true of a texture can be "resolved". uint/sint formats can be multisampled but
+ * Returns true if a texture can be "resolved". uint/sint formats can be multisampled but
  * can not be resolved.
  */
 export function isTextureFormatResolvable(device: GPUDevice, format: GPUTextureFormat): boolean {

@@ -35,6 +35,7 @@ import {
   isTextureFormatUsableAsStorageFormatDeprecated,
   isMultisampledTextureFormatDeprecated,
   isTextureFormatUsableAsStorageFormat,
+  isTextureFormatUsableAsRenderAttachment,
 } from './format_info.js';
 import { checkElementsEqual, checkElementsBetween } from './util/check_contents.js';
 import { CommandBufferMaker, EncoderType } from './util/command_buffer_maker.js';
@@ -608,6 +609,29 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
     }
   }
 
+  skipIfTextureFormatNotUsableAsRenderAttachment(...formats: (GPUTextureFormat | undefined)[]) {
+    for (const format of formats) {
+      if (format && !isTextureFormatUsableAsRenderAttachment(this.device, format)) {
+        this.skip(`Texture with ${format} is not usable as a render attachment`);
+      }
+    }
+  }
+
+  skipIfTextureFormatDoesNotSupportUsage(
+    usage: GPUTextureUsageFlags,
+    ...formats: (GPUTextureFormat | undefined)[]
+  ) {
+    for (const format of formats) {
+      if (!format) continue;
+      if (usage & GPUTextureUsage.RENDER_ATTACHMENT) {
+        this.skipIfTextureFormatNotUsableAsRenderAttachment(format);
+      }
+      if (usage & GPUTextureUsage.STORAGE_BINDING) {
+        this.skipIfTextureFormatNotUsableAsStorageTexture(format);
+      }
+    }
+  }
+
   /** Skips this test case if the `langFeature` is *not* supported. */
   skipIfLanguageFeatureNotSupported(langFeature: WGSLLanguageFeature) {
     if (!this.hasLanguageFeature(langFeature)) {
@@ -622,7 +646,7 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
     }
   }
 
-  /** returns true iff the `langFeature` is supported  */
+  /** returns true if the `langFeature` is supported  */
   hasLanguageFeature(langFeature: WGSLLanguageFeature) {
     const lf = getGPU(this.rec).wgslLanguageFeatures;
     return lf !== undefined && lf.has(langFeature);
