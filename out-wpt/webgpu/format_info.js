@@ -1393,7 +1393,7 @@ const kASTCTextureFormatInfo = formatTableWithDefaults({
   }
 });
 
-// Definitions for use locally. To access the table entries, use `kTextureFormatInfo`.
+// Definitions for use locally.
 
 // MAINTENANCE_TODO: Consider generating the exports below programmatically by filtering the big list, instead
 // of using these local constants? Requires some type magic though.
@@ -1543,6 +1543,13 @@ export const kTextureFormatInfo = {
 const kTextureFormatInfo_TypeCheck =
 
 kTextureFormatInfo;
+
+// Texture formats that may possibly be used as a storage texture.
+// Some may require certain features to be enabled.
+export const kPossibleStorageTextureFormats = [
+...kAllTextureFormats.filter((f) => kTextureFormatInfo[f].color?.storage),
+'bgra8unorm'];
+
 
 /** Valid GPUTextureFormats for `copyExternalImageToTexture`, by spec. */
 export const kValidTextureFormatsForCopyE2T = [

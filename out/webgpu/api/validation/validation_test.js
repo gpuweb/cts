@@ -437,11 +437,6 @@ class ValidationTestImpl extends GPUTest {
 }
 
 /**
- * Deprecated base fixture for WebGPU validation tests
- * @deprecated use AllFeaturesMaxLimitsValidationTest or UniqueFeaturesAndLimitsValidationTest
- */
-
-/**
  * Base fixture for WebGPU validation tests.
  */
 export class AllFeaturesMaxLimitsValidationTest extends AllFeaturesMaxLimitsGPUTest {
