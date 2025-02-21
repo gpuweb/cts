@@ -36,6 +36,7 @@ import {
   isMultisampledTextureFormatDeprecated,
   isTextureFormatUsableAsStorageFormat,
   isTextureFormatUsableAsRenderAttachment,
+  isTextureFormatMultisampled,
 } from './format_info.js';
 import { checkElementsEqual, checkElementsBetween } from './util/check_contents.js';
 import { CommandBufferMaker, EncoderType } from './util/command_buffer_maker.js';
@@ -525,6 +526,26 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
   }
 
   /**
+   * Skips test if device does not have feature.
+   * Note: Try to use one of the more specific skipIf tests if possible.
+   */
+  skipIfDeviceDoesNotHaveFeature(feature: GPUFeatureName) {
+    this.skipIf(!this.device.features.has(feature), `device does not have feature: '${feature}'`);
+  }
+
+  /**
+   * Skips test if device des not support query type.
+   */
+  skipIfDeviceDoesNotSupportQueryType(...types: GPUQueryType[]) {
+    for (const type of types) {
+      const feature = kQueryTypeInfo[type].feature;
+      if (feature) {
+        this.skipIfDeviceDoesNotHaveFeature(feature);
+      }
+    }
+  }
+
+  /**
    * Skips test if any format is not supported.
    */
   skipIfTextureFormatNotSupported(...formats: (GPUTextureFormat | undefined)[]) {
@@ -542,6 +563,15 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
         !!feature && !this.device.features.has(feature),
         `texture format '${format}' requires feature: '${feature}`
       );
+    }
+  }
+
+  skipIfMultisampleNotSupportedForFormat(...formats: (GPUTextureFormat | undefined)[]) {
+    for (const format of formats) {
+      if (format === undefined) continue;
+      if (!isTextureFormatMultisampled(this.device, format)) {
+        this.skip(`texture format '${format}' is not supported to be multisampled`);
+      }
     }
   }
 
