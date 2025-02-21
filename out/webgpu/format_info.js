@@ -1553,6 +1553,13 @@ const kTextureFormatInfo_TypeCheck =
 
 kTextureFormatInfo;
 
+// Depth texture formats including formats that also support stencil
+export const kDepthTextureFormats = kDepthStencilFormats.filter((v) => kTextureFormatInfo[v].depth);
+// Stencil texture formats including formats that also support depth
+export const kStencilTextureFormats = kDepthStencilFormats.filter(
+  (v) => kTextureFormatInfo[v].stencil
+);
+
 // Texture formats that may possibly be used as a storage texture.
 // Some may require certain features to be enabled.
 export const kPossibleStorageTextureFormats = [
@@ -1915,6 +1922,23 @@ format)
 export function isTextureFormatPossiblyUsableAsRenderAttachment(format) {
   const info = kTextureFormatInfo[format];
   return format === 'rg11b10ufloat' || isDepthOrStencilTextureFormat(format) || !!info.colorRender;
+}
+
+/**
+ * Returns true if a texture can possibly be used multisampled.
+ * The texture may require certain features to be enabled.
+ */
+export function isTextureFormatPossiblyMultisampled(format) {
+  const info = kTextureFormatInfo[format];
+  return format === 'rg11b10ufloat' || info.multisample;
+}
+
+/**
+ * Returns true if a texture can possibly be used as a writable storage texture.
+ * The texture may require certain features to be enabled.
+ */
+export function isTextureFormatPossiblyStorageWritable(format) {
+  return kTextureFormatInfo[format].color?.readWriteStorage;
 }
 
 export function is16Float(format) {

@@ -631,6 +631,19 @@ export class GPUTestBase extends Fixture {
     }
   }
 
+  skipIfTextureLoadNotSupportedForTextureType(...types) {
+    if (this.isCompatibility) {
+      for (const type of types) {
+        switch (type) {
+          case 'texture_depth_2d':
+          case 'texture_depth_2d_array':
+          case 'texture_depth_multisampled_2d':
+            this.skip(`${type} is not supported by textureLoad in compatibility mode`);
+        }
+      }
+    }
+  }
+
   skipIfTextureFormatNotUsableAsStorageTexture(...formats) {
     for (const format of formats) {
       if (format && !isTextureFormatUsableAsStorageFormat(this.device, format)) {
