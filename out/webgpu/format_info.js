@@ -1438,9 +1438,18 @@ export const kUncompressedTextureFormats = keysOf(kUncompressedTextureFormatInfo
 export const kAllTextureFormats = keysOf(kAllTextureFormatInfo);
 
 // CompressedTextureFormat are unrenderable so filter from RegularTextureFormats for color targets is enough
+// @deprecated
 export const kRenderableColorTextureFormats = kRegularTextureFormats.filter(
   (v) => kColorTextureFormatInfo[v].colorRender
 );
+
+// Color formats that are possibly renderable. Some may require features to be enabled.
+// MAINTENANCE_TODO: remove 'rg11b10ufloat` once colorRender is added to its info.
+// See: computeBytesPerSampleFromFormats
+export const kPossiblyRenderableColorTextureFormats = [
+...kRegularTextureFormats.filter((v) => kColorTextureFormatInfo[v].colorRender),
+'rg11b10ufloat'];
+
 
 /** Per-GPUTextureFormat-per-aspect info. */
 
@@ -2042,7 +2051,14 @@ export const kFeaturesForFormats = getFeaturesForFormats(kAllTextureFormats);
 export function computeBytesPerSampleFromFormats(formats) {
   let bytesPerSample = 0;
   for (const format of formats) {
-    const info = kTextureFormatInfo[format];
+    // MAINTENANCE_TODO: Add colorRender to rg11b10ufloat format in kTextureFormatInfo
+    // The issue is if we add it now lots of tests will break as they'll think they can
+    // render to the format but are not enabling 'rg11b10ufloat-renderable'. Once we
+    // get the CTS refactored (see issue 4181), then fix this.
+    const info =
+    format === 'rg11b10ufloat' ?
+    { colorRender: { alignment: 4, byteCost: 8 } } :
+    kTextureFormatInfo[format];
     const alignedBytesPerSample = align(bytesPerSample, info.colorRender.alignment);
     bytesPerSample = alignedBytesPerSample + info.colorRender.byteCost;
   }
