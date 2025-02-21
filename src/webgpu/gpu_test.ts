@@ -536,11 +536,6 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
         if (isCompatibilityDevice(this.device)) {
           this.skip(`texture format '${format}' is not supported`);
         }
-        const feature = getRequiredFeatureForTextureFormat(format);
-        this.skipIf(
-          !!feature && !this.device.features.has(feature),
-          `texture format '${format}' requires feature: '${feature}`
-        );
       }
       const feature = getRequiredFeatureForTextureFormat(format);
       this.skipIf(
