@@ -1560,6 +1560,18 @@ export const kPossibleStorageTextureFormats = [
   'bgra8unorm',
 ] as const;
 
+// Texture formats that may possibly be multisampled.
+// Some may require certain features to be enabled.
+export const kPossibleMultisampledTextureFormats = [
+  ...kAllTextureFormats.filter(f => kTextureFormatInfo[f].multisample),
+  'rg11b10ufloat',
+] as const;
+
+// Texture formats that have a different base format. This is effectively all -srgb formats.
+export const kDifferentBaseFormatTextureFormats = kAllTextureFormats.filter(
+  f => kTextureFormatInfo[f].baseFormat && kTextureFormatInfo[f].baseFormat !== f
+);
+
 /** Valid GPUTextureFormats for `copyExternalImageToTexture`, by spec. */
 export const kValidTextureFormatsForCopyE2T = [
   'r8unorm',
@@ -1790,6 +1802,7 @@ export function textureFormatsAreViewCompatible(
 
 /**
  * Gets the block width, height, and bytes per block for a color texture format.
+ * This is for color textures only. For all texture formats @see {@link getBlockInfoForTextureFormat}
  */
 export function getBlockInfoForColorTextureFormat(format: ColorTextureFormat) {
   const info = kTextureFormatInfo[format];
@@ -1803,6 +1816,7 @@ export function getBlockInfoForColorTextureFormat(format: ColorTextureFormat) {
 /**
  * Gets the block width, height, and bytes per block for a color texture format.
  * Note that bytesPerBlock will be undefined if format's size is undefined.
+ * If you are only using color formats, @see {@link getBlockInfoForColorTextureFormat}
  */
 export function getBlockInfoForTextureFormat(format: GPUTextureFormat) {
   const info = kTextureFormatInfo[format];
@@ -1816,8 +1830,10 @@ export function getBlockInfoForTextureFormat(format: GPUTextureFormat) {
 /**
  * Gets the baseFormat for a texture format.
  */
-export function getBaseFormatForTextureFormat(format: GPUTextureFormat) {
-  return kTextureFormatInfo[format].baseFormat;
+export function getBaseFormatForTextureFormat(
+  format: (typeof kDifferentBaseFormatTextureFormats)[number]
+): GPUTextureFormat {
+  return kTextureFormatInfo[format].baseFormat!;
 }
 
 /**
@@ -2043,6 +2059,9 @@ export function isTextureFormatResolvable(device: GPUDevice, format: GPUTextureF
   return !!info.colorRender?.resolve;
 }
 
+// MAINTENANCE_TODD: See if we can remove this. This doesn't seem useful since
+// formats are not on/off by feature. Some are on but a feature allows them to be
+// used in more cases, like going from un-renderable to renderable, etc...
 export const kFeaturesForFormats = getFeaturesForFormats(kAllTextureFormats);
 
 /**
