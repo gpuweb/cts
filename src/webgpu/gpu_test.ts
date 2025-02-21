@@ -647,6 +647,15 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
     }
   }
 
+  skipIfTextureFormatNotMultisampled(...formats: (GPUTextureFormat | undefined)[]) {
+    for (const format of formats) {
+      if (format === undefined) continue;
+      if (!isTextureFormatMultisampled(this.device, format)) {
+        this.skip(`texture format '${format}' is not supported to be multisampled`);
+      }
+    }
+  }
+
   skipIfTextureFormatDoesNotSupportUsage(
     usage: GPUTextureUsageFlags,
     ...formats: (GPUTextureFormat | undefined)[]
@@ -1484,7 +1493,9 @@ function applyLimitsToDescriptor(
 }
 
 function getAdapterFeaturesAsDeviceRequiredFeatures(adapter: GPUAdapter): Iterable<GPUFeatureName> {
-  return adapter.features as Iterable<GPUFeatureName>;
+  return [...adapter.features].filter(
+    f => f !== 'core-features-and-limits'
+  ) as Iterable<GPUFeatureName>;
 }
 
 function applyFeaturesToDescriptor(

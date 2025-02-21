@@ -647,6 +647,15 @@ export class GPUTestBase extends Fixture {
     }
   }
 
+  skipIfTextureFormatNotMultisampled(...formats) {
+    for (const format of formats) {
+      if (format === undefined) continue;
+      if (!isTextureFormatMultisampled(this.device, format)) {
+        this.skip(`texture format '${format}' is not supported to be multisampled`);
+      }
+    }
+  }
+
   skipIfTextureFormatDoesNotSupportUsage(
   usage,
   ...formats)
@@ -1484,7 +1493,9 @@ getRequiredLimits)
 }
 
 function getAdapterFeaturesAsDeviceRequiredFeatures(adapter) {
-  return adapter.features;
+  return [...adapter.features].filter(
+    (f) => f !== 'core-features-and-limits'
+  );
 }
 
 function applyFeaturesToDescriptor(
