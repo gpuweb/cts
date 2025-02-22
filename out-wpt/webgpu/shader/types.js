@@ -180,7 +180,18 @@ export const kAddressSpaceInfo = {
   }
 };
 
-/** List of texel formats and their shader representation */
+/**
+ * List of texel formats and their shader representation
+ * MAINTENANCE_TODO: It's not clear what this table is used for but being static we should
+ * check that it's used correctly and not missing formats. For example the textureLoad tests
+ * were using this table and then manually adding in bgra8unorm but doing that at every
+ * test means that if a new format is added it will have to be added at every test.
+ * If this table is useful, say for a list of storage texture formats, it should probably
+ * be validated with the data in format_info.ts and visa versa so that adding a new format
+ * to one or the other asserts if it's missing in the other. Marking as deprecated for now
+ * to highlight where it's used.
+ */
+/** @deprecated */
 export const TexelFormats = [
 { format: 'rgba8unorm', _shaderType: 'f32' },
 { format: 'rgba8snorm', _shaderType: 'f32' },

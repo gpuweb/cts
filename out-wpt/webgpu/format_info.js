@@ -1574,6 +1574,13 @@ export const kPossibleMultisampledTextureFormats = [
 'rg11b10ufloat'];
 
 
+// Texture formats that may possibly be color renderable.
+// Some may require certain features to be enabled.
+export const kPossibleColorRenderableTextureFormats = [
+...kAllTextureFormats.filter((f) => kTextureFormatInfo[f].colorRender),
+'rg11b10ufloat'];
+
+
 // Texture formats that have a different base format. This is effectively all -srgb formats.
 export const kDifferentBaseFormatTextureFormats = kAllTextureFormats.filter(
   (f) => kTextureFormatInfo[f].baseFormat && kTextureFormatInfo[f].baseFormat !== f
