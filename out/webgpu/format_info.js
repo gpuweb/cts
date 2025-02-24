@@ -1554,7 +1554,9 @@ const kTextureFormatInfo_TypeCheck =
 kTextureFormatInfo;
 
 // Depth texture formats including formats that also support stencil
-export const kDepthTextureFormats = kDepthStencilFormats.filter((v) => kTextureFormatInfo[v].depth);
+export const kDepthTextureFormats = [
+...kDepthStencilFormats.filter((v) => kTextureFormatInfo[v].depth)];
+
 // Stencil texture formats including formats that also support depth
 export const kStencilTextureFormats = kDepthStencilFormats.filter(
   (v) => kTextureFormatInfo[v].stencil
@@ -1581,9 +1583,16 @@ export const kPossibleColorRenderableTextureFormats = [
 'rg11b10ufloat'];
 
 
+
+
 // Texture formats that have a different base format. This is effectively all -srgb formats.
 export const kDifferentBaseFormatTextureFormats = kAllTextureFormats.filter(
   (f) => kTextureFormatInfo[f].baseFormat && kTextureFormatInfo[f].baseFormat !== f
+);
+
+// Textures formats that are optional
+export const kOptionalTextureFormats = kAllTextureFormats.filter(
+  (t) => kTextureFormatInfo[t].feature !== undefined
 );
 
 /** Valid GPUTextureFormats for `copyExternalImageToTexture`, by spec. */
@@ -1842,6 +1851,21 @@ export function getBlockInfoForTextureFormat(format) {
 }
 
 /**
+ * Returns the "byteCost" of rendering to a color texture format.
+ * MAINTENANCE_TODO: remove `rg11b10ufloat' from here and add its data to table
+ * once CTS is refactored. See issue #4181
+ */
+export function getColorRenderByteCost(format) {
+  const byteCost =
+  format === 'rg11b10ufloat' ? 8 : kTextureFormatInfo[format].colorRender?.byteCost;
+  // MAINTENANCE_TODO: remove this assert. The issue is typescript thinks
+  // PossibleColorRenderTextureFormat contains all texture formats and not just
+  // a filtered list.
+  assert(byteCost !== undefined);
+  return byteCost;
+}
+
+/**
  * Gets the baseFormat for a texture format.
  */
 export function getBaseFormatForTextureFormat(
@@ -1932,6 +1956,15 @@ export function isTextureFormatPossiblyUsableAsRenderAttachment(format) {
 }
 
 /**
+ * Returns true if a texture can possibly be used as a color render attachment.
+ * The texture may require certain features to be enabled.
+ */
+export function isTextureFormatPossiblyUsableAsColorRenderAttachment(format) {
+  const info = kTextureFormatInfo[format];
+  return format === 'rg11b10ufloat' || !!info.colorRender;
+}
+
+/**
  * Returns true if a texture can possibly be used multisampled.
  * The texture may require certain features to be enabled.
  */
@@ -1941,11 +1974,19 @@ export function isTextureFormatPossiblyMultisampled(format) {
 }
 
 /**
+ * Returns true if a texture can possibly be used as a storage texture.
+ * The texture may require certain features to be enabled.
+ */
+export function isTextureFormatPossiblyStorageReadable(format) {
+  return !!kTextureFormatInfo[format].color?.storage;
+}
+
+/**
  * Returns true if a texture can possibly be used as a writable storage texture.
  * The texture may require certain features to be enabled.
  */
 export function isTextureFormatPossiblyStorageWritable(format) {
-  return kTextureFormatInfo[format].color?.readWriteStorage;
+  return !!kTextureFormatInfo[format].color?.readWriteStorage;
 }
 
 export function is16Float(format) {
