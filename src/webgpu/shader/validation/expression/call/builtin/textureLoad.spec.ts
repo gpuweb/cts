@@ -114,7 +114,9 @@ Validates the return type of ${builtin} is the expected type.
         kNonStorageTextureTypeInfo[t.textureType].texelTypes.map(v => v.toString())
       )
   )
-  .beforeAllSubcases(t => t.skipIfTextureLoadNotSupportedForTextureType(t.params.textureType))
+  .beforeAllSubcases(t =>
+    t.skipIfTextureLoadNotSupportedForTextureTypeDeprecated(t.params.textureType)
+  )
   .fn(t => {
     const { returnType, textureType, texelType } = t.params;
     const returnVarType = kValuesTypes[returnType];
@@ -159,7 +161,9 @@ Validates that only incorrect coords arguments are rejected by ${builtin}
       // filter out unsigned types with negative values
       .filter(t => !isUnsignedType(kValuesTypes[t.coordType]) || t.value >= 0)
   )
-  .beforeAllSubcases(t => t.skipIfTextureLoadNotSupportedForTextureType(t.params.textureType))
+  .beforeAllSubcases(t =>
+    t.skipIfTextureLoadNotSupportedForTextureTypeDeprecated(t.params.textureType)
+  )
   .fn(t => {
     const { textureType, coordType, texelType, value } = t.params;
     const coordArgType = kValuesTypes[coordType];
@@ -210,7 +214,7 @@ Validates that only incorrect coords arguments are rejected by ${builtin}
   )
   .fn(t => {
     const { textureType, coordType, format, value } = t.params;
-    t.skipIfTextureFormatNotUsableAsStorageTexture(format);
+    t.skipIfTextureFormatNotUsableAsStorageTextureDeprecated(format);
 
     const coordArgType = kValuesTypes[coordType];
     const { coordsArgTypes, hasArrayIndexArg } =
@@ -255,7 +259,9 @@ Validates that only incorrect array_index arguments are rejected by ${builtin}
       // filter out unsigned types with negative values
       .filter(t => !isUnsignedType(kValuesTypes[t.arrayIndexType]) || t.value >= 0)
   )
-  .beforeAllSubcases(t => t.skipIfTextureLoadNotSupportedForTextureType(t.params.textureType))
+  .beforeAllSubcases(t =>
+    t.skipIfTextureLoadNotSupportedForTextureTypeDeprecated(t.params.textureType)
+  )
   .fn(t => {
     const { textureType, arrayIndexType, texelType, value } = t.params;
     const arrayIndexArgType = kValuesTypes[arrayIndexType];
@@ -309,7 +315,7 @@ Validates that only incorrect array_index arguments are rejected by ${builtin}
   )
   .fn(t => {
     const { textureType, arrayIndexType, format, value } = t.params;
-    t.skipIfTextureFormatNotUsableAsStorageTexture(format);
+    t.skipIfTextureFormatNotUsableAsStorageTextureDeprecated(format);
 
     const arrayIndexArgType = kValuesTypes[arrayIndexType];
     const args = [arrayIndexArgType.create(value)];
@@ -355,7 +361,9 @@ Validates that only incorrect level arguments are rejected by ${builtin}
       // filter out unsigned types with negative values
       .filter(t => !isUnsignedType(kValuesTypes[t.levelType]) || t.value >= 0)
   )
-  .beforeAllSubcases(t => t.skipIfTextureLoadNotSupportedForTextureType(t.params.textureType))
+  .beforeAllSubcases(t =>
+    t.skipIfTextureLoadNotSupportedForTextureTypeDeprecated(t.params.textureType)
+  )
   .fn(t => {
     const { textureType, levelType, texelType, value } = t.params;
     const levelArgType = kValuesTypes[levelType];
@@ -403,7 +411,9 @@ Validates that only incorrect sample_index arguments are rejected by ${builtin}
       // filter out unsigned types with negative values
       .filter(t => !isUnsignedType(kValuesTypes[t.sampleIndexType]) || t.value >= 0)
   )
-  .beforeAllSubcases(t => t.skipIfTextureLoadNotSupportedForTextureType(t.params.textureType))
+  .beforeAllSubcases(t =>
+    t.skipIfTextureLoadNotSupportedForTextureTypeDeprecated(t.params.textureType)
+  )
   .fn(t => {
     const { textureType, sampleIndexType, texelType, value } = t.params;
     const sampleIndexArgType = kValuesTypes[sampleIndexType];
@@ -442,7 +452,9 @@ Validates that incompatible texture types don't work with ${builtin}
       .beginSubcases()
       .combine('textureType', kNonStorageTextureTypes)
   )
-  .beforeAllSubcases(t => t.skipIfTextureLoadNotSupportedForTextureType(t.params.testTextureType))
+  .beforeAllSubcases(t =>
+    t.skipIfTextureLoadNotSupportedForTextureTypeDeprecated(t.params.testTextureType)
+  )
   .fn(t => {
     const { testTextureType, textureType } = t.params;
     const { coordsArgTypes, hasArrayIndexArg, hasLevelArg, hasSampleIndexArg } =
@@ -497,7 +509,9 @@ Validates that incompatible texture types don't work with ${builtin}
       .combine('textureType', kStorageTextureTypes)
       .combine('format', kAllTextureFormats)
   )
-  .beforeAllSubcases(t => t.skipIfTextureLoadNotSupportedForTextureType(t.params.testTextureType))
+  .beforeAllSubcases(t =>
+    t.skipIfTextureLoadNotSupportedForTextureTypeDeprecated(t.params.testTextureType)
+  )
   .fn(t => {
     const { testTextureType, textureType } = t.params;
     const { coordsArgTypes, hasArrayIndexArg, hasLevelArg, hasSampleIndexArg } =

@@ -4,7 +4,10 @@ Tests for texture_utils.ts
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { assert } from '../../../../../../common/util/util.js';
-import { isMultisampledTextureFormat, kDepthStencilFormats } from '../../../../../format_info.js';
+import {
+  isMultisampledTextureFormatDeprecated,
+  kDepthStencilFormats,
+} from '../../../../../format_info.js';
 import { GPUTest } from '../../../../../gpu_test.js';
 import { getTextureDimensionFromView, virtualMipSize } from '../../../../../util/texture/base.js';
 import {
@@ -47,7 +50,7 @@ g.test('createTextureWithRandomDataAndGetTexels_with_generator')
       .filter(t => isSupportedViewFormatCombo(t.format, t.viewDimension))
   )
   .beforeAllSubcases(t => {
-    t.skipIfTextureViewDimensionNotSupported(t.params.viewDimension);
+    t.skipIfTextureViewDimensionNotSupportedDeprecated(t.params.viewDimension);
     t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
   })
   .fn(async t => {
@@ -90,13 +93,13 @@ g.test('readTextureToTexelViews')
       .unless(
         t =>
           t.sampleCount > 1 &&
-          (!isMultisampledTextureFormat(t.srcFormat, false) || t.viewDimension !== '2d')
+          (!isMultisampledTextureFormatDeprecated(t.srcFormat, false) || t.viewDimension !== '2d')
       )
   )
   .beforeAllSubcases(t => {
-    t.skipIfTextureViewDimensionNotSupported(t.params.viewDimension);
+    t.skipIfTextureViewDimensionNotSupportedDeprecated(t.params.viewDimension);
     // recheck if multisampled is supported with compat mode flag
-    t.skipIfMultisampleNotSupportedForFormat(t.params.srcFormat);
+    t.skipIfMultisampleNotSupportedForFormatDeprecated(t.params.srcFormat);
   })
   .fn(async t => {
     const { srcFormat, texelViewFormat, viewDimension, sampleCount } = t.params;

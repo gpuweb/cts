@@ -185,7 +185,7 @@ export function skipIfTextureFormatNotSupportedNotAvailableOrNotFilterable(
   t: GPUTestSubcaseBatchState,
   format: GPUTextureFormat
 ) {
-  t.skipIfTextureFormatNotSupported(format);
+  t.skipIfTextureFormatNotSupportedDeprecated(format);
   const info = kTextureFormatInfo[format];
   if (info.color?.type === 'unfilterable-float') {
     t.selectDeviceOrSkipTestCase('float32-filterable');
@@ -2567,7 +2567,7 @@ export async function checkCallResults<T extends Dimensionality>(
                     break;
                   case 'textureSampleCompareLevel':
                     debugCall.builtin = 'textureSampleLevel';
-                    debugCall.levelType = 'f';
+                    debugCall.levelType = 'u';
                     debugCall.mipLevel = 0;
                     break;
                   default:
