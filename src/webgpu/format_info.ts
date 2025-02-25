@@ -1895,8 +1895,21 @@ export function filterFormatsByFeature<T>(
   return formats.filter(f => f === undefined || kTextureFormatInfo[f].feature === feature);
 }
 
+export function canCopyAllAspectsOfTextureFormat(format: GPUTextureFormat) {
+  const info = kTextureFormatInfo[format];
+  return (
+    (!info.color || info.color.copyDst) &&
+    (!info.depth || info.depth.copyDst) &&
+    (!info.stencil || info.stencil.copyDst)
+  );
+}
+
 export function isCompressedTextureFormat(format: GPUTextureFormat) {
   return format in kCompressedTextureFormatInfo;
+}
+
+export function isColorTextureFormat(format: GPUTextureFormat) {
+  return !!kTextureFormatInfo[format].color;
 }
 
 export function isDepthTextureFormat(format: GPUTextureFormat) {

@@ -1895,8 +1895,21 @@ formats)
   return formats.filter((f) => f === undefined || kTextureFormatInfo[f].feature === feature);
 }
 
+export function canCopyAllAspectsOfTextureFormat(format) {
+  const info = kTextureFormatInfo[format];
+  return (
+    (!info.color || info.color.copyDst) && (
+    !info.depth || info.depth.copyDst) && (
+    !info.stencil || info.stencil.copyDst));
+
+}
+
 export function isCompressedTextureFormat(format) {
   return format in kCompressedTextureFormatInfo;
+}
+
+export function isColorTextureFormat(format) {
+  return !!kTextureFormatInfo[format].color;
 }
 
 export function isDepthTextureFormat(format) {
