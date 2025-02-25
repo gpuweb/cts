@@ -1164,7 +1164,7 @@ g.test('resolveTarget,format_supports_resolve')
   .fn(t => {
     const { format } = t.params;
     t.skipIfTextureFormatNotSupported(format);
-    t.skipIfMultisampleNotSupportedForFormat(format);
+    t.skipIfTextureFormatNotMultisampled(format);
 
     const multisampledColorTexture = t.createTestTexture({ format, sampleCount: 4 });
     const resolveTarget = t.createTestTexture({ format });

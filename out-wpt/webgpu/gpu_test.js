@@ -38,7 +38,8 @@ import {
   isTextureFormatUsableAsRenderAttachment,
   isTextureFormatMultisampled,
   is32Float,
-  isSintOrUintFormat } from
+  isSintOrUintFormat,
+  isTextureFormatResolvable } from
 './format_info.js';
 import { checkElementsEqual, checkElementsBetween } from './util/check_contents.js';
 import { CommandBufferMaker } from './util/command_buffer_maker.js';
@@ -568,11 +569,11 @@ export class GPUTestBase extends Fixture {
     }
   }
 
-  skipIfMultisampleNotSupportedForFormat(...formats) {
+  skipIfTextureFormatNotResolvable(...formats) {
     for (const format of formats) {
       if (format === undefined) continue;
-      if (!isTextureFormatMultisampled(this.device, format)) {
-        this.skip(`texture format '${format}' is not supported to be multisampled`);
+      if (!isTextureFormatResolvable(this.device, format)) {
+        this.skip(`texture format '${format}' is not resolvable`);
       }
     }
   }
@@ -666,7 +667,7 @@ export class GPUTestBase extends Fixture {
     for (const format of formats) {
       if (format === undefined) continue;
       if (!isTextureFormatMultisampled(this.device, format)) {
-        this.skip(`texture format '${format}' is not supported to be multisampled`);
+        this.skip(`texture format '${format}' does not support multisampling`);
       }
     }
   }
