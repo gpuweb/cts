@@ -40,6 +40,7 @@ import {
   is32Float,
   isSintOrUintFormat,
   isTextureFormatResolvable,
+  isTextureFormatUsableAsReadWriteStorageTexture,
 } from './format_info.js';
 import { checkElementsEqual, checkElementsBetween } from './util/check_contents.js';
 import { CommandBufferMaker, EncoderType } from './util/command_buffer_maker.js';
@@ -650,6 +651,18 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
   skipIfTextureFormatNotUsableAsStorageTexture(...formats: (GPUTextureFormat | undefined)[]) {
     for (const format of formats) {
       if (format && !isTextureFormatUsableAsStorageFormat(this.device, format)) {
+        this.skip(`Texture with ${format} is not usable as a storage texture`);
+      }
+    }
+  }
+
+  skipIfTextureFormatNotUsableAsReadWriteStorageTexture(
+    ...formats: (GPUTextureFormat | undefined)[]
+  ) {
+    for (const format of formats) {
+      if (!format) continue;
+
+      if (!isTextureFormatUsableAsReadWriteStorageTexture(this.device, format)) {
         this.skip(`Texture with ${format} is not usable as a storage texture`);
       }
     }
