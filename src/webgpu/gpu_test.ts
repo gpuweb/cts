@@ -38,6 +38,7 @@ import {
   isTextureFormatUsableAsRenderAttachment,
   isTextureFormatMultisampled,
   is32Float,
+  isSintOrUintFormat,
 } from './format_info.js';
 import { checkElementsEqual, checkElementsBetween } from './util/check_contents.js';
 import { CommandBufferMaker, EncoderType } from './util/command_buffer_maker.js';
@@ -673,6 +674,7 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
   skipIfTextureFormatNotBlendable(...formats: (GPUTextureFormat | undefined)[]) {
     for (const format of formats) {
       if (format === undefined) continue;
+      this.skipIf(isSintOrUintFormat(format), 'sint/uint formats are not blendable');
       if (is32Float(format)) {
         this.skipIf(
           !this.device.features.has('float32-blendable'),
