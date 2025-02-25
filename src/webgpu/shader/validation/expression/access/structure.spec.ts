@@ -6,6 +6,7 @@ Validation tests for structure access expressions.
 `;
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
+import { keysOf } from '../../../../../common/util/data_tables.js';
 import { ShaderValidationTest } from '../../shader_validation_test.js';
 
 export const g = makeTestGroup(ShaderValidationTest);
@@ -113,4 +114,113 @@ g.test('result_type_runtime_array')
       let tmp_ptr : ptr<storage, array<u32>> = &v.x;
     }`;
     t.expectCompileResult(true, code);
+  });
+
+interface OutOfBoundsCase {
+  code: string;
+  result: boolean;
+  pipeline?: boolean;
+  value?: number;
+}
+
+const kOutOfBoundsCases: Record<string, OutOfBoundsCase> = {
+  runtime_structure_array_override_oob_neg: {
+    code: `
+      override x : i32;
+      struct S {
+        w : array<u32>
+      }
+      @group(0) @binding(0) var<storage> v : S;
+      fn foo() -> u32 {
+        let tmp : u32 = v.w[x];
+        return 0;
+      }`,
+    result: false,
+    pipeline: true,
+    value: -1,
+  },
+  runtime_structure_array_override_pos: {
+    code: `
+      override x : i32;
+      struct S {
+        w : array<u32>
+      }
+      @group(0) @binding(0) var<storage> v : S;
+      fn foo() -> u32 {
+        let tmp : u32 = v.w[x];
+        return 0;
+      }`,
+    result: true,
+    pipeline: true,
+    value: 1,
+  },
+  runtime_structure_array_override_oob_pos: {
+    code: `
+      override x : i32;
+      struct S {
+        w : array<u32, 5>
+      }
+      @group(0) @binding(0) var<storage> v : S;
+      fn foo() -> u32 {
+        let tmp : u32 = v.w[x];
+        return 0;
+      }`,
+    result: false,
+    pipeline: true,
+    value: 5,
+  },
+  runtime_nested_structure_array_override_oob_pos: {
+    code: `
+      override x : i32;
+      struct S {
+        w : array<u32, 5>
+      }
+      struct S2 {
+        r : S
+      }
+      @group(0) @binding(0) var<storage> v : S2;
+      fn foo() -> u32 {
+        let tmp : u32 = v.r.w[x];
+        return 0;
+      }`,
+    result: false,
+    pipeline: true,
+    value: 5,
+  },
+  runtime_nested_structure_array_override_pos: {
+    code: `
+      override x : i32;
+      struct S {
+        w : array<u32, 6>
+      }
+      struct S2 {
+        r : S
+      }
+      @group(0) @binding(0) var<storage> v : S2;
+      fn foo() -> u32 {
+        let tmp : u32 = v.r.w[x];
+        return 0;
+      }`,
+    result: true,
+    pipeline: true,
+    value: 5,
+  },
+};
+
+g.test('early_eval_errors')
+  .desc('Tests early evaluation errors for arrays in stuctures out-of-bounds indexing')
+  .params(u => u.combine('case', keysOf(kOutOfBoundsCases)))
+  .fn(t => {
+    const testcase = kOutOfBoundsCases[t.params.case];
+    if (testcase.pipeline) {
+      const v: number = testcase.value ?? 0;
+      t.expectPipelineResult({
+        expectedResult: testcase.result,
+        code: testcase.code,
+        constants: { x: v },
+        reference: ['foo()'],
+      });
+    } else {
+      t.expectCompileResult(testcase.result, testcase.code);
+    }
   });
