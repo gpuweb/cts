@@ -1565,28 +1565,29 @@ export const kStencilTextureFormats = kDepthStencilFormats.filter(
 // Texture formats that may possibly be used as a storage texture.
 // Some may require certain features to be enabled.
 export const kPossibleStorageTextureFormats = [
-  ...kAllTextureFormats.filter(f => kTextureFormatInfo[f].color?.storage),
+  ...kRegularTextureFormats.filter(f => kTextureFormatInfo[f].color?.storage),
   'bgra8unorm',
 ] as const;
 
 // Texture formats that may possibly be multisampled.
 // Some may require certain features to be enabled.
 export const kPossibleMultisampledTextureFormats = [
-  ...kAllTextureFormats.filter(f => kTextureFormatInfo[f].multisample),
+  ...kRegularTextureFormats.filter(f => kTextureFormatInfo[f].multisample),
+  ...kDepthStencilFormats.filter(f => kTextureFormatInfo[f].multisample),
   'rg11b10ufloat',
 ] as const;
 
 // Texture formats that may possibly be color renderable.
 // Some may require certain features to be enabled.
 export const kPossibleColorRenderableTextureFormats = [
-  ...kAllTextureFormats.filter(f => kTextureFormatInfo[f].colorRender),
+  ...kRegularTextureFormats.filter(f => kTextureFormatInfo[f].colorRender),
   'rg11b10ufloat',
 ] as const;
 export type PossibleColorRenderTextureFormat =
   (typeof kPossibleColorRenderableTextureFormats)[number];
 
 // Texture formats that have a different base format. This is effectively all -srgb formats.
-export const kDifferentBaseFormatTextureFormats = kAllTextureFormats.filter(
+export const kDifferentBaseFormatTextureFormats = kColorTextureFormats.filter(
   f => kTextureFormatInfo[f].baseFormat && kTextureFormatInfo[f].baseFormat !== f
 );
 
@@ -1931,6 +1932,14 @@ export function isTextureFormatUsableAsRenderAttachment(
     return true;
   }
   return kTextureFormatInfo[format].colorRender || isDepthOrStencilTextureFormat(format);
+}
+
+/**
+ * Returns the texture's type (float, unsigned-float, sint, uint, depth)
+ */
+export function getTextureFormatType(format: GPUTextureFormat) {
+  const info = kTextureFormatInfo[format];
+  return info.color?.type ?? info.depth?.type ?? info.stencil?.type;
 }
 
 /**

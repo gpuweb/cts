@@ -36,7 +36,8 @@ import {
   isMultisampledTextureFormatDeprecated,
   isTextureFormatUsableAsStorageFormat,
   isTextureFormatUsableAsRenderAttachment,
-  isTextureFormatMultisampled } from
+  isTextureFormatMultisampled,
+  is32Float } from
 './format_info.js';
 import { checkElementsEqual, checkElementsBetween } from './util/check_contents.js';
 import { CommandBufferMaker } from './util/command_buffer_maker.js';
@@ -665,6 +666,18 @@ export class GPUTestBase extends Fixture {
       if (format === undefined) continue;
       if (!isTextureFormatMultisampled(this.device, format)) {
         this.skip(`texture format '${format}' is not supported to be multisampled`);
+      }
+    }
+  }
+
+  skipIfTextureFormatNotBlendable(...formats) {
+    for (const format of formats) {
+      if (format === undefined) continue;
+      if (is32Float(format)) {
+        this.skipIf(
+          !this.device.features.has('float32-blendable'),
+          `texture format '${format}' is not blendable`
+        );
       }
     }
   }
