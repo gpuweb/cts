@@ -80,7 +80,7 @@ class F extends TextureTestMixin(AllFeaturesMaxLimitsGPUTest) {
   srcCopyLevel,
   dstCopyLevel)
   {
-    this.skipIfTextureFormatNotSupportedDeprecated(srcFormat, dstFormat);
+    this.skipIfTextureFormatNotSupported(srcFormat, dstFormat);
 
     // If we're in compatibility mode and it's a compressed texture
     // then we need to render the texture to test the results of the copy.

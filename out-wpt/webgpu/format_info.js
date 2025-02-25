@@ -1902,6 +1902,45 @@ formats)
   return formats.filter((f) => f === undefined || kTextureFormatInfo[f].feature === feature);
 }
 
+export function canCopyToAspectOfTextureFormat(format, aspect) {
+  const info = kTextureFormatInfo[format];
+  switch (aspect) {
+    case 'depth-only':
+      assert(isDepthTextureFormat(format));
+      return info.depth && info.depth.copyDst;
+    case 'stencil-only':
+      assert(isStencilTextureFormat(format));
+      return info.stencil && info.stencil.copyDst;
+    case 'all':
+      return (
+        (!isDepthTextureFormat(format) || info.depth?.copyDst) && (
+        !isStencilTextureFormat(format) || info.stencil?.copyDst) && (
+        !isColorTextureFormat(format) || !info.color?.copyDst));
+
+  }
+}
+
+export function canCopyFromAspectOfTextureFormat(
+format,
+aspect)
+{
+  const info = kTextureFormatInfo[format];
+  switch (aspect) {
+    case 'depth-only':
+      assert(isDepthTextureFormat(format));
+      return info.depth && info.depth.copySrc;
+    case 'stencil-only':
+      assert(isStencilTextureFormat(format));
+      return info.stencil && info.stencil.copySrc;
+    case 'all':
+      return (
+        (!isDepthTextureFormat(format) || info.depth?.copySrc) && (
+        !isStencilTextureFormat(format) || info.stencil?.copySrc) && (
+        !isColorTextureFormat(format) || !info.color?.copySrc));
+
+  }
+}
+
 export function canCopyAllAspectsOfTextureFormat(format) {
   const info = kTextureFormatInfo[format];
   return (
