@@ -685,6 +685,19 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
     }
   }
 
+  skipIfTextureFormatNotFilterable(...formats: (GPUTextureFormat | undefined)[]) {
+    for (const format of formats) {
+      if (format === undefined) continue;
+      this.skipIf(isSintOrUintFormat(format), 'sint/uint formats are not filterable');
+      if (is32Float(format)) {
+        this.skipIf(
+          !this.device.features.has('float32-filterable'),
+          `texture format '${format}' is not filterable`
+        );
+      }
+    }
+  }
+
   skipIfTextureFormatDoesNotSupportUsage(
     usage: GPUTextureUsageFlags,
     ...formats: (GPUTextureFormat | undefined)[]
