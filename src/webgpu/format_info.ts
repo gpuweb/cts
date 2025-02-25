@@ -1941,12 +1941,27 @@ export function canCopyFromAspectOfTextureFormat(
   }
 }
 
-export function canCopyAllAspectsOfTextureFormat(format: GPUTextureFormat) {
+/**
+ * Returns true if all aspects of texture can be copied to (used with COPY_DST)
+ */
+export function canCopyToAllAspectsOfTextureFormat(format: GPUTextureFormat) {
   const info = kTextureFormatInfo[format];
   return (
     (!info.color || info.color.copyDst) &&
     (!info.depth || info.depth.copyDst) &&
     (!info.stencil || info.stencil.copyDst)
+  );
+}
+
+/**
+ * Returns true if all aspects of texture can be copied from (used with COPY_SRC)
+ */
+export function canCopyFromAllAspectsOfTextureFormat(format: GPUTextureFormat) {
+  const info = kTextureFormatInfo[format];
+  return (
+    (!info.color || info.color.copySrc) &&
+    (!info.depth || info.depth.copySrc) &&
+    (!info.stencil || info.stencil.copySrc)
   );
 }
 
