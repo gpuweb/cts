@@ -393,6 +393,7 @@ g.test('blending,formats')
   .fn(t => {
     const { format } = t.params;
     t.skipIfTextureFormatNotSupported(format);
+    t.skipIfTextureFormatNotUsableAsRenderAttachment(format);
     t.skipIfTextureFormatNotBlendable(format);
 
     const pipeline = t.device.createRenderPipeline({
