@@ -1586,8 +1586,15 @@ export const kPossibleColorRenderableTextureFormats = [
 export type PossibleColorRenderTextureFormat =
   (typeof kPossibleColorRenderableTextureFormats)[number];
 
-// Texture formats that have a different base format. This is effectively all -srgb formats.
+// Texture formats that have a different base format. This is effectively all -srgb formats
+// including compressed formats.
 export const kDifferentBaseFormatTextureFormats = kColorTextureFormats.filter(
+  f => kTextureFormatInfo[f].baseFormat && kTextureFormatInfo[f].baseFormat !== f
+);
+
+// "Regular" texture formats that have a different base format. This is effectively all -srgb formats
+// except compressed formats.
+export const kDifferentBaseFormatRegularTextureFormats = kRegularTextureFormats.filter(
   f => kTextureFormatInfo[f].baseFormat && kTextureFormatInfo[f].baseFormat !== f
 );
 
@@ -1871,7 +1878,7 @@ export function getColorRenderByteCost(format: PossibleColorRenderTextureFormat)
  */
 export function getBaseFormatForTextureFormat(
   format: (typeof kDifferentBaseFormatTextureFormats)[number]
-): GPUTextureFormat {
+): ColorTextureFormat {
   return kTextureFormatInfo[format].baseFormat!;
 }
 
@@ -1948,14 +1955,6 @@ export function isTextureFormatUsableAsRenderAttachment(
 }
 
 /**
- * Returns the texture's type (float, unsigned-float, sint, uint, depth)
- */
-export function getTextureFormatType(format: GPUTextureFormat) {
-  const info = kTextureFormatInfo[format];
-  return info.color?.type ?? info.depth?.type ?? info.stencil?.type;
-}
-
-/**
  * Returns if a texture can be used as a "colorAttachment".
  */
 export function isTextureFormatColorRenderable(
@@ -1966,6 +1965,14 @@ export function isTextureFormatColorRenderable(
     return true;
   }
   return !!kAllTextureFormatInfo[format].colorRender;
+}
+
+/**
+ * Returns the texture's type (float, unsigned-float, sint, uint, de`pth)
+ */
+export function getTextureFormatType(format: GPUTextureFormat) {
+  const info = kTextureFormatInfo[format];
+  return info.color?.type ?? info.depth?.type ?? info.stencil?.type;
 }
 
 /**
