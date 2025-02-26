@@ -2065,10 +2065,10 @@ export function isTextureFormatPossiblyStorageReadable(format) {
 }
 
 /**
- * Returns true if a texture can possibly be used as a writable storage texture.
+ * Returns true if a texture can possibly be used as a read-write storage texture.
  * The texture may require certain features to be enabled.
  */
-export function isTextureFormatPossiblyStorageWritable(format) {
+export function isTextureFormatPossiblyStorageReadWritable(format) {
   return !!kTextureFormatInfo[format].color?.readWriteStorage;
 }
 
@@ -2127,6 +2127,16 @@ format)
   }
   const info = kTextureFormatInfo[format];
   return !!(info.color?.storage || info.depth?.storage || info.stencil?.storage);
+}
+
+export function isTextureFormatUsableAsReadWriteStorageTexture(
+device,
+format)
+{
+  return (
+    isTextureFormatUsableAsStorageFormat(device, format) &&
+    !!kTextureFormatInfo[format].color?.readWriteStorage);
+
 }
 
 export function isRegularTextureFormat(format) {
