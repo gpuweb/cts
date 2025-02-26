@@ -1902,12 +1902,66 @@ export function filterFormatsByFeature<T>(
   return formats.filter(f => f === undefined || kTextureFormatInfo[f].feature === feature);
 }
 
-export function canCopyAllAspectsOfTextureFormat(format: GPUTextureFormat) {
+export function canCopyToAspectOfTextureFormat(format: GPUTextureFormat, aspect: GPUTextureAspect) {
+  const info = kTextureFormatInfo[format];
+  switch (aspect) {
+    case 'depth-only':
+      assert(isDepthTextureFormat(format));
+      return info.depth && info.depth.copyDst;
+    case 'stencil-only':
+      assert(isStencilTextureFormat(format));
+      return info.stencil && info.stencil.copyDst;
+    case 'all':
+      return (
+        (!isDepthTextureFormat(format) || info.depth?.copyDst) &&
+        (!isStencilTextureFormat(format) || info.stencil?.copyDst) &&
+        (!isColorTextureFormat(format) || !info.color?.copyDst)
+      );
+  }
+}
+
+export function canCopyFromAspectOfTextureFormat(
+  format: GPUTextureFormat,
+  aspect: GPUTextureAspect
+) {
+  const info = kTextureFormatInfo[format];
+  switch (aspect) {
+    case 'depth-only':
+      assert(isDepthTextureFormat(format));
+      return info.depth && info.depth.copySrc;
+    case 'stencil-only':
+      assert(isStencilTextureFormat(format));
+      return info.stencil && info.stencil.copySrc;
+    case 'all':
+      return (
+        (!isDepthTextureFormat(format) || info.depth?.copySrc) &&
+        (!isStencilTextureFormat(format) || info.stencil?.copySrc) &&
+        (!isColorTextureFormat(format) || !info.color?.copySrc)
+      );
+  }
+}
+
+/**
+ * Returns true if all aspects of texture can be copied to (used with COPY_DST)
+ */
+export function canCopyToAllAspectsOfTextureFormat(format: GPUTextureFormat) {
   const info = kTextureFormatInfo[format];
   return (
     (!info.color || info.color.copyDst) &&
     (!info.depth || info.depth.copyDst) &&
     (!info.stencil || info.stencil.copyDst)
+  );
+}
+
+/**
+ * Returns true if all aspects of texture can be copied from (used with COPY_SRC)
+ */
+export function canCopyFromAllAspectsOfTextureFormat(format: GPUTextureFormat) {
+  const info = kTextureFormatInfo[format];
+  return (
+    (!info.color || info.color.copySrc) &&
+    (!info.depth || info.depth.copySrc) &&
+    (!info.stencil || info.stencil.copySrc)
   );
 }
 
@@ -2011,10 +2065,10 @@ export function isTextureFormatPossiblyStorageReadable(format: GPUTextureFormat)
 }
 
 /**
- * Returns true if a texture can possibly be used as a writable storage texture.
+ * Returns true if a texture can possibly be used as a read-write storage texture.
  * The texture may require certain features to be enabled.
  */
-export function isTextureFormatPossiblyStorageWritable(format: GPUTextureFormat) {
+export function isTextureFormatPossiblyStorageReadWritable(format: GPUTextureFormat) {
   return !!kTextureFormatInfo[format].color?.readWriteStorage;
 }
 
@@ -2073,6 +2127,16 @@ export function isTextureFormatUsableAsStorageFormat(
   }
   const info = kTextureFormatInfo[format];
   return !!(info.color?.storage || info.depth?.storage || info.stencil?.storage);
+}
+
+export function isTextureFormatUsableAsReadWriteStorageTexture(
+  device: GPUDevice,
+  format: GPUTextureFormat
+): boolean {
+  return (
+    isTextureFormatUsableAsStorageFormat(device, format) &&
+    !!kTextureFormatInfo[format].color?.readWriteStorage
+  );
 }
 
 export function isRegularTextureFormat(format: GPUTextureFormat) {

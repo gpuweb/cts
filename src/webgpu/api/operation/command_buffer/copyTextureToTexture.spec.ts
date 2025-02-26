@@ -80,7 +80,7 @@ class F extends TextureTestMixin(AllFeaturesMaxLimitsGPUTest) {
     srcCopyLevel: number,
     dstCopyLevel: number
   ): void {
-    this.skipIfTextureFormatNotSupportedDeprecated(srcFormat, dstFormat);
+    this.skipIfTextureFormatNotSupported(srcFormat, dstFormat);
 
     // If we're in compatibility mode and it's a compressed texture
     // then we need to render the texture to test the results of the copy.
@@ -919,10 +919,6 @@ g.test('color_textures,compressed,non_array')
       .combine('srcCopyLevel', [0, 2])
       .combine('dstCopyLevel', [0, 2])
   )
-  .beforeAllSubcases(t => {
-    const { srcFormat, dstFormat } = t.params;
-    t.skipIfCopyTextureToTextureNotSupportedForFormat(srcFormat, dstFormat);
-  })
   .fn(t => {
     const {
       dimension,
@@ -933,6 +929,7 @@ g.test('color_textures,compressed,non_array')
       srcCopyLevel,
       dstCopyLevel,
     } = t.params;
+    t.skipIfCopyTextureToTextureNotSupportedForFormat(srcFormat, dstFormat);
     const { blockWidth: srcBlockWidth, blockHeight: srcBlockHeight } =
       getBlockInfoForColorTextureFormat(srcFormat);
     const { blockWidth: dstBlockWidth, blockHeight: dstBlockHeight } =
@@ -1070,10 +1067,6 @@ g.test('color_textures,compressed,array')
       .combine('srcCopyLevel', [0, 2])
       .combine('dstCopyLevel', [0, 2])
   )
-  .beforeAllSubcases(t => {
-    const { srcFormat, dstFormat } = t.params;
-    t.skipIfCopyTextureToTextureNotSupportedForFormat(srcFormat, dstFormat);
-  })
   .fn(t => {
     const {
       dimension,
@@ -1085,6 +1078,7 @@ g.test('color_textures,compressed,array')
       dstCopyLevel,
     } = t.params;
     t.skipIfTextureFormatNotSupported(srcFormat, dstFormat);
+    t.skipIfCopyTextureToTextureNotSupportedForFormat(srcFormat, dstFormat);
 
     const { blockWidth: srcBlockWidth, blockHeight: srcBlockHeight } =
       getBlockInfoForColorTextureFormat(srcFormat);
@@ -1353,10 +1347,8 @@ g.test('copy_multisampled_color')
     texture can only be 1.
   `
   )
-  .beforeAllSubcases(t => {
-    t.skipIf(t.isCompatibility, 'multisample textures are not copyable in compatibility mode');
-  })
   .fn(t => {
+    t.skipIf(t.isCompatibility, 'multisample textures are not copyable in compatibility mode');
     const textureSize = [32, 16, 1] as const;
     const kColorFormat = 'rgba8unorm';
     const kSampleCount = 4;
@@ -1544,11 +1536,12 @@ g.test('copy_multisampled_depth')
   .params(u =>
     u.combine('format', kDepthStencilFormats).filter(t => isDepthTextureFormat(t.format))
   )
-  .beforeAllSubcases(t => {
-    t.skipIf(t.isCompatibility, 'multisample textures are not copyable in compatibility mode');
-  })
   .fn(t => {
     const { format } = t.params;
+
+    t.skipIf(t.isCompatibility, 'multisample textures are not copyable in compatibility mode');
+    t.skipIfTextureFormatNotSupported(format);
+
     const textureSize = [32, 16, 1] as const;
     const kSampleCount = 4;
 

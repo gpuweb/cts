@@ -5,6 +5,7 @@ depth ranges as well.
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import {
+  canCopyFromAspectOfTextureFormat,
   getBlockInfoForTextureFormat,
   isStencilTextureFormat,
   kDepthTextureFormats,
@@ -231,14 +232,14 @@ have unexpected values then get drawn to the color buffer, which is later checke
 
     const { bytesPerBlock } = getBlockInfoForTextureFormat(format);
     const dsActual =
-      !multisampled && bytesPerBlock
+      canCopyFromAspectOfTextureFormat(format, 'depth-only') && !multisampled && bytesPerBlock
         ? t.createBufferTracked({
             size: kNumTestPoints * bytesPerBlock,
             usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
           })
         : undefined;
     const dsExpected =
-      !multisampled && bytesPerBlock
+      canCopyFromAspectOfTextureFormat(format, 'depth-only') && !multisampled && bytesPerBlock
         ? t.createBufferTracked({
             size: kNumTestPoints * bytesPerBlock,
             usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
