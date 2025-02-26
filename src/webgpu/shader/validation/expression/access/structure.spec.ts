@@ -6,6 +6,7 @@ Validation tests for structure access expressions.
 `;
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
+import { keysOf } from '../../../../../common/util/data_tables.js';
 import { ShaderValidationTest } from '../../shader_validation_test.js';
 
 export const g = makeTestGroup(ShaderValidationTest);
