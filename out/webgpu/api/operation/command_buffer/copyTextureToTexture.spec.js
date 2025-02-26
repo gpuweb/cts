@@ -919,10 +919,6 @@ combine('copyBoxOffsets', kCopyBoxOffsetsForWholeDepth).
 combine('srcCopyLevel', [0, 2]).
 combine('dstCopyLevel', [0, 2])
 ).
-beforeAllSubcases((t) => {
-  const { srcFormat, dstFormat } = t.params;
-  t.skipIfCopyTextureToTextureNotSupportedForFormat(srcFormat, dstFormat);
-}).
 fn((t) => {
   const {
     dimension,
@@ -933,6 +929,7 @@ fn((t) => {
     srcCopyLevel,
     dstCopyLevel
   } = t.params;
+  t.skipIfCopyTextureToTextureNotSupportedForFormat(srcFormat, dstFormat);
   const { blockWidth: srcBlockWidth, blockHeight: srcBlockHeight } =
   getBlockInfoForColorTextureFormat(srcFormat);
   const { blockWidth: dstBlockWidth, blockHeight: dstBlockHeight } =
@@ -1070,10 +1067,6 @@ combine('copyBoxOffsets', kCopyBoxOffsetsFor2DArrayTextures).
 combine('srcCopyLevel', [0, 2]).
 combine('dstCopyLevel', [0, 2])
 ).
-beforeAllSubcases((t) => {
-  const { srcFormat, dstFormat } = t.params;
-  t.skipIfCopyTextureToTextureNotSupportedForFormat(srcFormat, dstFormat);
-}).
 fn((t) => {
   const {
     dimension,
@@ -1085,6 +1078,7 @@ fn((t) => {
     dstCopyLevel
   } = t.params;
   t.skipIfTextureFormatNotSupported(srcFormat, dstFormat);
+  t.skipIfCopyTextureToTextureNotSupportedForFormat(srcFormat, dstFormat);
 
   const { blockWidth: srcBlockWidth, blockHeight: srcBlockHeight } =
   getBlockInfoForColorTextureFormat(srcFormat);
@@ -1353,10 +1347,8 @@ desc(
     texture can only be 1.
   `
 ).
-beforeAllSubcases((t) => {
-  t.skipIf(t.isCompatibility, 'multisample textures are not copyable in compatibility mode');
-}).
 fn((t) => {
+  t.skipIf(t.isCompatibility, 'multisample textures are not copyable in compatibility mode');
   const textureSize = [32, 16, 1];
   const kColorFormat = 'rgba8unorm';
   const kSampleCount = 4;
@@ -1544,11 +1536,12 @@ desc(
 params((u) =>
 u.combine('format', kDepthStencilFormats).filter((t) => isDepthTextureFormat(t.format))
 ).
-beforeAllSubcases((t) => {
-  t.skipIf(t.isCompatibility, 'multisample textures are not copyable in compatibility mode');
-}).
 fn((t) => {
   const { format } = t.params;
+
+  t.skipIf(t.isCompatibility, 'multisample textures are not copyable in compatibility mode');
+  t.skipIfTextureFormatNotSupported(format);
+
   const textureSize = [32, 16, 1];
   const kSampleCount = 4;
 

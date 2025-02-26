@@ -1941,12 +1941,27 @@ aspect)
   }
 }
 
-export function canCopyAllAspectsOfTextureFormat(format) {
+/**
+ * Returns true if all aspects of texture can be copied to (used with COPY_DST)
+ */
+export function canCopyToAllAspectsOfTextureFormat(format) {
   const info = kTextureFormatInfo[format];
   return (
     (!info.color || info.color.copyDst) && (
     !info.depth || info.depth.copyDst) && (
     !info.stencil || info.stencil.copyDst));
+
+}
+
+/**
+ * Returns true if all aspects of texture can be copied from (used with COPY_SRC)
+ */
+export function canCopyFromAllAspectsOfTextureFormat(format) {
+  const info = kTextureFormatInfo[format];
+  return (
+    (!info.color || info.color.copySrc) && (
+    !info.depth || info.depth.copySrc) && (
+    !info.stencil || info.stencil.copySrc));
 
 }
 

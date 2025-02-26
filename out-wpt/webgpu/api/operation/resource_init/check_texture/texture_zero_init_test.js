@@ -18,7 +18,7 @@ import {
   isTextureFormatPossiblyUsableAsRenderAttachment,
   isTextureFormatPossiblyStorageReadable,
   isTextureFormatPossiblyMultisampled,
-  canCopyAllAspectsOfTextureFormat,
+  canCopyToAllAspectsOfTextureFormat,
   isTextureFormatColorRenderable,
   isTextureFormatPossiblyUsableAsColorRenderAttachment } from
 '../../../../format_info.js';
@@ -168,7 +168,7 @@ readMethod)
     usage |= GPUConst.TextureUsage.RENDER_ATTACHMENT;
   }
 
-  if (!canCopyAllAspectsOfTextureFormat(format)) {
+  if (!canCopyToAllAspectsOfTextureFormat(format)) {
     // Copies are not possible. We need OutputAttachment to initialize
     // canary data.
     if (isColorTextureFormat(format)) {
@@ -398,7 +398,7 @@ export class TextureZeroInitTest extends AllFeaturesMaxLimitsGPUTest {
   state,
   subresourceRange)
   {
-    if (this.p.sampleCount > 1 || !canCopyAllAspectsOfTextureFormat(this.p.format)) {
+    if (this.p.sampleCount > 1 || !canCopyToAllAspectsOfTextureFormat(this.p.format)) {
       // Copies to multisampled textures not yet specified.
       // Use a storeOp for now.
       if (isColorTextureFormat(this.p.format)) {
