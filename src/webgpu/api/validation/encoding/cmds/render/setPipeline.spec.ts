@@ -4,11 +4,11 @@ Validation tests for setPipeline on render pass and render bundle.
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { kRenderEncodeTypes } from '../../../../../util/command_buffer_maker.js';
-import { ValidationTest } from '../../../validation_test.js';
+import { AllFeaturesMaxLimitsValidationTest } from '../../../validation_test.js';
 
 import { kRenderEncodeTypeParams } from './render.js';
 
-export const g = makeTestGroup(ValidationTest);
+export const g = makeTestGroup(AllFeaturesMaxLimitsValidationTest);
 
 g.test('invalid_pipeline')
   .desc(

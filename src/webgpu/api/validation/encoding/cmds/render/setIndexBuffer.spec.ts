@@ -5,11 +5,11 @@ Validation tests for setIndexBuffer on render pass and render bundle.
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUConst } from '../../../../../constants.js';
 import { kResourceStates } from '../../../../../gpu_test.js';
-import { ValidationTest } from '../../../validation_test.js';
+import { AllFeaturesMaxLimitsValidationTest } from '../../../validation_test.js';
 
 import { kRenderEncodeTypeParams, buildBufferOffsetAndSizeOOBTestParams } from './render.js';
 
-export const g = makeTestGroup(ValidationTest);
+export const g = makeTestGroup(AllFeaturesMaxLimitsValidationTest);
 
 g.test('index_buffer_state')
   .desc(

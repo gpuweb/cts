@@ -25,7 +25,7 @@ TODO: ensure existing tests cover these notes. Note many of these may be operati
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { MaxLimitsTestMixin } from '../../../../../gpu_test.js';
 import { nextAfterF32 } from '../../../../../util/math.js';
-import { ValidationTest } from '../../../validation_test.js';
+import { AllFeaturesMaxLimitsValidationTest } from '../../../validation_test.js';
 
 interface ViewportCall {
   x: number;
@@ -43,7 +43,7 @@ interface ScissorCall {
   h: number;
 }
 
-class F extends ValidationTest {
+class F extends AllFeaturesMaxLimitsValidationTest {
   testViewportCall(
     success: boolean,
     v: ViewportCall,

@@ -22,9 +22,9 @@ import {
   kProgrammableEncoderTypes,
   ProgrammableEncoderType,
 } from '../../../../util/command_buffer_maker.js';
-import { ValidationTest } from '../../validation_test.js';
+import { AllFeaturesMaxLimitsValidationTest } from '../../validation_test.js';
 
-class F extends ValidationTest {
+class F extends AllFeaturesMaxLimitsValidationTest {
   encoderTypeToStageFlag(encoderType: ProgrammableEncoderType): GPUShaderStageFlags {
     switch (encoderType) {
       case 'compute pass':

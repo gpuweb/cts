@@ -9,9 +9,9 @@ import { makeValueTestVariant } from '../../../../../common/util/util.js';
 import { kBufferUsages } from '../../../../capability_info.js';
 import { GPUConst } from '../../../../constants.js';
 import { kResourceStates, ResourceState } from '../../../../gpu_test.js';
-import { ValidationTest } from '../../validation_test.js';
+import { AllFeaturesMaxLimitsValidationTest } from '../../validation_test.js';
 
-class F extends ValidationTest {
+class F extends AllFeaturesMaxLimitsValidationTest {
   createComputePipeline(state: 'valid' | 'invalid'): GPUComputePipeline {
     if (state === 'valid') {
       return this.createNoOpComputePipeline();

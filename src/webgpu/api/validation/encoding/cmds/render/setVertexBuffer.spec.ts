@@ -6,11 +6,11 @@ import { makeTestGroup } from '../../../../../../common/framework/test_group.js'
 import { makeValueTestVariant } from '../../../../../../common/util/util.js';
 import { GPUConst } from '../../../../../constants.js';
 import { kResourceStates } from '../../../../../gpu_test.js';
-import { ValidationTest } from '../../../validation_test.js';
+import { AllFeaturesMaxLimitsValidationTest } from '../../../validation_test.js';
 
 import { kRenderEncodeTypeParams, buildBufferOffsetAndSizeOOBTestParams } from './render.js';
 
-export const g = makeTestGroup(ValidationTest);
+export const g = makeTestGroup(AllFeaturesMaxLimitsValidationTest);
 
 g.test('slot')
   .desc(

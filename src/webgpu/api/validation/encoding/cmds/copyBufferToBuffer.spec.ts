@@ -27,9 +27,9 @@ import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { kBufferUsages } from '../../../../capability_info.js';
 import { kResourceStates } from '../../../../gpu_test.js';
 import { kMaxSafeMultipleOf8 } from '../../../../util/math.js';
-import { ValidationTest } from '../../validation_test.js';
+import { AllFeaturesMaxLimitsValidationTest } from '../../validation_test.js';
 
-class F extends ValidationTest {
+class F extends AllFeaturesMaxLimitsValidationTest {
   TestCopyBufferToBuffer(options: {
     srcBuffer: GPUBuffer;
     srcOffset: number;

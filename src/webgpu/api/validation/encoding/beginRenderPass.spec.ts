@@ -22,9 +22,9 @@ Notes:
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { ValidationTest } from '../validation_test.js';
+import { AllFeaturesMaxLimitsValidationTest } from '../validation_test.js';
 
-export const g = makeTestGroup(ValidationTest);
+export const g = makeTestGroup(AllFeaturesMaxLimitsValidationTest);
 
 g.test('color_attachments,device_mismatch')
   .desc(
@@ -176,10 +176,10 @@ g.test('timestamp_query_set,device_mismatch')
   )
   .paramsSubcasesOnly(u => u.combine('mismatched', [true, false]))
   .beforeAllSubcases(t => {
-    t.selectDeviceOrSkipTestCase(['timestamp-query']);
     t.selectMismatchedDeviceOrSkipTestCase('timestamp-query');
   })
   .fn(t => {
+    t.skipIfDeviceDoesNotSupportQueryType('timestamp');
     const { mismatched } = t.params;
     const sourceDevice = mismatched ? t.mismatchedDevice : t.device;
 
