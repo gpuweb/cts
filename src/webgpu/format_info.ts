@@ -2065,10 +2065,10 @@ export function isTextureFormatPossiblyStorageReadable(format: GPUTextureFormat)
 }
 
 /**
- * Returns true if a texture can possibly be used as a writable storage texture.
+ * Returns true if a texture can possibly be used as a read-write storage texture.
  * The texture may require certain features to be enabled.
  */
-export function isTextureFormatPossiblyStorageWritable(format: GPUTextureFormat) {
+export function isTextureFormatPossiblyStorageReadWritable(format: GPUTextureFormat) {
   return !!kTextureFormatInfo[format].color?.readWriteStorage;
 }
 
@@ -2127,6 +2127,16 @@ export function isTextureFormatUsableAsStorageFormat(
   }
   const info = kTextureFormatInfo[format];
   return !!(info.color?.storage || info.depth?.storage || info.stencil?.storage);
+}
+
+export function isTextureFormatUsableAsReadWriteStorageTexture(
+  device: GPUDevice,
+  format: GPUTextureFormat
+): boolean {
+  return (
+    isTextureFormatUsableAsStorageFormat(device, format) &&
+    !!kTextureFormatInfo[format].color?.readWriteStorage
+  );
 }
 
 export function isRegularTextureFormat(format: GPUTextureFormat) {

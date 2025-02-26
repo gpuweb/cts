@@ -13,7 +13,7 @@ import {
   isDepthTextureFormat,
   isStencilTextureFormat,
   isTextureFormatPossiblyMultisampled,
-  isTextureFormatPossiblyStorageWritable,
+  isTextureFormatPossiblyStorageReadWritable,
   kAllTextureFormats,
   kDepthTextureFormats,
   kPossibleStorageTextureFormats,
@@ -463,8 +463,10 @@ Parameters:
       .combine('access', ['read', 'write', 'read_write'] as const)
       // vertex stage can not use writable storage.
       .unless(t => t.stage === 'vertex' && t.access !== 'read')
-      // Only some formats support write
-      .unless(t => !isTextureFormatPossiblyStorageWritable(t.format) && t.access === 'read_write')
+      // Only some formats support read_write
+      .unless(
+        t => !isTextureFormatPossiblyStorageReadWritable(t.format) && t.access === 'read_write'
+      )
       .expand('dimensions', u => viewDimensions(u).filter(dimensionsValidForStorage))
       .expand('textureMipCount', textureMipCount)
       .expand('baseMipLevel', baseMipLevel)
