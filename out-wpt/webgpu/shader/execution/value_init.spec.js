@@ -88,11 +88,10 @@ combine('type', ['bool', 'f32', 'f16', 'i32', 'u32'])
 ).
 fn(async (t) => {
   const typeDecl = t.params.type;
-  const testValue = Type[typeDecl].create(5).wgsl();
-
   if (typeDecl === 'f16') {
     t.skipIfDeviceDoesNotHaveFeature('shader-f16');
   }
+  const testValue = Type[typeDecl].create(5).wgsl();
 
   const comparison = `if (testVar != ${testValue}) {
       atomicStore(&output.failed, 1u);
@@ -117,13 +116,11 @@ combine('type', ['bool', 'f32', 'f16', 'i32', 'u32']).
 combine('count', [2, 3, 4])
 ).
 fn(async (t) => {
-  const typeDecl = `vec${t.params.count}<${t.params.type}>`;
-  const testValue = `${typeDecl}(${Type[t.params.type].create(5).wgsl()})`;
-
-  if (typeDecl === 'f16') {
+  if (t.params.type === 'f16') {
     t.skipIfDeviceDoesNotHaveFeature('shader-f16');
   }
-
+  const typeDecl = `vec${t.params.count}<${t.params.type}>`;
+  const testValue = `${typeDecl}(${Type[t.params.type].create(5).wgsl()})`;
   const comparison = `if (!all(testVar == ${testValue})) {
       atomicStore(&output.failed, 1u);
     }`;
@@ -151,12 +148,11 @@ combine('c', [2, 3, 4]).
 combine('r', [2, 3, 4])
 ).
 fn(async (t) => {
-  const typeDecl = `mat${t.params.c}x${t.params.r}<${t.params.type}>`;
-  const testScalarValue = Type[t.params.type].create(5).wgsl();
-
-  if (typeDecl === 'f16') {
+  if (t.params.type === 'f16') {
     t.skipIfDeviceDoesNotHaveFeature('shader-f16');
   }
+  const typeDecl = `mat${t.params.c}x${t.params.r}<${t.params.type}>`;
+  const testScalarValue = Type[t.params.type].create(5).wgsl();
 
   let testValue = `${typeDecl}(`;
   for (let c = 0; c < t.params.c; c++) {
@@ -192,13 +188,13 @@ combine('addressSpace', ['private', 'function']).
 combine('type', ['bool', 'i32', 'u32', 'f32', 'f16'])
 ).
 fn(async (t) => {
-  const arraySize = 4;
-  const typeDecl = `array<${t.params.type}, ${arraySize}>`;
-  const testScalarValue = Type[t.params.type].create(5).wgsl();
-
-  if (typeDecl === 'f16') {
+  if (t.params.type === 'f16') {
     t.skipIfDeviceDoesNotHaveFeature('shader-f16');
   }
+  const arraySize = 4;
+  const typeDecl = `array<${t.params.type}, ${arraySize}>`;
+
+  const testScalarValue = Type[t.params.type].create(5).wgsl();
 
   let testValue = `${typeDecl}(`;
   for (let i = 0; i < arraySize; i++) {
@@ -230,15 +226,15 @@ combine('addressSpace', ['private', 'function']).
 combine('type', ['bool', 'i32', 'u32', 'f32', 'f16'])
 ).
 fn(async (t) => {
+  if (t.params.type === 'f16') {
+    t.skipIfDeviceDoesNotHaveFeature('shader-f16');
+  }
   const arraySize = 4;
 
   const innerDecl = `array<${t.params.type}, ${arraySize}>`;
   const typeDecl = `array<${innerDecl}, ${arraySize}>`;
-  const testScalarValue = Type[t.params.type].create(5).wgsl();
 
-  if (typeDecl === 'f16') {
-    t.skipIfDeviceDoesNotHaveFeature('shader-f16');
-  }
+  const testScalarValue = Type[t.params.type].create(5).wgsl();
 
   let testValue = `${typeDecl}(`;
   for (let i = 0; i < arraySize; i++) {
