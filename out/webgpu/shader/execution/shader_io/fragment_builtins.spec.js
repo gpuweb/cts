@@ -1529,7 +1529,7 @@ fn vsMain(@builtin(vertex_index) index : u32) -> @builtin(position) vec4f {
 
     });
     pass.setPipeline(pipeline);
-    // Draw the uperr-left triangle (vertices 0-2) or the lower-right triangle (vertices 3-5)
+    // Draw the upper-left triangle (vertices 0-2) or the lower-right triangle (vertices 3-5)
     pass.draw(3, 1, i * 3);
     pass.end();
     t.queue.submit([encoder.finish()]);
@@ -1547,7 +1547,7 @@ fn vsMain(@builtin(vertex_index) index : u32) -> @builtin(position) vec4f {
   }
 }
 
-const kMaximiumSubgroupSize = 128;
+const kMaximumSubgroupSize = 128;
 // A non-zero magic number indicating no expectation error, in order to prevent the false no-error
 // result from zero-initialization.
 const kSubgroupShaderNoError = 17;
@@ -1563,7 +1563,7 @@ const kSubgroupShaderNoError = 17;
  *             * balloted active invocations number
  *             * balloted subgroup size all active invocations agreed on, otherwise 0
  *             * error flag, should be equal to kSubgroupShaderNoError or shader found
- *               expection failed otherwise.
+ *               expectation failed otherwise.
  * @param format The texture format for data
  * @param min The minimum subgroup size from the device
  * @param max The maximum subgroup size from the device
@@ -1661,7 +1661,7 @@ fn(async (t) => {
   const fsShader = `
 enable subgroups;
 
-const subgroupMaxSize = ${kMaximiumSubgroupSize}u;
+const subgroupMaxSize = ${kMaximumSubgroupSize}u;
 const noError = ${kSubgroupShaderNoError}u;
 
 const width = ${t.params.size[0]};
@@ -1734,7 +1734,7 @@ fn fsMain(
  *             * subgroup size
  *             * ballot active invocation number
  *             * error flag, should be equal to kSubgroupShaderNoError or shader found
- *               expection failed otherwise.
+ *               expectation failed otherwise.
  * @param format The texture format of data
  * @param width The width of the framebuffer
  * @param height The height of the framebuffer
@@ -1813,7 +1813,7 @@ enable subgroups;
 const width = ${t.params.size[0]};
 const height = ${t.params.size[1]};
 
-const subgroupMaxSize = ${kMaximiumSubgroupSize}u;
+const subgroupMaxSize = ${kMaximumSubgroupSize}u;
 // A non-zero magic number indicating no expectation error, in order to prevent the
 // false no-error result from zero-initialization.
 const noError = ${kSubgroupShaderNoError}u;

@@ -1514,11 +1514,11 @@ function getAdapterLimitsAsDeviceRequiredLimits(adapter) {
 
 /**
  * Removes limits that don't exist on the adapter.
- * A test might request a new limit that not all implementions support. The test itself
+ * A test might request a new limit that not all implementations support. The test itself
  * should check the requested limit using code that expects undefined.
  *
  * ```ts
- *    t.skipIf(limit < 2);     // BAD! Doesn't skip if unsupported beause undefined is never less than 2.
+ *    t.skipIf(limit < 2);     // BAD! Doesn't skip if unsupported because undefined is never less than 2.
  *    t.skipIf(!(limit >= 2)); // Good. Skips if limits is not >= 2. undefined is not >= 2.
  * ```
  */

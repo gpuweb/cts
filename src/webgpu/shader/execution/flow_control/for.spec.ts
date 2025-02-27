@@ -70,7 +70,7 @@ g.test('for_continue')
     );
   });
 
-g.test('for_initalizer')
+g.test('for_initializer')
   .desc('Test flow control for a for-loop initializer')
   .params(u => u.combine('preventValueOptimizations', [true, false]))
   .fn(t => {
@@ -91,7 +91,7 @@ fn initializer() -> i32 {
     }));
   });
 
-g.test('for_complex_initalizer')
+g.test('for_complex_initializer')
   .desc('Test flow control for a complex for-loop initializer')
   .params(u => u.combine('preventValueOptimizations', [true, false]))
   .fn(t => {
