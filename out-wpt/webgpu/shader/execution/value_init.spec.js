@@ -1,10 +1,10 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
 **/export const description = `Test that variables in the shader are value initialized`;import { makeTestGroup } from '../../../common/framework/test_group.js';
-import { GPUTest } from '../../gpu_test.js';
+import { AllFeaturesMaxLimitsGPUTest } from '../../gpu_test.js';
 import { Type } from '../../util/conversion.js';
 
-export const g = makeTestGroup(GPUTest);
+export const g = makeTestGroup(AllFeaturesMaxLimitsGPUTest);
 
 function generateShader(
 isF16,
@@ -86,14 +86,13 @@ u.
 combine('addressSpace', ['private', 'function']).
 combine('type', ['bool', 'f32', 'f16', 'i32', 'u32'])
 ).
-beforeAllSubcases((t) => {
-  if (t.params.type === 'f16') {
-    t.selectDeviceOrSkipTestCase('shader-f16');
-  }
-}).
 fn(async (t) => {
   const typeDecl = t.params.type;
   const testValue = Type[typeDecl].create(5).wgsl();
+
+  if (typeDecl === 'f16') {
+    t.skipIfDeviceDoesNotHaveFeature('shader-f16');
+  }
 
   const comparison = `if (testVar != ${testValue}) {
       atomicStore(&output.failed, 1u);
@@ -117,14 +116,13 @@ combine('addressSpace', ['private', 'function']).
 combine('type', ['bool', 'f32', 'f16', 'i32', 'u32']).
 combine('count', [2, 3, 4])
 ).
-beforeAllSubcases((t) => {
-  if (t.params.type === 'f16') {
-    t.selectDeviceOrSkipTestCase('shader-f16');
-  }
-}).
 fn(async (t) => {
   const typeDecl = `vec${t.params.count}<${t.params.type}>`;
   const testValue = `${typeDecl}(${Type[t.params.type].create(5).wgsl()})`;
+
+  if (typeDecl === 'f16') {
+    t.skipIfDeviceDoesNotHaveFeature('shader-f16');
+  }
 
   const comparison = `if (!all(testVar == ${testValue})) {
       atomicStore(&output.failed, 1u);
@@ -152,14 +150,13 @@ beginSubcases().
 combine('c', [2, 3, 4]).
 combine('r', [2, 3, 4])
 ).
-beforeAllSubcases((t) => {
-  if (t.params.type === 'f16') {
-    t.selectDeviceOrSkipTestCase('shader-f16');
-  }
-}).
 fn(async (t) => {
   const typeDecl = `mat${t.params.c}x${t.params.r}<${t.params.type}>`;
   const testScalarValue = Type[t.params.type].create(5).wgsl();
+
+  if (typeDecl === 'f16') {
+    t.skipIfDeviceDoesNotHaveFeature('shader-f16');
+  }
 
   let testValue = `${typeDecl}(`;
   for (let c = 0; c < t.params.c; c++) {
@@ -194,15 +191,14 @@ u.
 combine('addressSpace', ['private', 'function']).
 combine('type', ['bool', 'i32', 'u32', 'f32', 'f16'])
 ).
-beforeAllSubcases((t) => {
-  if (t.params.type === 'f16') {
-    t.selectDeviceOrSkipTestCase('shader-f16');
-  }
-}).
 fn(async (t) => {
   const arraySize = 4;
   const typeDecl = `array<${t.params.type}, ${arraySize}>`;
   const testScalarValue = Type[t.params.type].create(5).wgsl();
+
+  if (typeDecl === 'f16') {
+    t.skipIfDeviceDoesNotHaveFeature('shader-f16');
+  }
 
   let testValue = `${typeDecl}(`;
   for (let i = 0; i < arraySize; i++) {
@@ -233,17 +229,16 @@ u.
 combine('addressSpace', ['private', 'function']).
 combine('type', ['bool', 'i32', 'u32', 'f32', 'f16'])
 ).
-beforeAllSubcases((t) => {
-  if (t.params.type === 'f16') {
-    t.selectDeviceOrSkipTestCase('shader-f16');
-  }
-}).
 fn(async (t) => {
   const arraySize = 4;
 
   const innerDecl = `array<${t.params.type}, ${arraySize}>`;
   const typeDecl = `array<${innerDecl}, ${arraySize}>`;
   const testScalarValue = Type[t.params.type].create(5).wgsl();
+
+  if (typeDecl === 'f16') {
+    t.skipIfDeviceDoesNotHaveFeature('shader-f16');
+  }
 
   let testValue = `${typeDecl}(`;
   for (let i = 0; i < arraySize; i++) {
