@@ -1718,7 +1718,7 @@ export class AllFeaturesMaxLimitsGPUTestSubcaseBatchState extends GPUTestSubcase
  * like those under api/validation/capability_checks/feature.
  *
  * NOTE: The goal is to go through all existing tests and remove any direct use of GPUTest.
- * For each test, choose either AllFeaturesMaxLimitsGPUTest or GPUTestWithUniqueFeaturesOrLimits.
+ * For each test, choose either AllFeaturesMaxLimitsGPUTest or UniqueFeaturesOrLimitsGPUTest.
  * This way we can track progress as we go through every test using GPUTest and check it is
  * testing everything it should test.
  */
