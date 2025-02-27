@@ -1,11 +1,11 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
-**/import { keysOf } from '../../../common/util/data_tables.js';import { ErrorWithExtra } from '../../../common/util/util.js';import { GPUTest } from '../../gpu_test.js';
+**/import { keysOf } from '../../../common/util/data_tables.js';import { ErrorWithExtra } from '../../../common/util/util.js';import { AllFeaturesMaxLimitsGPUTest } from '../../gpu_test.js';
 
 /**
  * Base fixture for WGSL shader validation tests.
  */
-export class ShaderValidationTest extends GPUTest {
+export class ShaderValidationTest extends AllFeaturesMaxLimitsGPUTest {
   /**
    * Add a test expectation for whether a createShaderModule call succeeds or not.
    *
