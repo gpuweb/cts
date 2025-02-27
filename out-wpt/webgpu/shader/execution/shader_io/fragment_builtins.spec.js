@@ -20,15 +20,15 @@ is evaluated per-fragment or per-sample. With @interpolate(, sample) or usage of
 `;import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { ErrorWithExtra, assert, range, unreachable } from '../../../../common/util/util.js';
 
-import { kTextureFormatInfo } from '../../../format_info.js';
-import { GPUTest, TextureTestMixin } from '../../../gpu_test.js';
+import { getBlockInfoForTextureFormat } from '../../../format_info.js';
+import { AllFeaturesMaxLimitsGPUTest, TextureTestMixin } from '../../../gpu_test.js';
 import { getProvokingVertexForFlatInterpolationEitherSampling } from '../../../inter_stage.js';
 import { getMultisampleFragmentOffsets } from '../../../multisample_info.js';
 import { dotProduct, subtractVectors, align } from '../../../util/math.js';
 import { TexelView } from '../../../util/texture/texel_view.js';
 import { findFailedPixels } from '../../../util/texture/texture_ok.js';
 
-class FragmentBuiltinTest extends TextureTestMixin(GPUTest) {}
+class FragmentBuiltinTest extends TextureTestMixin(AllFeaturesMaxLimitsGPUTest) {}
 
 export const g = makeTestGroup(FragmentBuiltinTest);
 
@@ -1498,7 +1498,7 @@ fn vsMain(@builtin(vertex_index) index : u32) -> @builtin(position) vec4f {
     }
   });
 
-  const { blockWidth, blockHeight, bytesPerBlock } = kTextureFormatInfo[format];
+  const { blockWidth, blockHeight, bytesPerBlock } = getBlockInfoForTextureFormat(format);
   assert(bytesPerBlock !== undefined);
 
   const blocksPerRow = width / blockWidth;
@@ -1578,7 +1578,7 @@ max,
 width,
 height)
 {
-  const { blockWidth, blockHeight, bytesPerBlock } = kTextureFormatInfo[format];
+  const { blockWidth, blockHeight, bytesPerBlock } = getBlockInfoForTextureFormat(format);
   const blocksPerRow = width / blockWidth;
   // Image copies require bytesPerRow to be a multiple of 256.
   const bytesPerRow = align(blocksPerRow * (bytesPerBlock ?? 1), 256);
@@ -1650,10 +1650,8 @@ combine('size', kSizes).
 beginSubcases().
 combineWithParams([{ format: 'rgba32uint' }])
 ).
-beforeAllSubcases((t) => {
-  t.selectDeviceOrSkipTestCase('subgroups');
-}).
 fn(async (t) => {
+  t.skipIfDeviceDoesNotHaveFeature('subgroups');
 
 
 
@@ -1747,7 +1745,7 @@ format,
 width,
 height)
 {
-  const { blockWidth, blockHeight, bytesPerBlock } = kTextureFormatInfo[format];
+  const { blockWidth, blockHeight, bytesPerBlock } = getBlockInfoForTextureFormat(format);
   const blocksPerRow = width / blockWidth;
   const bytesPerRow = align(blocksPerRow * (bytesPerBlock ?? 1), 256);
   const uintsPerRow = bytesPerRow / 4;
