@@ -51,6 +51,8 @@ fn(async (t) => {
   );
 });
 
+// MAINTENANCE_TODO: Update this test - this test wants to test the maxDynamicStorageBuffersPerPipelineLayout
+// but to get the max it should split them between stages so that it's less likely to hit the per stage limit.
 g.test('createPipelineLayout,at_over').
 desc(`Test using at and over ${limit} limit in createPipelineLayout`).
 params(
