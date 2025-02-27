@@ -1722,7 +1722,7 @@ export class AllFeaturesMaxLimitsGPUTestSubcaseBatchState extends GPUTestSubcase
  * This way we can track progress as we go through every test using GPUTest and check it is
  * testing everything it should test.
  */
-export class GPUTestWithUniqueFeaturesOrLimits extends GPUTest {}
+export class UniqueFeaturesOrLimitsGPUTest extends GPUTest {}
 
 /**
  * A test that requests all features and maximum limits. This should be the default
