@@ -1882,6 +1882,12 @@ format)
   return kTextureFormatInfo[format].baseFormat;
 }
 
+export function getBaseFormatForRegularTextureFormat(
+format)
+{
+  return kTextureFormatInfo[format].baseFormat;
+}
+
 /**
  * Gets the feature needed for a give texture format or undefined if none.
  */
