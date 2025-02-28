@@ -32,12 +32,10 @@ u.combine('type', [
 'vec2i']
 )
 ).
-beforeAllSubcases((t) => {
-  if (t.params.type === 'f16') {
-    t.selectDeviceOrSkipTestCase('shader-f16');
-  }
-}).
 fn((t) => {
+  if (t.params.type === 'f16') {
+    t.skipIfDeviceDoesNotHaveFeature('shader-f16');
+  }
   const ty = Type[t.params.type];
   const enable = ty.requiresF16() ? 'enable f16;' : '';
   const code = `${enable}
