@@ -1,9 +1,9 @@
 import { assert, unreachable } from '../../common/util/util.js';
 import {
+  getBlockInfoForTextureFormat,
   isDepthOrStencilTextureFormat,
   isDepthTextureFormat,
   isStencilTextureFormat,
-  kTextureFormatInfo,
 } from '../format_info.js';
 import { GPUTestBase } from '../gpu_test.js';
 
@@ -585,7 +585,7 @@ function copyBufferToTextureViaRender(
       pass.setViewport(origin.x, origin.y, copySize.width, copySize.height, 0, 1);
       pass.setPipeline(pipeline);
 
-      const info = kTextureFormatInfo[sourceFormat];
+      const info = getBlockInfoForTextureFormat(sourceFormat);
       const offset =
         (source.offset ?? 0) + (source.bytesPerRow ?? 0) * (source.rowsPerImage ?? 0) * l;
       const uniforms = new Uint32Array([
