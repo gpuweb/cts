@@ -111,7 +111,6 @@ var<storage> a: i32;
 g.test('group_f16')
   .desc(`Test validation of group with f16`)
   .fn(t => {
-    t.skipIfDeviceDoesNotHaveFeature('shader-f16');
     const code = `
 @group(1h) @binding(1)
 var<storage> a: i32;

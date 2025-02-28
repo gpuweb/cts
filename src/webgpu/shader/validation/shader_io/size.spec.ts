@@ -135,7 +135,6 @@ g.test('size_fp16')
   .desc(`Test validation of size with fp16`)
   .params(u => u.combine('ext', ['', 'h']))
   .fn(t => {
-    t.skipIfDeviceDoesNotHaveFeature('shader-f16');
     const code = `
 struct S {
   @size(4${t.params.ext}) a: f32,
