@@ -76,7 +76,7 @@ g.test('createPipelineLayout,at_over')
           device.limits.maxStorageBuffersInFragmentStage ?? maxComputeBindings,
           actualLimit
         );
-        // re-write storage buffers are not allowed in vertex stages.
+        // read-write storage buffers are not allowed in vertex stages.
         const maxVertexBindings =
           type === 'storage'
             ? 0
