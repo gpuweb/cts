@@ -293,10 +293,8 @@ fn my_func() {
 g.test('workgroup_size_fp16').
 desc(`Test validation of workgroup_size with fp16`).
 params((u) => u.combine('ext', ['', 'h'])).
-beforeAllSubcases((t) => {
-  t.selectDeviceOrSkipTestCase('shader-f16');
-}).
 fn((t) => {
+  t.skipIfDeviceDoesNotHaveFeature('shader-f16');
   const code = `
 @workgroup_size(1${t.params.ext})
 @compute fn main() {}`;

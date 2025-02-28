@@ -233,10 +233,8 @@ g.test('overflow_f16')
       .combine('c', [2, 3, 4] as const)
       .combine('r', [2, 3, 4] as const)
   )
-  .beforeAllSubcases(t => {
-    t.selectDeviceOrSkipTestCase('shader-f16');
-  })
   .fn(t => {
+    t.skipIfDeviceDoesNotHaveFeature('shader-f16');
     let lhs = `mat${t.params.c}x${t.params.r}h(`;
     let rhs = `mat${t.params.c}x${t.params.r}h(`;
     for (let i = 0; i < t.params.c; i++) {
@@ -267,10 +265,8 @@ g.test('underflow_f16')
       .combine('c', [2, 3, 4] as const)
       .combine('r', [2, 3, 4] as const)
   )
-  .beforeAllSubcases(t => {
-    t.selectDeviceOrSkipTestCase('shader-f16');
-  })
   .fn(t => {
+    t.skipIfDeviceDoesNotHaveFeature('shader-f16');
     let lhs = `mat${t.params.c}x${t.params.r}h(`;
     let rhs = `mat${t.params.c}x${t.params.r}h(`;
     for (let i = 0; i < t.params.c; i++) {

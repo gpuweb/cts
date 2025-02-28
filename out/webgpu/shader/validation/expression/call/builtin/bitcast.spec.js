@@ -130,10 +130,8 @@ expand('bitBadValue', (p) =>
 p.useBadValue ? [...f16InfAndNaNInU16] : [0]
 )
 ).
-beforeAllSubcases((t) => {
-  t.selectDeviceOrSkipTestCase('shader-f16');
-}).
 fn((t) => {
+  t.skipIfDeviceDoesNotHaveFeature('shader-f16');
   // For width = 2 generate code like:
   //  const f = bitcast<vec2<f16>>(i32(u32(0x7f800000)));
   // And for width = 4:
@@ -270,10 +268,8 @@ combine('other_type', [
 combine('direction', ['to', 'from']).
 combine('type', ['vec3<f16>', 'vec3h'])
 ).
-beforeAllSubcases((t) => {
-  t.selectDeviceOrSkipTestCase('shader-f16');
-}).
 fn((t) => {
+  t.skipIfDeviceDoesNotHaveFeature('shader-f16');
   const src_type = t.params.direction === 'to' ? t.params.type : t.params.other_type;
   const dst_type = t.params.direction === 'from' ? t.params.type : t.params.other_type;
   const code = `
@@ -319,10 +315,8 @@ combine('other_type', [
 ).
 combine('direction', ['to', 'from'])
 ).
-beforeAllSubcases((t) => {
-  t.selectDeviceOrSkipTestCase('shader-f16');
-}).
 fn((t) => {
+  t.skipIfDeviceDoesNotHaveFeature('shader-f16');
   const src_type = t.params.direction === 'to' ? 'f16' : t.params.other_type;
   const dst_type = t.params.direction === 'from' ? 'f16' : t.params.other_type;
   const code = `
@@ -344,10 +338,8 @@ combine('other_type', ['u32', 'i32', 'f32']).
 combine('type', ['vec2<f16>', 'vec2h']).
 combine('direction', ['to', 'from'])
 ).
-beforeAllSubcases((t) => {
-  t.selectDeviceOrSkipTestCase('shader-f16');
-}).
 fn((t) => {
+  t.skipIfDeviceDoesNotHaveFeature('shader-f16');
   const src_type = t.params.direction === 'to' ? t.params.type : t.params.other_type;
   const dst_type = t.params.direction === 'from' ? t.params.type : t.params.other_type;
   const code = `
@@ -376,10 +368,8 @@ combine('other_type', [
 combine('type', ['vec4<f16>', 'vec4h']).
 combine('direction', ['to', 'from'])
 ).
-beforeAllSubcases((t) => {
-  t.selectDeviceOrSkipTestCase('shader-f16');
-}).
 fn((t) => {
+  t.skipIfDeviceDoesNotHaveFeature('shader-f16');
   const src_type = t.params.direction === 'to' ? t.params.type : t.params.other_type;
   const dst_type = t.params.direction === 'from' ? t.params.type : t.params.other_type;
   const code = `

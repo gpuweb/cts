@@ -371,10 +371,8 @@ override y = 8;
 g.test('location_fp16').
 desc(`Test validation of location with fp16`).
 params((u) => u.combine('ext', ['', 'h'])).
-beforeAllSubcases((t) => {
-  t.selectDeviceOrSkipTestCase('shader-f16');
-}).
 fn((t) => {
+  t.skipIfDeviceDoesNotHaveFeature('shader-f16');
   const code = `
 
 @vertex fn main(

@@ -84,10 +84,8 @@ fn((t) => {
 g.test('result_type_f16').
 desc('Tests correct type is returned for f16').
 params((u) => u.combine('decl', ['value', 'ref'])).
-beforeAllSubcases((t) => {
-  t.selectDeviceOrSkipTestCase('shader-f16');
-}).
 fn((t) => {
+  t.skipIfDeviceDoesNotHaveFeature('shader-f16');
   const code = `
     enable f16;
     struct S {

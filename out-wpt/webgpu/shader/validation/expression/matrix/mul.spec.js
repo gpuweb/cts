@@ -99,10 +99,8 @@ fn main() {
 g.test('f16_and_f32_matrix').
 desc(`Validates that f16 multiplied by an f32 matrix is an error.`).
 params((u) => u.combine('rhs', ['mat2x3f()', 'mat2x3h()']).combine('swap', [true, false])).
-beforeAllSubcases((t) => {
-  t.selectDeviceOrSkipTestCase('shader-f16');
-}).
 fn((t) => {
+  t.skipIfDeviceDoesNotHaveFeature('shader-f16');
   let lhs = '1h';
   let rhs = t.params.rhs;
   if (t.params.swap) {
@@ -127,10 +125,8 @@ fn main() {
 g.test('f32_and_f16_matrix').
 desc(`Validates that f32 multiplied by an f16 matrix is an error`).
 params((u) => u.combine('rhs', ['mat2x3f()', 'mat2x3h()']).combine('swap', [true, false])).
-beforeAllSubcases((t) => {
-  t.selectDeviceOrSkipTestCase('shader-f16');
-}).
 fn((t) => {
+  t.skipIfDeviceDoesNotHaveFeature('shader-f16');
   let lhs = '1f';
   let rhs = t.params.rhs;
   if (t.params.swap) {
@@ -475,10 +471,8 @@ combine('rhs', [kValue.f16.positive.max, 1]).
 combine('c', [2, 3, 4]).
 combine('r', [2, 3, 4])
 ).
-beforeAllSubcases((t) => {
-  t.selectDeviceOrSkipTestCase('shader-f16');
-}).
 fn((t) => {
+  t.skipIfDeviceDoesNotHaveFeature('shader-f16');
   let lhs = `mat${t.params.c}x${t.params.r}h(`;
   for (let i = 0; i < t.params.c; i++) {
     for (let k = 0; k < t.params.r; k++) {
@@ -513,10 +507,8 @@ combine('rhs', [kValue.f16.positive.max, 1]).
 combine('c', [2, 3, 4]).
 combine('r', [2, 3, 4])
 ).
-beforeAllSubcases((t) => {
-  t.selectDeviceOrSkipTestCase('shader-f16');
-}).
 fn((t) => {
+  t.skipIfDeviceDoesNotHaveFeature('shader-f16');
   let lhs = `mat${t.params.c}x${t.params.r}h(`;
   for (let i = 0; i < t.params.c; i++) {
     for (let k = 0; k < t.params.r; k++) {
@@ -547,10 +539,8 @@ combine('lhs', [kValue.f16.positive.max, 1]).
 combine('c', [2, 3, 4]).
 combine('r', [2, 3, 4])
 ).
-beforeAllSubcases((t) => {
-  t.selectDeviceOrSkipTestCase('shader-f16');
-}).
 fn((t) => {
+  t.skipIfDeviceDoesNotHaveFeature('shader-f16');
   let lhs = `mat${t.params.c}x${t.params.r}h(`;
   for (let i = 0; i < t.params.c; i++) {
     for (let k = 0; k < t.params.r; k++) {
@@ -581,10 +571,8 @@ combine('rhs', [kValue.f16.positive.max, 1]).
 combine('c', [2, 3, 4]).
 combine('r', [2, 3, 4])
 ).
-beforeAllSubcases((t) => {
-  t.selectDeviceOrSkipTestCase('shader-f16');
-}).
 fn((t) => {
+  t.skipIfDeviceDoesNotHaveFeature('shader-f16');
   let lhs = `mat${t.params.c}x${t.params.r}h(`;
   let rhs = `mat${t.params.r}x${t.params.c}h(`;
   for (let i = 0; i < t.params.c; i++) {
@@ -622,10 +610,8 @@ combine('lhs', [kValue.f16.positive.max, 1]).
 combine('c', [2, 3, 4]).
 combine('r', [2, 3, 4])
 ).
-beforeAllSubcases((t) => {
-  t.selectDeviceOrSkipTestCase('shader-f16');
-}).
 fn((t) => {
+  t.skipIfDeviceDoesNotHaveFeature('shader-f16');
   let lhs = `mat${t.params.c}x${t.params.r}h(`;
   let rhs = `mat${t.params.r}x${t.params.c}h(`;
   for (let i = 0; i < t.params.c; i++) {

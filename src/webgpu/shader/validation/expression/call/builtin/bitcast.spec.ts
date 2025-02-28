@@ -130,10 +130,8 @@ It is a shader-creation error if any const-expression of floating-point type eva
         p.useBadValue ? ([...f16InfAndNaNInU16] as const) : [0 as const]
       )
   )
-  .beforeAllSubcases(t => {
-    t.selectDeviceOrSkipTestCase('shader-f16');
-  })
   .fn(t => {
+    t.skipIfDeviceDoesNotHaveFeature('shader-f16');
     // For width = 2 generate code like:
     //  const f = bitcast<vec2<f16>>(i32(u32(0x7f800000)));
     // And for width = 4:
@@ -270,10 +268,8 @@ and no other type is that size.
       .combine('direction', ['to', 'from'] as const)
       .combine('type', ['vec3<f16>', 'vec3h'])
   )
-  .beforeAllSubcases(t => {
-    t.selectDeviceOrSkipTestCase('shader-f16');
-  })
   .fn(t => {
+    t.skipIfDeviceDoesNotHaveFeature('shader-f16');
     const src_type = t.params.direction === 'to' ? t.params.type : t.params.other_type;
     const dst_type = t.params.direction === 'from' ? t.params.type : t.params.other_type;
     const code = `
@@ -319,10 +315,8 @@ and no other type is that size.
       ] as const)
       .combine('direction', ['to', 'from'] as const)
   )
-  .beforeAllSubcases(t => {
-    t.selectDeviceOrSkipTestCase('shader-f16');
-  })
   .fn(t => {
+    t.skipIfDeviceDoesNotHaveFeature('shader-f16');
     const src_type = t.params.direction === 'to' ? 'f16' : t.params.other_type;
     const dst_type = t.params.direction === 'from' ? 'f16' : t.params.other_type;
     const code = `
@@ -344,10 +338,8 @@ g.test('valid_vec2h')
       .combine('type', ['vec2<f16>', 'vec2h'] as const)
       .combine('direction', ['to', 'from'] as const)
   )
-  .beforeAllSubcases(t => {
-    t.selectDeviceOrSkipTestCase('shader-f16');
-  })
   .fn(t => {
+    t.skipIfDeviceDoesNotHaveFeature('shader-f16');
     const src_type = t.params.direction === 'to' ? t.params.type : t.params.other_type;
     const dst_type = t.params.direction === 'from' ? t.params.type : t.params.other_type;
     const code = `
@@ -376,10 +368,8 @@ g.test('valid_vec4h')
       .combine('type', ['vec4<f16>', 'vec4h'] as const)
       .combine('direction', ['to', 'from'] as const)
   )
-  .beforeAllSubcases(t => {
-    t.selectDeviceOrSkipTestCase('shader-f16');
-  })
   .fn(t => {
+    t.skipIfDeviceDoesNotHaveFeature('shader-f16');
     const src_type = t.params.direction === 'to' ? t.params.type : t.params.other_type;
     const dst_type = t.params.direction === 'from' ? t.params.type : t.params.other_type;
     const code = `
