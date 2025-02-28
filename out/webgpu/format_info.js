@@ -2094,7 +2094,7 @@ export function is32Float(format) {
  * * 'depth16unorm' -> false
  * * 'rgba32float' -> true (you need to enable feature 'float32-filterable')
  */
-export function isFilterableAsTextureF32(format) {
+export function isTextureFormatPossiblyFilterableAsTextureF32(format) {
   const info = kTextureFormatInfo[format];
   return info.color?.type === 'float' || is32Float(format);
 }

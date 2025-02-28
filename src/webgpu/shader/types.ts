@@ -181,37 +181,6 @@ export const kAddressSpaceInfo: Record<string, AddressSpaceInfo> = {
 } as const;
 
 /**
- * List of texel formats and their shader representation
- * MAINTENANCE_TODO: It's not clear what this table is used for but being static we should
- * check that it's used correctly and not missing formats. For example the textureLoad tests
- * were using this table and then manually adding in bgra8unorm but doing that at every
- * test means that if a new format is added it will have to be added at every test.
- * If this table is useful, say for a list of storage texture formats, it should probably
- * be validated with the data in format_info.ts and visa versa so that adding a new format
- * to one or the other asserts if it's missing in the other. Marking as deprecated for now
- * to highlight where it's used.
- */
-/** @deprecated */
-export const TexelFormats = [
-  { format: 'rgba8unorm', _shaderType: 'f32' },
-  { format: 'rgba8snorm', _shaderType: 'f32' },
-  { format: 'rgba8uint', _shaderType: 'u32' },
-  { format: 'rgba8sint', _shaderType: 'i32' },
-  { format: 'rgba16uint', _shaderType: 'u32' },
-  { format: 'rgba16sint', _shaderType: 'i32' },
-  { format: 'rgba16float', _shaderType: 'f32' },
-  { format: 'r32uint', _shaderType: 'u32' },
-  { format: 'r32sint', _shaderType: 'i32' },
-  { format: 'r32float', _shaderType: 'f32' },
-  { format: 'rg32uint', _shaderType: 'u32' },
-  { format: 'rg32sint', _shaderType: 'i32' },
-  { format: 'rg32float', _shaderType: 'f32' },
-  { format: 'rgba32uint', _shaderType: 'u32' },
-  { format: 'rgba32sint', _shaderType: 'i32' },
-  { format: 'rgba32float', _shaderType: 'f32' },
-] as const;
-
-/**
  * Generate a bunch types (vec, mat, sized/unsized array) for testing.
  */
 export function* generateTypes({
