@@ -23,12 +23,10 @@ const kScalarTypes = ['bool', 'i32', 'u32', 'f32', 'f16'];
 g.test('scalar_zero_value')
   .desc('Tests zero value scalar constructors')
   .params(u => u.combine('type', kScalarTypes))
-  .beforeAllSubcases(t => {
-    if (t.params.type === 'f16') {
-      t.selectDeviceOrSkipTestCase('shader-f16');
-    }
-  })
   .fn(t => {
+    if (t.params.type === 'f16') {
+      t.skipIfDeviceDoesNotHaveFeature('shader-f16');
+    }
     const enable = t.params.type === 'f16' ? 'enable f16;' : '';
     const code = `${enable}
     const x : ${t.params.type} = ${t.params.type}();
@@ -63,12 +61,10 @@ g.test('vector_zero_value')
       .beginSubcases()
       .combine('size', [2, 3, 4] as const)
   )
-  .beforeAllSubcases(t => {
-    if (t.params.type === 'f16') {
-      t.selectDeviceOrSkipTestCase('shader-f16');
-    }
-  })
   .fn(t => {
+    if (t.params.type === 'f16') {
+      t.skipIfDeviceDoesNotHaveFeature('shader-f16');
+    }
     const abstract = t.params.type === 'abstract-int' || t.params.type === 'abstract-float';
     const param = abstract ? '' : `<${t.params.type}>`;
     const decl = `vec${t.params.size}${param}`;
@@ -349,12 +345,10 @@ g.test('matrix_zero_value')
       .combine('rows', [2, 3, 4] as const)
       .combine('cols', [2, 3, 4] as const)
   )
-  .beforeAllSubcases(t => {
-    if (t.params.type === 'f16') {
-      t.selectDeviceOrSkipTestCase('shader-f16');
-    }
-  })
   .fn(t => {
+    if (t.params.type === 'f16') {
+      t.skipIfDeviceDoesNotHaveFeature('shader-f16');
+    }
     const decl = `mat${t.params.cols}x${t.params.rows}<${t.params.type}>`;
     const enable = t.params.type === 'f16' ? 'enable f16;' : '';
     let code = `${enable}
