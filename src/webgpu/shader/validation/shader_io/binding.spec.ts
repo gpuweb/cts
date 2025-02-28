@@ -110,10 +110,8 @@ var<storage> a: i32;
 
 g.test('binding_f16')
   .desc(`Test validation of binding with f16`)
-  .beforeAllSubcases(t => {
-    t.selectDeviceOrSkipTestCase('shader-f16');
-  })
   .fn(t => {
+    t.skipIfDeviceDoesNotHaveFeature('shader-f16');
     const code = `
 @group(1) @binding(1h)
 var<storage> a: i32;
