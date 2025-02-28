@@ -1834,20 +1834,40 @@ export function textureFormatsAreViewCompatible(
 /**
  * Gets the block width, height, and bytes per block for a color texture format.
  * This is for color textures only. For all texture formats @see {@link getBlockInfoForTextureFormat}
+ * The point of this function is bytesPerBlock is always defined so no need to check that it's not
+ * vs getBlockInfoForTextureFormat where it may not be defined.
  */
 export function getBlockInfoForColorTextureFormat(format: ColorTextureFormat) {
   const info = kTextureFormatInfo[format];
   return {
     blockWidth: info.blockWidth,
     blockHeight: info.blockHeight,
-    bytesPerBlock: info.color.bytes,
+    bytesPerBlock: info.color?.bytes,
+  };
+}
+
+/**
+ * Gets the block width, height, and bytes per block for an encodable texture format.
+ * This is for encodable textures only. For all texture formats @see {@link getBlockInfoForTextureFormat}
+ * The point of this function is bytesPerBlock is always defined so no need to check that it's not
+ * vs getBlockInfoForTextureFormat where it may not be defined.
+ */
+export function getBlockInfoForEncodableTextureFormat(format: EncodableTextureFormat) {
+  const info = kTextureFormatInfo[format];
+  const bytesPerBlock = info.color?.bytes || info.depth?.bytes || info.stencil?.bytes;
+  assert(!!bytesPerBlock);
+  return {
+    blockWidth: info.blockWidth,
+    blockHeight: info.blockHeight,
+    bytesPerBlock,
   };
 }
 
 /**
  * Gets the block width, height, and bytes per block for a color texture format.
  * Note that bytesPerBlock will be undefined if format's size is undefined.
- * If you are only using color formats, @see {@link getBlockInfoForColorTextureFormat}
+ * If you are only using color or encodable formats, @see {@link getBlockInfoForColorTextureFormat}
+ * or {@link getBlockInfoForEncodableTextureFormat}
  */
 export function getBlockInfoForTextureFormat(format: GPUTextureFormat) {
   const info = kTextureFormatInfo[format];
@@ -2032,7 +2052,9 @@ export function isTextureFormatColorRenderable(
  */
 export function getTextureFormatType(format: GPUTextureFormat) {
   const info = kTextureFormatInfo[format];
-  return info.color?.type ?? info.depth?.type ?? info.stencil?.type;
+  const type = info.color?.type ?? info.depth?.type ?? info.stencil?.type;
+  assert(!!type);
+  return type;
 }
 
 /**
