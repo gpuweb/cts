@@ -40,12 +40,10 @@ g.test('type')
       'sampler',
     ] as const)
   )
-  .beforeAllSubcases(t => {
-    if (t.params.type === 'f16') {
-      t.selectDeviceOrSkipTestCase('shader-f16');
-    }
-  })
   .fn(t => {
+    if (t.params.type === 'f16') {
+      t.skipIfDeviceDoesNotHaveFeature('shader-f16');
+    }
     const code = `
 struct S {
   x : u32
