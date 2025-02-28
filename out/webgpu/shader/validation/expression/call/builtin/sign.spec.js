@@ -41,12 +41,10 @@ filter((u) => stageSupportsType(u.stage, kValuesTypes[u.type])).
 beginSubcases().
 expand('value', (u) => fullRangeForType(kValuesTypes[u.type]))
 ).
-beforeAllSubcases((t) => {
-  if (scalarTypeOf(kValuesTypes[t.params.type]) === Type.f16) {
-    t.selectDeviceOrSkipTestCase('shader-f16');
-  }
-}).
 fn((t) => {
+  if (scalarTypeOf(kValuesTypes[t.params.type]) === Type.f16) {
+    t.skipIfDeviceDoesNotHaveFeature('shader-f16');
+  }
   const expectedResult = true; // Result should always be representable by the type
   validateConstOrOverrideBuiltinEval(
     t,

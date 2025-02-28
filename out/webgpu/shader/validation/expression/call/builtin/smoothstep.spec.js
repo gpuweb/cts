@@ -43,12 +43,10 @@ beginSubcases().
 expand('value1', (u) => [-1000, -10, 0, 10, 1000]).
 expand('value2', (u) => [-1000, -10, 0, 10, 1000])
 ).
-beforeAllSubcases((t) => {
-  if (scalarTypeOf(kValuesTypes[t.params.type]) === Type.f16) {
-    t.selectDeviceOrSkipTestCase('shader-f16');
-  }
-}).
 fn((t) => {
+  if (scalarTypeOf(kValuesTypes[t.params.type]) === Type.f16) {
+    t.skipIfDeviceDoesNotHaveFeature('shader-f16');
+  }
   const type = kValuesTypes[t.params.type];
 
   // We expect to fail if low == high.
@@ -83,12 +81,10 @@ expand('high', (u) => [0, 10])
 // in_shader: Is the function call statically accessed by the entry point?
 .combine('in_shader', [false, true])
 ).
-beforeAllSubcases((t) => {
-  if (scalarTypeOf(kValuesTypes[t.params.type]) === Type.f16) {
-    t.selectDeviceOrSkipTestCase('shader-f16');
-  }
-}).
 fn((t) => {
+  if (scalarTypeOf(kValuesTypes[t.params.type]) === Type.f16) {
+    t.skipIfDeviceDoesNotHaveFeature('shader-f16');
+  }
   const type = kValuesTypes[t.params.type];
   const scalarTy = scalarTypeOf(type);
   const enable = `${type.requiresF16() ? 'enable f16;' : ''}`;
