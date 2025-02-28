@@ -45,12 +45,10 @@ Validates that constant evaluation and override evaluation of ${builtin}() rejec
         )
       )
   )
-  .beforeAllSubcases(t => {
-    if (scalarTypeOf(kValuesTypes[t.params.type]) === Type.f16) {
-      t.selectDeviceOrSkipTestCase('shader-f16');
-    }
-  })
   .fn(t => {
+    if (scalarTypeOf(kValuesTypes[t.params.type]) === Type.f16) {
+      t.skipIfDeviceDoesNotHaveFeature('shader-f16');
+    }
     const type = kValuesTypes[t.params.type];
     const expectedResult = true;
     validateConstOrOverrideBuiltinEval(

@@ -38,12 +38,10 @@ Validates that constant evaluation and override evaluation of ${builtin}() input
       .beginSubcases()
       .expand('value', u => fullRangeForType(kValuesTypes[u.type]))
   )
-  .beforeAllSubcases(t => {
-    if (scalarTypeOf(kValuesTypes[t.params.type]) === Type.f16) {
-      t.selectDeviceOrSkipTestCase('shader-f16');
-    }
-  })
   .fn(t => {
+    if (scalarTypeOf(kValuesTypes[t.params.type]) === Type.f16) {
+      t.skipIfDeviceDoesNotHaveFeature('shader-f16');
+    }
     const expectedResult = true; // The result is always smaller than the input, so can't go OOB.
     validateConstOrOverrideBuiltinEval(
       t,
