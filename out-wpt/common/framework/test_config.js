@@ -76,7 +76,7 @@ export const globalTestConfig = {
 // is trying to test that compatibility devices have the correct validation.
 export function isCompatibilityDevice(device) {
   if (globalTestConfig.compatibility) {
-    assert(!device.features.has('webgpu-core'));
+    assert(!device.features.has('core-features-and-limits'));
   }
   return globalTestConfig.compatibility;
 }
