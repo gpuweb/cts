@@ -19,13 +19,11 @@ g.test('scalar_vector')
   `
   )
   .params(u => u.combine('type', keysOf(kScalarAndVectorTypes)).beginSubcases())
-  .beforeAllSubcases(t => {
-    if (scalarTypeOf(kScalarAndVectorTypes[t.params.type]) === Type.f16) {
-      t.selectDeviceOrSkipTestCase('shader-f16');
-    }
-  })
   .fn(t => {
     const type = kScalarAndVectorTypes[t.params.type];
+    if (scalarTypeOf(type) === Type.f16) {
+      t.skipIfDeviceDoesNotHaveFeature('shader-f16');
+    }
     const elementTy = scalarTypeOf(type);
     const hasF16 = elementTy === Type.f16;
     const code = `

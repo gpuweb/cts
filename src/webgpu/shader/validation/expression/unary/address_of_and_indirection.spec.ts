@@ -54,12 +54,10 @@ g.test('basic')
         return !kDerefTypes[t.derefType].requires_pointer_composite_access;
       })
   )
-  .beforeAllSubcases(t => {
-    if (t.params.storageType === 'f16') {
-      t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
-    }
-  })
   .fn(t => {
+    if (t.params.storageType === 'f16') {
+      t.skipIfDeviceDoesNotHaveFeature('shader-f16');
+    }
     const isLocal = t.params.addressSpace === 'function';
     const deref = kDerefTypes[t.params.derefType];
     // Only specify access mode for storage buffers
@@ -117,12 +115,10 @@ g.test('composite')
         return true;
       })
   )
-  .beforeAllSubcases(t => {
-    if (t.params.storageType === 'f16') {
-      t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
-    }
-  })
   .fn(t => {
+    if (t.params.storageType === 'f16') {
+      t.skipIfDeviceDoesNotHaveFeature('shader-f16');
+    }
     const isLocal = t.params.addressSpace === 'function';
     const deref = kDerefTypes[t.params.derefType];
     // Only specify access mode for storage buffers

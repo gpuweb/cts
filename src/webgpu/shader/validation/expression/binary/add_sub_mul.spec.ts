@@ -62,14 +62,6 @@ g.test('scalar_vector')
       .beginSubcases()
       .combine('op', keysOf(kOperators))
   )
-  .beforeAllSubcases(t => {
-    if (
-      scalarTypeOf(kScalarAndVectorTypes[t.params.lhs]) === Type.f16 ||
-      scalarTypeOf(kScalarAndVectorTypes[t.params.rhs]) === Type.f16
-    ) {
-      t.selectDeviceOrSkipTestCase('shader-f16');
-    }
-  })
   .fn(t => {
     const op = kOperators[t.params.op];
     const lhs = kScalarAndVectorTypes[t.params.lhs];
@@ -78,6 +70,9 @@ g.test('scalar_vector')
     const rhsElement = scalarTypeOf(rhs);
     const hasBool = lhsElement === Type.bool || rhsElement === Type.bool;
     const hasF16 = lhsElement === Type.f16 || rhsElement === Type.f16;
+    if (hasF16) {
+      t.skipIfDeviceDoesNotHaveFeature('shader-f16');
+    }
     const resType = resultType({ lhs, rhs, canConvertScalarToVector: true });
     const resTypeIsTypeable = resType && !isAbstractType(scalarTypeOf(resType));
     const code = t.params.compound_assignment
@@ -138,19 +133,14 @@ g.test('scalar_vector_out_of_range')
       .combine('valueCase', ['halfmax', 'halfmax+ulp', 'sqrtmax', 'sqrtmax+ulp'] as const)
       .combine('stage', kConstantAndOverrideStages)
   )
-  .beforeAllSubcases(t => {
-    if (
-      scalarTypeOf(kScalarAndVectorTypes[t.params.lhs]) === Type.f16 ||
-      scalarTypeOf(kScalarAndVectorTypes[t.params.rhs]) === Type.f16
-    ) {
-      t.selectDeviceOrSkipTestCase('shader-f16');
-    }
-  })
   .fn(t => {
     const { op, valueCase, nonZeroIndex, swap } = t.params;
     let { lhs, rhs } = t.params;
 
     const elementType = scalarTypeOf(kScalarAndVectorTypes[lhs]);
+    if (elementType === Type.f16 || scalarTypeOf(kScalarAndVectorTypes[rhs]) === Type.f16) {
+      t.skipIfDeviceDoesNotHaveFeature('shader-f16');
+    }
 
     // Handle the swapping of LHS and RHS to test all cases of scalar * vector.
     if (swap) {
