@@ -52,14 +52,12 @@ const kConstructibleCases = {
 g.test('rhs_constructible')
   .desc(`Test that the rhs of 'phony assignment' can be a constructible.`)
   .params(u => u.combine('type', keysOf(kConstructibleCases)))
-  .beforeAllSubcases(t => {
-    const c = kConstructibleCases[t.params.type] as Case;
-    if (c.usesF16) {
-      t.selectDeviceOrSkipTestCase('shader-f16');
-    }
-  })
   .fn(t => {
     const { value, pass, usesF16, gdecl } = kConstructibleCases[t.params.type] as Case;
+    if (usesF16) {
+      t.skipIfDeviceDoesNotHaveFeature('shader-f16');
+    }
+
     const code = `
 ${usesF16 ? 'enable f16;' : ''}
 ${gdecl ?? ''}
