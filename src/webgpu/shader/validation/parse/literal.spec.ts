@@ -84,13 +84,11 @@ const kU32 = new Set([
   g.test('i32')
     .desc(`Test that valid signed integers are accepted, and invalid signed integers are rejected.`)
     .params(u => u.combine('val', new Set([...kValidI32, ...kInvalidI32])).beginSubcases())
-    .beforeAllSubcases(t => {
-      if (t.params.val.includes('h')) {
-        t.selectDeviceOrSkipTestCase('shader-f16');
-      }
-    })
     .fn(t => {
       const { val } = t.params;
+      if (val.includes('h')) {
+        t.skipIfDeviceDoesNotHaveFeature('shader-f16');
+      }
       const code = `var test: i32 = ${val};`;
       const extensionList = val.includes('h') ? ['f16'] : [];
       t.expectCompileResult(kValidI32.has(val), t.wrapInEntryPoint(code, extensionList));
@@ -118,13 +116,11 @@ const kU32 = new Set([
       `Test that valid unsigned integers are accepted, and invalid unsigned integers are rejected.`
     )
     .params(u => u.combine('val', new Set([...kValidU32, ...kInvalidU32])).beginSubcases())
-    .beforeAllSubcases(t => {
-      if (t.params.val.includes('h')) {
-        t.selectDeviceOrSkipTestCase('shader-f16');
-      }
-    })
     .fn(t => {
       const { val } = t.params;
+      if (val.includes('h')) {
+        t.skipIfDeviceDoesNotHaveFeature('shader-f16');
+      }
       const code = `var test: u32 = ${val};`;
       const extensionList = val.includes('h') ? ['f16'] : [];
       t.expectCompileResult(kValidU32.has(val), t.wrapInEntryPoint(code, extensionList));
@@ -208,12 +204,10 @@ const kAbstractFloat = new Set([
         .combine('val', new Set([...kValidFloats, ...kInvalidFloats, ...kInvalidF16s]))
         .beginSubcases()
     )
-    .beforeAllSubcases(t => {
-      if (kF16.has(t.params.val) || kInvalidF16s.has(t.params.val)) {
-        t.selectDeviceOrSkipTestCase('shader-f16');
-      }
-    })
     .fn(t => {
+      if (kF16.has(t.params.val) || kInvalidF16s.has(t.params.val)) {
+        t.skipIfDeviceDoesNotHaveFeature('shader-f16');
+      }
       const code = `var test = ${t.params.val};`;
       const extensionList = kF16.has(t.params.val) || kInvalidF16s.has(t.params.val) ? ['f16'] : [];
       t.expectCompileResult(
@@ -251,13 +245,11 @@ const kAbstractFloat = new Set([
   g.test('f32')
     .desc(`Test that valid floats are accepted, and invalid floats are rejected`)
     .params(u => u.combine('val', new Set([...kValidF32, ...kInvalidF32])).beginSubcases())
-    .beforeAllSubcases(t => {
-      if (kF16.has(t.params.val)) {
-        t.selectDeviceOrSkipTestCase('shader-f16');
-      }
-    })
     .fn(t => {
       const { val } = t.params;
+      if (kF16.has(val)) {
+        t.skipIfDeviceDoesNotHaveFeature('shader-f16');
+      }
       const code = `var test: f32 = ${val};`;
       const extensionList = kF16.has(val) ? ['f16'] : [];
       t.expectCompileResult(kValidF32.has(val), t.wrapInEntryPoint(code, extensionList));
@@ -290,10 +282,8 @@ Test that valid half floats are accepted, and invalid half floats are rejected
 `
     )
     .params(u => u.combine('val', new Set([...kValidF16, ...kInvalidF16])).beginSubcases())
-    .beforeAllSubcases(t => {
-      t.selectDeviceOrSkipTestCase('shader-f16');
-    })
     .fn(t => {
+      t.skipIfDeviceDoesNotHaveFeature('shader-f16');
       const { val } = t.params;
       const code = `var test: f16 = ${val};`;
       const extensionList = ['f16'];
