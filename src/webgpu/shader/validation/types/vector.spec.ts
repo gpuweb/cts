@@ -66,13 +66,10 @@ g.test('vector')
   .params(
     u => u.combine('case', keysOf(kCases)) //
   )
-  .beforeAllSubcases(t => {
-    const c = kCases[t.params.case];
-    if (c.wgsl.indexOf('enable f16') >= 0) {
-      t.selectDeviceOrSkipTestCase('shader-f16');
-    }
-  })
   .fn(t => {
     const c = kCases[t.params.case];
+    if (c.wgsl.indexOf('enable f16') >= 0) {
+      t.skipIfDeviceDoesNotHaveFeature('shader-f16');
+    }
     t.expectCompileResult(c.ok, c.wgsl);
   });
