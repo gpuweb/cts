@@ -53,13 +53,12 @@ g.test('result_type')
       .combine('rows', [2, 3, 4] as const)
       .combine('decl', ['function', 'module'] as const)
   )
-  .beforeAllSubcases(t => {
-    if (t.params.element === 'f16') {
-      t.selectDeviceOrSkipTestCase('shader-f16');
-    }
-  })
   .fn(t => {
     const enable = t.params.element === 'f16' ? 'enable f16;' : '';
+    if (enable) {
+      t.skipIfDeviceDoesNotHaveFeature('shader-f16');
+    }
+
     const scalarTy = Type[t.params.element];
     const vectorTy = Type['vec'](t.params.rows, scalarTy);
     const matrixTy = Type['mat'](t.params.columns, t.params.rows, scalarTy);

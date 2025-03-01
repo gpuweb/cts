@@ -70,14 +70,11 @@ g.test('result_type')
         return true;
       })
   )
-  .beforeAllSubcases(t => {
-    const ty = kTypes[t.params.type];
-    if (ty.requiresF16()) {
-      t.selectDeviceOrSkipTestCase('shader-f16');
-    }
-  })
   .fn(t => {
     const ty = kTypes[t.params.type];
+    if (ty.requiresF16()) {
+      t.skipIfDeviceDoesNotHaveFeature('shader-f16');
+    }
     const enable = ty.requiresF16() ? 'enable f16;' : '';
     const arrayTy = Type['array'](t.params.elements, ty);
     const module_decl =

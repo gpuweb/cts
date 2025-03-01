@@ -36,20 +36,15 @@ g.test('scalar_vector')
       )
       .beginSubcases()
   )
-  .beforeAllSubcases(t => {
-    if (
-      scalarTypeOf(kScalarAndVectorTypes[t.params.lhs]) === Type.f16 ||
-      scalarTypeOf(kScalarAndVectorTypes[t.params.rhs]) === Type.f16
-    ) {
-      t.selectDeviceOrSkipTestCase('shader-f16');
-    }
-  })
   .fn(t => {
     const lhs = kScalarAndVectorTypes[t.params.lhs];
     const rhs = kScalarAndVectorTypes[t.params.rhs];
     const lhsElement = scalarTypeOf(lhs);
     const rhsElement = scalarTypeOf(rhs);
     const hasF16 = lhsElement === Type.f16 || rhsElement === Type.f16;
+    if (hasF16) {
+      t.skipIfDeviceDoesNotHaveFeature('shader-f16');
+    }
     const code = `
 ${hasF16 ? 'enable f16;' : ''}
 const lhs = ${lhs.create(0).wgsl()};
