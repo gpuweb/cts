@@ -101,11 +101,6 @@ beforeAllSubcases((t) => {
     t.isCompatibility && ['sample_index', 'sample_mask'].includes(t.params.name),
     'compatibility mode does not support sample_index or sample_mask'
   );
-  if (t.params.name.includes('subgroup')) {
-    t.selectDeviceOrSkipTestCase('subgroups');
-  } else if (t.params.name === 'clip_distances') {
-    t.selectDeviceOrSkipTestCase('clip-distances');
-  }
   t.skipIf(
     t.params.name !== 'position' &&
     t.params.target_stage === 'vertex' &&
@@ -115,6 +110,11 @@ beforeAllSubcases((t) => {
   );
 }).
 fn((t) => {
+  if (t.params.name.includes('subgroup')) {
+    t.skipIfDeviceDoesNotHaveFeature('subgroups');
+  } else if (t.params.name === 'clip_distances') {
+    t.skipIfDeviceDoesNotHaveFeature('clip-distances');
+  }
   const code = generateShader({
     attribute: `@builtin(${t.params.name})`,
     type: t.params.type,
@@ -151,11 +151,6 @@ beforeAllSubcases((t) => {
     t.isCompatibility && ['sample_index', 'sample_mask'].includes(t.params.name),
     'compatibility mode does not support sample_index or sample_mask'
   );
-  if (t.params.name.includes('subgroup')) {
-    t.selectDeviceOrSkipTestCase('subgroups');
-  } else if (t.params.name === 'clip_distances') {
-    t.selectDeviceOrSkipTestCase('clip-distances');
-  }
   t.skipIf(
     t.params.name !== 'position' &&
     t.params.stage === 'vertex' &&
@@ -165,6 +160,11 @@ beforeAllSubcases((t) => {
   );
 }).
 fn((t) => {
+  if (t.params.name.includes('subgroup')) {
+    t.skipIfDeviceDoesNotHaveFeature('subgroups');
+  } else if (t.params.name === 'clip_distances') {
+    t.skipIfDeviceDoesNotHaveFeature('clip-distances');
+  }
   let code = '';
 
   if (t.params.target_type === 'MyStruct') {
@@ -340,13 +340,13 @@ beforeAllSubcases((t) => {
   if (!t.params.enable_extension) {
     return;
   }
-  if (t.params.name.includes('subgroup')) {
-    t.selectDeviceOrSkipTestCase('subgroups');
-  } else if (t.params.name === 'clip_distances') {
-    t.selectDeviceOrSkipTestCase('clip-distances');
-  }
 }).
 fn((t) => {
+  if (t.params.name.includes('subgroup')) {
+    t.skipIfDeviceDoesNotHaveFeature('subgroups');
+  } else if (t.params.name === 'clip_distances') {
+    t.skipIfDeviceDoesNotHaveFeature('clip-distances');
+  }
   let code = '';
   if (t.params.enable_extension) {
     if (t.params.name.includes('subgroups')) {

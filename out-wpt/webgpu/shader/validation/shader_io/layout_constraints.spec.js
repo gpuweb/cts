@@ -490,14 +490,11 @@ combine('case', keysOf(kLayoutCases)).
 beginSubcases().
 combine('aspace', ['storage', 'uniform', 'function', 'private', 'workgroup'])
 ).
-beforeAllSubcases((t) => {
-  const testcase = kLayoutCases[t.params.case];
-  if (testcase.f16) {
-    t.selectDeviceOrSkipTestCase('shader-f16');
-  }
-}).
 fn((t) => {
   const testcase = kLayoutCases[t.params.case];
+  if (testcase.f16) {
+    t.skipIfDeviceDoesNotHaveFeature('shader-f16');
+  }
   const decls = testcase.decls !== undefined ? testcase.decls : '';
   let code = `
 ${testcase.f16 ? 'enable f16;' : ''}

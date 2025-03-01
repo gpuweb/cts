@@ -131,16 +131,14 @@ g.test('type')
       .combine('type', new Set([...kValidLocationTypes, ...kInvalidLocationTypes]))
       .beginSubcases()
   )
-  .beforeAllSubcases(t => {
+  .fn(t => {
     if (
       t.params.type === 'f16' ||
       ((t.params.type.startsWith('mat') || t.params.type.startsWith('vec')) &&
         t.params.type.endsWith('h'))
     ) {
-      t.selectDeviceOrSkipTestCase('shader-f16');
+      t.skipIfDeviceDoesNotHaveFeature('shader-f16');
     }
-  })
-  .fn(t => {
     let code = '';
 
     if (
