@@ -313,10 +313,8 @@ g.test('basics,subgroups')
       .combine('op', kSubgroupOps)
       .combine('stage', ['compute', 'fragment'] as const)
   )
-  .beforeAllSubcases(t => {
-    t.selectDeviceOrSkipTestCase('subgroups' as GPUFeatureName);
-  })
   .fn(t => {
+    t.skipIfDeviceDoesNotHaveFeature('subgroups' as GPUFeatureName);
     let code = `
  enable subgroups;
 
@@ -399,12 +397,11 @@ g.test('fragment_builtin_values')
       t.isCompatibility && ['sample_index', 'sample_mask'].includes(t.params.builtin),
       'compatibility mode does not support sample_index or sample_mask'
     );
-    const builtin = t.params.builtin;
-    if (builtin.includes('subgroup')) {
-      t.selectDeviceOrSkipTestCase('subgroups' as GPUFeatureName);
-    }
   })
   .fn(t => {
+    if (t.params.builtin.includes('subgroup')) {
+      t.skipIfDeviceDoesNotHaveFeature('subgroups' as GPUFeatureName);
+    }
     let cond = ``;
     switch (t.params.type) {
       case `u32`:
@@ -486,12 +483,10 @@ const kComputeBuiltinValues = [
 g.test('compute_builtin_values')
   .desc(`Test uniformity of compute built-in values`)
   .params(u => u.combineWithParams(kComputeBuiltinValues).beginSubcases())
-  .beforeAllSubcases(t => {
-    if (t.params.builtin.includes('subgroup')) {
-      t.selectDeviceOrSkipTestCase('subgroups' as GPUFeatureName);
-    }
-  })
   .fn(t => {
+    if (t.params.builtin.includes('subgroup')) {
+      t.skipIfDeviceDoesNotHaveFeature('subgroups' as GPUFeatureName);
+    }
     let cond = ``;
     switch (t.params.type) {
       case `u32`:
@@ -2819,10 +2814,8 @@ g.test('subgroups,parameters')
       .combine('op', ['subgroupShuffleUp', 'subgroupShuffleDown', 'subgroupShuffleXor'] as const)
       .combine('uniform', [false, true] as const)
   )
-  .beforeAllSubcases(t => {
-    t.selectDeviceOrSkipTestCase('subgroups' as GPUFeatureName);
-  })
   .fn(t => {
+    t.skipIfDeviceDoesNotHaveFeature('subgroups' as GPUFeatureName);
     const wgsl = `
 enable subgroups;
 

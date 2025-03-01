@@ -285,14 +285,11 @@ const kStructureCases: Record<string, StructureCase> = {
 g.test('structures')
   .desc('Validation tests for structures')
   .params(u => u.combine('case', keysOf(kStructureCases)))
-  .beforeAllSubcases(t => {
-    const testcase = kStructureCases[t.params.case];
-    if (testcase.f16) {
-      t.selectDeviceOrSkipTestCase('shader-f16');
-    }
-  })
   .fn(t => {
     const testcase = kStructureCases[t.params.case];
+    if (testcase.f16) {
+      t.skipIfDeviceDoesNotHaveFeature('shader-f16');
+    }
     const code = `${testcase.f16 ? 'enable f16;' : ''}
     ${testcase.code}`;
     t.expectCompileResult(testcase.valid, code);

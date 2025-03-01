@@ -126,13 +126,11 @@ const kTypeCases: Record<string, TypeCase> = {
 g.test('type')
   .desc('Tests that pointee type must be storable')
   .params(u => u.combine('case', keysOf(kTypeCases)))
-  .beforeAllSubcases(t => {
-    if (kTypeCases[t.params.case].f16) {
-      t.selectDeviceOrSkipTestCase('shader-f16');
-    }
-  })
   .fn(t => {
     const testcase = kTypeCases[t.params.case];
+    if (testcase.f16) {
+      t.skipIfDeviceDoesNotHaveFeature('shader-f16');
+    }
     const aspace = testcase.aspace ?? 'storage';
     const access = testcase.type.includes('atomic') ? ', read_write' : '';
     const code = `${testcase.f16 ? 'enable f16;' : ''}
