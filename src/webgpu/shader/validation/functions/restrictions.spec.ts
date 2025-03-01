@@ -157,13 +157,11 @@ g.test('function_return_types')
   .specURL('https://gpuweb.github.io/gpuweb/wgsl/#function-restriction')
   .desc(`Test that function return types must be constructible`)
   .params(u => u.combine('case', keysOf(kFunctionRetTypeCases)))
-  .beforeAllSubcases(t => {
-    if (kFunctionRetTypeCases[t.params.case].name === 'f16') {
-      t.selectDeviceOrSkipTestCase('shader-f16');
-    }
-  })
   .fn(t => {
     const testcase = kFunctionRetTypeCases[t.params.case];
+    if (testcase.name === 'f16') {
+      t.skipIfDeviceDoesNotHaveFeature('shader-f16');
+    }
     const enable = testcase.name === 'f16' ? 'enable f16;' : '';
     const value = testcase.value === '' ? `${testcase.name}()` : testcase.value;
     const code = `
@@ -299,13 +297,11 @@ g.test('function_parameter_types')
   .specURL('https://gpuweb.github.io/gpuweb/wgsl/#function-restriction')
   .desc(`Test validation of user-declared function parameter types`)
   .params(u => u.combine('case', keysOf(kFunctionParamTypeCases)))
-  .beforeAllSubcases(t => {
-    if (kFunctionParamTypeCases[t.params.case].name === 'f16') {
-      t.selectDeviceOrSkipTestCase('shader-f16');
-    }
-  })
   .fn(t => {
     const testcase = kFunctionParamTypeCases[t.params.case];
+    if (testcase.name === 'f16') {
+      t.skipIfDeviceDoesNotHaveFeature('shader-f16');
+    }
     const enable = testcase.name === 'f16' ? 'enable f16;' : '';
     const code = `
 ${enable}
@@ -523,13 +519,11 @@ g.test('function_parameter_matching')
       .beginSubcases()
       .combine('arg', keysOf(kFunctionParamValueCases))
   )
-  .beforeAllSubcases(t => {
-    if (kFunctionParamTypeCases[t.params.decl].name === 'f16') {
-      t.selectDeviceOrSkipTestCase('shader-f16');
-    }
-  })
   .fn(t => {
     const param = kFunctionParamTypeCases[t.params.decl];
+    if (param.name === 'f16') {
+      t.skipIfDeviceDoesNotHaveFeature('shader-f16');
+    }
     const arg = kFunctionParamValueCases[t.params.arg];
     const enable = param.name === 'f16' ? 'enable f16;' : '';
     const code = `

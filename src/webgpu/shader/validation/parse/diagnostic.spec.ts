@@ -219,14 +219,12 @@ g.test('after_other_directives')
   .params(u =>
     u.combine('directive', ['enable f16', 'requires readonly_and_readwrite_storage_textures'])
   )
-  .beforeAllSubcases(t => {
-    if (t.params.directive.startsWith('enable')) {
-      t.selectDeviceOrSkipTestCase('shader-f16');
-    }
-  })
   .fn(t => {
     if (t.params.directive.startsWith('requires')) {
       t.skipIfLanguageFeatureNotSupported('readonly_and_readwrite_storage_textures');
+    }
+    if (t.params.directive.startsWith('enable')) {
+      t.skipIfDeviceDoesNotHaveFeature('shader-f16');
     }
 
     let code = `${t.params.directive};`;
