@@ -60,11 +60,6 @@ g.test('invalid')
       .combine('test', keysOf(kTests))
       .combine('swap', [true, false])
   )
-  .beforeAllSubcases(t => {
-    if (kTests[t.params.test].is_f16 === true || t.params.rhs.startsWith('mat2x3h(')) {
-      t.selectDeviceOrSkipTestCase('shader-f16');
-    }
-  })
   .fn(t => {
     let lhs = kTests[t.params.test].src;
     let rhs = t.params.rhs === 'ai' ? 'mat3x2(0, 0, 0, 0, 0, 0)' : t.params.rhs;
@@ -100,7 +95,6 @@ g.test('f16_and_f32_matrix')
   .desc(`Validates that f16 multiplied by an f32 matrix is an error.`)
   .params(u => u.combine('rhs', ['mat2x3f()', 'mat2x3h()']).combine('swap', [true, false]))
   .fn(t => {
-    t.skipIfDeviceDoesNotHaveFeature('shader-f16');
     let lhs = '1h';
     let rhs = t.params.rhs;
     if (t.params.swap) {
@@ -126,7 +120,6 @@ g.test('f32_and_f16_matrix')
   .desc(`Validates that f32 multiplied by an f16 matrix is an error`)
   .params(u => u.combine('rhs', ['mat2x3f()', 'mat2x3h()']).combine('swap', [true, false]))
   .fn(t => {
-    t.skipIfDeviceDoesNotHaveFeature('shader-f16');
     let lhs = '1f';
     let rhs = t.params.rhs;
     if (t.params.swap) {
@@ -160,11 +153,6 @@ g.test('mat_by_mat')
       .combine('c2', [2, 3, 4])
       .combine('r2', [2, 3, 4])
   )
-  .beforeAllSubcases(t => {
-    if (t.params.ty1 === 'h' || t.params.ty2 === 'h') {
-      t.selectDeviceOrSkipTestCase('shader-f16');
-    }
-  })
   .fn(t => {
     const c1 = t.params.c1;
     const c2 = t.params.c2;
@@ -213,11 +201,6 @@ g.test('mat_by_vec')
       .combine('r1', [2, 3, 4])
       .combine('v1', [2, 3, 4])
   )
-  .beforeAllSubcases(t => {
-    if (t.params.ty1 === 'h' || t.params.ty2 === 'h') {
-      t.selectDeviceOrSkipTestCase('shader-f16');
-    }
-  })
   .fn(t => {
     const c1 = t.params.c1;
     const r1 = t.params.r1;
@@ -263,11 +246,6 @@ g.test('vec_by_mat')
       .combine('r1', [2, 3, 4])
       .combine('v1', [2, 3, 4])
   )
-  .beforeAllSubcases(t => {
-    if (t.params.ty1 === 'h' || t.params.ty2 === 'h') {
-      t.selectDeviceOrSkipTestCase('shader-f16');
-    }
-  })
   .fn(t => {
     const c1 = t.params.c1;
     const r1 = t.params.r1;
@@ -472,7 +450,6 @@ g.test('overflow_scalar_f16')
       .combine('r', [2, 3, 4] as const)
   )
   .fn(t => {
-    t.skipIfDeviceDoesNotHaveFeature('shader-f16');
     let lhs = `mat${t.params.c}x${t.params.r}h(`;
     for (let i = 0; i < t.params.c; i++) {
       for (let k = 0; k < t.params.r; k++) {
@@ -508,7 +485,6 @@ g.test('overflow_vec_f16')
       .combine('r', [2, 3, 4] as const)
   )
   .fn(t => {
-    t.skipIfDeviceDoesNotHaveFeature('shader-f16');
     let lhs = `mat${t.params.c}x${t.params.r}h(`;
     for (let i = 0; i < t.params.c; i++) {
       for (let k = 0; k < t.params.r; k++) {
@@ -540,7 +516,6 @@ g.test('overflow_vec_f16_internal')
       .combine('r', [2, 3, 4] as const)
   )
   .fn(t => {
-    t.skipIfDeviceDoesNotHaveFeature('shader-f16');
     let lhs = `mat${t.params.c}x${t.params.r}h(`;
     for (let i = 0; i < t.params.c; i++) {
       for (let k = 0; k < t.params.r; k++) {
@@ -572,7 +547,6 @@ g.test('overflow_mat_f16')
       .combine('r', [2, 3, 4] as const)
   )
   .fn(t => {
-    t.skipIfDeviceDoesNotHaveFeature('shader-f16');
     let lhs = `mat${t.params.c}x${t.params.r}h(`;
     let rhs = `mat${t.params.r}x${t.params.c}h(`;
     for (let i = 0; i < t.params.c; i++) {
@@ -611,7 +585,6 @@ g.test('overflow_mat_f16_internal')
       .combine('r', [2, 3, 4] as const)
   )
   .fn(t => {
-    t.skipIfDeviceDoesNotHaveFeature('shader-f16');
     let lhs = `mat${t.params.c}x${t.params.r}h(`;
     let rhs = `mat${t.params.r}x${t.params.c}h(`;
     for (let i = 0; i < t.params.c; i++) {
