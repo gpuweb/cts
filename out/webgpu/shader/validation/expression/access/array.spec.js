@@ -273,7 +273,7 @@ const kOutOfBoundsCases = {
         w : array<u32>
       }
       @group(0) @binding(0) var<storage> v : S;
-      fn foo() -> u32 {
+      fn y() -> u32 {
         let tmp : u32 = v.w[x];
         return 0;
       }`,
@@ -288,7 +288,7 @@ const kOutOfBoundsCases = {
         w : array<u32>
       }
       @group(0) @binding(0) var<storage> v : S;
-      fn foo() -> u32 {
+      fn y() -> u32 {
         let tmp : u32 = v.w[x];
         return 0;
       }`,
@@ -303,7 +303,7 @@ const kOutOfBoundsCases = {
         w : array<u32, 5>
       }
       @group(0) @binding(0) var<storage> v : S;
-      fn foo() -> u32 {
+      fn y() -> u32 {
         let tmp : u32 = v.w[x];
         return 0;
       }`,
@@ -321,7 +321,7 @@ const kOutOfBoundsCases = {
         r : S
       }
       @group(0) @binding(0) var<storage> v : S2;
-      fn foo() -> u32 {
+      fn y() -> u32 {
         let tmp : u32 = v.r.w[x];
         return 0;
       }`,
@@ -339,7 +339,7 @@ const kOutOfBoundsCases = {
         r : S
       }
       @group(0) @binding(0) var<storage> v : S2;
-      fn foo() -> u32 {
+      fn y() -> u32 {
         let tmp : u32 = v.r.w[x];
         return 0;
       }`,
