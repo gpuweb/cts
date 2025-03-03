@@ -9,7 +9,6 @@ import {
   Type,
   kConcreteIntegerScalarsAndVectors,
   kConvertableToFloatScalarsAndVectors,
-  scalarTypeOf,
 } from '../../../../../util/conversion.js';
 import { ShaderValidationTest } from '../../../shader_validation_test.js';
 
@@ -39,9 +38,6 @@ Validates that constant evaluation and override evaluation of ${builtin}() rejec
       .expand('value', u => fullRangeForType(kValuesTypes[u.type]))
   )
   .fn(t => {
-    if (scalarTypeOf(kValuesTypes[t.params.type]) === Type.f16) {
-      t.skipIfDeviceDoesNotHaveFeature('shader-f16');
-    }
     const expectedResult = true; // Result should always be representable by the type
     validateConstOrOverrideBuiltinEval(
       t,

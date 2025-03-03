@@ -46,9 +46,6 @@ g.test('matrix_args')
       .combine('type', ['abstract-int', 'abstract-float', 'f32', 'f16'] as const)
   )
   .fn(t => {
-    if (t.params.type === 'f16') {
-      t.skipIfDeviceDoesNotHaveFeature('shader-f16');
-    }
     const cols = t.params.cols;
     const rows = t.params.rows;
     const type = t.params.type;
