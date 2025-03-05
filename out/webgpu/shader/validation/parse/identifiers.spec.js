@@ -133,7 +133,6 @@ const kInvalidIdentifiers = new Set([
 'auto',
 'await',
 'become',
-'binding_array',
 'cast',
 'catch',
 'class',
