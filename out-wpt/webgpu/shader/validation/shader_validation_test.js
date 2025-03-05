@@ -1,6 +1,45 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
-**/import { keysOf } from '../../../common/util/data_tables.js';import { ErrorWithExtra } from '../../../common/util/util.js';import { AllFeaturesMaxLimitsGPUTest, UniqueFeaturesOrLimitsGPUTest } from '../../gpu_test.js';
+**/import { keysOf } from '../../../common/util/data_tables.js';import { ErrorWithExtra } from '../../../common/util/util.js';import {
+  AllFeaturesMaxLimitsGPUTest,
+
+  UniqueFeaturesOrLimitsGPUTest } from
+'../../gpu_test.js';
+
+const kEnables = {
+  f16: 'shader-f16',
+  subgroups: 'subgroups',
+  clip_distances: 'clip-distances'
+};
+
+/**
+ * Note: These regular expressions are not meant to be perfect. This is not production code expecting
+ * to work with any WGSL passed by a user. It's only test code for working with WGSL written
+ * in the CTS. A CTS test for which these regular expressions don't work should use a different set of
+ * testing functions or options that don't use these regular expressions.
+ */
+const kEnableREs = Object.entries(kEnables).map(([enableName, feature]) => {
+  return {
+    re: new RegExp(
+      `^\\s*enable\\s+(?:\\s*\\w+\\s*,)*\\s*${enableName}\\s*(?:,\\s*\\w+)*\\s*;\\s*$`
+    ),
+    feature
+  };
+});
+
+/**
+ * Note: This function is not meant to be perfect. This is not production code expecting
+ * to work with any WGSL passed by a user. It's only test code for working with WGSL written
+ * in the CTS. A CTS test for which this check doesn't work can choose a different set of
+ * testing functions or options that don't take this path.
+ */
+function skipIfCodeNeedsFeatureAndDeviceDoesNotHaveFeature(t, code) {
+  for (const { re, feature } of kEnableREs) {
+    if (re.test(code)) {
+      t.skipIfDeviceDoesNotHaveFeature(feature);
+    }
+  }
+}
 
 /**
  * Base fixture for WGSL shader validation tests.
@@ -8,6 +47,8 @@
 export class ShaderValidationTest extends AllFeaturesMaxLimitsGPUTest {
   /**
    * Add a test expectation for whether a createShaderModule call succeeds or not.
+   * Note: skips test if 'enable X' exists in code and X's corresponding feature does not exist on device
+   * unless you pass in autoSkipIfFeatureNotAvailable: false.
    *
    * @example
    * ```ts
@@ -15,7 +56,14 @@ export class ShaderValidationTest extends AllFeaturesMaxLimitsGPUTest {
    * t.expectCompileResult(false, `wgsl code`); // Expect validation error with any error string
    * ```
    */
-  expectCompileResult(expectedResult, code) {
+  expectCompileResult(
+  expectedResult,
+  code,
+  options)
+  {
+    if (options?.autoSkipIfFeatureNotAvailable !== false) {
+      skipIfCodeNeedsFeatureAndDeviceDoesNotHaveFeature(this, code);
+    }
     let shaderModule;
     this.expectGPUError(
       'validation',
@@ -109,8 +157,12 @@ export class ShaderValidationTest extends AllFeaturesMaxLimitsGPUTest {
 
   /**
    * Add a test expectation for whether a createComputePipeline call succeeds or not.
+   * Note: skips test if 'enable X' exists in code and X's corresponding feature does not exist on device
+   * unless you pass in autoSkipIfFeatureNotAvailable: false
    */
   expectPipelineResult(args)
+
+
 
 
 
@@ -141,6 +193,10 @@ export class ShaderValidationTest extends AllFeaturesMaxLimitsGPUTest {
 fn main() {
   ${phonies.join('\n')}
 }`;
+
+    if (args.autoSkipIfFeatureNotAvailable !== false) {
+      skipIfCodeNeedsFeatureAndDeviceDoesNotHaveFeature(this, code);
+    }
 
     let shaderModule;
     this.expectGPUError(
