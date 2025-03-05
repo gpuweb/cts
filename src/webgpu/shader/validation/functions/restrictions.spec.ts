@@ -159,9 +159,6 @@ g.test('function_return_types')
   .params(u => u.combine('case', keysOf(kFunctionRetTypeCases)))
   .fn(t => {
     const testcase = kFunctionRetTypeCases[t.params.case];
-    if (testcase.name === 'f16') {
-      t.skipIfDeviceDoesNotHaveFeature('shader-f16');
-    }
     const enable = testcase.name === 'f16' ? 'enable f16;' : '';
     const value = testcase.value === '' ? `${testcase.name}()` : testcase.value;
     const code = `
@@ -299,9 +296,6 @@ g.test('function_parameter_types')
   .params(u => u.combine('case', keysOf(kFunctionParamTypeCases)))
   .fn(t => {
     const testcase = kFunctionParamTypeCases[t.params.case];
-    if (testcase.name === 'f16') {
-      t.skipIfDeviceDoesNotHaveFeature('shader-f16');
-    }
     const enable = testcase.name === 'f16' ? 'enable f16;' : '';
     const code = `
 ${enable}
@@ -521,9 +515,6 @@ g.test('function_parameter_matching')
   )
   .fn(t => {
     const param = kFunctionParamTypeCases[t.params.decl];
-    if (param.name === 'f16') {
-      t.skipIfDeviceDoesNotHaveFeature('shader-f16');
-    }
     const arg = kFunctionParamValueCases[t.params.arg];
     const enable = param.name === 'f16' ? 'enable f16;' : '';
     const code = `

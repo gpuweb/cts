@@ -223,9 +223,6 @@ g.test('after_other_directives')
     if (t.params.directive.startsWith('requires')) {
       t.skipIfLanguageFeatureNotSupported('readonly_and_readwrite_storage_textures');
     }
-    if (t.params.directive.startsWith('enable')) {
-      t.skipIfDeviceDoesNotHaveFeature('shader-f16');
-    }
 
     let code = `${t.params.directive};`;
     code += generateDiagnostic('directive', 'info', 'derivative_uniformity') + ';';
