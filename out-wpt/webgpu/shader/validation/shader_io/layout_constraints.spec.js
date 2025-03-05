@@ -492,9 +492,6 @@ combine('aspace', ['storage', 'uniform', 'function', 'private', 'workgroup'])
 ).
 fn((t) => {
   const testcase = kLayoutCases[t.params.case];
-  if (testcase.f16) {
-    t.skipIfDeviceDoesNotHaveFeature('shader-f16');
-  }
   const decls = testcase.decls !== undefined ? testcase.decls : '';
   let code = `
 ${testcase.f16 ? 'enable f16;' : ''}

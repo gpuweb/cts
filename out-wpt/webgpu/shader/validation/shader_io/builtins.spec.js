@@ -110,11 +110,6 @@ beforeAllSubcases((t) => {
   );
 }).
 fn((t) => {
-  if (t.params.name.includes('subgroup')) {
-    t.skipIfDeviceDoesNotHaveFeature('subgroups');
-  } else if (t.params.name === 'clip_distances') {
-    t.skipIfDeviceDoesNotHaveFeature('clip-distances');
-  }
   const code = generateShader({
     attribute: `@builtin(${t.params.name})`,
     type: t.params.type,
@@ -160,11 +155,6 @@ beforeAllSubcases((t) => {
   );
 }).
 fn((t) => {
-  if (t.params.name.includes('subgroup')) {
-    t.skipIfDeviceDoesNotHaveFeature('subgroups');
-  } else if (t.params.name === 'clip_distances') {
-    t.skipIfDeviceDoesNotHaveFeature('clip-distances');
-  }
   let code = '';
 
   if (t.params.target_type === 'MyStruct') {
@@ -342,11 +332,6 @@ beforeAllSubcases((t) => {
   }
 }).
 fn((t) => {
-  if (t.params.name.includes('subgroup')) {
-    t.skipIfDeviceDoesNotHaveFeature('subgroups');
-  } else if (t.params.name === 'clip_distances') {
-    t.skipIfDeviceDoesNotHaveFeature('clip-distances');
-  }
   let code = '';
   if (t.params.enable_extension) {
     if (t.params.name.includes('subgroups')) {
