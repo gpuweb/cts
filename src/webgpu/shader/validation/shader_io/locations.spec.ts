@@ -132,13 +132,6 @@ g.test('type')
       .beginSubcases()
   )
   .fn(t => {
-    if (
-      t.params.type === 'f16' ||
-      ((t.params.type.startsWith('mat') || t.params.type.startsWith('vec')) &&
-        t.params.type.endsWith('h'))
-    ) {
-      t.skipIfDeviceDoesNotHaveFeature('shader-f16');
-    }
     let code = '';
 
     if (
@@ -370,7 +363,6 @@ g.test('location_fp16')
   .desc(`Test validation of location with fp16`)
   .params(u => u.combine('ext', ['', 'h']))
   .fn(t => {
-    t.skipIfDeviceDoesNotHaveFeature('shader-f16');
     const code = `
 
 @vertex fn main(
