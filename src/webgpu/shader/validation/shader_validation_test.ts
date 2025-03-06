@@ -20,10 +20,7 @@ const kEnables: Record<string, GPUFeatureName> = {
  */
 const kEnableREs = Object.entries(kEnables).map(([enableName, feature]) => {
   return {
-    re: new RegExp(
-      `^\\s*enable\\s+(?:\\s*\\w+\\s*,)*\\s*${enableName}\\s*(?:,\\s*\\w+)*\\s*;\\s*$`,
-      'm'
-    ),
+    re: new RegExp(`\\benable\\s+(?:\\s*\\w+\\s*,)*\\s*${enableName}\\s*(?:,\\s*\\w+)*\\s*;`),
     feature,
   };
 });
