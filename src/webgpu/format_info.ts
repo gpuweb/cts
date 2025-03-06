@@ -2048,11 +2048,21 @@ export function isTextureFormatColorRenderable(
 }
 
 /**
- * Returns the texture's type (float, unsigned-float, sint, uint, de`pth)
+ * Returns the texture's type (float, unsigned-float, sint, uint, depth)
  */
 export function getTextureFormatType(format: GPUTextureFormat) {
   const info = kTextureFormatInfo[format];
   const type = info.color?.type ?? info.depth?.type ?? info.stencil?.type;
+  assert(!!type);
+  return type;
+}
+
+/**
+ * Returns the regular texture's type (float, unsigned-float, sint, uint)
+ */
+export function getTextureFormatColorType(format: RegularTextureFormat) {
+  const info = kTextureFormatInfo[format];
+  const type = info.color?.type;
   assert(!!type);
   return type;
 }

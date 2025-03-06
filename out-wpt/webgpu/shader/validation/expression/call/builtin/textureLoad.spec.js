@@ -13,7 +13,7 @@ Validation tests for the ${builtin}() builtin.
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { keysOf, objectsToRecord } from '../../../../../../common/util/data_tables.js';
 import { assert } from '../../../../../../common/util/util.js';
-import { kAllTextureFormats, kTextureFormatInfo } from '../../../../../format_info.js';
+import { kAllTextureFormats, kPossibleStorageTextureFormats } from '../../../../../format_info.js';
 import {
   Type,
   kAllScalarsAndVectors,
@@ -114,10 +114,9 @@ expand('texelType', (t) =>
 kNonStorageTextureTypeInfo[t.textureType].texelTypes.map((v) => v.toString())
 )
 ).
-beforeAllSubcases((t) =>
-t.skipIfTextureLoadNotSupportedForTextureTypeDeprecated(t.params.textureType)
-).
 fn((t) => {
+  t.skipIfTextureLoadNotSupportedForTextureType(t.params.textureType);
+
   const { returnType, textureType, texelType } = t.params;
   const returnVarType = kValuesTypes[returnType];
   const { coordsArgTypes, hasArrayIndexArg, hasLevelArg, hasSampleIndexArg } =
@@ -161,10 +160,9 @@ combine('value', [-1, 0, 1])
 // filter out unsigned types with negative values
 .filter((t) => !isUnsignedType(kValuesTypes[t.coordType]) || t.value >= 0)
 ).
-beforeAllSubcases((t) =>
-t.skipIfTextureLoadNotSupportedForTextureTypeDeprecated(t.params.textureType)
-).
 fn((t) => {
+  t.skipIfTextureLoadNotSupportedForTextureType(t.params.textureType);
+
   const { textureType, coordType, texelType, value } = t.params;
   const coordArgType = kValuesTypes[coordType];
   const { coordsArgTypes, hasArrayIndexArg, hasLevelArg, hasSampleIndexArg } =
@@ -202,9 +200,7 @@ u.
 combine('textureType', kStorageTextureTypes).
 combine('coordType', keysOf(kValuesTypes)).
 beginSubcases().
-combine('format', kAllTextureFormats)
-// filter to only storage texture formats.
-.filter((t) => !!kTextureFormatInfo[t.format].color?.storage).
+combine('format', kPossibleStorageTextureFormats).
 combine('value', [-1, 0, 1])
 // filter out unsigned types with negative values
 .filter((t) => !isUnsignedType(kValuesTypes[t.coordType]) || t.value >= 0)
@@ -214,7 +210,7 @@ t.skipIfLanguageFeatureNotSupported('readonly_and_readwrite_storage_textures')
 ).
 fn((t) => {
   const { textureType, coordType, format, value } = t.params;
-  t.skipIfTextureFormatNotUsableAsStorageTextureDeprecated(format);
+  t.skipIfTextureFormatNotUsableAsStorageTexture(format);
 
   const coordArgType = kValuesTypes[coordType];
   const { coordsArgTypes, hasArrayIndexArg } =
@@ -259,10 +255,9 @@ combine('value', [-1, 0, 1])
 // filter out unsigned types with negative values
 .filter((t) => !isUnsignedType(kValuesTypes[t.arrayIndexType]) || t.value >= 0)
 ).
-beforeAllSubcases((t) =>
-t.skipIfTextureLoadNotSupportedForTextureTypeDeprecated(t.params.textureType)
-).
 fn((t) => {
+  t.skipIfTextureLoadNotSupportedForTextureType(t.params.textureType);
+
   const { textureType, arrayIndexType, texelType, value } = t.params;
   const arrayIndexArgType = kValuesTypes[arrayIndexType];
   const args = [arrayIndexArgType.create(value)];
@@ -303,9 +298,7 @@ combine('textureType', kStorageTextureTypes)
 ).
 combine('arrayIndexType', keysOf(kValuesTypes)).
 beginSubcases().
-combine('format', kAllTextureFormats)
-// filter to only storage texture formats.
-.filter((t) => !!kTextureFormatInfo[t.format].color?.storage).
+combine('format', kPossibleStorageTextureFormats).
 combine('value', [-1, 0, 1])
 // filter out unsigned types with negative values
 .filter((t) => !isUnsignedType(kValuesTypes[t.arrayIndexType]) || t.value >= 0)
@@ -315,7 +308,7 @@ t.skipIfLanguageFeatureNotSupported('readonly_and_readwrite_storage_textures')
 ).
 fn((t) => {
   const { textureType, arrayIndexType, format, value } = t.params;
-  t.skipIfTextureFormatNotUsableAsStorageTextureDeprecated(format);
+  t.skipIfTextureFormatNotUsableAsStorageTexture(format);
 
   const arrayIndexArgType = kValuesTypes[arrayIndexType];
   const args = [arrayIndexArgType.create(value)];
@@ -361,10 +354,9 @@ combine('value', [-1, 0, 1])
 // filter out unsigned types with negative values
 .filter((t) => !isUnsignedType(kValuesTypes[t.levelType]) || t.value >= 0)
 ).
-beforeAllSubcases((t) =>
-t.skipIfTextureLoadNotSupportedForTextureTypeDeprecated(t.params.textureType)
-).
 fn((t) => {
+  t.skipIfTextureLoadNotSupportedForTextureType(t.params.textureType);
+
   const { textureType, levelType, texelType, value } = t.params;
   const levelArgType = kValuesTypes[levelType];
   const { coordsArgTypes, hasArrayIndexArg } =
@@ -411,10 +403,9 @@ combine('value', [-1, 0, 1])
 // filter out unsigned types with negative values
 .filter((t) => !isUnsignedType(kValuesTypes[t.sampleIndexType]) || t.value >= 0)
 ).
-beforeAllSubcases((t) =>
-t.skipIfTextureLoadNotSupportedForTextureTypeDeprecated(t.params.textureType)
-).
 fn((t) => {
+  t.skipIfTextureLoadNotSupportedForTextureType(t.params.textureType);
+
   const { textureType, sampleIndexType, texelType, value } = t.params;
   const sampleIndexArgType = kValuesTypes[sampleIndexType];
   const { coordsArgTypes, hasArrayIndexArg, hasLevelArg } =
@@ -452,11 +443,9 @@ combine('testTextureType', kTestTextureTypes).
 beginSubcases().
 combine('textureType', kNonStorageTextureTypes)
 ).
-beforeAllSubcases((t) =>
-t.skipIfTextureLoadNotSupportedForTextureTypeDeprecated(t.params.testTextureType)
-).
 fn((t) => {
   const { testTextureType, textureType } = t.params;
+  t.skipIfTextureLoadNotSupportedForTextureType(textureType);
   const { coordsArgTypes, hasArrayIndexArg, hasLevelArg, hasSampleIndexArg } =
   kValidTextureLoadParameterTypesForNonStorageTextures[textureType];
 
@@ -509,11 +498,9 @@ beginSubcases().
 combine('textureType', kStorageTextureTypes).
 combine('format', kAllTextureFormats)
 ).
-beforeAllSubcases((t) =>
-t.skipIfTextureLoadNotSupportedForTextureTypeDeprecated(t.params.testTextureType)
-).
 fn((t) => {
   const { testTextureType, textureType } = t.params;
+  t.skipIfTextureLoadNotSupportedForTextureType(textureType);
   const { coordsArgTypes, hasArrayIndexArg, hasLevelArg, hasSampleIndexArg } =
   kValidTextureLoadParameterTypesForStorageTextures[textureType];
 

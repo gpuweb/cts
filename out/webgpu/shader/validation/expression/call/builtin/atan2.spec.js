@@ -56,9 +56,6 @@ unique(
 )
 ).
 fn((t) => {
-  if (scalarTypeOf(kValuesTypes[t.params.type]) === Type.f16) {
-    t.skipIfDeviceDoesNotHaveFeature('shader-f16');
-  }
   const type = kValuesTypes[t.params.type];
   const expectedResult = isRepresentable(
     Math.abs(Math.atan2(Number(t.params.x), Number(t.params.y))),
@@ -312,11 +309,6 @@ const kTests = {
 g.test('parameters').
 desc(`Test that ${builtin} is validated correctly.`).
 params((u) => u.combine('test', keysOf(kTests))).
-beforeAllSubcases((t) => {
-  if (kTests[t.params.test].is_f16 === true) {
-    t.selectDeviceOrSkipTestCase('shader-f16');
-  }
-}).
 fn((t) => {
   const src = kTests[t.params.test].src;
   const code = `

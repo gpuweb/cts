@@ -6,10 +6,8 @@ Validation tests for the ${builtin}() builtin.
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { keysOf, objectsToRecord } from '../../../../../../common/util/data_tables.js';
 import {
-  Type,
   kFloatScalarsAndVectors,
-  kConcreteSignedIntegerScalarsAndVectors,
-  scalarTypeOf } from
+  kConcreteSignedIntegerScalarsAndVectors } from
 '../../../../../util/conversion.js';
 import { ShaderValidationTest } from '../../../shader_validation_test.js';
 
@@ -42,9 +40,6 @@ beginSubcases().
 expand('value', (u) => fullRangeForType(kValuesTypes[u.type]))
 ).
 fn((t) => {
-  if (scalarTypeOf(kValuesTypes[t.params.type]) === Type.f16) {
-    t.skipIfDeviceDoesNotHaveFeature('shader-f16');
-  }
   const expectedResult = true; // Result should always be representable by the type
   validateConstOrOverrideBuiltinEval(
     t,

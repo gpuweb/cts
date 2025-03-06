@@ -46,9 +46,6 @@ Validates that constant evaluation and override evaluation of ${builtin}() rejec
       )
   )
   .fn(t => {
-    if (scalarTypeOf(kValuesTypes[t.params.type]) === Type.f16) {
-      t.skipIfDeviceDoesNotHaveFeature('shader-f16');
-    }
     const type = kValuesTypes[t.params.type];
     const fp = fpTraitsFor(
       // AbstractInt is converted to AbstractFloat before calling into the builtin

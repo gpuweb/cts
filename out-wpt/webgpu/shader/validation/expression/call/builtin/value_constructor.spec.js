@@ -24,9 +24,6 @@ g.test('scalar_zero_value').
 desc('Tests zero value scalar constructors').
 params((u) => u.combine('type', kScalarTypes)).
 fn((t) => {
-  if (t.params.type === 'f16') {
-    t.skipIfDeviceDoesNotHaveFeature('shader-f16');
-  }
   const enable = t.params.type === 'f16' ? 'enable f16;' : '';
   const code = `${enable}
     const x : ${t.params.type} = ${t.params.type}();
@@ -41,11 +38,6 @@ u.
 combine('type', kScalarTypes).
 combine('value_type', [...kScalarTypes, 'vec2u', 'S', 'array<u32, 2>'])
 ).
-beforeAllSubcases((t) => {
-  if (t.params.type === 'f16' || t.params.value_type === 'f16') {
-    t.selectDeviceOrSkipTestCase('shader-f16');
-  }
-}).
 fn((t) => {
   const enable = t.params.type === 'f16' || t.params.value_type === 'f16' ? 'enable f16;' : '';
   const code = `${enable}
@@ -62,9 +54,6 @@ beginSubcases().
 combine('size', [2, 3, 4])
 ).
 fn((t) => {
-  if (t.params.type === 'f16') {
-    t.skipIfDeviceDoesNotHaveFeature('shader-f16');
-  }
   const abstract = t.params.type === 'abstract-int' || t.params.type === 'abstract-float';
   const param = abstract ? '' : `<${t.params.type}>`;
   const decl = `vec${t.params.size}${param}`;
@@ -107,13 +96,6 @@ combine('ele_type', [
 beginSubcases().
 combine('size', [2, 3, 4])
 ).
-beforeAllSubcases((t) => {
-  const ty = Type[t.params.type];
-  const eleTy = Type[t.params.ele_type];
-  if (ty.requiresF16() || eleTy.requiresF16()) {
-    t.selectDeviceOrSkipTestCase('shader-f16');
-  }
-}).
 fn((t) => {
   const eleTy = Type[t.params.ele_type];
   const abstract = t.params.type === 'abstract-int' || t.params.type === 'abstract-float';
@@ -157,13 +139,6 @@ beginSubcases().
 combine('decl_size', [2, 3, 4]).
 combine('value_size', [2, 3, 4])
 ).
-beforeAllSubcases((t) => {
-  const ty = Type[t.params.decl_type];
-  const eleTy = Type[t.params.value_type];
-  if (ty.requiresF16() || eleTy.requiresF16()) {
-    t.selectDeviceOrSkipTestCase('shader-f16');
-  }
-}).
 fn((t) => {
   const declTy = Type[t.params.decl_type];
   const valueTy = Type[t.params.value_type];
@@ -212,13 +187,6 @@ combine('size', [2, 3, 4]).
 combine('num_eles', [2, 3, 4, 5]).
 combine('full_type', [true, false])
 ).
-beforeAllSubcases((t) => {
-  const ty = Type[t.params.type];
-  const eleTy = Type[t.params.ele_type];
-  if (ty.requiresF16() || eleTy.requiresF16()) {
-    t.selectDeviceOrSkipTestCase('shader-f16');
-  }
-}).
 fn((t) => {
   const eleTy = Type[t.params.ele_type];
   const abstract = t.params.type === 'abstract-int' || t.params.type === 'abstract-float';
@@ -276,13 +244,6 @@ combine('size', [3, 4]).
 combine('num_eles', [3, 4, 5]).
 combine('full_type', [true, false])
 ).
-beforeAllSubcases((t) => {
-  const ty = Type[t.params.type];
-  const eleTy = Type[t.params.ele_type];
-  if (ty.requiresF16() || eleTy.requiresF16()) {
-    t.selectDeviceOrSkipTestCase('shader-f16');
-  }
-}).
 fn((t) => {
   const eleTy = Type[t.params.ele_type];
   const abstract = t.params.type === 'abstract-int' || t.params.type === 'abstract-float';
@@ -346,9 +307,6 @@ combine('rows', [2, 3, 4]).
 combine('cols', [2, 3, 4])
 ).
 fn((t) => {
-  if (t.params.type === 'f16') {
-    t.skipIfDeviceDoesNotHaveFeature('shader-f16');
-  }
   const decl = `mat${t.params.cols}x${t.params.rows}<${t.params.type}>`;
   const enable = t.params.type === 'f16' ? 'enable f16;' : '';
   let code = `${enable}
@@ -373,13 +331,6 @@ combine('r1', [2, 3, 4]).
 combine('c2', [2, 3, 4]).
 combine('r2', [2, 3, 4])
 ).
-beforeAllSubcases((t) => {
-  const t1 = Type[t.params.type1];
-  const t2 = Type[t.params.type2];
-  if (t1.requiresF16() || t2.requiresF16()) {
-    t.selectDeviceOrSkipTestCase('shader-f16');
-  }
-}).
 fn((t) => {
   const t1 = Type[t.params.type1];
   const t2 = Type[t.params.type2];
@@ -406,13 +357,6 @@ combine('r1', [2, 3, 4]).
 combine('c2', [2, 3, 4]).
 combine('r2', [2, 3, 4])
 ).
-beforeAllSubcases((t) => {
-  const t1 = Type[t.params.type1];
-  const t2 = Type[t.params.type2];
-  if (t1.requiresF16() || t2.requiresF16()) {
-    t.selectDeviceOrSkipTestCase('shader-f16');
-  }
-}).
 fn((t) => {
   const t1 = Type[t.params.type1];
   const t2 = Type[t.params.type2];
@@ -448,13 +392,6 @@ combine('r1', [2, 3, 4]).
 combine('c2', [2, 3, 4]).
 combine('r2', [2, 3, 4])
 ).
-beforeAllSubcases((t) => {
-  const t1 = Type[t.params.type1];
-  const t2 = Type[t.params.type2];
-  if (t1.requiresF16() || t2.requiresF16()) {
-    t.selectDeviceOrSkipTestCase('shader-f16');
-  }
-}).
 fn((t) => {
   const t1 = Type[t.params.type1];
   const t2 = Type[t.params.type2];
@@ -702,11 +639,6 @@ const kConstructors = {
 g.test('must_use').
 desc('Tests that value constructors must be used').
 params((u) => u.combine('ctor', keysOf(kConstructors)).combine('use', [true, false])).
-beforeAllSubcases((t) => {
-  if (t.params.ctor.includes('f16')) {
-    t.selectDeviceOrSkipTestCase('shader-f16');
-  }
-}).
 fn((t) => {
   const code = `
     ${t.params.ctor.includes('f16') ? 'enable f16;' : ''}

@@ -39,9 +39,6 @@ beginSubcases().
 expand('value', (u) => fullRangeForType(kValuesTypes[u.type]))
 ).
 fn((t) => {
-  if (scalarTypeOf(kValuesTypes[t.params.type]) === Type.f16) {
-    t.skipIfDeviceDoesNotHaveFeature('shader-f16');
-  }
   const type = kValuesTypes[t.params.type];
   const expectedResult = isRepresentable(
     Math.sinh(Number(t.params.value)),

@@ -9,7 +9,7 @@ Validation tests for the ${builtin}() builtin.
 `;
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { keysOf, objectsToRecord } from '../../../../../../common/util/data_tables.js';
-import { kAllTextureFormats, kTextureFormatInfo } from '../../../../../format_info.js';
+import { kPossibleStorageTextureFormats } from '../../../../../format_info.js';
 import {
   Type,
   kAllScalarsAndVectors,
@@ -156,13 +156,11 @@ u.
 combine('returnType', keysOf(kValuesTypes)).
 combine('textureType', kStorageTextureTypes).
 beginSubcases().
-combine('format', kAllTextureFormats)
-// filter to only storage texture formats.
-.filter((t) => !!kTextureFormatInfo[t.format].color?.storage)
+combine('format', kPossibleStorageTextureFormats)
 ).
 fn((t) => {
   const { returnType, textureType, format } = t.params;
-  t.skipIfTextureFormatNotUsableAsStorageTextureDeprecated(format);
+  t.skipIfTextureFormatNotUsableAsStorageTexture(format);
 
   const returnVarType = kValuesTypes[returnType];
   const { returnType: returnRequiredType, hasLevelArg } =

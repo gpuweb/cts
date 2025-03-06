@@ -8,8 +8,7 @@ import { keysOf, objectsToRecord } from '../../../../../../common/util/data_tabl
 import {
   Type,
   kConcreteIntegerScalarsAndVectors,
-  kConvertableToFloatScalarsAndVectors,
-  scalarTypeOf } from
+  kConvertableToFloatScalarsAndVectors } from
 '../../../../../util/conversion.js';
 import { absBigInt } from '../../../../../util/math.js';
 import { ShaderValidationTest } from '../../../shader_validation_test.js';
@@ -47,9 +46,6 @@ unique(
 )
 ).
 fn((t) => {
-  if (scalarTypeOf(kValuesTypes[t.params.type]) === Type.f16) {
-    t.skipIfDeviceDoesNotHaveFeature('shader-f16');
-  }
   const expectedResult =
   typeof t.params.value === 'bigint' ?
   absBigInt(t.params.value) < 1n :
