@@ -91,16 +91,6 @@ g.test('enable')
     if (t.params.case === 'requires_before') {
       t.skipIfLanguageFeatureNotSupported('readonly_and_readwrite_storage_textures');
     }
-    const name: string = t.params.case as string;
-    if (name.includes('subgroups')) {
-      t.skipIfDeviceDoesNotHaveFeature('subgroups' as GPUFeatureName);
-      if (name.includes('f16')) {
-        t.skipIfDeviceDoesNotHaveFeature('shader-f16');
-      }
-    } else {
-      t.skipIfDeviceDoesNotHaveFeature('shader-f16');
-    }
-
     const c = kCases[t.params.case];
     t.expectCompileResult(c.pass, c.code);
   });

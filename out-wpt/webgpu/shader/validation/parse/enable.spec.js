@@ -91,16 +91,6 @@ fn((t) => {
   if (t.params.case === 'requires_before') {
     t.skipIfLanguageFeatureNotSupported('readonly_and_readwrite_storage_textures');
   }
-  const name = t.params.case;
-  if (name.includes('subgroups')) {
-    t.skipIfDeviceDoesNotHaveFeature('subgroups');
-    if (name.includes('f16')) {
-      t.skipIfDeviceDoesNotHaveFeature('shader-f16');
-    }
-  } else {
-    t.skipIfDeviceDoesNotHaveFeature('shader-f16');
-  }
-
   const c = kCases[t.params.case];
   t.expectCompileResult(c.pass, c.code);
 });

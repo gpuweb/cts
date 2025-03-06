@@ -159,9 +159,6 @@ desc(`Test that function return types must be constructible`).
 params((u) => u.combine('case', keysOf(kFunctionRetTypeCases))).
 fn((t) => {
   const testcase = kFunctionRetTypeCases[t.params.case];
-  if (testcase.name === 'f16') {
-    t.skipIfDeviceDoesNotHaveFeature('shader-f16');
-  }
   const enable = testcase.name === 'f16' ? 'enable f16;' : '';
   const value = testcase.value === '' ? `${testcase.name}()` : testcase.value;
   const code = `
@@ -299,9 +296,6 @@ desc(`Test validation of user-declared function parameter types`).
 params((u) => u.combine('case', keysOf(kFunctionParamTypeCases))).
 fn((t) => {
   const testcase = kFunctionParamTypeCases[t.params.case];
-  if (testcase.name === 'f16') {
-    t.skipIfDeviceDoesNotHaveFeature('shader-f16');
-  }
   const enable = testcase.name === 'f16' ? 'enable f16;' : '';
   const code = `
 ${enable}
@@ -521,9 +515,6 @@ combine('arg', keysOf(kFunctionParamValueCases))
 ).
 fn((t) => {
   const param = kFunctionParamTypeCases[t.params.decl];
-  if (param.name === 'f16') {
-    t.skipIfDeviceDoesNotHaveFeature('shader-f16');
-  }
   const arg = kFunctionParamValueCases[t.params.arg];
   const enable = param.name === 'f16' ? 'enable f16;' : '';
   const code = `

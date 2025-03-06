@@ -84,9 +84,6 @@ params((u) => u.combine('case', keysOf(kCases))).
 fn((t) => {
   t.skipIfLanguageFeatureNotSupported('readonly_and_readwrite_storage_textures');
   t.skipIfLanguageFeatureNotSupported('packed_4x8_integer_dot_product');
-  if (t.params.case === 'enable_before') {
-    t.skipIfDeviceDoesNotHaveFeature('shader-f16');
-  }
 
   const c = kCases[t.params.case];
   t.expectCompileResult(c.pass, c.code);

@@ -560,7 +560,6 @@ g.test('shadow_hides_builtin_f16')
       .combine('builtin', keysOf(kFloat16Tests))
   )
   .fn(t => {
-    t.skipIfDeviceDoesNotHaveFeature('shader-f16');
     const data = kFloat16Tests[t.params.builtin];
     const local = `let ${data.keyword} = 4;`;
 

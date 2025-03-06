@@ -20,7 +20,6 @@ fn((t) => {
 g.test('after_enable').
 desc(`Test that a semicolon must be placed after an enable directive.`).
 fn((t) => {
-  t.skipIfDeviceDoesNotHaveFeature('shader-f16');
   t.expectCompileResult( /* pass */true, `enable f16;`);
   t.expectCompileResult( /* pass */false, `enable f16`);
 });
