@@ -191,6 +191,12 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
     this.provider.catch(() => {});
   }
 
+  usesMismatchedDevice() {
+    // MAINTENANCE_TODO: Refactor this. This should select a device with the same
+    // features and limits as the non-mismatched device for this test.
+    GPUTestSubcaseBatchState.prototype.selectMismatchedDeviceOrSkipTestCase.call(this, undefined);
+  }
+
   /**
    * Some tests or cases need particular feature flags or limits to be enabled.
    * Call this function with a descriptor or feature name (or `undefined`) to add
@@ -1728,6 +1734,38 @@ export class AllFeaturesMaxLimitsGPUTestSubcaseBatchState extends GPUTestSubcase
       initUncanonicalizedDeviceDescriptor(descriptor),
       mod
     );
+  }
+
+  /**
+   * Use skipIfDeviceDoesNotHaveFeature or similar. If you really need to test
+   * lack of a feature (for example tests under webgpu/api/validation/capability_checks)
+   * then use UniqueFeaturesAndLimitsGPUTest
+   */
+  override selectDeviceOrSkipTestCase(descriptor: DeviceSelectionDescriptor): void {
+    unreachable('this function should not be called in AllFeaturesMaxLimitsGPUTest');
+  }
+
+  /**
+   * Use skipIfDeviceDoesNotHaveFeature or similar.
+   */
+  override selectDeviceForQueryTypeOrSkipTestCase(types: GPUQueryType | GPUQueryType[]): void {
+    unreachable('this function should not be called in AllFeaturesMaxLimitsGPUTest');
+  }
+
+  /**
+   * Use skipIfDeviceDoesNotHaveFeature or skipIf(device.limits.maxXXX < requiredXXX) etc...
+   */
+  override selectDeviceForTextureFormatOrSkipTestCase(
+    formats: GPUTextureFormat | undefined | (GPUTextureFormat | undefined)[]
+  ): void {
+    unreachable('this function should not be called in AllFeaturesMaxLimitsGPUTest');
+  }
+
+  /**
+   * Use skipIfDeviceDoesNotHaveFeature or skipIf(device.limits.maxXXX < requiredXXX) etc...
+   */
+  override selectMismatchedDeviceOrSkipTestCase(descriptor: DeviceSelectionDescriptor): void {
+    unreachable('this function should not be called in AllFeaturesMaxLimitsGPUTest');
   }
 }
 
