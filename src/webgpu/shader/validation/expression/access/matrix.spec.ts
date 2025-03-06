@@ -28,9 +28,6 @@ g.test('index_type')
     ] as const)
   )
   .fn(t => {
-    if (t.params.type === 'f16') {
-      t.skipIfDeviceDoesNotHaveFeature('shader-f16');
-    }
     const ty = Type[t.params.type];
     const enable = ty.requiresF16() ? 'enable f16;' : '';
     const code = `${enable}
@@ -53,11 +50,6 @@ g.test('result_type')
       .combine('rows', [2, 3, 4] as const)
       .combine('decl', ['function', 'module'] as const)
   )
-  .beforeAllSubcases(t => {
-    if (t.params.element === 'f16') {
-      t.selectDeviceOrSkipTestCase('shader-f16');
-    }
-  })
   .fn(t => {
     const enable = t.params.element === 'f16' ? 'enable f16;' : '';
     const scalarTy = Type[t.params.element];

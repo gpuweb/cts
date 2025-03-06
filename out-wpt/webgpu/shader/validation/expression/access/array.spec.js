@@ -33,9 +33,6 @@ u.combine('type', [
 )
 ).
 fn((t) => {
-  if (t.params.type === 'f16') {
-    t.skipIfDeviceDoesNotHaveFeature('shader-f16');
-  }
   const ty = Type[t.params.type];
   const enable = ty.requiresF16() ? 'enable f16;' : '';
   const code = `${enable}
@@ -70,12 +67,6 @@ filter((t) => {
   return true;
 })
 ).
-beforeAllSubcases((t) => {
-  const ty = kTypes[t.params.type];
-  if (ty.requiresF16()) {
-    t.selectDeviceOrSkipTestCase('shader-f16');
-  }
-}).
 fn((t) => {
   const ty = kTypes[t.params.type];
   const enable = ty.requiresF16() ? 'enable f16;' : '';
