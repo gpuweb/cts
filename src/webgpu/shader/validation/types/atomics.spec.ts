@@ -41,9 +41,6 @@ g.test('type')
     ] as const)
   )
   .fn(t => {
-    if (t.params.type === 'f16') {
-      t.skipIfDeviceDoesNotHaveFeature('shader-f16');
-    }
     const code = `
 struct S {
   x : u32
