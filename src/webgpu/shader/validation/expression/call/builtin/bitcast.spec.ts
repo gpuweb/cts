@@ -131,7 +131,6 @@ It is a shader-creation error if any const-expression of floating-point type eva
       )
   )
   .fn(t => {
-    t.skipIfDeviceDoesNotHaveFeature('shader-f16');
     // For width = 2 generate code like:
     //  const f = bitcast<vec2<f16>>(i32(u32(0x7f800000)));
     // And for width = 4:
@@ -187,11 +186,6 @@ Test constructible types.
       ])
       .combine('direction', ['to', 'from'])
   )
-  .beforeAllSubcases(t => {
-    if (t.params.type.includes('f16')) {
-      t.selectDeviceOrSkipTestCase('shader-f16');
-    }
-  })
   .fn(t => {
     const T = t.params.type;
     const enable_directives = t.params.type.includes('f16') ? 'enable f16;\n' : '';
@@ -269,7 +263,6 @@ and no other type is that size.
       .combine('type', ['vec3<f16>', 'vec3h'])
   )
   .fn(t => {
-    t.skipIfDeviceDoesNotHaveFeature('shader-f16');
     const src_type = t.params.direction === 'to' ? t.params.type : t.params.other_type;
     const dst_type = t.params.direction === 'from' ? t.params.type : t.params.other_type;
     const code = `
@@ -316,7 +309,6 @@ and no other type is that size.
       .combine('direction', ['to', 'from'] as const)
   )
   .fn(t => {
-    t.skipIfDeviceDoesNotHaveFeature('shader-f16');
     const src_type = t.params.direction === 'to' ? 'f16' : t.params.other_type;
     const dst_type = t.params.direction === 'from' ? 'f16' : t.params.other_type;
     const code = `
@@ -339,7 +331,6 @@ g.test('valid_vec2h')
       .combine('direction', ['to', 'from'] as const)
   )
   .fn(t => {
-    t.skipIfDeviceDoesNotHaveFeature('shader-f16');
     const src_type = t.params.direction === 'to' ? t.params.type : t.params.other_type;
     const dst_type = t.params.direction === 'from' ? t.params.type : t.params.other_type;
     const code = `
@@ -369,7 +360,6 @@ g.test('valid_vec4h')
       .combine('direction', ['to', 'from'] as const)
   )
   .fn(t => {
-    t.skipIfDeviceDoesNotHaveFeature('shader-f16');
     const src_type = t.params.direction === 'to' ? t.params.type : t.params.other_type;
     const dst_type = t.params.direction === 'from' ? t.params.type : t.params.other_type;
     const code = `
