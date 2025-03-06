@@ -1,5 +1,4 @@
 import { keysOf } from '../../../common/util/data_tables.js';
-import { ErrorWithExtra } from '../../../common/util/util.js';
 import {
   AllFeaturesMaxLimitsGPUTest,
   GPUTest,
@@ -71,7 +70,7 @@ export class ShaderValidationTest extends AllFeaturesMaxLimitsGPUTest {
       expectedResult !== true
     );
 
-    const error = new ErrorWithExtra('', () => ({ shaderModule }));
+    const error = new Error();
     this.eventualAsyncExpectation(async () => {
       const compilationInfo = await shaderModule!.getCompilationInfo();
 
@@ -82,7 +81,6 @@ export class ShaderValidationTest extends AllFeaturesMaxLimitsGPUTest {
           .join('\n') +
         '\n\n---- shader ----\n' +
         code;
-      error.extra.compilationInfo = compilationInfo;
 
       if (compilationInfo.messages.some(m => m.type === 'error')) {
         if (expectedResult) {
@@ -123,7 +121,7 @@ export class ShaderValidationTest extends AllFeaturesMaxLimitsGPUTest {
       false
     );
 
-    const error = new ErrorWithExtra('', () => ({ shaderModule }));
+    const error = new Error();
     this.eventualAsyncExpectation(async () => {
       const compilationInfo = await shaderModule!.getCompilationInfo();
 
@@ -131,7 +129,6 @@ export class ShaderValidationTest extends AllFeaturesMaxLimitsGPUTest {
       const messagesLog = compilationInfo.messages
         .map(m => `${m.lineNum}:${m.linePos}: ${m.type}: ${m.message}`)
         .join('\n');
-      error.extra.compilationInfo = compilationInfo;
 
       if (compilationInfo.messages.some(m => m.type === 'warning')) {
         if (expectWarning) {
@@ -262,7 +259,7 @@ export class UniqueFeaturesAndLimitsShaderValidationTest extends UniqueFeaturesO
       expectedResult !== true
     );
 
-    const error = new ErrorWithExtra('', () => ({ shaderModule }));
+    const error = new Error();
     this.eventualAsyncExpectation(async () => {
       const compilationInfo = await shaderModule!.getCompilationInfo();
 
@@ -273,7 +270,6 @@ export class UniqueFeaturesAndLimitsShaderValidationTest extends UniqueFeaturesO
           .join('\n') +
         '\n\n---- shader ----\n' +
         code;
-      error.extra.compilationInfo = compilationInfo;
 
       if (compilationInfo.messages.some(m => m.type === 'error')) {
         if (expectedResult) {
@@ -314,7 +310,7 @@ export class UniqueFeaturesAndLimitsShaderValidationTest extends UniqueFeaturesO
       false
     );
 
-    const error = new ErrorWithExtra('', () => ({ shaderModule }));
+    const error = new Error();
     this.eventualAsyncExpectation(async () => {
       const compilationInfo = await shaderModule!.getCompilationInfo();
 
@@ -322,7 +318,6 @@ export class UniqueFeaturesAndLimitsShaderValidationTest extends UniqueFeaturesO
       const messagesLog = compilationInfo.messages
         .map(m => `${m.lineNum}:${m.linePos}: ${m.type}: ${m.message}`)
         .join('\n');
-      error.extra.compilationInfo = compilationInfo;
 
       if (compilationInfo.messages.some(m => m.type === 'warning')) {
         if (expectWarning) {
