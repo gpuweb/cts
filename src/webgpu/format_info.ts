@@ -32,6 +32,8 @@ const kFormatUniversalDefaults = {
   feature: undefined,
   /** The base format for srgb formats. Specified on both srgb and equivalent non-srgb formats. */
   baseFormat: undefined,
+  /** Whether the format can be used in textures with 3D dimension. */
+  texture3D: undefined,
 
   /** @deprecated Use `.color.bytes`, `.depth.bytes`, or `.stencil.bytes`. */
   bytesPerBlock: undefined,
@@ -70,7 +72,7 @@ function formatTableWithDefaults<Defaults extends {}, Table extends { readonly [
 
 /** "plain color formats", plus rgb9e5ufloat. */
 const kRegularTextureFormatInfo = formatTableWithDefaults({
-  defaults: { blockWidth: 1, blockHeight: 1 },
+  defaults: { blockWidth: 1, blockHeight: 1, texture3D: true },
   table: {
     // plain, 8 bits per component
 
@@ -579,7 +581,7 @@ const kRegularTextureFormatInfo = formatTableWithDefaults({
 // because one aspect can be sized and one can be unsized. This should be cleaned up, but is kept
 // this way during a migration phase.
 const kSizedDepthStencilFormatInfo = formatTableWithDefaults({
-  defaults: { blockWidth: 1, blockHeight: 1, multisample: true },
+  defaults: { blockWidth: 1, blockHeight: 1, multisample: true, texture3D: false },
   table: {
     stencil8: {
       stencil: {
@@ -617,7 +619,7 @@ const kSizedDepthStencilFormatInfo = formatTableWithDefaults({
   },
 } as const);
 const kUnsizedDepthStencilFormatInfo = formatTableWithDefaults({
-  defaults: { blockWidth: 1, blockHeight: 1, multisample: true },
+  defaults: { blockWidth: 1, blockHeight: 1, multisample: true, texture3D: false },
   table: {
     depth24plus: {
       depth: {
@@ -675,6 +677,7 @@ const kBCTextureFormatInfo = formatTableWithDefaults({
     blockHeight: 4,
     multisample: false,
     feature: 'texture-compression-bc',
+    texture3D: true,
   },
   table: {
     'bc1-rgba-unorm': {
@@ -854,6 +857,7 @@ const kETC2TextureFormatInfo = formatTableWithDefaults({
     blockHeight: 4,
     multisample: false,
     feature: 'texture-compression-etc2',
+    texture3D: false,
   },
   table: {
     'etc2-rgb8unorm': {
@@ -983,6 +987,7 @@ const kASTCTextureFormatInfo = formatTableWithDefaults({
   defaults: {
     multisample: false,
     feature: 'texture-compression-astc',
+    texture3D: false,
   },
   table: {
     'astc-4x4-unorm': {
@@ -1803,9 +1808,9 @@ export function textureDimensionAndFormatCompatible(
   format: GPUTextureFormat
 ): boolean {
   const info = kAllTextureFormatInfo[format];
-  return !(
-    (dimension === '1d' || dimension === '3d') &&
-    (info.blockWidth > 1 || info.depth || info.stencil)
+  return (
+    !(dimension === '1d' && (info.blockWidth > 1 || info.depth || info.stencil)) &&
+    !(dimension === '3d' && !info.texture3D)
   );
 }
 
