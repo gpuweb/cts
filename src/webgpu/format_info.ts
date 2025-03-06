@@ -2151,6 +2151,13 @@ export function isTextureFormatUsableAsStorageFormatDeprecated(
   return !!(info.color?.storage || info.depth?.storage || info.stencil?.storage);
 }
 
+/**
+ * Return true if the format can be used as a storage texture.
+ * Note: Some formats can be compiled in a shader but can not be used
+ * in a pipeline or elsewhere. This function returns whether or not the format
+ * can be used in general. If you want to know if the format can used when compiling
+ * a shader @see {@link isTextureFormatUsableAsStorageFormatInCreateShaderModule}
+ */
 export function isTextureFormatUsableAsStorageFormat(
   device: GPUDevice,
   format: GPUTextureFormat
@@ -2161,6 +2168,26 @@ export function isTextureFormatUsableAsStorageFormat(
     }
   }
   if (format === 'bgra8unorm' && device.features.has('bgra8unorm-storage')) {
+    return true;
+  }
+  const info = kTextureFormatInfo[format];
+  return !!(info.color?.storage || info.depth?.storage || info.stencil?.storage);
+}
+
+/**
+ * Returns true if format can be used with createShaderModule on the device.
+ * Some formats may require a feature to be enabled before they can be used
+ * as a storage texture. Others, can't be used in a pipeline but can be compiled
+ * in a shader. Examples are rg32float, rg32uint, rg32sint which are not usable
+ * in compat mode but shaders can be compiled. Similarly, bgra8unorm can be
+ * compiled but can't be used in a pipeline unless feature 'bgra8unorm-storage'
+ * is available.
+ */
+export function isTextureFormatUsableAsStorageFormatInCreateShaderModule(
+  device: GPUDevice,
+  format: GPUTextureFormat
+): boolean {
+  if (format === 'bgra8unorm') {
     return true;
   }
   const info = kTextureFormatInfo[format];
