@@ -430,11 +430,12 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
     assert(size % 4 === 0);
 
     const dst = this.createBufferTracked({
+      label: 'createCopyForMapRead',
       size,
       usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
     });
 
-    const c = this.device.createCommandEncoder();
+    const c = this.device.createCommandEncoder({ label: 'createCopyForMapRead' });
     c.copyBufferToBuffer(src, srcOffset, dst, 0, size);
     this.queue.submit([c.finish()]);
 
@@ -847,6 +848,7 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
 
     // Copy into a buffer suitable for STORAGE usage.
     const storageBuffer = this.createBufferTracked({
+      label: 'expectGPUBufferRepeatsSingleValue:storageBuffer',
       size: bufferSize,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
     });
@@ -858,6 +860,7 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
     // `expectedValue` as-is.
     const expectedDataSize = Math.max(4, valueSize);
     const expectedDataBuffer = this.createBufferTracked({
+      label: 'expectGPUBufferRepeatsSingleValue:expectedDataBuffer',
       size: expectedDataSize,
       usage: GPUBufferUsage.STORAGE,
       mappedAtCreation: true,
@@ -881,6 +884,7 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
     // The output buffer has one 32-bit entry per buffer row. An entry's value will be 1 if every
     // read from the corresponding row matches the expected data derived above, or 0 otherwise.
     const resultBuffer = this.createBufferTracked({
+      label: 'expectGPUBufferRepeatsSingleValue:resultBuffer',
       size: numRows * 4,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
     });
@@ -925,7 +929,9 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
       ],
     });
 
-    const commandEncoder = this.device.createCommandEncoder();
+    const commandEncoder = this.device.createCommandEncoder({
+      label: 'expectGPUBufferRepeatsSingleValue',
+    });
     commandEncoder.copyBufferToBuffer(buffer, 0, storageBuffer, 0, bufferSize);
     const pass = commandEncoder.beginComputePass();
     pass.setPipeline(pipeline);
@@ -987,11 +993,12 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
     const expectedTexelData = rep.pack(rep.encode(exp));
 
     const buffer = this.createBufferTracked({
+      label: 'expectSingleColor',
       size: byteLength,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
 
-    const commandEncoder = this.device.createCommandEncoder();
+    const commandEncoder = this.device.createCommandEncoder({ label: 'expectSingleColor' });
     commandEncoder.copyTextureToBuffer(
       {
         texture: src,
@@ -1028,11 +1035,14 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
       layout
     );
     const buffer = this.createBufferTracked({
+      label: 'readSinglePixelFrom2DTexture',
       size: byteLength,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
 
-    const commandEncoder = this.device.createCommandEncoder();
+    const commandEncoder = this.device.createCommandEncoder({
+      label: 'readSinglePixelFrom2DTexture',
+    });
     commandEncoder.copyTextureToBuffer(
       { texture: src, mipLevel: layout?.mipLevel, origin: { x, y, z: slice } },
       { buffer, bytesPerRow, rowsPerImage },
@@ -1158,6 +1168,7 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
     });
 
     const storageBuffer = this.createBufferTracked({
+      label: 'copy2DTextureToBufferUsingComputePass:storageBuffer',
       size: sampleCount * type.size * componentCount * width * height,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC,
     });
@@ -1189,7 +1200,9 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
       ],
     });
 
-    const encoder = this.device.createCommandEncoder();
+    const encoder = this.device.createCommandEncoder({
+      label: 'copy2DTextureToBufferUsingComputePass',
+    });
     const pass = encoder.beginComputePass();
     pass.setPipeline(computePipeline);
     pass.setBindGroup(0, uniformBindGroup);
@@ -2133,6 +2146,7 @@ export function TextureTestMixin<F extends FixtureClass<GPUTestBase>>(
           const readbackPromisesPerLayer = [];
 
           const uniformBuffer = this.createBufferTracked({
+            label: 'expectTexturesToMatchByRendering:uniforBuffer',
             size: 4,
             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
           });
@@ -2169,7 +2183,9 @@ export function TextureTestMixin<F extends FixtureClass<GPUTestBase>>(
 
             this.device.queue.writeBuffer(uniformBuffer, 0, new Uint32Array([layer]));
 
-            const encoder = this.device.createCommandEncoder();
+            const encoder = this.device.createCommandEncoder({
+              label: 'expectTexturesToMatchByRendering',
+            });
             const pass = encoder.beginRenderPass({
               colorAttachments: [
                 {
@@ -2276,12 +2292,13 @@ export function TextureTestMixin<F extends FixtureClass<GPUTestBase>>(
     ): GPUBuffer {
       const { byteLength, bytesPerRow, rowsPerImage } = resultDataLayout;
       const buffer = this.createBufferTracked({
+        label: 'copyWholeTextureToNewBuffer:buffer',
         size: align(byteLength, 4), // this is necessary because we need to copy and map data from this buffer
         usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
       });
 
       const mipSize = physicalMipSizeFromTexture(texture, mipLevel || 0);
-      const encoder = this.device.createCommandEncoder();
+      const encoder = this.device.createCommandEncoder({ label: 'copyWholeTextureToNewBuffer' });
       encoder.copyTextureToBuffer(
         { texture, mipLevel },
         { buffer, bytesPerRow, rowsPerImage },

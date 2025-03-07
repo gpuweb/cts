@@ -459,11 +459,13 @@ export async function queryMipLevelMixWeightsForDevice(t, stage) {
   });
 
   const storageBuffer = t.createBufferTracked({
+    label: 'queryMipLevelMixWeightsForDevice:storageBuffer',
     size: 4 * 4 * (kMipLevelWeightSteps + 1),
     usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
   });
 
   const resultBuffer = t.createBufferTracked({
+    label: 'queryMipLevelMixWeightsForDevice:resultBuffer',
     size: align(storageBuffer.size, 256), // padded for copyTextureToBuffer
     usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
   });
@@ -478,7 +480,7 @@ export async function queryMipLevelMixWeightsForDevice(t, stage) {
 
   });
 
-  const encoder = device.createCommandEncoder();
+  const encoder = device.createCommandEncoder({ label: 'queryMipLevelMixWeightsForDevice' });
   switch (stage) {
     case 'compute':{
         const pipeline = device.createComputePipeline({
@@ -947,15 +949,17 @@ struct VOut {
     });
 
     const resultBuffer = this.createBufferTracked({
+      label: 'executeAndExpectResult:resultBuffer',
       size: align(expected.length * 4, 256),
       usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC
     });
 
     let storageBuffer;
-    const encoder = device.createCommandEncoder();
+    const encoder = device.createCommandEncoder({ label: 'executeAndExpectResult' });
 
     if (stage === 'compute') {
       storageBuffer = this.createBufferTracked({
+        label: 'executeAndExpectResult:storageBuffer',
         size: resultBuffer.size,
         usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
       });
@@ -3022,7 +3026,7 @@ format)
     viewDimensionToPipelineMap.set(id, pipeline);
   }
 
-  const encoder = device.createCommandEncoder();
+  const encoder = device.createCommandEncoder({ label: 'readTextureToTexelViews' });
 
   const readBuffers = [];
   for (let mipLevel = 0; mipLevel < texture.mipLevelCount; ++mipLevel) {
@@ -3030,17 +3034,20 @@ format)
 
     const uniformValues = new Uint32Array([texture.sampleCount, 0, 0, 0]); // min size is 16 bytes
     const uniformBuffer = t.createBufferTracked({
+      label: 'readTextureToTexelViews:uniformBuffer',
       size: uniformValues.byteLength,
       usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
     });
     device.queue.writeBuffer(uniformBuffer, 0, uniformValues);
 
     const storageBuffer = t.createBufferTracked({
+      label: 'readTextureToTexelViews:storageBuffer',
       size: size[0] * size[1] * size[2] * 4 * 4 * texture.sampleCount, // rgba32float
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
     });
 
     const readBuffer = t.createBufferTracked({
+      label: 'readTextureToTexelViews:readBuffer',
       size: storageBuffer.size,
       usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST
     });
@@ -4821,6 +4828,7 @@ stage)
   });
 
   const dataBuffer = t.createBufferTracked({
+    label: 'createTextureCallsRunner:dataBuffer',
     size: data.length * 4,
     usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.UNIFORM
   });
@@ -5078,6 +5086,7 @@ ${stageWGSL}
 
   const run = async (gpuTexture) => {
     const resultBuffer = t.createBufferTracked({
+      label: 'createTextureCallsRunner:resultBuffer',
       size: align(calls.length * 16, 256),
       usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
     });
@@ -5104,10 +5113,11 @@ ${stageWGSL}
     });
 
     let storageBuffer;
-    const encoder = t.device.createCommandEncoder();
+    const encoder = t.device.createCommandEncoder({ label: 'createTextureCallsRunner' });
 
     if (stage === 'compute') {
       storageBuffer = t.createBufferTracked({
+        label: 'createTextureCallsRunner:storageBuffer',
         size: resultBuffer.size,
         usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
       });
