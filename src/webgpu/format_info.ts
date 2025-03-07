@@ -1569,6 +1569,12 @@ export const kPossibleStorageTextureFormats = [
   'bgra8unorm',
 ] as const;
 
+// Texture formats that may possibly be used as a storage texture.
+// Some may require certain features to be enabled.
+export const kPossibleReadWriteStorageTextureFormats = [
+  ...kPossibleStorageTextureFormats.filter(f => kTextureFormatInfo[f].color?.readWriteStorage),
+] as const;
+
 // Texture formats that may possibly be multisampled.
 // Some may require certain features to be enabled.
 export const kPossibleMultisampledTextureFormats = [
