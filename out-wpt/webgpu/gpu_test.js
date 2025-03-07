@@ -141,6 +141,8 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
     requiredLimits: {},
     defaultQueue: {}
   };
+  /** Whether or not to provide a mismatched device */
+  useMismatchedDevice = false;
 
   async postInit() {
     // Skip all subcases if there's no device.
@@ -163,6 +165,7 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
       this.requestDeviceWithRequiredParametersOrSkip(this.skipIfRequirements);
     }
     assert(this.provider !== undefined);
+    assert(!this.useMismatchedDevice || this.mismatchedProvider !== undefined);
     return this.provider;
   }
 
@@ -189,12 +192,27 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
     );
     // Suppress uncaught promise rejection (we'll catch it later).
     this.provider.catch(() => {});
+
+    if (this.useMismatchedDevice) {
+      this.mismatchedProvider = mismatchedDevicePool.acquire(
+        this.recorder,
+        initUncanonicalizedDeviceDescriptor(descriptor),
+        descriptorModifier
+      );
+      // Suppress uncaught promise rejection (we'll catch it later).
+      this.mismatchedProvider.catch(() => {});
+    }
   }
 
+  /**
+   * Some tests need a second device which is different from the first.
+   * This requests a second device so it will be available during the test. If it is not called,
+   * no second device will be available. The second device will be created with the
+   * same features and limits as the first device.
+   */
   usesMismatchedDevice() {
-    // MAINTENANCE_TODO: Refactor this. This should select a device with the same
-    // features and limits as the non-mismatched device for this test.
-    GPUTestSubcaseBatchState.prototype.selectMismatchedDeviceOrSkipTestCase.call(this, undefined);
+    assert(this.provider === undefined, 'Can not call usedMismatchedDevice after device creation');
+    this.useMismatchedDevice = true;
   }
 
   /**
@@ -253,20 +271,15 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
    * no second device will be available.
    *
    * If the request isn't supported, throws a SkipTestCase exception to skip the entire test case.
+   * @deprecated Use AllFeaturesMaxLimitsGPUTest case if possible. Otherwise, use selectDeviceOrSkipTestCase
+   * and usesMismatchedDevice. In either case, the device and mismatched device will have the same features and limits.
    */
   selectMismatchedDeviceOrSkipTestCase(descriptor) {
     assert(
       this.mismatchedProvider === undefined,
       "Can't selectMismatchedDeviceOrSkipTestCase() multiple times"
     );
-
-    this.mismatchedProvider = mismatchedDevicePool.acquire(
-      this.recorder,
-      initUncanonicalizedDeviceDescriptor(descriptor),
-      undefined
-    );
-    // Suppress uncaught promise rejection (we'll catch it later).
-    this.mismatchedProvider.catch(() => {});
+    this.usesMismatchedDevice();
   }
 
   /** @deprecated use skipIfTextureFormatNotSupported on GPUTest */
@@ -1507,7 +1520,7 @@ export class GPUTest extends GPUTestBase {
   get mismatchedDevice() {
     assert(
       this.mismatchedProvider !== undefined,
-      'selectMismatchedDeviceOrSkipTestCase was not called in beforeAllSubcases'
+      'usesMismatchedDevice or selectMismatchedDeviceOrSkipTestCase was not called in beforeAllSubcases'
     );
     return this.mismatchedProvider.device;
   }
@@ -1693,6 +1706,7 @@ requiredLimitsHelper)
 
 /**
  * Requests all the max limits from the adapter.
+ * @deprecated Use AllFeaturesMaxLimitsGPUTest or related.
  */
 export function MaxLimitsTestMixin(Base) {
   return RequiredLimitsTestMixin(Base, {
