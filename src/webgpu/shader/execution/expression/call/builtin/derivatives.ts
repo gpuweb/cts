@@ -149,7 +149,7 @@ fn frag(info : CaseInfo) -> @location(0) vec4u {
 
   // Submit the render pass to the device.
   const results = [];
-  const encoder = t.device.createCommandEncoder();
+  const encoder = t.device.createCommandEncoder({ label: 'runDerivativeTest' });
   for (let quad = 0; quad < cases.length / 2; quad++) {
     const pass = encoder.beginRenderPass({
       colorAttachments: [
