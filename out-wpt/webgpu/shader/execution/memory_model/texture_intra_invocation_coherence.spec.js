@@ -13,13 +13,13 @@ Some platform (e.g. Metal) require a fence call to make writes visible
 to reads performed by the same invocation. These tests attempt to ensure
 WebGPU implementations emit correct fence calls.`;import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { unreachable, iterRange } from '../../../../common/util/util.js';
-import { GPUTest } from '../../../gpu_test.js';
+import { AllFeaturesMaxLimitsGPUTest } from '../../../gpu_test.js';
 import { PRNG } from '../../../util/prng.js';
 
 const kRWStorageFormats = ['r32uint', 'r32sint', 'r32float'];
 const kDimensions = ['1d', '2d', '2d-array', '3d'];
 
-export const g = makeTestGroup(GPUTest);
+export const g = makeTestGroup(AllFeaturesMaxLimitsGPUTest);
 
 function indexToCoord(dim) {
   switch (dim) {
@@ -140,11 +140,9 @@ function getTextureSize(numTexels, dim) {
 g.test('texture_intra_invocation_coherence').
 desc(`Tests writes from an invocation are visible to reads from the same invocation`).
 params((u) => u.combine('format', kRWStorageFormats).combine('dim', kDimensions)).
-beforeAllSubcases((t) => {
-  t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
-}).
 fn((t) => {
   t.skipIfLanguageFeatureNotSupported('readonly_and_readwrite_storage_textures');
+  t.skipIfTextureFormatNotSupported(t.params.format);
 
   const wgx = 16;
   const wgy = t.device.limits.maxComputeInvocationsPerWorkgroup / wgx;
