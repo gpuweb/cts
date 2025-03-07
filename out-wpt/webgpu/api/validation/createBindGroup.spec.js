@@ -662,7 +662,7 @@ desc(
 ).
 paramsSubcasesOnly((u) => u.combine('mismatched', [true, false])).
 beforeAllSubcases((t) => {
-  t.selectMismatchedDeviceOrSkipTestCase(undefined);
+  t.usesMismatchedDevice();
 }).
 fn((t) => {
   const mismatched = t.params.mismatched;
@@ -722,7 +722,7 @@ combineWithParams([
 combine('visibilityMask', [kAllShaderStages, GPUConst.ShaderStage.COMPUTE])
 ).
 beforeAllSubcases((t) => {
-  t.selectMismatchedDeviceOrSkipTestCase(undefined);
+  t.usesMismatchedDevice();
 }).
 fn((t) => {
   const { entry, resource0Mismatched, resource1Mismatched, visibilityMask } = t.params;
@@ -1132,7 +1132,7 @@ g.test('sampler,device_mismatch').
 desc(`Tests createBindGroup cannot be called with a sampler created from another device.`).
 paramsSubcasesOnly((u) => u.combine('mismatched', [true, false])).
 beforeAllSubcases((t) => {
-  t.selectMismatchedDeviceOrSkipTestCase(undefined);
+  t.usesMismatchedDevice();
 }).
 fn((t) => {
   const { mismatched } = t.params;
