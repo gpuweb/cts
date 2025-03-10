@@ -255,7 +255,7 @@ export function formatCopyableWithMethod({ format, method }: WithFormatAndMethod
   if (method === 'CopyT2B') {
     return canCopyFromAllAspectsOfTextureFormat(format);
   } else {
-    return canCopyFromAllAspectsOfTextureFormat(format);
+    return canCopyToAllAspectsOfTextureFormat(format);
   }
 }
 
