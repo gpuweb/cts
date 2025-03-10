@@ -6,6 +6,7 @@ import {
   getBlockInfoForTextureFormat,
   isDepthOrStencilTextureFormat,
   canCopyFromAllAspectsOfTextureFormat,
+  canCopyToAllAspectsOfTextureFormat,
 } from '../../../format_info.js';
 import { align } from '../../../util/math.js';
 import { ImageCopyType } from '../../../util/texture/layout.js';
