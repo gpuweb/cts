@@ -1900,6 +1900,21 @@ export function getColorRenderByteCost(format: PossibleColorRenderTextureFormat)
 }
 
 /**
+ * Returns the "alignment" of rendering to a color texture format.
+ * MAINTENANCE_TODO: remove `rg11b10ufloat' from here and add its data to table
+ * once CTS is refactored. See issue #4181
+ */
+export function getColorRenderAlignment(format: PossibleColorRenderTextureFormat) {
+  const alignment =
+    format === 'rg11b10ufloat' ? 1 : kTextureFormatInfo[format].colorRender?.alignment;
+  // MAINTENANCE_TODO: remove this assert. The issue is typescript thinks
+  // PossibleColorRenderTextureFormat contains all texture formats and not just
+  // a filtered list.
+  assert(alignment !== undefined);
+  return alignment;
+}
+
+/**
  * Gets the baseFormat for a texture format.
  */
 export function getBaseFormatForTextureFormat(
