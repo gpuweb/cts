@@ -1437,12 +1437,6 @@ export const kDepthStencilFormats = keysOf(kDepthStencilFormatInfo);
 export const kUncompressedTextureFormats = keysOf(kUncompressedTextureFormatInfo);
 export const kAllTextureFormats = keysOf(kAllTextureFormatInfo);
 
-// CompressedTextureFormat are unrenderable so filter from RegularTextureFormats for color targets is enough
-// @deprecated
-export const kRenderableColorTextureFormats = kRegularTextureFormats.filter(
-  (v) => kColorTextureFormatInfo[v].colorRender
-);
-
 // Color formats that are possibly renderable. Some may require features to be enabled.
 // MAINTENANCE_TODO: remove 'rg11b10ufloat` once colorRender is added to its info.
 // See: computeBytesPerSampleFromFormats
@@ -1853,6 +1847,23 @@ export function getBlockInfoForColorTextureFormat(format) {
 }
 
 /**
+ * Gets the block width, height, and bytes per block for a sized texture format.
+ * This is for sized textures only. For all texture formats @see {@link getBlockInfoForTextureFormat}
+ * The point of this function is bytesPerBlock is always defined so no need to check that it's not
+ * vs getBlockInfoForTextureFormat where it may not be defined.
+ */
+export function getBlockInfoForSizedTextureFormat(format) {
+  const info = kTextureFormatInfo[format];
+  const bytesPerBlock = info.color?.bytes || info.depth?.bytes || info.stencil?.bytes;
+  assert(!!bytesPerBlock);
+  return {
+    blockWidth: info.blockWidth,
+    blockHeight: info.blockHeight,
+    bytesPerBlock
+  };
+}
+
+/**
  * Gets the block width, height, and bytes per block for an encodable texture format.
  * This is for encodable textures only. For all texture formats @see {@link getBlockInfoForTextureFormat}
  * The point of this function is bytesPerBlock is always defined so no need to check that it's not
@@ -2066,6 +2077,22 @@ format)
     return true;
   }
   return !!kAllTextureFormatInfo[format].colorRender;
+}
+
+/**
+ * Returns if a texture can be blended.
+ */
+export function isTextureFormatBlendable(device, format) {
+  if (!isTextureFormatColorRenderable(device, format)) {
+    return false;
+  }
+  if (format === 'rg11b10ufloat' && device.features.has('rg11b10ufloat-renderable')) {
+    return true;
+  }
+  if (is32Float(format) && device.features.has('float32-blendable')) {
+    return true;
+  }
+  return !!kAllTextureFormatInfo[format].colorRender?.blend;
 }
 
 /**
