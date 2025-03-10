@@ -14,7 +14,7 @@ import {
   isTextureFormatColorRenderable,
   kAllTextureFormats,
   kDepthStencilFormats,
-  kRenderableColorTextureFormats,
+  kPossibleColorRenderableTextureFormats,
 } from '../../../format_info.js';
 import { AllFeaturesMaxLimitsValidationTest } from '../validation_test.js';
 
@@ -56,7 +56,7 @@ g.test('attachment_state,limits,maxColorAttachmentBytesPerSample,aligned')
   )
   .params(u =>
     u
-      .combine('format', kRenderableColorTextureFormats)
+      .combine('format', kPossibleColorRenderableTextureFormats)
       .beginSubcases()
       .combine(
         'colorFormatCount',
