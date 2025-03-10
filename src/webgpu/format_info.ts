@@ -1437,14 +1437,6 @@ const kASTCTextureFormatInfo = formatTableWithDefaults({
 /* prettier-ignore */ export const kUncompressedTextureFormats: readonly UncompressedTextureFormat[] = keysOf(kUncompressedTextureFormatInfo);
 /* prettier-ignore */ export const          kAllTextureFormats: readonly          GPUTextureFormat[] = keysOf(         kAllTextureFormatInfo);
 
-// Color formats that are possibly renderable. Some may require features to be enabled.
-// MAINTENANCE_TODO: remove 'rg11b10ufloat` once colorRender is added to its info.
-// See: computeBytesPerSampleFromFormats
-export const kPossiblyRenderableColorTextureFormats = [
-  ...kRegularTextureFormats.filter(v => kColorTextureFormatInfo[v].colorRender),
-  'rg11b10ufloat',
-] as const;
-
 /** Per-GPUTextureFormat-per-aspect info. */
 interface TextureFormatAspectInfo {
   /** Whether the aspect can be used as `COPY_SRC`. */
