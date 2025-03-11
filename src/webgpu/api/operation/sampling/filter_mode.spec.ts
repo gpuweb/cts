@@ -11,7 +11,7 @@ import { kAddressModes, kMipmapFilterModes } from '../../../capability_info.js';
 import {
   EncodableTextureFormat,
   getTextureFormatType,
-  kPossiblyRenderableColorTextureFormats,
+  kPossibleColorRenderableTextureFormats,
 } from '../../../format_info.js';
 import { AllFeaturesMaxLimitsGPUTest, TextureTestMixin } from '../../../gpu_test.js';
 import { getTextureCopyLayout } from '../../../util/texture/layout.js';
@@ -31,7 +31,7 @@ const kCheckerTextureData = [
  * One more both may required certain features to be enabled.
  */
 const kPossiblyRenderablePossiblyFilterableColorTextureFormats =
-  kPossiblyRenderableColorTextureFormats.filter(
+  kPossibleColorRenderableTextureFormats.filter(
     format =>
       getTextureFormatType(format) === 'float' ||
       getTextureFormatType(format) === 'unfilterable-float'
