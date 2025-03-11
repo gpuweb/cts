@@ -1437,14 +1437,6 @@ export const kDepthStencilFormats = keysOf(kDepthStencilFormatInfo);
 export const kUncompressedTextureFormats = keysOf(kUncompressedTextureFormatInfo);
 export const kAllTextureFormats = keysOf(kAllTextureFormatInfo);
 
-// Color formats that are possibly renderable. Some may require features to be enabled.
-// MAINTENANCE_TODO: remove 'rg11b10ufloat` once colorRender is added to its info.
-// See: computeBytesPerSampleFromFormats
-export const kPossiblyRenderableColorTextureFormats = [
-...kRegularTextureFormats.filter((v) => kColorTextureFormatInfo[v].colorRender),
-'rg11b10ufloat'];
-
-
 /** Per-GPUTextureFormat-per-aspect info. */
 
 
