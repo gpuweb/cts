@@ -1,7 +1,6 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
-**/ // MAINTENANCE_TODO: Remove all deprecated functions once they are no longer in use.
-import { isCompatibilityDevice } from '../common/framework/test_config.js';import { keysOf } from '../common/util/data_tables.js';import { assert, unreachable } from '../common/util/util.js';
+**/import { isCompatibilityDevice } from '../common/framework/test_config.js';import { keysOf } from '../common/util/data_tables.js';import { assert, unreachable } from '../common/util/util.js';
 
 import { align } from './util/math.js';
 
@@ -1518,13 +1517,75 @@ export const kAllTextureFormats = keysOf(kAllTextureFormatInfo);
 
 
 
-// MAINTENANCE_TODO: make this private to avoid tests wrongly trying to
-// filter things on their own. Various features make this hard to do correctly
-// so we'd prefer to put filtering here, in a central place and add other functions
-// to get at this data so that they always have enough info to give the correct answer.
-/** Per-GPUTextureFormat info. */
-/** @deprecated */
-export const kTextureFormatInfo = {
+/**
+ * DO NOT EXPORT THIS - functions that need info from this table should use the appropriate
+ * method for their needs.
+ *
+ * For a list of textures formats for test parameters there are:
+ *
+ * Lists of formats that might require features to be enabled
+ * * kPossibleColorRenderableTextureFormats
+ * * kPossibleStorageTextureFormats
+ * * kPossibleReadWriteStorageTextureFormats
+ * * kPossibleMultisampledTextureFormats
+ *
+ * Lists of formats that end in -srgb
+ * * kDifferentBaseFormatTextureFormats  (includes compressed textures)
+ * * kDifferentBaseFormatRegularTextureFormats (does not include compressed textures)
+ *
+ * Formats that require a feature to use at all (mostly compressed formats)
+ * * kOptionalTextureFormats
+ *
+ * Misc
+ * * kRegularTextureFormats
+ * * kSizedDepthStencilFormats
+ * * kUnsizedDepthStencilFormats
+ * * kCompressedTextureFormats
+ * * kUncompressedTextureFormats
+ * * kColorTextureFormats - color formats including compressed and sint/uint
+ * * kEncodableTextureFormats - formats that TexelView supports.
+ * * kSizedTextureFormats - formats that have a known size (so not depth24plus ...)
+ * * kDepthStencilFormats - depth, stencil, depth-stencil
+ * * kDepthTextureFormats - depth and depth-stencil
+ * * kStencilTextureFormats - stencil and depth-stencil
+ * * kAllTextureFormats
+ *
+ * If one of the list above does not work, add a new one or to filter in beforeAllSubcases you generally want to use
+ * You will not know if you can actually use a texture for the given use case until the test runs and has a device.
+ *
+ * * isTextureFormatPossiblyUsableAsRenderAttachment
+ * * isTextureFormatPossiblyUsableAsColorRenderAttachment
+ * * isTextureFormatPossiblyMultisampled
+ * * isTextureFormatPossiblyStorageReadable
+ * * isTextureFormatPossiblyStorageReadWritable
+ * * isTextureFormatPossiblyFilterableAsTextureF32
+ *
+ * These are also usable before or during a test
+ *
+ * * isColorTextureFormat
+ * * isDepthTextureFormat
+ * * isStencilTextureFormat
+ * * isDepthOrStencilTextureFormat
+ * * isEncodableTextureFormat
+ * * isRegularTextureFormat
+ * * isCompressedFloatTextureFormat
+ * * isSintOrUintFormat
+ *
+ * To skip a test use the `skipIfXXX` tests in `GPUTest` if possible. Otherwise these functions
+ * require a device to give a correct answer.
+ *
+ * * isTextureFormatUsableAsRenderAttachment
+ * * isTextureFormatColorRenderable
+ * * isTextureFormatResolvable
+ * * isTextureFormatBlendable
+ * * isTextureFormatMultisampled
+ * * isTextureFormatUsableAsStorageFormat
+ * * isTextureFormatUsableAsReadWriteStorageTexture
+ * * isTextureFormatUsableAsStorageFormatInCreateShaderModule
+ *
+ * Per-GPUTextureFormat info.
+ */
+const kTextureFormatInfo = {
   ...kRegularTextureFormatInfo,
   ...kSizedDepthStencilFormatInfo,
   ...kUnsizedDepthStencilFormatInfo,
@@ -1801,15 +1862,6 @@ format)
 
 }
 
-/** @deprecated */
-export function viewCompatibleDeprecated(
-compatibilityMode,
-a,
-b)
-{
-  return compatibilityMode ? a === b : a === b || a + '-srgb' === b || b + '-srgb' === a;
-}
-
 /**
  * Check if two formats are view format compatible.
  */
@@ -2039,11 +2091,6 @@ export function isEncodableTextureFormat(format) {
   return kEncodableTextureFormats.includes(format);
 }
 
-/** @deprecated use isTextureFormatUsableAsRenderAttachment */
-export function canUseAsRenderTargetDeprecated(format) {
-  return kTextureFormatInfo[format].colorRender || isDepthOrStencilTextureFormat(format);
-}
-
 /**
  * Returns if a texture can be used as a render attachment. some color formats and all
  * depth textures and stencil textures are usable with usage RENDER_ATTACHMENT.
@@ -2177,20 +2224,6 @@ export const kCompatModeUnsupportedStorageTextureFormats = [
 'rg32uint'];
 
 
-/** @deprecated */
-export function isTextureFormatUsableAsStorageFormatDeprecated(
-format,
-isCompatibilityMode)
-{
-  if (isCompatibilityMode) {
-    if (kCompatModeUnsupportedStorageTextureFormats.indexOf(format) >= 0) {
-      return false;
-    }
-  }
-  const info = kTextureFormatInfo[format];
-  return !!(info.color?.storage || info.depth?.storage || info.stencil?.storage);
-}
-
 /**
  * Return true if the format can be used as a storage texture.
  * Note: Some formats can be compiled in a shader but can not be used
@@ -2284,19 +2317,6 @@ export const kCompatModeUnsupportedMultisampledTextureFormats = [
 'rgba16float',
 'r32float'];
 
-
-/** @deprecated use isTextureFormatMultisampled */
-export function isMultisampledTextureFormatDeprecated(
-format,
-isCompatibilityMode)
-{
-  if (isCompatibilityMode) {
-    if (kCompatModeUnsupportedMultisampledTextureFormats.indexOf(format) >= 0) {
-      return false;
-    }
-  }
-  return kAllTextureFormatInfo[format].multisample;
-}
 
 /**
  * Returns true if you can make a multisampled texture from the given format.

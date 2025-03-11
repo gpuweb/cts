@@ -874,7 +874,7 @@ fn(async (t) => {
   const { format, samplePoints, A, mode } = t.params;
   t.skipIfTextureFormatNotSupported(format);
   t.skipIfDepthTextureCanNotBeUsedWithNonComparisonSampler();
-  t.skipIfTextureViewDimensionNotSupportedDeprecated('cube-array');
+  t.skipIfTextureViewDimensionNotSupported('cube-array');
 
   const viewDimension = 'cube-array';
   const size = chooseTextureSize({

@@ -874,7 +874,7 @@ Parameters:
     const { format, samplePoints, A, mode } = t.params;
     t.skipIfTextureFormatNotSupported(format);
     t.skipIfDepthTextureCanNotBeUsedWithNonComparisonSampler();
-    t.skipIfTextureViewDimensionNotSupportedDeprecated('cube-array');
+    t.skipIfTextureViewDimensionNotSupported('cube-array');
 
     const viewDimension: GPUTextureViewDimension = 'cube-array';
     const size = chooseTextureSize({
