@@ -518,17 +518,11 @@ fn(async (t) => {
     const device = await t.requestDeviceTracked(adapter);
     assert(device instanceof GPUDevice, 'requestDevice must return a device or throw');
 
-    if (featureLevel === 'core') {
+    if (featureLevel === 'core' && adapter.features.has('core-features-and-limits')) {
+      // Check if the device supports core, when featureLevel is core and adapter supports core.
       // This check is to make sure something lower-level is not forcing compatibility mode.
 
-      // MAINTENANCE_TODO: Simplify this check (and typecast) once we standardize how to do this.
-      const adapterExtensions = adapter;
-
-
       t.expect(
-        // Old version of Compat design.
-        adapterExtensions.featureLevel === 'core' ||
-        // Current version of Compat design.
         device.features.has('core-features-and-limits'),
         'must not get a Compatibility adapter if not requested'
       );
