@@ -10,7 +10,7 @@ import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { getGPU } from '../../../../common/util/navigator_gpu.js';
 import { assert, assertReject, raceWithRejectOnTimeout } from '../../../../common/util/util.js';
 import {
-  getDefaultLimitsForAdapter,
+  getDefaultLimitsForCTS,
   kFeatureNames,
   kLimits,
   kLimitClasses } from
@@ -54,7 +54,7 @@ fn(async (t) => {
     );
   }
   // All limits should be defaults.
-  const limitInfo = getDefaultLimitsForAdapter(adapter);
+  const limitInfo = getDefaultLimitsForCTS();
   for (const limit of kLimits) {
     t.expect(
       device.limits[limit] === limitInfo[limit].default,
@@ -274,7 +274,7 @@ fn(async (t) => {
   const adapter = await gpu.requestAdapter();
   assert(adapter !== null);
 
-  const limitInfo = getDefaultLimitsForAdapter(adapter);
+  const limitInfo = getDefaultLimitsForCTS();
   let value = -1;
   let result = -1;
   switch (limitValue) {
@@ -351,7 +351,7 @@ fn(async (t) => {
   const adapter = await gpu.requestAdapter();
   assert(adapter !== null);
 
-  const limitInfo = getDefaultLimitsForAdapter(adapter);
+  const limitInfo = getDefaultLimitsForCTS();
   const value = adapter.limits[limit] * mul + add;
   const requiredLimits = {
     [limit]: clamp(value, { min: 0, max: limitInfo[limit].maximumValue })
@@ -397,7 +397,7 @@ fn(async (t) => {
   const gpu = getGPU(t.rec);
   const adapter = await gpu.requestAdapter();
   assert(adapter !== null);
-  const limitInfo = getDefaultLimitsForAdapter(adapter)[limit];
+  const limitInfo = getDefaultLimitsForCTS()[limit];
 
   const requiredLimits = {
     [limit]: value
@@ -455,7 +455,7 @@ fn(async (t) => {
   const adapter = await gpu.requestAdapter();
   assert(adapter !== null);
 
-  const limitInfo = getDefaultLimitsForAdapter(adapter);
+  const limitInfo = getDefaultLimitsForCTS();
   const value = limitInfo[limit].default * mul + add;
   const requiredLimits = {
     [limit]: clamp(value, { min: 0, max: limitInfo[limit].maximumValue })
