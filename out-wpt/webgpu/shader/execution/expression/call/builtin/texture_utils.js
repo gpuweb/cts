@@ -3998,12 +3998,82 @@ args)
       return makeDerivativeMult(coords, mipLevel);
     };
 
-    // for textureSampleBias we choose a mipLevel we want to sample, then a bias between -17 and 17.
+    // for textureSampleBias we choose a mipLevel we want to sample, then a bias,
     // and then a derivative that, given the chosen bias will arrive at the chosen mipLevel.
     // The GPU is supposed to clamp between -16.0 and 15.99.
+    //
+    // Testing clamping with textureSampleBias is prone to precision issues. The reason is, to test
+    // that the bias is clamped, a natural thing to do is:
+    //
+    // * Create a texture with N mip levels, Eg 3. (lets do 8x8, 4x4, 2x2)
+    // * Choose a target mipLevel. Eg 1.5
+    // * Choose a bias that will need to be clamped. Eg 20.0. Clamped this will be 15.99
+    // * Choose a derivative that selects mipLevel -14.49
+    // * Check if we sampled mip level 1.5 (because -14.49 + bias(15.99) = 1.5)
+    //
+    // Unfortunately, to select a mipLevel of -14.49 via derivatives requires a small enough value
+    // (eg: 0.000005432320387256895) that based on internal precision issues in the GPU, might
+    // not calculate -14.49 but instead +/- 0.5 or worse (1 exponent change in the floating point
+    // representation worth of difference?)
+    //
+    // To work around this issue we do the following
+    //
+    // * to test negative bias is clamped
+    //
+    //   * choose a target of 4.0 (assuming 3 mips this is past the 3rd mip level and should be clamped to 3)
+    //   * choose a bias of like -25 (so should be clamped to -16)
+    //   * choose a derivative that computes a mipLevel of 20 because (-16 + 20) = 4 (our target)
+    //
+    //   If the result was clamped we should sample only mip level 3. If the result was not clamped we'll sample
+    //   mip level 0.
+    //
+    //   Note: we'll choose mipLevelCount + 1 as our target so that we have 1 unit of extra range.
+    //   This won't tell is if the bias is clamped to -16 but it will tell us it's clamped to at least -18
+    //
+    // * to test positive bias is clamped
+    //
+    //   * same as above just reverse the signs and clamp to 15.99
+    //
+    // * to test bias works in general
+    //
+    //   * test small values like +/- 3
+    //
     const makeBiasAndDerivativeMult = (coords) => {
-      const mipLevel = chooseMipLevel();
-      const bias = makeRangeValue({ num: 34, type: 'f32' }, i, 9) - 17;
+      const testType = makeRandValue({ num: 4, type: 'u32' }, i, 11);
+      let mipLevel;
+      let bias;
+      switch (testType) {
+        case 0:
+          // test negative bias
+          mipLevel = mipLevelCount + 1;
+          bias = -25;
+          // example:
+          //   mipLevel                = 4
+          //   bias                    = -25
+          //   clampedBias             = -16
+          //   derivativeBasedMipLevel = mipLevel - clampedBias = 4 - -16 = 20
+          //   expectedMipLevel        = derivativeBasedMipLevel + clampedBias = 20 + -16 = 4
+          //   if bias is not clamped. For example it's -18 then:
+          //   actualMipLevel =  20 + -18 = 2  // this would be an error.
+          break;
+        case 1:
+          // test positive bias
+          mipLevel = -1;
+          bias = 25;
+          // example:
+          //   mipLevel                = -1
+          //   bias                    = 25
+          //   clampedBias             = 15.99
+          //   derivativeBasedMipLevel = mipLevel - clampedBias = -1 - 15.99 = -16.99
+          //   expectedMipLevel        = derivativeBasedMipLevel + clampedBias = -16.99 + 15.99 = -1
+          //   if bias is not clamped. For example it's 18 then:
+          //   actualMipLevel =  -16.99 + 18 = 1.99  // this would be an error.
+          break;
+        default: // test small-ish middle bias
+          mipLevel = chooseMipLevel();
+          bias = makeRangeValue({ num: 6, type: 'f32' }, i, 9) - 3;
+          break;
+      }
       const clampedBias = clamp(bias, { min: -16, max: 15.99 });
       const derivativeBasedMipLevel = mipLevel - clampedBias;
       const derivativeMult = makeDerivativeMult(coords, derivativeBasedMipLevel);
@@ -4538,12 +4608,27 @@ args)
       return makeDerivativeMult(coords, mipLevel);
     };
 
-    // for textureSampleBias we choose a mipLevel we want to sample, then a bias between -17 and 17.
-    // and then a derivative that, given the chosen bias will arrive at the chosen mipLevel.
-    // The GPU is supposed to clamp between -16.0 and 15.99.
+    // See makeBiasAndDerivativeMult in generateTextureBuiltinInputsImpl
     const makeBiasAndDerivativeMult = (coords) => {
-      const mipLevel = chooseMipLevel();
-      const bias = makeRangeValue({ num: 34, type: 'f32' }, i, 9) - 17;
+      const testType = makeRandValue({ num: 4, type: 'u32' }, i, 11);
+      let mipLevel;
+      let bias;
+      switch (testType) {
+        case 0:
+          // test negative bias
+          mipLevel = mipLevelCount + 1;
+          bias = -25;
+          break;
+        case 1:
+          // test positive bias
+          mipLevel = -1;
+          bias = 25;
+          break;
+        default: // test small-ish middle bias
+          mipLevel = chooseMipLevel();
+          bias = makeRangeValue({ num: 6, type: 'f32' }, i, 9) - 3;
+          break;
+      }
       const clampedBias = clamp(bias, { min: -16, max: 15.99 });
       const derivativeBasedMipLevel = mipLevel - clampedBias;
       const derivativeMult = makeDerivativeMult(coords, derivativeBasedMipLevel);
