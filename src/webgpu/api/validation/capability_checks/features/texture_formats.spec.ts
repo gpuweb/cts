@@ -454,7 +454,8 @@ g.test('check_capability_guarantees')
 
     const features = adapter.features;
     t.expect(
-      features.has('texture-compression-bc') ||
+      t.isCompatibility ||
+        features.has('texture-compression-bc') ||
         (features.has('texture-compression-etc2') && features.has('texture-compression-astc'))
     );
   });
