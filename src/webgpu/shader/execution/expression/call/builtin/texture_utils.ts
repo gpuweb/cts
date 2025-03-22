@@ -2895,12 +2895,9 @@ function getEffectiveViewDimension(
   t: GPUTest,
   descriptor: Omit<GPUTextureDescriptor, 'format' | 'usage'>
 ): GPUTextureViewDimension {
-  const { textureBindingViewDimension } = descriptor as unknown as {
-    textureBindingViewDimension?: GPUTextureViewDimension;
-  };
   const size = reifyExtent3D(descriptor.size);
   return effectiveViewDimensionForDimension(
-    textureBindingViewDimension,
+    descriptor.textureBindingViewDimension,
     descriptor.dimension,
     size.depthOrArrayLayers
   );
