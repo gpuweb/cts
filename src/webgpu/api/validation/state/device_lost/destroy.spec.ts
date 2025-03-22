@@ -191,8 +191,6 @@ g.test('mapping,mapAsync')
 Tests behavior of mapAsync'd buffers when destroying the device.
 - Various usages
 - Wait for .lost or not
-
-TODO(https://github.com/gpuweb/gpuweb/issues/5101): Test which error we got at [1].
   `
   )
   .params(u =>
@@ -227,21 +225,7 @@ TODO(https://github.com/gpuweb/gpuweb/issues/5101): Test which error we got at [
       // But unmap just in case, to reset state before continuing.
       b.unmap();
 
-      // Check that mapping after destroy fails.
-      // Also check that if mapAsync fails validation, it still produces an OperationError.
-      try {
-        await b.mapAsync(mode);
-        t.expect(false, 'bAsync mapAsync after destroy 1 should reject');
-      } catch (ex) {
-        if (mode) {
-          // The mapAsync call is valid except for the fact that the device is lost.
-          t.expect(ex instanceof DOMException && ex.name === 'AbortError');
-        } else {
-          // The mapAsync call is also invalid for other reasons.
-          // [1] Test which error type we got. (And maybe switch to shouldReject().)
-          t.expect(ex instanceof DOMException);
-        }
-      }
+      // Check that mapping after destroy fails with AbortError.
       const mapPromise = b.mapAsync(mode);
       t.shouldReject('AbortError', mapPromise);
       await mapPromise.catch(() => {});
