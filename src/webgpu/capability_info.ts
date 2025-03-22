@@ -905,6 +905,8 @@ export const kFeatureNameInfo: {
   'float32-blendable':                  {},
   'clip-distances':                     {},
   'dual-source-blending':               {},
+  'subgroups':                          {},
+  'core-features-and-limits':           {},
 };
 /** List of all GPUFeatureName values. */
 export const kFeatureNames = keysOf(kFeatureNameInfo);
