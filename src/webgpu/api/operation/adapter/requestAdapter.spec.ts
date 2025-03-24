@@ -114,10 +114,15 @@ g.test('requestAdapter')
       ...(forceFallbackAdapter !== undefined && { forceFallbackAdapter }),
     });
 
-    // failing to create an adapter when forceFallbackAdapter is true is ok.
-    if (forceFallbackAdapter && !adapter) {
-      t.skip('No adapter available');
-      return;
+    assert(typeof adapter?.info.isFallbackAdapter === 'boolean');
+    if (forceFallbackAdapter) {
+      // Failing to create an adapter when forceFallbackAdapter is true is ok.
+      if (!adapter) {
+        t.skip('No adapter available');
+        return;
+      }
+      // Only a fallback adapter may be returned though.
+      assert(adapter.info.isFallbackAdapter === true);
     }
 
     await testAdapter(t, adapter);
