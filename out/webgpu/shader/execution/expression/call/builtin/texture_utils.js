@@ -2895,12 +2895,9 @@ function getEffectiveViewDimension(
 t,
 descriptor)
 {
-  const { textureBindingViewDimension } = descriptor;
-
-
   const size = reifyExtent3D(descriptor.size);
   return effectiveViewDimensionForDimension(
-    textureBindingViewDimension,
+    descriptor.textureBindingViewDimension,
     descriptor.dimension,
     size.depthOrArrayLayers
   );
