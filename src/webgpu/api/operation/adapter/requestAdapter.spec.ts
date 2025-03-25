@@ -114,18 +114,17 @@ g.test('requestAdapter')
       ...(forceFallbackAdapter !== undefined && { forceFallbackAdapter }),
     });
 
-    assert(typeof adapter?.info.isFallbackAdapter === 'boolean');
-    if (forceFallbackAdapter) {
-      // Failing to create an adapter when forceFallbackAdapter is true is ok.
-      if (!adapter) {
-        t.skip('No adapter available');
-        return;
-      }
-      // Only a fallback adapter may be returned though.
-      assert(adapter.info.isFallbackAdapter === true);
-    }
+    if (adapter) {
+      t.expect(adapter.info.isFallbackAdapter === Boolean(forceFallbackAdapter));
 
-    await testAdapter(t, adapter);
+      await testAdapter(t, adapter);
+    } else {
+      // Failing to create an adapter is only OK when forceFallbackAdapter is true.
+      t.expect(forceFallbackAdapter === true);
+
+      // Mark the test as skipped (as long as nothing else failed before this point).
+      t.skip('No fallback adapter available');
+    }
   });
 
 g.test('requestAdapter_invalid_featureLevel')
