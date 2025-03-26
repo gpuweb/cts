@@ -134,7 +134,7 @@ ${t.params.stage} array_size = 10u;
 var<workgroup> wgvar : array<u32, array_size>;
 
 fn foo() {
-  _ = workgroupUniformLoad(&wgvar);
+  _ = workgroupUniformLoad(&wgvar)[0];
 }`;
     t.expectCompileResult(t.params.stage === 'const', code);
   });
