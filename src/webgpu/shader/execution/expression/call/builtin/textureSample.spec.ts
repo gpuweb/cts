@@ -154,10 +154,26 @@ Parameters:
       .combine('offset', [false, true] as const)
       .beginSubcases()
       .combine('samplePoints', kSamplePointMethods)
-      .combine('baseMipLevel', [0, 1] as const)
+      .combineWithParams([
+        { baseMipLevel: 0, lodMinClamp: 0, lodMaxClamp: 2 },
+        { baseMipLevel: 0, lodMinClamp: 0.5, lodMaxClamp: 1.5 },
+        { baseMipLevel: 1, lodMinClamp: 0, lodMaxClamp: 1 },
+        { baseMipLevel: 0, lodMinClamp: 0, lodMaxClamp: 1 },
+        { baseMipLevel: 0, lodMinClamp: 1, lodMaxClamp: 2 },
+      ])
   )
   .fn(async t => {
-    const { format, samplePoints, modeU, modeV, filt: minFilter, offset, baseMipLevel } = t.params;
+    const {
+      format,
+      samplePoints,
+      modeU,
+      modeV,
+      filt: minFilter,
+      offset,
+      baseMipLevel,
+      lodMaxClamp,
+      lodMinClamp,
+    } = t.params;
     skipIfTextureFormatNotSupportedOrNeedsFilteringAndIsUnfilterable(t, minFilter, format);
 
     // We want at least 4 blocks or something wide enough for 3 mip levels.
@@ -180,6 +196,8 @@ Parameters:
       minFilter,
       magFilter: minFilter,
       mipmapFilter: minFilter,
+      lodMinClamp,
+      lodMaxClamp,
     };
 
     const calls: TextureCall<vec2>[] = generateTextureBuiltinInputs2D(50, {

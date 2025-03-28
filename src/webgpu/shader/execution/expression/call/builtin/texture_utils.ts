@@ -1892,12 +1892,20 @@ function softwareTextureReadLevel<T extends Dimensionality>(
   }
 
   const { mipLevelCount } = getBaseMipLevelInfo(softwareTexture);
-  const maxLevel = mipLevelCount - 1;
 
+  const lodMinClamp = isBuiltinGather(call.builtin) ? 0 : sampler.lodMinClamp ?? 0;
+  const lodMaxClamp = isBuiltinGather(call.builtin)
+    ? mipLevelCount - 1
+    : sampler.lodMaxClamp ?? mipLevelCount - 1;
+  assert(lodMinClamp >= 0 && lodMinClamp < mipLevelCount, 'lodMinClamp in range');
+  assert(lodMaxClamp >= 0 && lodMaxClamp < mipLevelCount, 'lodMaxClamp in range');
+  assert(lodMinClamp <= lodMinClamp, 'lodMinClamp <= lodMaxClamp');
+
+  const lodClampMinMax = { min: lodMinClamp, max: lodMaxClamp };
   const effectiveMipmapFilter = isBuiltinGather(call.builtin) ? 'nearest' : sampler.mipmapFilter;
   switch (effectiveMipmapFilter) {
     case 'linear': {
-      const clampedMipLevel = clamp(mipLevel, { min: 0, max: maxLevel });
+      const clampedMipLevel = clamp(mipLevel, lodClampMinMax);
       const rootMipLevel = Math.floor(clampedMipLevel);
       const nextMipLevel = Math.ceil(clampedMipLevel);
       const t0 = softwareTextureReadMipLevel<T>(call, softwareTexture, sampler, rootMipLevel);
@@ -1918,7 +1926,7 @@ function softwareTextureReadLevel<T extends Dimensionality>(
       return out;
     }
     default: {
-      const baseMipLevel = Math.floor(clamp(mipLevel + 0.5, { min: 0, max: maxLevel }));
+      const baseMipLevel = Math.floor(clamp(mipLevel + 0.5, lodClampMinMax));
       return softwareTextureReadMipLevel<T>(call, softwareTexture, sampler, baseMipLevel);
     }
   }

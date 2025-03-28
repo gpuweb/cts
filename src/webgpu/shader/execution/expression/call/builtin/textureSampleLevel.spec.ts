@@ -76,9 +76,27 @@ Parameters:
       .combine('offset', [false, true] as const)
       .beginSubcases()
       .combine('samplePoints', kSamplePointMethods)
+      .combineWithParams([
+        { baseMipLevel: 0, lodMinClamp: 0, lodMaxClamp: 2 },
+        { baseMipLevel: 0, lodMinClamp: 0.5, lodMaxClamp: 1.5 },
+        { baseMipLevel: 1, lodMinClamp: 0, lodMaxClamp: 1 },
+        { baseMipLevel: 0, lodMinClamp: 0, lodMaxClamp: 1 },
+        { baseMipLevel: 0, lodMinClamp: 1, lodMaxClamp: 2 },
+      ])
   )
   .fn(async t => {
-    const { format, stage, samplePoints, modeU, modeV, filt: minFilter, offset } = t.params;
+    const {
+      format,
+      stage,
+      samplePoints,
+      modeU,
+      modeV,
+      filt: minFilter,
+      offset,
+      baseMipLevel,
+      lodMaxClamp,
+      lodMinClamp,
+    } = t.params;
     skipIfTextureFormatNotSupportedOrNeedsFilteringAndIsUnfilterable(t, minFilter, format);
 
     // We want at least 4 blocks or something wide enough for 3 mip levels.
@@ -89,19 +107,23 @@ Parameters:
       mipLevelCount: 3,
       usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
     };
+    const viewDescriptor = { baseMipLevel };
     const { texels, texture } = await createTextureWithRandomDataAndGetTexels(t, descriptor);
+    const softwareTexture = { texels, descriptor, viewDescriptor };
     const sampler: GPUSamplerDescriptor = {
       addressModeU: kShortAddressModeToAddressMode[modeU],
       addressModeV: kShortAddressModeToAddressMode[modeV],
       minFilter,
       magFilter: minFilter,
       mipmapFilter: minFilter,
+      lodMinClamp,
+      lodMaxClamp,
     };
 
     const calls: TextureCall<vec2>[] = generateTextureBuiltinInputs2D(50, {
       method: samplePoints,
       sampler,
-      descriptor,
+      softwareTexture,
       mipLevel: { num: texture.mipLevelCount, type: 'f32' },
       offset,
       hashInputs: [stage, format, samplePoints, modeU, modeV, minFilter, offset],
@@ -116,7 +138,6 @@ Parameters:
       };
     });
     const textureType = appendComponentTypeForFormatToTextureType('texture_2d', format);
-    const viewDescriptor = {};
     const results = await doTextureCalls(
       t,
       texture,
@@ -298,6 +319,13 @@ Parameters:
       .beginSubcases()
       .combine('samplePoints', kCubeSamplePointMethods)
       .filter(t => t.samplePoints !== 'cube-edges' || t.dim !== '3d')
+      .combineWithParams([
+        { baseMipLevel: 0, lodMinClamp: 0, lodMaxClamp: 2 },
+        { baseMipLevel: 0, lodMinClamp: 0.5, lodMaxClamp: 1.5 },
+        { baseMipLevel: 1, lodMinClamp: 0, lodMaxClamp: 1 },
+        { baseMipLevel: 0, lodMinClamp: 0, lodMaxClamp: 1 },
+        { baseMipLevel: 0, lodMinClamp: 1, lodMaxClamp: 2 },
+      ])
   )
   .fn(async t => {
     const {
@@ -308,6 +336,9 @@ Parameters:
       mode,
       filt: minFilter,
       offset,
+      baseMipLevel,
+      lodMaxClamp,
+      lodMinClamp,
     } = t.params;
     skipIfTextureFormatNotSupportedOrNeedsFilteringAndIsUnfilterable(t, minFilter, format);
 
@@ -322,7 +353,12 @@ Parameters:
       usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
       mipLevelCount: 3,
     };
+    const viewDescriptor = {
+      dimension: viewDimension,
+      baseMipLevel,
+    };
     const { texels, texture } = await createTextureWithRandomDataAndGetTexels(t, descriptor);
+    const softwareTexture = { texels, descriptor, viewDescriptor };
     const sampler: GPUSamplerDescriptor = {
       addressModeU: kShortAddressModeToAddressMode[mode],
       addressModeV: kShortAddressModeToAddressMode[mode],
@@ -330,15 +366,16 @@ Parameters:
       minFilter,
       magFilter: minFilter,
       mipmapFilter: minFilter,
+      lodMinClamp,
+      lodMaxClamp,
     };
-
     const hashInputs = [stage, format, viewDimension, samplePoints, mode, minFilter, offset];
     const calls: TextureCall<vec3>[] = (
       viewDimension === '3d'
         ? generateTextureBuiltinInputs3D(50, {
             method: samplePoints as SamplePointMethods,
             sampler,
-            descriptor,
+            softwareTexture,
             mipLevel: { num: texture.mipLevelCount, type: 'f32' },
             offset,
             hashInputs,
@@ -346,7 +383,7 @@ Parameters:
         : generateSamplePointsCube(50, {
             method: samplePoints,
             sampler,
-            descriptor,
+            softwareTexture,
             mipLevel: { num: texture.mipLevelCount, type: 'f32' },
             hashInputs,
           })
@@ -360,9 +397,6 @@ Parameters:
         offset,
       };
     });
-    const viewDescriptor = {
-      dimension: viewDimension,
-    };
     const textureType = getTextureTypeForTextureViewDimension(viewDimension);
     const results = await doTextureCalls(
       t,
