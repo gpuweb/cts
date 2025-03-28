@@ -18,11 +18,20 @@ g.test('single')
   )
   .paramsSubcasesOnly(u =>
     u //
-      .combine('srcOffset', [0, 4, 8, 16])
-      .combine('dstOffset', [0, 4, 8, 16])
-      .combine('copySize', [0, 4, 8, 16])
-      .expand('srcBufferSize', p => [p.srcOffset + p.copySize, p.srcOffset + p.copySize + 8])
-      .expand('dstBufferSize', p => [p.dstOffset + p.copySize, p.dstOffset + p.copySize + 8])
+      .combine('srcOffset', [0, 4, 8, 16, undefined])
+      .combine('dstOffset', [0, 4, 8, 16, undefined])
+      .unless(
+        p => (p.srcOffset === undefined || p.dstOffset === undefined) && p.srcOffset !== p.dstOffset
+      )
+      .combine('copySize', [0, 4, 8, 16, undefined])
+      .expand('srcBufferSize', p => [
+        p.srcOffset ?? 0 + (p.copySize ?? 0),
+        p.srcOffset ?? 0 + (p.copySize ?? 0) + 8,
+      ])
+      .expand('dstBufferSize', p => [
+        p.dstOffset ?? 0 + (p.copySize ?? 0),
+        p.dstOffset ?? 0 + (p.copySize ?? 0) + 8,
+      ])
   )
   .fn(t => {
     const { srcOffset, dstOffset, copySize, srcBufferSize, dstBufferSize } = t.params;
@@ -40,12 +49,24 @@ g.test('single')
     });
 
     const encoder = t.device.createCommandEncoder();
-    encoder.copyBufferToBuffer(src, srcOffset, dst, dstOffset, copySize);
-    t.device.queue.submit([encoder.finish()]);
+    if (srcOffset === undefined || dstOffset === undefined) {
+      encoder.copyBufferToBuffer(src, dst, copySize);
+    } else {
+      encoder.copyBufferToBuffer(src, srcOffset, dst, dstOffset, copySize);
+    }
+
+    const expectedSrcOffset = srcOffset ?? 0;
+    const expectedDstOffset = dstOffset ?? 0;
+    const expectedCopySize = copySize ?? srcBufferSize - expectedSrcOffset;
+
+    const isValid = dstBufferSize - expectedDstOffset >= expectedCopySize;
+    t.expectValidationError(() => {
+      t.device.queue.submit([encoder.finish()]);
+    }, !isValid);
 
     const expectedDstData = new Uint8Array(dstBufferSize);
-    for (let i = 0; i < copySize; ++i) {
-      expectedDstData[dstOffset + i] = srcData[srcOffset + i];
+    for (let i = 0; i < expectedCopySize; ++i) {
+      expectedDstData[expectedDstOffset + i] = srcData[expectedSrcOffset + i];
     }
 
     t.expectGPUBufferValuesEqual(dst, expectedDstData);
