@@ -25,12 +25,12 @@ g.test('single')
       )
       .combine('copySize', [0, 4, 8, 16, undefined])
       .expand('srcBufferSize', p => [
-        p.srcOffset ?? 0 + (p.copySize ?? 0),
-        p.srcOffset ?? 0 + (p.copySize ?? 0) + 8,
+        (p.srcOffset ?? 0) + (p.copySize ?? 0),
+        (p.srcOffset ?? 0) + (p.copySize ?? 0) + 8,
       ])
       .expand('dstBufferSize', p => [
-        p.dstOffset ?? 0 + (p.copySize ?? 0),
-        p.dstOffset ?? 0 + (p.copySize ?? 0) + 8,
+        (p.dstOffset ?? 0) + (p.copySize ?? 0),
+        (p.dstOffset ?? 0) + (p.copySize ?? 0) + 8,
       ])
   )
   .fn(t => {
