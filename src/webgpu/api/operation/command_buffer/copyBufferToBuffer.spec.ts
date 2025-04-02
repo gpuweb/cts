@@ -1,6 +1,7 @@
 export const description = 'copyBufferToBuffer operation tests';
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
+import { assert } from '../../../../common/util/util.js';
 import { AllFeaturesMaxLimitsGPUTest } from '../../../gpu_test.js';
 
 export const g = makeTestGroup(AllFeaturesMaxLimitsGPUTest);
@@ -16,8 +17,11 @@ g.test('single')
   - covers the end of the dstBuffer
   - covers neither the beginning nor the end of the dstBuffer`
   )
-  .paramsSubcasesOnly(u =>
+  .params(u =>
     u //
+      // Whether the test case requires the newly-added method signature or not.
+      .combine('newSig', [false, true])
+      .beginSubcases()
       .combine('srcOffset', [0, 4, 8, 16, undefined])
       .combine('dstOffset', [0, 4, 8, 16, undefined])
       .unless(
@@ -32,6 +36,11 @@ g.test('single')
         (p.dstOffset ?? 0) + (p.copySize ?? 0),
         (p.dstOffset ?? 0) + (p.copySize ?? 0) + 8,
       ])
+      // Bifurcate the cases between newSig=false and newSig=true based on whether they need it.
+      .filter(p => {
+        const needsNewSignature = [p.srcOffset, p.dstOffset, p.copySize].includes(undefined);
+        return p.newSig === needsNewSignature;
+      })
   )
   .fn(t => {
     const { srcOffset, dstOffset, copySize, srcBufferSize, dstBufferSize } = t.params;
@@ -50,6 +59,7 @@ g.test('single')
 
     const encoder = t.device.createCommandEncoder();
     if (srcOffset === undefined || dstOffset === undefined) {
+      assert(srcOffset === undefined && dstOffset === undefined);
       encoder.copyBufferToBuffer(src, dst, copySize);
     } else {
       encoder.copyBufferToBuffer(src, srcOffset, dst, dstOffset, copySize);
