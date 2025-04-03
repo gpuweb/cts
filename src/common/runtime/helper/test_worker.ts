@@ -10,22 +10,27 @@ import { WorkerTestRunRequest } from './utils_worker.js';
 
 /** Query all currently-registered service workers, and unregister them. */
 function unregisterAllServiceWorkers() {
-  void navigator.serviceWorker.getRegistrations().then(registrations => {
-    for (const registration of registrations) {
-      void registration.unregister();
-    }
-  });
+  if ('serviceWorker' in navigator) {
+    void navigator.serviceWorker.getRegistrations().then(registrations => {
+      for (const registration of registrations) {
+        void registration.unregister();
+      }
+    });
+  }
 }
 
-// Firefox has serviceWorkers disabled in private mode
-// and Servo does not support serviceWorkers yet.
-if ('serviceWorker' in navigator) {
-  // NOTE: This code runs on startup for any runtime with worker support. Here, we use that chance to
-  // delete any leaked service workers, and register to clean up after ourselves at shutdown.
-  unregisterAllServiceWorkers();
-  window.addEventListener('beforeunload', () => {
-    unregisterAllServiceWorkers();
-  });
+// NOTE: This code runs on startup for any runtime with worker support. Here, we use that chance
+// to delete any leaked service workers (in case they weren't cleaned up by the 'beforeonload'
+// handler below).
+unregisterAllServiceWorkers();
+
+/**
+ * Add a 'beforeunload' handler. (We use this here instead of registerShutdownTask so that we don't
+ * have to rely on the runtime to call runShutdownTasks. We know we are on the Web main thread,
+ * so we may as well use addEventListener directly.)
+ */
+function addBeforeUnload(task: () => void) {
+  window.addEventListener('beforeunload', task);
 }
 
 abstract class TestBaseWorker {
@@ -104,8 +109,14 @@ export class TestDedicatedWorker extends TestBaseWorker {
       const selfPath = import.meta.url;
       const selfPathDir = selfPath.substring(0, selfPath.lastIndexOf('/'));
       const workerPath = selfPathDir + '/test_worker-worker.js';
-      this.worker = new Worker(workerPath, { type: 'module' });
-      this.worker.onmessage = ev => this.onmessage(ev);
+      const worker = new Worker(workerPath, { type: 'module' });
+      worker.onmessage = ev => this.onmessage(ev);
+      this.worker = worker;
+
+      // Try our best to clean up before the page unloads. The worker closes itself.
+      addBeforeUnload(() => {
+        worker.postMessage('shutdown');
+      });
     } catch (ex) {
       assert(ex instanceof Error);
       // Save the exception to re-throw in runImpl().
@@ -143,6 +154,11 @@ export class TestSharedWorker extends TestBaseWorker {
       this.port = worker.port;
       this.port.start();
       this.port.onmessage = ev => this.onmessage(ev);
+
+      // Try our best to clean up before the page unloads. The worker closes itself.
+      addBeforeUnload(() => {
+        worker.port.postMessage('shutdown');
+      });
     } catch (ex) {
       assert(ex instanceof Error);
       // Save the exception to re-throw in runImpl().
@@ -188,6 +204,12 @@ export class TestServiceWorker extends TestBaseWorker {
       await new Promise(resolve => timeout(resolve, 0));
     }
     const serviceWorker = registration.active;
+
+    // Try our best to clean up before the page unloads.
+    addBeforeUnload(() => {
+      serviceWorker.postMessage('shutdown');
+      unregisterAllServiceWorkers();
+    });
 
     navigator.serviceWorker.onmessage = ev => this.onmessage(ev);
     return this.makeRequestAndRecordResult(serviceWorker, query, expectations);

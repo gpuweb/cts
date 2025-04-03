@@ -142,6 +142,17 @@ export class DevicePool {
       holder.state = 'free';
     }
   }
+
+  /**
+   * Destroy the pool, moving it to the persistent 'failed' state and destroy()ing any devices
+   * in the pool, regardless of whether they're in use by a test.
+   */
+  destroy() {
+    if (this.holders instanceof DescriptorToHolderMap) {
+      this.holders.clear();
+    }
+    this.holders = 'failed';
+  }
 }
 
 /**
@@ -227,6 +238,14 @@ class DescriptorToHolderMap {
         return;
       }
     }
+  }
+
+  /** Destroy all the devices and clear the map. This destroys devices even if they're in use. */
+  clear() {
+    for (const [, value] of this.holders) {
+      value.device.destroy();
+    }
+    this.holders.clear();
   }
 }
 

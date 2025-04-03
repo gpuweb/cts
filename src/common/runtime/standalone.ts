@@ -3,6 +3,7 @@
 /* eslint no-console: "off" */
 
 import { dataCache } from '../framework/data_cache.js';
+import { runShutdownTasks } from '../framework/on_shutdown.js';
 import { getResourcePath, setBaseResourcePath } from '../framework/resources.js';
 import { globalTestConfig } from '../framework/test_config.js';
 import { DefaultTestFileLoader } from '../internal/file_loader.js';
@@ -30,10 +31,15 @@ let isFullCTS = false;
 
 globalTestConfig.frameworkDebugLog = console.log;
 
-window.onbeforeunload = () => {
+window.addEventListener('beforeunload', () => {
   // Prompt user before reloading if there are any results
-  return promptBeforeReload ? false : undefined;
-};
+  if (promptBeforeReload) {
+    return false;
+  }
+
+  runShutdownTasks();
+  return undefined;
+});
 
 const kOpenTestLinkAltText = 'Open';
 
