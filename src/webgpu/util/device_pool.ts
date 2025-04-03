@@ -409,7 +409,7 @@ class DeviceHolder implements DeviceProvider {
         this.device.popErrorScope(),
       ]);
     } catch (ex) {
-      assert(this.lostInfo !== undefined, 'popErrorScope failed; did beginTestScope get missed?');
+      assert(this.lostInfo !== undefined, 'popErrorScope failed; did the test body steal it?');
       throw ex;
     }
 
