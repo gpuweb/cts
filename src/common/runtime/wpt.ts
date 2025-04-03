@@ -1,6 +1,5 @@
 // Implements the wpt-embedded test runner (see also: wpt/cts.https.html).
 
-import { runShutdownTasks } from '../framework/on_shutdown.js';
 import { globalTestConfig } from '../framework/test_config.js';
 import { DefaultTestFileLoader } from '../internal/file_loader.js';
 import { prettyPrintLog } from '../internal/logging/log_message.js';
@@ -24,11 +23,6 @@ declare function assert_unreached(description: string): void;
 
 declare const loadWebGPUExpectations: Promise<unknown> | undefined;
 declare const shouldWebGPUCTSFailOnWarnings: Promise<boolean> | undefined;
-
-window.addEventListener('beforeunload', () => {
-  runShutdownTasks();
-  return undefined;
-});
 
 setup({
   // It's convenient for us to asynchronously add tests to the page. Prevent done() from being

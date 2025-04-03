@@ -3,7 +3,6 @@
 /* eslint no-console: "off" */
 
 import { dataCache } from '../framework/data_cache.js';
-import { runShutdownTasks } from '../framework/on_shutdown.js';
 import { getResourcePath, setBaseResourcePath } from '../framework/resources.js';
 import { globalTestConfig } from '../framework/test_config.js';
 import { DefaultTestFileLoader } from '../internal/file_loader.js';
@@ -26,20 +25,16 @@ import {
 import { TestDedicatedWorker, TestSharedWorker, TestServiceWorker } from './helper/test_worker.js';
 
 const rootQuerySpec = 'webgpu:*';
-let promptBeforeReload = false;
 let isFullCTS = false;
 
 globalTestConfig.frameworkDebugLog = console.log;
 
-window.addEventListener('beforeunload', () => {
-  // Prompt user before reloading if there are any results
-  if (promptBeforeReload) {
+// Prompt before reloading to avoid losing test results.
+function enablePromptBeforeReload() {
+  window.addEventListener('beforeunload', () => {
     return false;
-  }
-
-  runShutdownTasks();
-  return undefined;
-});
+  });
+}
 
 const kOpenTestLinkAltText = 'Open';
 
@@ -289,7 +284,7 @@ function makeSubtreeHTML(n: TestSubtree, parentLevel: TestQueryLevel): Visualize
       progressElem.style.display = '';
       // only prompt if this is the full CTS and we started from the root.
       if (isFullCTS && n.query.filePathParts.length === 0) {
-        promptBeforeReload = true;
+        enablePromptBeforeReload();
       }
     }
     if (stopRequested) {

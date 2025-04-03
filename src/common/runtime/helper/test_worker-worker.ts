@@ -14,7 +14,7 @@ const loader = new DefaultTestFileLoader();
 
 setBaseResourcePath('../../../resources');
 
-// Either a MessagePort or a DedicatedWorkerGlobalScope.
+// MessagePort, DedicatedWorkerGlobalScope, etc.
 type Sender = { postMessage: (x: unknown) => void };
 
 async function handleOnMessage(port: Sender, ev: MessageEvent) {

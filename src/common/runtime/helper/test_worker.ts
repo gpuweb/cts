@@ -1,3 +1,4 @@
+import { registerShutdownTask, runShutdownTasks } from '../../framework/on_shutdown.js';
 import { LogMessageWithStack } from '../../internal/logging/log_message.js';
 import { TransferredTestCaseResult, LiveTestCaseResult } from '../../internal/logging/result.js';
 import { TestCaseRecorder } from '../../internal/logging/test_case_recorder.js';
@@ -10,28 +11,24 @@ import { WorkerTestRunRequest } from './utils_worker.js';
 
 /** Query all currently-registered service workers, and unregister them. */
 function unregisterAllServiceWorkers() {
-  if ('serviceWorker' in navigator) {
-    void navigator.serviceWorker.getRegistrations().then(registrations => {
-      for (const registration of registrations) {
-        void registration.unregister();
-      }
-    });
-  }
+  void navigator.serviceWorker.getRegistrations().then(registrations => {
+    for (const registration of registrations) {
+      void registration.unregister();
+    }
+  });
 }
 
-// NOTE: This code runs on startup for any runtime with worker support. Here, we use that chance
-// to delete any leaked service workers (in case they weren't cleaned up by the 'beforeonload'
-// handler below).
-unregisterAllServiceWorkers();
-
-/**
- * Add a 'beforeunload' handler. (We use this here instead of registerShutdownTask so that we don't
- * have to rely on the runtime to call runShutdownTasks. We know we are on the Web main thread,
- * so we may as well use addEventListener directly.)
- */
-function addBeforeUnload(task: () => void) {
-  window.addEventListener('beforeunload', task);
-}
+// In practice all Web-based runtimes should be including this file, so take the opportunity to set
+// up runShutdownTasks. None of these events are guaranteed to happen, but cleaning up is very
+// important, so we try our best (and don't worry about shutdown performance or disabling bfcache).
+// (We could try 'visibilitychange', but since it can happen in the middle of the page lifetime,
+// it is more likely to have unintended consequences and would need to do different stuff.)
+// - 'unload' supposedly always disables the bfcache.
+window.addEventListener('unload', runShutdownTasks);
+// - 'beforeunload' may disable the bfcache but may be called more reliably than 'unload'.
+window.addEventListener('beforeunload', runShutdownTasks);
+// - 'pagehide' won't disable the bfcache but may be called more reliably than the others.
+window.addEventListener('pagehide', runShutdownTasks);
 
 abstract class TestBaseWorker {
   protected readonly ctsOptions: CTSOptions;
@@ -110,13 +107,11 @@ export class TestDedicatedWorker extends TestBaseWorker {
       const selfPathDir = selfPath.substring(0, selfPath.lastIndexOf('/'));
       const workerPath = selfPathDir + '/test_worker-worker.js';
       const worker = new Worker(workerPath, { type: 'module' });
-      worker.onmessage = ev => this.onmessage(ev);
       this.worker = worker;
+      this.worker.onmessage = ev => this.onmessage(ev);
 
-      // Try our best to clean up before the page unloads. The worker closes itself.
-      addBeforeUnload(() => {
-        worker.postMessage('shutdown');
-      });
+      // Try to send a shutdown signal to the worker on shutdown.
+      registerShutdownTask(() => worker.postMessage('shutdown'));
     } catch (ex) {
       assert(ex instanceof Error);
       // Save the exception to re-throw in runImpl().
@@ -155,10 +150,8 @@ export class TestSharedWorker extends TestBaseWorker {
       this.port.start();
       this.port.onmessage = ev => this.onmessage(ev);
 
-      // Try our best to clean up before the page unloads. The worker closes itself.
-      addBeforeUnload(() => {
-        worker.port.postMessage('shutdown');
-      });
+      // Try to send a shutdown signal to the worker on shutdown.
+      registerShutdownTask(() => worker.port.postMessage('shutdown'));
     } catch (ex) {
       assert(ex instanceof Error);
       // Save the exception to re-throw in runImpl().
@@ -176,8 +169,25 @@ export class TestSharedWorker extends TestBaseWorker {
 }
 
 export class TestServiceWorker extends TestBaseWorker {
+  private lastServiceWorker: ServiceWorker | null = null;
+
   constructor(ctsOptions?: CTSOptions) {
     super('service', ctsOptions);
+
+    // If the runtime is trying to use service workers, first clean up any service workers that may
+    // have leaked from previous incarnations of the page. Service workers *shouldn't* affect
+    // worker=none/dedicated/shared, so it should be OK if this constructor isn't called.
+    unregisterAllServiceWorkers();
+
+    // Try to send a shutdown signal to the worker on shutdown.
+    registerShutdownTask(() => {
+      this.runShutdownTasksOnLastServiceWorker();
+      unregisterAllServiceWorkers();
+    });
+  }
+
+  private runShutdownTasksOnLastServiceWorker() {
+    this.lastServiceWorker?.postMessage('shutdown');
   }
 
   override async runImpl(query: string, expectations: TestQueryWithExpectation[] = []) {
@@ -194,22 +204,24 @@ export class TestServiceWorker extends TestBaseWorker {
       `${selfPathDir}/../../../${suite}/webworker/${fileName}.as_worker.js`
     ).toString();
 
-    // If a registration already exists for this path, it will be ignored.
+    // Ensure the correct service worker is registered.
     const registration = await navigator.serviceWorker.register(serviceWorkerURL, {
       type: 'module',
     });
-    // Make sure the registration we just requested is active. (We don't worry about it being
-    // outdated from a previous page load, because we wipe all service workers on shutdown/startup.)
-    while (!registration.active || registration.active.scriptURL !== serviceWorkerURL) {
-      await new Promise(resolve => timeout(resolve, 0));
-    }
-    const serviceWorker = registration.active;
+    const registrationPending = () =>
+      !registration.active || registration.active.scriptURL !== serviceWorkerURL;
 
-    // Try our best to clean up before the page unloads.
-    addBeforeUnload(() => {
-      serviceWorker.postMessage('shutdown');
-      unregisterAllServiceWorkers();
-    });
+    // Ensure the registration we just requested is active. (We don't worry about it being
+    // outdated from a previous page load, because we wipe all service workers on shutdown/startup.)
+    const isNewInstance = registrationPending();
+    if (isNewInstance) {
+      this.runShutdownTasksOnLastServiceWorker();
+      do {
+        await new Promise(resolve => timeout(resolve, 0));
+      } while (registrationPending());
+    }
+    const serviceWorker = registration.active!;
+    this.lastServiceWorker = serviceWorker;
 
     navigator.serviceWorker.onmessage = ev => this.onmessage(ev);
     return this.makeRequestAndRecordResult(serviceWorker, query, expectations);
