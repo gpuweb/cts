@@ -112,14 +112,8 @@ export class DevicePool {
       // created for the next test.
       if (!(ex instanceof TestFailedButDeviceReusable)) {
         this.holders.delete(holder);
-        if ('destroy' in holder.device) {
-          holder.device.destroy();
-          // Wait for destruction (or actual device loss if any) to complete.
-          await holder.device.lost;
-        }
-
-        // Release the (hopefully only) ref to the GPUDevice.
-        holder.releaseGPUDevice();
+        // Wait for destruction (or actual device loss if any) to complete.
+        await holder.device.lost;
 
         // Try to clean up, in case there are stray GPU resources in need of collection.
         if (ex instanceof TestOOMedShouldAttemptGC) {
@@ -156,6 +150,7 @@ class DescriptorToHolderMap {
   delete(holder: DeviceHolder): void {
     for (const [k, v] of this.holders) {
       if (v === holder) {
+        holder.device.destroy();
         this.holders.delete(k);
         return;
       }
@@ -215,16 +210,20 @@ class DescriptorToHolderMap {
     return value;
   }
 
-  /** Insert an entry, then remove the least-recently-used items if there are too many. */
+  /**
+   * Insert an entry, then remove and destroy() the least-recently-used devices
+   * if there are too many.
+   */
   private insertAndCleanUp(key: string, value: DeviceHolder) {
     this.holders.set(key, value);
 
     const kMaxEntries = 5;
     if (this.holders.size > kMaxEntries) {
       // Delete the first (least recently used) item in the set.
-      for (const [key] of this.holders) {
+      for (const [key, value] of this.holders) {
+        value.device.destroy();
         this.holders.delete(key);
-        return;
+        break;
       }
     }
   }
@@ -443,13 +442,5 @@ class DeviceHolder implements DeviceProvider {
         `Unexpected validation error occurred: ${gpuValidationError.message}`
       );
     }
-  }
-
-  /**
-   * Release the ref to the GPUDevice. This should be the only ref held by the DevicePool or
-   * GPUTest, so in theory it can get garbage collected.
-   */
-  releaseGPUDevice(): void {
-    this._device = undefined;
   }
 }
