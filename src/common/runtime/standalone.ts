@@ -25,15 +25,16 @@ import {
 import { TestDedicatedWorker, TestSharedWorker, TestServiceWorker } from './helper/test_worker.js';
 
 const rootQuerySpec = 'webgpu:*';
-let promptBeforeReload = false;
 let isFullCTS = false;
 
 globalTestConfig.frameworkDebugLog = console.log;
 
-window.onbeforeunload = () => {
-  // Prompt user before reloading if there are any results
-  return promptBeforeReload ? false : undefined;
-};
+// Prompt before reloading to avoid losing test results.
+function enablePromptBeforeReload() {
+  window.addEventListener('beforeunload', () => {
+    return false;
+  });
+}
 
 const kOpenTestLinkAltText = 'Open';
 
@@ -283,7 +284,7 @@ function makeSubtreeHTML(n: TestSubtree, parentLevel: TestQueryLevel): Visualize
       progressElem.style.display = '';
       // only prompt if this is the full CTS and we started from the root.
       if (isFullCTS && n.query.filePathParts.length === 0) {
-        promptBeforeReload = true;
+        enablePromptBeforeReload();
       }
     }
     if (stopRequested) {
