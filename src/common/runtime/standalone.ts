@@ -702,7 +702,7 @@ void (async () => {
   });
 
   document.getElementById('saveResultsJSON')!.addEventListener('click', () => {
-    const text = JSON.stringify(logger.asJSON(2));
+    const text = logger.asJSON(2);
     const blob = new Blob([text], { type: 'text/plain' });
     const link = document.createElement('a');
     link.download = 'results-webgpu-cts.json';
