@@ -261,8 +261,8 @@ function canonicalizeDescriptor(
   /** Canonicalized version of the requested limits: in canonical order, with only values which are
    * specified _and_ non-default. */
   const limitsCanonicalized: Record<string, number> = {};
-  const adapterOptions = getDefaultRequestAdapterOptions();
-  const featureLevel = adapterOptions?.featureLevel === 'compatibility' ? 'compatibility' : 'core';
+  const featureLevel = getDefaultRequestAdapterOptions()?.featureLevel ?? 'core';
+  assert(featureLevel === 'compatibility' || featureLevel === 'core');
   const defaultLimits = getDefaultLimits(featureLevel);
   if (desc.requiredLimits) {
     for (const limit of kLimits) {
