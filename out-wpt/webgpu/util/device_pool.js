@@ -279,11 +279,8 @@ desc)
   /** Canonicalized version of the requested limits: in canonical order, with only values which are
    * specified _and_ non-default. */
   const limitsCanonicalized = {};
-  // MAINTENANCE_TODO: Remove cast when @webgpu/types includes compatibilityMode
-  const adapterOptions = getDefaultRequestAdapterOptions();
-
-
-  const featureLevel = adapterOptions?.compatibilityMode ? 'compatibility' : 'core';
+  const featureLevel = getDefaultRequestAdapterOptions()?.featureLevel ?? 'core';
+  assert(featureLevel === 'compatibility' || featureLevel === 'core');
   const defaultLimits = getDefaultLimits(featureLevel);
   if (desc.requiredLimits) {
     for (const limit of kLimits) {
