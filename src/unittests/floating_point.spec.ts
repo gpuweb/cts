@@ -5356,7 +5356,7 @@ const kMixImpreciseIntervalCases = {
     { input: [kValue.f32.negative.min, -10.0, 5.0], expected: kUnboundedEndpoints },
     { input: [kValue.f32.negative.min, 10.0, 0.5], expected: kUnboundedEndpoints },
     { input: [kValue.f32.negative.min, -10.0, 0.5], expected:  [reinterpretU32AsF32(0xff000000),  reinterpretU32AsF32(0xfeffffff) ]},
-    // Special case from mix bug
+    // Test the case of unbounded precision of mix when implementing the subtraction intermediate value.
     { input: [kValue.f32.positive.min, 1.0, kValue.f32.positive.min], expected: [reinterpretU32AsF32(0x00800000),reinterpretU32AsF32(0x01000000)]},
   ] as ScalarTripleToIntervalCase[],
   f16: [
