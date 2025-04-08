@@ -6082,10 +6082,12 @@ const kDotIntervalCases = {
     { input: [[kValue.f32.positive.max, 1.0, 2.0, 3.0], [1.0, kValue.f32.negative.min, 2.0, 3.0]], expected: kUnboundedEndpoints },
   ] as VectorPairToIntervalCase[],
   f16: [
-    // Due to unbounded precision, intermediate correctly rounded computations could result in intervals that include infinity.
-    // This is because the computation kValue.f16.negative.min - 4.0 = [-inf, kValue.f16.negative.min]
-    // due to the ULP_neg(kValue.f16.negative.min) => -inf
-    // See: https://www.w3.org/TR/WGSL/#floating-point-accuracy
+    // Inputs with large values but cancel out to finite result. In these cases, 2.0*2.0 = 4.0 and
+    // 3.0*3.0 = 9.0 is not small enough comparing to kValue.f16.positive.max = 65504, as a result
+    // kValue.f16.positive.max + 9.0 = 65513 is exactly representable in f32 and f64. So, if the
+    // positive and negative large number don't cancel each other first, the computation will
+    // overflow f16 and result in unbounded endpoints.
+    // https://github.com/gpuweb/cts/issues/2155
     { input: [[kValue.f16.positive.max, 1.0, 2.0, 3.0], [-1.0, kValue.f16.positive.max, -2.0, -3.0]], expected: kUnboundedEndpoints },
     { input: [[kValue.f16.positive.max, 1.0, 2.0, 3.0], [1.0, kValue.f16.negative.min, 2.0, 3.0]], expected: kUnboundedEndpoints },
   ] as VectorPairToIntervalCase[],
