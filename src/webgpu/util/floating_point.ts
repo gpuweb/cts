@@ -710,6 +710,39 @@ export abstract class FPTraits {
   }
 
   /**
+   * WGSL specifies unbounded precision:
+   *   https://www.w3.org/TR/WGSL/#floating-point-accuracy
+   * In most computations doubles (number in js) can provide enough
+   * precision to give the correctly rounded interval.
+   * However in some cases (addition/subtraction) doubles clearly do
+   * not provide enough numeric precision.
+   * These cases are whenever a large number (eg 1.0) is added or
+   * subtracted from a much smaller number (eg smallest positive normal).
+   * The result will, incorrectly, simply be the original large number.
+   * We must detect these cases where double precision cannot represent
+   * this compuation then we must manually create the interval.
+   */
+  /** @returns an interval containing the correctly rounded val with respect to unbounded precision */
+  public correctlyRoundedIntervalWithUnboundedPrecision(
+    val: number,
+    large_val: number,
+    small_val: number
+  ): FPInterval {
+    if (val === large_val && !(small_val === 0.0)) {
+      if (Math.sign(small_val) >= 0) {
+        return this.correctlyRoundedInterval(
+          this.toInterval([large_val, nextAfterF64(large_val, 'positive', 'flush')])
+        );
+      } else {
+        return this.correctlyRoundedInterval(
+          this.toInterval([nextAfterF64(large_val, 'negative', 'flush'), large_val])
+        );
+      }
+    }
+    return this.correctlyRoundedInterval(val);
+  }
+
+  /**
    * Makes a param that can be turned into an interval
    */
   public toParam(n: number | IntervalEndpoints): FPIntervalParam {
@@ -2801,19 +2834,7 @@ export abstract class FPTraits {
       const sum = x + y;
       const large_val = Math.abs(x) > Math.abs(y) ? x : y;
       const small_val = Math.abs(x) > Math.abs(y) ? y : x;
-      if (sum === large_val && !(small_val === 0.0)) {
-        if (Math.sign(small_val) >= 0) {
-          return this.correctlyRoundedInterval(
-            this.toInterval([large_val, nextAfterF64(large_val, 'positive', 'flush')])
-          );
-        } else {
-          return this.correctlyRoundedInterval(
-            this.toInterval([nextAfterF64(large_val, 'negative', 'flush'), large_val])
-          );
-        }
-      }
-
-      return this.correctlyRoundedInterval(x + y);
+      return this.correctlyRoundedIntervalWithUnboundedPrecision(sum, large_val, small_val);
     },
   };
 
@@ -4334,22 +4355,9 @@ export abstract class FPTraits {
   private readonly SubtractionIntervalOp: ScalarPairToIntervalOp = {
     impl: (x: number, y: number): FPInterval => {
       const difference: number = x - y;
-      // WGSL spec specifies unbounded precision. In the cases where double precision cannot represent this compuation we must manually create the interval.
       const large_val = Math.abs(x) > Math.abs(y) ? x : -y;
       const small_val = Math.abs(x) > Math.abs(y) ? -y : x;
-      if (difference === large_val && !(small_val === 0.0)) {
-        if (Math.sign(small_val) >= 0) {
-          return this.correctlyRoundedInterval(
-            this.toInterval([large_val, nextAfterF64(large_val, 'positive', 'flush')])
-          );
-        } else {
-          return this.correctlyRoundedInterval(
-            this.toInterval([nextAfterF64(large_val, 'negative', 'flush'), large_val])
-          );
-        }
-      }
-
-      return this.correctlyRoundedInterval(difference);
+      return this.correctlyRoundedIntervalWithUnboundedPrecision(difference, large_val, small_val);
     },
   };
 
