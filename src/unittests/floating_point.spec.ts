@@ -5346,12 +5346,12 @@ const kMixImpreciseIntervalCases = {
     { input: [-1.0, 1.0, 0.9], expected: [reinterpretU64AsF64(0x3fe9_9999_8000_0000n), reinterpretU64AsF64(0x3fe9_9999_c000_0000n)] },  // ~0.8
 
     // Showing how precise and imprecise versions diff
-    // Note that this expectation is 0 in f32 as |10.0| is much smaller than
-    // |f32.negative.min|.
-    // So that 10 - f32.negative.min == -f32.negative.min even in f64.
+    // Note that this expectation is unbounded [-inf,inf] in f32 as |10.0| is much smaller than
+    // |f32.negative.min|. The implementation of imprecise is is := x + (y - x) * z
+    // So that 10 - f32.negative.min == [f32.positive.max, inf] due to correctly rounding of unbounded precision.
     { input: [kValue.f32.negative.min, 10.0, 1.0], expected: kUnboundedEndpoints},
-    // -10.0 is the same, much smaller than f32.negative.min
-    { input: [kValue.f32.negative.min, -10.0, 1.0], expected:  [reinterpretU32AsF32(0xf3800000) ,0.0]  },
+    // -10.0 is the same, however due to  smaller than f32.negative.min we end up with [ULP_neg(f32.positive.max), f32.positive.max]
+    { input: [kValue.f32.negative.min, -10.0, 1.0], expected:  [reinterpretU32AsF32(0xf3800000), 0.0]  },
     { input: [kValue.f32.negative.min,  10.0, 5.0], expected: kUnboundedEndpoints },
     { input: [kValue.f32.negative.min, -10.0, 5.0], expected: kUnboundedEndpoints },
     { input: [kValue.f32.negative.min, 10.0, 0.5], expected: kUnboundedEndpoints },
@@ -6074,22 +6074,18 @@ g.test('distanceIntervalVector')
 // prettier-ignore
 const kDotIntervalCases = {
   f32: [
-    // Inputs with large values but cancel out to finite result. In these cases, 2.0*2.0 = 4.0 and
-    // 3.0*3.0 = 9.0 is much smaller than kValue.f32.positive.max, as a result
-    // kValue.f32.positive.max + 9.0 = kValue.f32.positive.max in f32 and even f64. So, if the
-    // positive and negative large number cancel each other first, the result would be
-    // 2.0*2.0+3.0*3.0 = 13. Otherwise, the result would be 0.0 or 4.0 or 9.0.
-    // https://github.com/gpuweb/cts/issues/2155
+    // Due to unbounded precision, intermediate correctly rounded computations could result in intervals that include infinity.
+    // This is because the computation kValue.f32.negative.min - 4.0 = [-inf, kValue.f32.negative.min]
+    // due to the ULP_neg(kValue.f32.negative.min) => -inf
+    // See: https://www.w3.org/TR/WGSL/#floating-point-accuracy
     { input: [[kValue.f32.positive.max, 1.0, 2.0, 3.0], [-1.0, kValue.f32.positive.max, -2.0, -3.0]], expected: kUnboundedEndpoints},
     { input: [[kValue.f32.positive.max, 1.0, 2.0, 3.0], [1.0, kValue.f32.negative.min, 2.0, 3.0]], expected: kUnboundedEndpoints },
   ] as VectorPairToIntervalCase[],
   f16: [
-    // Inputs with large values but cancel out to finite result. In these cases, 2.0*2.0 = 4.0 and
-    // 3.0*3.0 = 9.0 is not small enough comparing to kValue.f16.positive.max = 65504, as a result
-    // kValue.f16.positive.max + 9.0 = 65513 is exactly representable in f32 and f64. So, if the
-    // positive and negative large number don't cancel each other first, the computation will
-    // overflow f16 and result in unbounded endpoints.
-    // https://github.com/gpuweb/cts/issues/2155
+    // Due to unbounded precision, intermediate correctly rounded computations could result in intervals that include infinity.
+    // This is because the computation kValue.f16.negative.min - 4.0 = [-inf, kValue.f16.negative.min]
+    // due to the ULP_neg(kValue.f16.negative.min) => -inf
+    // See: https://www.w3.org/TR/WGSL/#floating-point-accuracy
     { input: [[kValue.f16.positive.max, 1.0, 2.0, 3.0], [-1.0, kValue.f16.positive.max, -2.0, -3.0]], expected: kUnboundedEndpoints },
     { input: [[kValue.f16.positive.max, 1.0, 2.0, 3.0], [1.0, kValue.f16.negative.min, 2.0, 3.0]], expected: kUnboundedEndpoints },
   ] as VectorPairToIntervalCase[],

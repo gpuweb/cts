@@ -712,15 +712,17 @@ export abstract class FPTraits {
   /**
    * WGSL specifies unbounded precision:
    *   https://www.w3.org/TR/WGSL/#floating-point-accuracy
-   * In most computations doubles (number in js) can provide enough
-   * precision to give the correctly rounded interval.
-   * However in some cases (addition/subtraction) doubles clearly do
-   * not provide enough numeric precision.
-   * These cases are whenever a large number (eg 1.0) is added or
-   * subtracted from a much smaller number (eg smallest positive normal).
-   * The result will, incorrectly, simply be the original large number.
-   * We must detect these cases where double precision cannot represent
-   * this compuation then we must manually create the interval.
+   * In most computations doubles (number in js) are equivalent
+   * to correctly rounded intervals. However in some cases
+   * (addition/subtraction) doubles do not provide enough numeric precision.
+   * 
+   * These cases are whenever a number, x (e.g. 1.0) is added (or subtracted)
+   * from a much smaller number, y (e.g. smallest positive normal), such that
+   * the difference between them is smaller then ULP(x). When working in JS
+   * numbers the result will, incorrectly, simply be x, since it will get
+   * rounded. We must detect these cases where double precision does not
+   * represent infinitely accurate computations accurately then we must
+   * manually create the interval.
    */
   /** @returns an interval containing the correctly rounded val with respect to unbounded precision */
   public correctlyRoundedIntervalWithUnboundedPrecision(
