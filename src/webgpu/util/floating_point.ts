@@ -715,7 +715,7 @@ export abstract class FPTraits {
    * In most computations doubles (number in js) are equivalent
    * to correctly rounded intervals. However in some cases
    * (addition/subtraction) doubles do not provide enough numeric precision.
-   * 
+   *
    * These cases are whenever a number, x (e.g. 1.0) is added (or subtracted)
    * from a much smaller number, y (e.g. smallest positive normal), such that
    * the difference between them is smaller then ULP(x). When working in JS
