@@ -38,6 +38,7 @@ import {
   map2DArray,
   oneULPF16,
   oneULPF32,
+  nextAfterF64,
   quantizeToF16,
   quantizeToF32,
   scalarF16Range,
@@ -2797,6 +2798,21 @@ export abstract class FPTraits {
 
   private readonly AdditionIntervalOp: ScalarPairToIntervalOp = {
     impl: (x: number, y: number): FPInterval => {
+      const sum = x + y;
+      const large_val = Math.abs(x) > Math.abs(y) ? x : y;
+      const small_val = Math.abs(x) > Math.abs(y) ? y : x;
+      if (sum === large_val && !(small_val === 0.0)) {
+        if (Math.sign(small_val) >= 0) {
+          return this.correctlyRoundedInterval(
+            this.toInterval([large_val, nextAfterF64(large_val, 'positive', 'flush')])
+          );
+        } else {
+          return this.correctlyRoundedInterval(
+            this.toInterval([nextAfterF64(large_val, 'negative', 'flush'), large_val])
+          );
+        }
+      }
+
       return this.correctlyRoundedInterval(x + y);
     },
   };
@@ -4317,7 +4333,23 @@ export abstract class FPTraits {
 
   private readonly SubtractionIntervalOp: ScalarPairToIntervalOp = {
     impl: (x: number, y: number): FPInterval => {
-      return this.correctlyRoundedInterval(x - y);
+      const difference: number = x - y;
+      // WGSL spec specifies unbounded precision. In the cases where double precision cannot represent this compuation we must manually create the interval.
+      const large_val = Math.abs(x) > Math.abs(y) ? x : -y;
+      const small_val = Math.abs(x) > Math.abs(y) ? -y : x;
+      if (difference === large_val && !(small_val === 0.0)) {
+        if (Math.sign(small_val) >= 0) {
+          return this.correctlyRoundedInterval(
+            this.toInterval([large_val, nextAfterF64(large_val, 'positive', 'flush')])
+          );
+        } else {
+          return this.correctlyRoundedInterval(
+            this.toInterval([nextAfterF64(large_val, 'negative', 'flush'), large_val])
+          );
+        }
+      }
+
+      return this.correctlyRoundedInterval(difference);
     },
   };
 
