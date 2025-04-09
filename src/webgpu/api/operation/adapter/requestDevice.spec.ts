@@ -104,7 +104,7 @@ g.test('stale')
   )
   .paramsSubcasesOnly(u =>
     u
-      .combine('initialError', [undefined, 'TypeError', 'OperationError'])
+      .combine('initialError', [undefined, 'TypeError', 'OperationError', 'ConsumedAdapter'])
       .combine('awaitInitialError', [true, false])
       .combine('awaitSuccess', [true, false])
       .unless(
@@ -155,6 +155,12 @@ g.test('stale')
               requiredLimits: { minUniformBufferOffsetAlignment: 255 },
             })
           );
+        }
+        break;
+      case 'ConsumedAdapter':
+        // Cause an operation error by requesting a device on a consumed adapter.
+        if (!awaitInitialError) {
+          t.shouldReject('OperationError', t.requestDeviceTracked(adapter));
         }
         break;
     }
