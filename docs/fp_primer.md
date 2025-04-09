@@ -261,6 +261,8 @@ since its native number format is higher precision (double-precision/f64), so
 all f64, f32, and f16 values can be represented in it. Where this breaks down
 will be discussed in the section on compile time vs runtime execution.
 
+Here?
+
 The true value is sometimes representable exactly as a floating point value, but
 often is not.
 
@@ -899,6 +901,7 @@ shader being run.
 |------------------------|---------------:|------------:|---------:|--------------:|-----------------------------:|
 | Negative Infinity      |             -∞ | 0xff80 0000 |        1 |     1111 1111 | 0000 0000 0000 0000 0000 000 |
 | Min Negative Normal    | -3.40282346E38 | 0xff7f ffff |        1 |     1111 1110 | 1111 1111 1111 1111 1111 111 |
+| Max Negative i32       |    -2147483648 | 0xCF00 0000 |        1 |     1001 1110 | 0000 0000 0000 0000 0000 000 |
 | Max Negative Normal    | -1.1754943E−38 | 0x8080 0000 |        1 |     0000 0001 | 0000 0000 0000 0000 0000 000 |
 | Min Negative Subnormal | -1.1754942E-38 | 0x807f ffff |        1 |     0000 0000 | 1111 1111 1111 1111 1111 111 |
 | Max Negative Subnormal | -1.4012984E−45 | 0x8000 0001 |        1 |     0000 0000 | 0000 0000 0000 0000 0000 001 |
@@ -907,8 +910,11 @@ shader being run.
 | Min Positive Subnormal |  1.4012984E−45 | 0x0000 0001 |        0 |     0000 0000 | 0000 0000 0000 0000 0000 001 |
 | Max Positive Subnormal |  1.1754942E-38 | 0x007f ffff |        0 |     0000 0000 | 1111 1111 1111 1111 1111 111 |
 | Min Positive Normal    |  1.1754943E−38 | 0x0080 0000 |        0 |     0000 0001 | 0000 0000 0000 0000 0000 000 |
+| Max Positive i32       |     2147483520 | 0x4efff fff |        0 |     1001 1101 | 1111 1111 1111 1111 1111 111 |
+| Max Positive u32       |     4294967040 | 0x4f7f ffff |        0 |     1001 1110 | 1111 1111 1111 1111 1111 111 |
 | Max Positive Normal    |  3.40282346E38 | 0x7f7f ffff |        0 |     1111 1110 | 1111 1111 1111 1111 1111 111 |
 | Negative Infinity      |              ∞ | 0x7f80 0000 |        0 |     1111 1111 | 0000 0000 0000 0000 0000 000 |
+
 
 ### Significant f16 Values
 
