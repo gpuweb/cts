@@ -6080,7 +6080,7 @@ const kDotIntervalCases = {
     // See: https://www.w3.org/TR/WGSL/#floating-point-accuracy
     { input: [[kValue.f32.positive.max, 1.0, 2.0, 3.0], [-1.0, kValue.f32.positive.max, -2.0, -3.0]], expected: kUnboundedEndpoints},
     { input: [[kValue.f32.positive.max, 1.0, 2.0, 3.0], [1.0, kValue.f32.negative.min, 2.0, 3.0]], expected: kUnboundedEndpoints },
-    // Exactly as above but simply 2 ulp magnitude smaller. 
+    // Exactly as above but simply 2 ulp magnitude smaller (away from kValue.f32.positive.max).
     // This avoids intermediate intervals that overflow into infinity and we end up with large but finite intervals.
     { input: [[reinterpretU32AsF32(0x7f7ffffd), 1.0, 2.0, 3.0], [-1.0, kValue.f32.positive.max, -2.0, -3.0]], expected:  [0.0, reinterpretU32AsF32(0x74000000)]},
     { input: [[reinterpretU32AsF32(0x7f7ffffd), 1.0, 2.0, 3.0], [1.0, kValue.f32.negative.min, 2.0, 3.0]], expected: [reinterpretU32AsF32(0xf4000000), 0.0] },
