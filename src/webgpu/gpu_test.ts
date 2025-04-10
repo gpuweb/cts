@@ -1582,19 +1582,6 @@ export function RequiredLimitsTestMixin<F extends FixtureClass<GPUTestBase>>(
 }
 
 /**
- * Requests all the max limits from the adapter.
- * @deprecated Use AllFeaturesMaxLimitsGPUTest or related.
- */
-export function MaxLimitsTestMixin<F extends FixtureClass<GPUTestBase>>(Base: F) {
-  return RequiredLimitsTestMixin(Base, {
-    getRequiredLimits: getAdapterLimitsAsDeviceRequiredLimits,
-    key() {
-      return 'AllLimits';
-    },
-  });
-}
-
-/**
  * Used by AllFeaturesMaxLimitsGPUTest to request a device with all limits and features of the adapter.
  */
 export class AllFeaturesMaxLimitsGPUTestSubcaseBatchState extends GPUTestSubcaseBatchState {
