@@ -869,11 +869,6 @@ export class AllFeaturesMaxLimitsValidationTest extends AllFeaturesMaxLimitsGPUT
 }
 
 /**
- * @deprecated Use AllFeaturesMaxLimitsValidationTest or UniqueFeaturesAndLimitsValidationTest
- */
-export class ValidationTest extends ValidationTestImpl {}
-
-/**
  * Fixture for WebGPU validation tests that need to test the absence of features and or lower limits
  */
 export class UniqueFeaturesAndLimitsValidationTest extends ValidationTestImpl {}
