@@ -116,7 +116,7 @@ const kWorkgroupSizeTests = {
   },
 
   trailing_comma_x: {
-    src: `@workgroup_size(8)`,
+    src: `@workgroup_size(8, )`,
     pass: true,
   },
   trailing_comma_y: {
