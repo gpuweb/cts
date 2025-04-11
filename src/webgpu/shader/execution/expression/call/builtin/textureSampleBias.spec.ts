@@ -12,7 +12,6 @@ import {
   isTextureFormatPossiblyFilterableAsTextureF32,
   kAllTextureFormats,
 } from '../../../../../format_info.js';
-import { TextureTestMixin } from '../../../../../gpu_test.js';
 
 import {
   vec2,
@@ -37,7 +36,7 @@ import {
   skipIfTextureFormatNotSupportedOrNeedsFilteringAndIsUnfilterable,
 } from './texture_utils.js';
 
-export const g = makeTestGroup(TextureTestMixin(WGSLTextureSampleTest));
+export const g = makeTestGroup(WGSLTextureSampleTest);
 
 // See comment "Issues with textureSampleBias" in texture_utils.ts
 // 3 was chosen because it shows errors on M1 Mac
