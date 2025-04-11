@@ -5,13 +5,18 @@
 
   getBlockInfoForColorTextureFormat,
   getBlockInfoForTextureFormat,
-  kEncodableTextureFormats } from
+  kEncodableTextureFormats,
+  resolvePerAspectFormat } from
 './format_info.js';
 
 import { checkElementsEqual } from './util/check_contents.js';
 import { align } from './util/math.js';
 import { physicalMipSizeFromTexture, virtualMipSize } from './util/texture/base.js';
-import { bytesInACompleteRow } from './util/texture/layout.js';
+import {
+  bytesInACompleteRow,
+  getTextureCopyLayout } from
+
+'./util/texture/layout.js';
 
 import { TexelView } from './util/texture/texel_view.js';
 import {
@@ -378,6 +383,60 @@ size)
       expectedReadback.cleanup();
     }
   });
+}
+
+/**
+ * Expect an entire GPUTexture to have a single color at the given mip level (defaults to 0).
+ * MAINTENANCE_TODO: Remove this and/or replace it with a helper in TextureTestMixin.
+ */
+export function expectSingleColorWithTolerance(
+t,
+src,
+format,
+{
+  size,
+  exp,
+  dimension = '2d',
+  slice = 0,
+  layout,
+  maxFractionalDiff
+
+
+
+
+
+
+
+})
+{
+  assert(slice === 0 || dimension === '2d', 'texture slices are only implemented for 2d textures');
+
+  format = resolvePerAspectFormat(format, layout?.aspect);
+  const { mipSize } = getTextureCopyLayout(format, dimension, size, layout);
+  // MAINTENANCE_TODO: getTextureCopyLayout does not return the proper size for array textures,
+  // i.e. it will leave the z/depth value as is instead of making it 1 when dealing with 2d
+  // texture arrays. Since we are passing in the dimension, we should update it to return the
+  // corrected size.
+  const copySize = [
+  mipSize[0],
+  dimension !== '1d' ? mipSize[1] : 1,
+  dimension === '3d' ? mipSize[2] : 1];
+
+
+  // Create a TexelView that returns exp for all texels.
+  const expTexelView = TexelView.fromTexelsAsColors(format, () => exp);
+  const source = {
+    texture: src,
+    mipLevel: layout?.mipLevel ?? 0,
+    aspect: layout?.aspect ?? 'all',
+    origin: [0, 0, slice]
+  };
+  const comparisonOptions = {
+    maxFractionalDiff: maxFractionalDiff ?? 0
+  };
+  t.eventualExpectOK(
+    textureContentIsOKByT2B(t, source, copySize, { expTexelView }, comparisonOptions)
+  );
 }
 
 export function copyWholeTextureToNewBufferSimple(
