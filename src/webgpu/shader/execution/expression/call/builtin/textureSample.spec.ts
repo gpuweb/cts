@@ -15,7 +15,6 @@ import {
   textureDimensionAndFormatCompatible,
   isTextureFormatPossiblyFilterableAsTextureF32,
 } from '../../../../../format_info.js';
-import { TextureTestMixin } from '../../../../../gpu_test.js';
 
 import {
   vec2,
@@ -42,7 +41,7 @@ import {
   generateTextureBuiltinInputs1D,
 } from './texture_utils.js';
 
-export const g = makeTestGroup(TextureTestMixin(WGSLTextureSampleTest));
+export const g = makeTestGroup(WGSLTextureSampleTest);
 
 g.test('sampled_1d_coords')
   .specURL('https://www.w3.org/TR/WGSL/#texturesample')
