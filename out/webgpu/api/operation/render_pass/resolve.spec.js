@@ -14,7 +14,8 @@ Tests a render pass with a resolveTarget resolves correctly for many combination
   - TODO?: resolveTarget {2d array layer, TODO: 3d slice} {0, >0} with {2d, TODO: 3d} resolveTarget
     (different z from colorAttachment)
 `;import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { AllFeaturesMaxLimitsGPUTest, TextureTestMixin } from '../../../gpu_test.js';
+import { AllFeaturesMaxLimitsGPUTest } from '../../../gpu_test.js';
+import * as ttu from '../../../texture_test_utils.js';
 
 const kSlotsToResolve = [
 [0, 2],
@@ -25,7 +26,7 @@ const kSlotsToResolve = [
 const kSize = 4;
 const kFormat = 'rgba8unorm';
 
-export const g = makeTestGroup(TextureTestMixin(AllFeaturesMaxLimitsGPUTest));
+export const g = makeTestGroup(AllFeaturesMaxLimitsGPUTest);
 
 g.test('render_pass_resolve').
 params((u) =>
@@ -168,7 +169,8 @@ fn((t) => {
   // array layer from which to pull the pixels for testing.
   const z = t.params.resolveTargetBaseArrayLayer;
   for (const resolveTarget of resolveTargets) {
-    t.expectSinglePixelComparisonsAreOkInTexture(
+    ttu.expectSinglePixelComparisonsAreOkInTexture(
+      t,
       { texture: resolveTarget, mipLevel: t.params.resolveTargetBaseMipLevel },
       [
       // Top left pixel should be {1.0, 1.0, 1.0, 1.0}.
