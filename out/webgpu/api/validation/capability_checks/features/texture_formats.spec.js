@@ -13,10 +13,11 @@ import {
   isTextureFormatPossiblyUsableAsColorRenderAttachment,
   kOptionalTextureFormats } from
 '../../../../format_info.js';
+import { UniqueFeaturesOrLimitsGPUTest } from '../../../../gpu_test.js';
 import { kAllCanvasTypes, createCanvas } from '../../../../util/create_elements.js';
-import { UniqueFeaturesAndLimitsValidationTest } from '../../validation_test.js';
+import * as vtu from '../../validation_test_utils.js';
 
-export const g = makeTestGroup(UniqueFeaturesAndLimitsValidationTest);
+export const g = makeTestGroup(UniqueFeaturesOrLimitsGPUTest);
 
 g.test('texture_descriptor').
 desc(
@@ -289,7 +290,8 @@ fn((t) => {
   const { isAsync, format, enable_required_feature } = t.params;
   t.skipIfTextureFormatNotUsableAsRenderAttachment(format);
 
-  t.doCreateRenderPipelineTest(
+  vtu.doCreateRenderPipelineTest(
+    t,
     isAsync,
     enable_required_feature,
     {
@@ -344,7 +346,8 @@ beforeAllSubcases((t) => {
 fn((t) => {
   const { isAsync, format, enable_required_feature } = t.params;
 
-  t.doCreateRenderPipelineTest(
+  vtu.doCreateRenderPipelineTest(
+    t,
     isAsync,
     enable_required_feature,
     {

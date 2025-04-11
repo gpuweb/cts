@@ -1603,7 +1603,7 @@ export class AllFeaturesMaxLimitsGPUTestSubcaseBatchState extends GPUTestSubcase
   /**
    * Use skipIfDeviceDoesNotHaveFeature or similar. If you really need to test
    * lack of a feature (for example tests under webgpu/api/validation/capability_checks)
-   * then use UniqueFeaturesAndLimitsGPUTest
+   * then use UniqueFeaturesOrLimitsGPUTest
    */
   override selectDeviceOrSkipTestCase(descriptor: DeviceSelectionDescriptor): void {
     unreachable('this function should not be called in AllFeaturesMaxLimitsGPUTest');

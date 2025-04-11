@@ -10,10 +10,10 @@ import {
   kBufferUsages } from
 '../../../capability_info.js';
 import { GPUConst } from '../../../constants.js';
+import { AllFeaturesMaxLimitsGPUTest } from '../../../gpu_test.js';
 import { kMaxSafeMultipleOf8 } from '../../../util/math.js';
-import { AllFeaturesMaxLimitsValidationTest } from '../validation_test.js';
 
-export const g = makeTestGroup(AllFeaturesMaxLimitsValidationTest);
+export const g = makeTestGroup(AllFeaturesMaxLimitsGPUTest);
 
 assert(kBufferSizeAlignment === 4);
 g.test('size').

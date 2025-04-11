@@ -1,6 +1,7 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
-**/export const description = `createTexture validation tests.`;import { makeTestGroup } from '../../../common/framework/test_group.js';
+**/export const description = `createTexture validation tests.`;import { AllFeaturesMaxLimitsGPUTest } from '../.././gpu_test.js';
+import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { assert, makeValueTestVariant } from '../../../common/util/util.js';
 import { kTextureDimensions, kTextureUsages } from '../../capability_info.js';
 import { GPUConst } from '../../constants.js';
@@ -23,9 +24,7 @@ import {
 '../../format_info.js';
 import { maxMipLevelCount } from '../../util/texture/base.js';
 
-import { AllFeaturesMaxLimitsValidationTest } from './validation_test.js';
-
-export const g = makeTestGroup(AllFeaturesMaxLimitsValidationTest);
+export const g = makeTestGroup(AllFeaturesMaxLimitsGPUTest);
 
 g.test('zero_size_and_usage').
 desc(
