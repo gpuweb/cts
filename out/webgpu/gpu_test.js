@@ -1,7 +1,6 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
-**/ // MAINTENANCE_TODO: Remove all deprecated functions once they are no longer in use.
-import { Fixture,
+**/import { Fixture,
 
 
   SubcaseBatchState } from
