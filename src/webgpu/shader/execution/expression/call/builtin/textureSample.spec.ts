@@ -15,6 +15,7 @@ import {
   textureDimensionAndFormatCompatible,
   isTextureFormatPossiblyFilterableAsTextureF32,
 } from '../../../../../format_info.js';
+import { AllFeaturesMaxLimitsGPUTest } from '../../../../../gpu_test.js';
 
 import {
   vec2,
@@ -35,13 +36,12 @@ import {
   isPotentiallyFilterableAndFillable,
   skipIfTextureFormatNotSupportedOrNeedsFilteringAndIsUnfilterable,
   getTextureTypeForTextureViewDimension,
-  WGSLTextureSampleTest,
   isSupportedViewFormatCombo,
   vec1,
   generateTextureBuiltinInputs1D,
 } from './texture_utils.js';
 
-export const g = makeTestGroup(WGSLTextureSampleTest);
+export const g = makeTestGroup(AllFeaturesMaxLimitsGPUTest);
 
 g.test('sampled_1d_coords')
   .specURL('https://www.w3.org/TR/WGSL/#texturesample')
