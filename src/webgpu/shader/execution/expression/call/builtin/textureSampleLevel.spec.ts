@@ -11,6 +11,7 @@ import {
   kAllTextureFormats,
   kDepthStencilFormats,
 } from '../../../../../format_info.js';
+import { AllFeaturesMaxLimitsGPUTest } from '../../../../../gpu_test.js';
 
 import {
   appendComponentTypeForFormatToTextureType,
@@ -35,10 +36,9 @@ import {
   TextureCall,
   vec2,
   vec3,
-  WGSLTextureSampleTest,
 } from './texture_utils.js';
 
-export const g = makeTestGroup(WGSLTextureSampleTest);
+export const g = makeTestGroup(AllFeaturesMaxLimitsGPUTest);
 
 g.test('sampled_2d_coords')
   .specURL('https://www.w3.org/TR/WGSL/#texturesamplelevel')
