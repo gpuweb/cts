@@ -271,8 +271,10 @@ in JS uses round-to-even, and we get `x - y = x` which is not the true value of
 this operation
 
 
-The CTS does best effort on these important edge cases to allow for all acceptable results of these operations. Internally this boils down creating to an interval bounding the true value. Where this breaks down 
-will further be discussed in the section on compile time vs runtime execution.
+The CTS does best effort on these important edge cases to allow for all
+acceptable results of these operations. Internally this boils down creating to
+an interval bounding the true value. Where this breaks down will further be
+discussed in the section on compile time vs runtime execution.
 
 The true value is sometimes representable exactly as a floating point value, but
 often is not.
