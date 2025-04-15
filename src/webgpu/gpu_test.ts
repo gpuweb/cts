@@ -154,9 +154,8 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
     ]);
 
     // If one of them rejected throw its reason. It should be an `Error`.
-    const rejected = results.find(result => result.status === 'rejected');
-    if (rejected) {
-      throw (rejected as PromiseRejectedResult).reason;
+    for (const result of results) {
+      if (result.status === 'rejected') throw result.reason;
     }
   }
 
