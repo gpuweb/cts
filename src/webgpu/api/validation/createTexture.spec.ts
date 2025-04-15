@@ -21,6 +21,7 @@ import {
   isTextureFormatPossiblyStorageReadable,
   isColorTextureFormat,
   textureFormatsAreViewCompatible,
+  textureDimensionAndFormatCompatibleForDevice,
 } from '../../format_info.js';
 import { maxMipLevelCount } from '../../util/texture/base.js';
 
@@ -100,7 +101,8 @@ g.test('zero_size_and_usage')
 
 g.test('dimension_type_and_format_compatibility')
   .desc(
-    `Test every dimension type on every format. Note that compressed formats and depth/stencil formats are not valid for 1D/3D dimension types.`
+    `Test every dimension type on every format. Note that compressed formats and depth/stencil formats are not valid
+    for 1D dimension types while it depends on the format for 3D types.`
   )
   .params(u =>
     u //
@@ -119,9 +121,12 @@ g.test('dimension_type_and_format_compatibility')
       usage: GPUTextureUsage.TEXTURE_BINDING,
     };
 
-    t.expectValidationError(() => {
-      t.createTextureTracked(descriptor);
-    }, !textureDimensionAndFormatCompatible(dimension, format));
+    t.expectValidationError(
+      () => {
+        t.createTextureTracked(descriptor);
+      },
+      !textureDimensionAndFormatCompatibleForDevice(t.device, dimension, format)
+    );
   });
 
 g.test('mipLevelCount,format')
