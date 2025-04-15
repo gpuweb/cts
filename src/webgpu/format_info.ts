@@ -1886,6 +1886,7 @@ export function textureDimensionAndFormatCompatibleForDevice(
   if (
     dimension === '3d' &&
     ((isBCTextureFormat(format) && !device.features.has('texture-compression-bc-sliced-3d')) ||
+      // This is not a real feature, but if it were, this is what it would be called.
       (isETC2TextureFormat(format) && !device.features.has('texture-compression-etc2-sliced-3d')) ||
       (isASTCTextureFormat(format) && !device.features.has('texture-compression-astc-sliced-3d')))
   ) {
