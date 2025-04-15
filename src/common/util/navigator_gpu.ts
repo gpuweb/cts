@@ -208,11 +208,9 @@ export function getGPU(recorder: TestCaseRecorder | null): GPU {
           ...options,
         });
         if (recorder && adapter) {
-          if (adapter) {
-            const adapterInfo = adapter.info;
-            const infoString = `Adapter: ${adapterInfo.vendor} / ${adapterInfo.architecture} / ${adapterInfo.device}`;
-            recorder.debug(new ErrorWithExtra(infoString, () => ({ adapterInfo })));
-          }
+          const adapterInfo = adapter.info;
+          const infoString = `Adapter: ${adapterInfo.vendor} / ${adapterInfo.architecture} / ${adapterInfo.device}`;
+          recorder.debug(new ErrorWithExtra(infoString, () => ({ adapterInfo })));
         }
         return adapter;
       },
