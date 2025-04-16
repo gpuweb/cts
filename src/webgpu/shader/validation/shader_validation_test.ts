@@ -168,7 +168,9 @@ export class ShaderValidationTest extends AllFeaturesMaxLimitsGPUTest {
     statements?: string[];
     // Skip tests when WGSL code has 'enable X' and feature for 'X' is not available on device
     autoSkipIfFeatureNotAvailable?: boolean; // defaults to true. You must set to false to turn this off.
+    addWorkgroupSize?: boolean; // defaults to true. You must set to false to turn this off.
   }) {
+    console.log('here');
     const phonies: Array<string> = [];
 
     if (args.statements !== undefined) {
@@ -183,9 +185,12 @@ export class ShaderValidationTest extends AllFeaturesMaxLimitsGPUTest {
 
     const code =
       args.code +
+      (args.addWorkgroupSize !== false
+        ? `
+@workgroup_size(1)`
+        : ``) +
       `
-@compute @workgroup_size(1)
-fn main() {
+      @compute fn main() {
   ${phonies.join('\n')}
 }`;
 
