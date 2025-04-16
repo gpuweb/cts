@@ -131,13 +131,13 @@ const kWorkgroupSizeTests = {
     src: `@id(42) override block_width = 12u;
 @workgroup_size(block_width)`,
     pass: true,
-    pipeline: false,
+    pipeline: true,
   },
   override_no_default: {
     src: `override block_width: i32;
 @workgroup_size(block_width)`,
     pass: true,
-    pipeline: false,
+    pipeline: true,
   },
 
   trailing_comma_x: {
