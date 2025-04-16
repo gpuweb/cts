@@ -117,10 +117,14 @@ g.test('stale')
 
     switch (request1) {
       case 'None':
-        // Cause an operation error by requesting a device on a consumed adapter.
-        t.shouldReject('OperationError', t.requestDeviceTracked(adapter));
         break;
       case 'Valid':
+        // Cause an operation error by requesting a device on a consumed adapter later.
+        if (awaitRequest1) {
+          await t.requestDeviceTracked(adapter);
+        } else {
+          void t.requestDeviceTracked(adapter);
+        }
         break;
       case 'TypeError':
         // Cause a type error by requesting with an unknown feature.
@@ -163,15 +167,23 @@ g.test('stale')
     let device: GPUDevice | undefined = undefined;
     const promise = t.requestDeviceTracked(adapter);
     if (awaitRequest2) {
-      device = await promise;
-      assert(device !== null);
+      if (request1 === 'Valid') {
+        await assertReject('OperationError', promise);
+      } else {
+        device = await promise;
+        assert(device !== null);
+      }
     } else {
-      t.shouldResolve(
-        (async () => {
-          const device = await promise;
-          device.destroy();
-        })()
-      );
+      if (request1 === 'Valid') {
+        t.shouldReject('OperationError', promise);
+      } else {
+        t.shouldResolve(
+          (async () => {
+            const device = await promise;
+            device.destroy();
+          })()
+        );
+      }
     }
 
     const kTimeoutMS = 1000;
