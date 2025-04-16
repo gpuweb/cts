@@ -146,11 +146,17 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
   override async finalize(): Promise<void> {
     await super.finalize();
 
-    // Ensure devicePool.release is called for both providers even if one rejects.
-    await Promise.all([
+    // Ensure devicePool.release is called for both providers even if one rejects
+    // and wait for both of them before proceeding.
+    const results = await Promise.allSettled([
       this.provider?.then(x => devicePool.release(x)),
       this.mismatchedProvider?.then(x => mismatchedDevicePool.release(x)),
     ]);
+
+    // If one of them rejected throw its reason. It should be an `Error`.
+    for (const result of results) {
+      if (result.status === 'rejected') throw result.reason;
+    }
   }
 
   /** @internal MAINTENANCE_TODO: Make this not visible to test code? */

@@ -1875,6 +1875,27 @@ export function textureDimensionAndFormatCompatible(
 }
 
 /**
+ * Returns true iff a texture can be created with the provided GPUTextureDimension
+ * (defaulting to 2d) and GPUTextureFormat for a GPU device, by spec.
+ */
+export function textureDimensionAndFormatCompatibleForDevice(
+  device: GPUDevice,
+  dimension: undefined | GPUTextureDimension,
+  format: GPUTextureFormat
+): boolean {
+  if (
+    dimension === '3d' &&
+    ((isBCTextureFormat(format) && !device.features.has('texture-compression-bc-sliced-3d')) ||
+      // This is not a real feature, but if it were, this is what it would be called.
+      (isETC2TextureFormat(format) && !device.features.has('texture-compression-etc2-sliced-3d')) ||
+      (isASTCTextureFormat(format) && !device.features.has('texture-compression-astc-sliced-3d')))
+  ) {
+    return false;
+  }
+  return textureDimensionAndFormatCompatible(dimension, format);
+}
+
+/**
  * Check if two formats are view format compatible.
  */
 export function textureFormatsAreViewCompatible(
@@ -2075,6 +2096,18 @@ export function canCopyFromAllAspectsOfTextureFormat(format: GPUTextureFormat) {
 
 export function isCompressedTextureFormat(format: GPUTextureFormat) {
   return format in kCompressedTextureFormatInfo;
+}
+
+export function isBCTextureFormat(format: GPUTextureFormat) {
+  return format in kBCTextureFormatInfo;
+}
+
+export function isETC2TextureFormat(format: GPUTextureFormat) {
+  return format in kETC2TextureFormatInfo;
+}
+
+export function isASTCTextureFormat(format: GPUTextureFormat) {
+  return format in kASTCTextureFormatInfo;
 }
 
 export function isColorTextureFormat(format: GPUTextureFormat) {
