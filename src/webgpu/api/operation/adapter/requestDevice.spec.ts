@@ -104,26 +104,27 @@ g.test('stale')
   )
   .paramsSubcasesOnly(u =>
     u
-      .combine('initialError', [undefined, 'TypeError', 'OperationError', 'ConsumedAdapter'])
-      .combine('awaitInitialError', [true, false])
-      .combine('awaitSuccess', [true, false])
-      .unless(
-        ({ initialError, awaitInitialError }) => initialError === undefined && awaitInitialError
-      )
+      .combine('request1', ['None', 'Valid', 'TypeError', 'OperationError'] as const)
+      .expand('awaitRequest1', p => (p.request1 === 'None' ? [false] : [true, false]))
+      .combine('awaitRequest2', [true, false])
   )
   .fn(async t => {
     const gpu = getGPU(t.rec);
     const adapter = await gpu.requestAdapter();
     assert(adapter !== null);
 
-    const { initialError, awaitInitialError, awaitSuccess } = t.params;
+    const { request1, awaitRequest1, awaitRequest2 } = t.params;
 
-    switch (initialError) {
-      case undefined:
+    switch (request1) {
+      case 'None':
+        // Cause an operation error by requesting a device on a consumed adapter.
+        t.shouldReject('OperationError', t.requestDeviceTracked(adapter));
+        break;
+      case 'Valid':
         break;
       case 'TypeError':
         // Cause a type error by requesting with an unknown feature.
-        if (awaitInitialError) {
+        if (awaitRequest1) {
           await assertReject(
             'TypeError',
             t.requestDeviceTracked(adapter, {
@@ -141,7 +142,7 @@ g.test('stale')
         break;
       case 'OperationError':
         // Cause an operation error by requesting with an alignment limit that is not a power of 2.
-        if (awaitInitialError) {
+        if (awaitRequest1) {
           await assertReject(
             'OperationError',
             t.requestDeviceTracked(adapter, {
@@ -157,17 +158,11 @@ g.test('stale')
           );
         }
         break;
-      case 'ConsumedAdapter':
-        // Cause an operation error by requesting a device on a consumed adapter.
-        if (!awaitInitialError) {
-          t.shouldReject('OperationError', t.requestDeviceTracked(adapter));
-        }
-        break;
     }
 
     let device: GPUDevice | undefined = undefined;
     const promise = t.requestDeviceTracked(adapter);
-    if (awaitSuccess) {
+    if (awaitRequest2) {
       device = await promise;
       assert(device !== null);
     } else {
