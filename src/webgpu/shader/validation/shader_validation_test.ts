@@ -170,7 +170,6 @@ export class ShaderValidationTest extends AllFeaturesMaxLimitsGPUTest {
     autoSkipIfFeatureNotAvailable?: boolean; // defaults to true. You must set to false to turn this off.
     addWorkgroupSize?: boolean; // defaults to true. You must set to false to turn this off.
   }) {
-    console.log('here');
     const phonies: Array<string> = [];
 
     if (args.statements !== undefined) {

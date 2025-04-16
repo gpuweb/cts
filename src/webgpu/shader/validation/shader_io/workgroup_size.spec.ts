@@ -287,7 +287,6 @@ g.test('workgroup_size')
   .desc(`Test validation of workgroup_size`)
   .params(u => u.combine('attr', keysOf(kWorkgroupSizeTests)))
   .fn(t => {
-    console.log('here2 ');
     if (kWorkgroupSizeTests[t.params.attr].pipeline) {
       const code = `${kWorkgroupSizeTests[t.params.attr].src}`;
       t.expectPipelineResult({
