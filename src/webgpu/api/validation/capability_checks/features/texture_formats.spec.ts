@@ -128,7 +128,7 @@ g.test('texture_view_descriptor')
     });
   });
 
-g.test('texture_compression_bc')
+g.test('texture_compression_bc_sliced_3d')
   .desc(
     `
   Tests that creating a 3D texture with BC compressed format fails if the features don't contain
