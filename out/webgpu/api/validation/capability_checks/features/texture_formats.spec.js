@@ -449,16 +449,29 @@ fn((t) => {
 
 g.test('check_capability_guarantees').
 desc(
-  `check "texture-compression-bc" is supported or both "texture-compression-etc2" and "texture-compression-astc" are supported.`
+  `check any adapter returned by requestAdapter() must provide the following guarantees:
+      - "texture-compression-bc" is supported or both "texture-compression-etc2" and "texture-compression-astc" are supported
+      - either "texture-compression-bc" or "texture-compression-bc-sliced-3d" is supported, both must be supported.
+    `
 ).
 fn(async (t) => {
   const adapter = await getGPU(t.rec).requestAdapter();
   assert(adapter !== null);
 
   const features = adapter.features;
-  t.expect(
-    features.has('texture-compression-bc') ||
-    features.has('texture-compression-etc2') && features.has('texture-compression-astc')
-  );
+
+  const supportsBC = features.has('texture-compression-bc');
+  const supportsETC2ASTC =
+  features.has('texture-compression-etc2') && features.has('texture-compression-astc');
+  const supportsBCSliced3D = features.has('texture-compression-bc-sliced-3d');
+
+  t.expect(supportsBC || supportsETC2ASTC, 'Adapter must support BC or both ETC2 and ASTC');
+
+  if (supportsBC || supportsBCSliced3D) {
+    t.expect(
+      supportsBC && supportsBCSliced3D,
+      'If BC or BC Sliced 3D is supported, both must be'
+    );
+  }
 });
 //# sourceMappingURL=texture_formats.spec.js.map
