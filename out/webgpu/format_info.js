@@ -1442,6 +1442,7 @@ export const kRegularTextureFormats = keysOf(kRegularTextureFormatInfo);
 export const kSizedDepthStencilFormats = keysOf(kSizedDepthStencilFormatInfo);
 export const kUnsizedDepthStencilFormats = keysOf(kUnsizedDepthStencilFormatInfo);
 export const kCompressedTextureFormats = keysOf(kCompressedTextureFormatInfo);
+export const kBCCompressedTextureFormats = keysOf(kBCTextureFormatInfo);
 
 export const kColorTextureFormats = keysOf(kColorTextureFormatInfo);
 export const kEncodableTextureFormats = keysOf(kEncodableTextureFormatInfo);
@@ -1885,12 +1886,10 @@ format)
 {
   if (
   dimension === '3d' && (
-  isBCTextureFormat(format) && !device.features.has('texture-compression-bc-sliced-3d') ||
-  // This is not a real feature, but if it were, this is what it would be called.
-  isETC2TextureFormat(format) && !device.features.has('texture-compression-etc2-sliced-3d') ||
-  isASTCTextureFormat(format) && !device.features.has('texture-compression-astc-sliced-3d')))
+  isBCTextureFormat(format) && device.features.has('texture-compression-bc-sliced-3d') ||
+  isASTCTextureFormat(format) && device.features.has('texture-compression-astc-sliced-3d')))
   {
-    return false;
+    return true;
   }
   return textureDimensionAndFormatCompatible(dimension, format);
 }
@@ -2100,10 +2099,6 @@ export function isCompressedTextureFormat(format) {
 
 export function isBCTextureFormat(format) {
   return format in kBCTextureFormatInfo;
-}
-
-export function isETC2TextureFormat(format) {
-  return format in kETC2TextureFormatInfo;
 }
 
 export function isASTCTextureFormat(format) {

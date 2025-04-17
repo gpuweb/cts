@@ -7,6 +7,7 @@ import { getGPU } from '../../../../../common/util/navigator_gpu.js';
 import { assert } from '../../../../../common/util/util.js';
 import { kCanvasTextureFormats } from '../../../../capability_info.js';
 import {
+  kBCCompressedTextureFormats,
   getBlockInfoForTextureFormat,
   isDepthOrStencilTextureFormat,
   isTextureFormatPossiblyStorageReadable,
@@ -125,6 +126,50 @@ g.test('texture_view_descriptor')
     t.shouldThrow(enable_required_feature ? false : 'TypeError', () => {
       testTexture.createView(testViewDesc);
     });
+  });
+
+g.test('texture_compression_bc_sliced_3d')
+  .desc(
+    `
+  Tests that creating a 3D texture with BC compressed format fails if the features don't contain
+  'texture-compression-bc' and 'texture-compression-bc-sliced-3d'.
+  `
+  )
+  .params(u =>
+    u
+      .combine('format', kBCCompressedTextureFormats)
+      .combine('supportsBC', [false, true])
+      .combine('supportsBCSliced3D', [false, true])
+  )
+  .beforeAllSubcases(t => {
+    const { supportsBC, supportsBCSliced3D } = t.params;
+
+    const requiredFeatures: GPUFeatureName[] = [];
+    if (supportsBC) {
+      requiredFeatures.push('texture-compression-bc');
+    }
+    if (supportsBCSliced3D) {
+      requiredFeatures.push('texture-compression-bc-sliced-3d');
+    }
+
+    t.selectDeviceOrSkipTestCase({ requiredFeatures });
+  })
+  .fn(t => {
+    const { format, supportsBC, supportsBCSliced3D } = t.params;
+
+    t.skipIfTextureFormatNotSupported(format);
+    const info = getBlockInfoForTextureFormat(format);
+
+    const descriptor: GPUTextureDescriptor = {
+      size: [info.blockWidth, info.blockHeight, 1],
+      dimension: '3d',
+      format,
+      usage: GPUTextureUsage.TEXTURE_BINDING,
+    };
+
+    t.expectValidationError(() => {
+      t.createTextureTracked(descriptor);
+    }, !supportsBC || !supportsBCSliced3D);
   });
 
 g.test('canvas_configuration')
