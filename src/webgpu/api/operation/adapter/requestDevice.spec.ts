@@ -104,26 +104,31 @@ g.test('stale')
   )
   .paramsSubcasesOnly(u =>
     u
-      .combine('initialError', [undefined, 'TypeError', 'OperationError'])
-      .combine('awaitInitialError', [true, false])
-      .combine('awaitSuccess', [true, false])
-      .unless(
-        ({ initialError, awaitInitialError }) => initialError === undefined && awaitInitialError
-      )
+      .combine('request1', ['None', 'Valid', 'TypeError', 'OperationError'] as const)
+      .expand('awaitRequest1', p => (p.request1 === 'None' ? [false] : [true, false]))
+      .combine('awaitRequest2', [true, false])
   )
   .fn(async t => {
     const gpu = getGPU(t.rec);
     const adapter = await gpu.requestAdapter();
     assert(adapter !== null);
 
-    const { initialError, awaitInitialError, awaitSuccess } = t.params;
+    const { request1, awaitRequest1, awaitRequest2 } = t.params;
 
-    switch (initialError) {
-      case undefined:
+    switch (request1) {
+      case 'None':
+        break;
+      case 'Valid':
+        // Cause an operation error by requesting a device on a consumed adapter later.
+        if (awaitRequest1) {
+          await t.requestDeviceTracked(adapter);
+        } else {
+          void t.requestDeviceTracked(adapter);
+        }
         break;
       case 'TypeError':
         // Cause a type error by requesting with an unknown feature.
-        if (awaitInitialError) {
+        if (awaitRequest1) {
           await assertReject(
             'TypeError',
             t.requestDeviceTracked(adapter, {
@@ -141,7 +146,7 @@ g.test('stale')
         break;
       case 'OperationError':
         // Cause an operation error by requesting with an alignment limit that is not a power of 2.
-        if (awaitInitialError) {
+        if (awaitRequest1) {
           await assertReject(
             'OperationError',
             t.requestDeviceTracked(adapter, {
@@ -161,16 +166,24 @@ g.test('stale')
 
     let device: GPUDevice | undefined = undefined;
     const promise = t.requestDeviceTracked(adapter);
-    if (awaitSuccess) {
-      device = await promise;
-      assert(device !== null);
+    if (awaitRequest2) {
+      if (request1 === 'Valid') {
+        await assertReject('OperationError', promise);
+      } else {
+        device = await promise;
+        assert(device !== null);
+      }
     } else {
-      t.shouldResolve(
-        (async () => {
-          const device = await promise;
-          device.destroy();
-        })()
-      );
+      if (request1 === 'Valid') {
+        t.shouldReject('OperationError', promise);
+      } else {
+        t.shouldResolve(
+          (async () => {
+            const device = await promise;
+            device.destroy();
+          })()
+        );
+      }
     }
 
     const kTimeoutMS = 1000;
