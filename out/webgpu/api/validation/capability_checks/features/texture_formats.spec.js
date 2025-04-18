@@ -7,6 +7,7 @@ import { getGPU } from '../../../../../common/util/navigator_gpu.js';
 import { assert } from '../../../../../common/util/util.js';
 import { kCanvasTextureFormats } from '../../../../capability_info.js';
 import {
+  kASTCCompressedTextureFormats,
   kBCCompressedTextureFormats,
   getBlockInfoForTextureFormat,
   isDepthOrStencilTextureFormat,
@@ -170,6 +171,50 @@ fn((t) => {
   t.expectValidationError(() => {
     t.createTextureTracked(descriptor);
   }, !supportsBC || !supportsBCSliced3D);
+});
+
+g.test('texture_compression_astc_sliced_3d').
+desc(
+  `
+  Tests that creating a 3D texture with ASTC compressed format fails if the features don't contain
+  'texture-compression-astc' and 'texture-compression-astc-sliced-3d'.
+  `
+).
+params((u) =>
+u.
+combine('format', kASTCCompressedTextureFormats).
+combine('supportsASTC', [false, true]).
+combine('supportsASTCSliced3D', [false, true])
+).
+beforeAllSubcases((t) => {
+  const { supportsASTC, supportsASTCSliced3D } = t.params;
+
+  const requiredFeatures = [];
+  if (supportsASTC) {
+    requiredFeatures.push('texture-compression-astc');
+  }
+  if (supportsASTCSliced3D) {
+    requiredFeatures.push('texture-compression-astc-sliced-3d');
+  }
+
+  t.selectDeviceOrSkipTestCase({ requiredFeatures });
+}).
+fn((t) => {
+  const { format, supportsASTC, supportsASTCSliced3D } = t.params;
+
+  t.skipIfTextureFormatNotSupported(format);
+  const info = getBlockInfoForTextureFormat(format);
+
+  const descriptor = {
+    size: [info.blockWidth, info.blockHeight, 1],
+    dimension: '3d',
+    format,
+    usage: GPUTextureUsage.TEXTURE_BINDING
+  };
+
+  t.expectValidationError(() => {
+    t.createTextureTracked(descriptor);
+  }, !supportsASTC || !supportsASTCSliced3D);
 });
 
 g.test('canvas_configuration').
