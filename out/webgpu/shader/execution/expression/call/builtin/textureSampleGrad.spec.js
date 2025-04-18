@@ -23,14 +23,14 @@ import {
   generateTextureBuiltinInputs3D,
   getTextureTypeForTextureViewDimension,
   isPotentiallyFilterableAndFillable,
-  isSupportedViewFormatCombo,
   kCubeSamplePointMethods,
   kSamplePointMethods,
   kShortAddressModes,
   kShortAddressModeToAddressMode,
   kShortShaderStages,
 
-  skipIfTextureFormatNotSupportedOrNeedsFilteringAndIsUnfilterable } from
+  skipIfTextureFormatNotSupportedOrNeedsFilteringAndIsUnfilterable,
+  skipIfTextureViewAndFormatNotCompatibleForDevice } from
 
 
 
@@ -162,7 +162,6 @@ combine('stage', kShortShaderStages).
 combine('format', kAllTextureFormats).
 filter((t) => isPotentiallyFilterableAndFillable(t.format)).
 combine('dim', ['3d', 'cube']).
-filter((t) => isSupportedViewFormatCombo(t.format, t.dim)).
 combine('filt', ['nearest', 'linear']).
 filter((t) => t.filt === 'nearest' || isTextureFormatPossiblyFilterableAsTextureF32(t.format)).
 combine('modeU', kShortAddressModes).
@@ -187,6 +186,7 @@ fn(async (t) => {
     offset
   } = t.params;
   skipIfTextureFormatNotSupportedOrNeedsFilteringAndIsUnfilterable(t, minFilter, format);
+  skipIfTextureViewAndFormatNotCompatibleForDevice(t, format, viewDimension);
 
   const size = chooseTextureSize({ minSize: 8, minBlocks: 2, format, viewDimension });
   const descriptor = {

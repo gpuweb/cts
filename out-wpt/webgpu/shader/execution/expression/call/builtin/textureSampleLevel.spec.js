@@ -25,14 +25,14 @@ import {
   getDepthOrArrayLayersForViewDimension,
   getTextureTypeForTextureViewDimension,
   isPotentiallyFilterableAndFillable,
-  isSupportedViewFormatCombo,
   kCubeSamplePointMethods,
   kSamplePointMethods,
   kShortAddressModes,
   kShortAddressModeToAddressMode,
   kShortShaderStages,
 
-  skipIfTextureFormatNotSupportedOrNeedsFilteringAndIsUnfilterable } from
+  skipIfTextureFormatNotSupportedOrNeedsFilteringAndIsUnfilterable,
+  skipIfTextureViewAndFormatNotCompatibleForDevice } from
 
 
 
@@ -385,7 +385,6 @@ combine('stage', kShortShaderStages).
 combine('format', kAllTextureFormats).
 filter((t) => isPotentiallyFilterableAndFillable(t.format)).
 combine('dim', ['3d', 'cube']).
-filter((t) => isSupportedViewFormatCombo(t.format, t.dim)).
 combine('filt', ['nearest', 'linear']).
 filter((t) => t.filt === 'nearest' || isTextureFormatPossiblyFilterableAsTextureF32(t.format)).
 combine('mode', kShortAddressModes).
@@ -406,6 +405,7 @@ fn(async (t) => {
     offset
   } = t.params;
   skipIfTextureFormatNotSupportedOrNeedsFilteringAndIsUnfilterable(t, minFilter, format);
+  skipIfTextureViewAndFormatNotCompatibleForDevice(t, format, viewDimension);
 
   const [width, height] = chooseTextureSize({ minSize: 32, minBlocks: 2, format, viewDimension });
   const depthOrArrayLayers = getDepthOrArrayLayersForViewDimension(viewDimension);
@@ -496,7 +496,6 @@ combine('stage', kShortShaderStages).
 combine('format', kAllTextureFormats).
 filter((t) => isPotentiallyFilterableAndFillable(t.format)).
 combine('dim', ['3d', 'cube']).
-filter((t) => isSupportedViewFormatCombo(t.format, t.dim)).
 combine('filt', ['nearest', 'linear']).
 filter((t) => t.filt === 'nearest' || isTextureFormatPossiblyFilterableAsTextureF32(t.format)).
 beginSubcases().
@@ -522,6 +521,7 @@ fn(async (t) => {
     lodMinClamp
   } = t.params;
   skipIfTextureFormatNotSupportedOrNeedsFilteringAndIsUnfilterable(t, minFilter, format);
+  skipIfTextureViewAndFormatNotCompatibleForDevice(t, format, viewDimension);
 
   const [width, height] = chooseTextureSize({ minSize: 32, minBlocks: 2, format, viewDimension });
   const depthOrArrayLayers = getDepthOrArrayLayersForViewDimension(viewDimension);

@@ -16,7 +16,8 @@ import {
   isEncodableTextureFormat,
   isSintOrUintFormat,
   isStencilTextureFormat,
-  kEncodableTextureFormats } from
+  kEncodableTextureFormats,
+  textureViewDimensionAndFormatCompatibleForDevice } from
 '../../../../../format_info.js';
 
 import {
@@ -79,15 +80,15 @@ export const kSampleTypeInfo = {
   }
 };
 
-// MAINTENANCE_TODO: Stop excluding sliced compressed 3d formats.
-export function isSupportedViewFormatCombo(
+export function skipIfTextureViewAndFormatNotCompatibleForDevice(
+t,
 format,
 viewDimension)
 {
-  return !(
-  (isCompressedTextureFormat(format) || isDepthOrStencilTextureFormat(format)) && (
-  viewDimension === '3d' || viewDimension === '1d'));
-
+  t.skipIf(
+    !textureViewDimensionAndFormatCompatibleForDevice(t.device, viewDimension, format),
+    `format: ${format} does not support viewDimension: ${viewDimension}`
+  );
 }
 
 /**

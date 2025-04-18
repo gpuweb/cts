@@ -3,6 +3,7 @@
 **/import { isCompatibilityDevice } from '../common/framework/test_config.js';import { keysOf } from '../common/util/data_tables.js';import { assert, unreachable } from '../common/util/util.js';
 
 import { align } from './util/math.js';
+import { getTextureDimensionFromView } from './util/texture/base.js';
 
 
 //
@@ -1893,6 +1894,21 @@ format)
     return true;
   }
   return textureDimensionAndFormatCompatible(dimension, format);
+}
+
+/**
+ * Returns true iff a texture can be used with the provided GPUTextureViewDimension
+ */
+export function textureViewDimensionAndFormatCompatibleForDevice(
+device,
+dimension,
+format)
+{
+  return textureDimensionAndFormatCompatibleForDevice(
+    device,
+    getTextureDimensionFromView(dimension),
+    format
+  );
 }
 
 /**
