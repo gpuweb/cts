@@ -2,7 +2,12 @@ import { Fixture, SkipTestCase } from '../../common/framework/fixture.js';
 import { getResourcePath } from '../../common/framework/resources.js';
 import { keysOf } from '../../common/util/data_tables.js';
 import { timeout } from '../../common/util/timeout.js';
-import { ErrorWithExtra, raceWithRejectOnTimeout } from '../../common/util/util.js';
+import {
+  ErrorWithExtra,
+  assert,
+  raceWithRejectOnTimeout,
+  resolveOnTimeout,
+} from '../../common/util/util.js';
 import { GPUTest } from '../gpu_test.js';
 import { RGBA, srgbToDisplayP3 } from '../util/color_space_conversion.js';
 
@@ -558,15 +563,11 @@ function callbackHelper(
   return { promise, callbackAndResolve: callbackAndResolve! };
 }
 
-/**
- * Create VideoFrame from camera captured frame. Check whether browser environment has
- * camera supported.
- * Returns a webcodec VideoFrame.
- *
- * @param test: GPUTest that requires getting VideoFrame
- *
- */
-export async function captureCameraFrame(test: GPUTest): Promise<VideoFrame> {
+async function getStreamFromCamera(
+  test: Fixture,
+  width: number | undefined,
+  height: number | undefined
+): Promise<MediaStream> {
   test.skipIf(typeof navigator === 'undefined', 'navigator does not exist in this environment');
   test.skipIf(
     typeof navigator.mediaDevices === 'undefined' ||
@@ -574,44 +575,73 @@ export async function captureCameraFrame(test: GPUTest): Promise<VideoFrame> {
     "Browser doesn't support capture frame from camera."
   );
 
-  const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-  const track = stream.getVideoTracks()[0] as MediaStreamVideoTrack;
+  const stream = await navigator.mediaDevices.getUserMedia({
+    audio: false,
+    video: { width, height },
+  });
+  test.trackForCleanup({
+    close() {
+      for (const track of stream.getTracks()) {
+        track.stop();
+      }
+    },
+  });
+  return stream;
+}
 
-  test.skipIf(!track, "Doesn't have valid camera captured stream for testing.");
-
-  // Use MediaStreamTrackProcessor and ReadableStream to generate video frame directly.
-  if (typeof MediaStreamTrackProcessor !== 'undefined') {
-    const trackProcessor = new MediaStreamTrackProcessor({ track });
-    const reader = trackProcessor.readable.getReader();
-    const result = await reader.read();
-    if (result.done) {
-      test.skip('MediaStreamTrackProcessor: Cannot get valid frame from readable stream.');
-    }
-
-    return result.value;
-  }
-
-  // Fallback to ImageCapture if MediaStreamTrackProcessor not supported. Using grabFrame() to
-  // generate imageBitmap and creating video frame from it.
-  if (typeof ImageCapture !== 'undefined') {
-    const imageCapture = new ImageCapture(track);
-    const imageBitmap = await imageCapture.grabFrame();
-    return new VideoFrame(imageBitmap);
-  }
-
-  // Fallback to using HTMLVideoElement to do capture.
+/**
+ * Uses MediaStreamTrackProcessor to capture a VideoFrame from the camera.
+ * Skips the test if not supported.
+ */
+export async function getVideoFrameFromCamera(
+  test: Fixture,
+  width: number | undefined,
+  height: number | undefined
+): Promise<VideoFrame> {
   test.skipIf(
-    typeof HTMLVideoElement === 'undefined',
-    'Try to use HTMLVideoElement do capture but HTMLVideoElement not available.'
+    typeof MediaStreamTrackProcessor === 'undefined',
+    'MediaStreamTrackProcessor not supported'
   );
 
+  const stream = await getStreamFromCamera(test, width, height);
+  const tracks = stream.getVideoTracks();
+  assert(tracks.length > 0, 'no tracks found');
+  const track = tracks[0] as MediaStreamVideoTrack;
+
+  // Chrome takes a while before it switches from blank frames to real frames
+  await resolveOnTimeout(200);
+
+  const trackProcessor = new MediaStreamTrackProcessor({ track });
+  const reader = trackProcessor.readable.getReader();
+  const result = await reader.read();
+  assert(!result.done, 'MediaStreamTrackProcessor: Cannot get valid frame from readable stream.');
+
+  return result.value;
+}
+
+/**
+ * Create an HTMLVideoElement from the camera stream. Skips the test if not supported.
+ */
+export async function getVideoElementFromCamera(
+  test: Fixture,
+  width: number | undefined,
+  height: number | undefined
+): Promise<HTMLVideoElement> {
+  const stream = await getStreamFromCamera(test, width, height);
+
+  // Main thread
   const video = document.createElement('video');
+  video.loop = false;
+  video.muted = true;
+  video.setAttribute('playsinline', '');
   video.srcObject = stream;
+  await new Promise(resolve => (video.onloadedmetadata = resolve));
+  await startPlayingAndWaitForVideo(video, () => {});
 
-  const frame = await getVideoFrameFromVideoElement(test, video);
-  test.trackForCleanup(frame);
+  // Chrome takes a while before it switches from blank frames to real frames
+  await resolveOnTimeout(200);
 
-  return frame;
+  return video;
 }
 
 const kFourColorsInfo = {
