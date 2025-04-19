@@ -148,9 +148,7 @@ fn main(@builtin(local_invocation_id) lid : vec3u,
     t.expectOK(checkResults(t.params.wgx, t.params.wgy, t.params.wgz, numWorkgroups, data));
   });
 
-
-
-  g.test('workgroup_size_override_exp')
+g.test('workgroup_size_override_exp')
   .desc(`Test workgroup size can be set from an override expression`)
   .params(u =>
     u
@@ -184,7 +182,7 @@ fn main(@builtin(local_invocation_id) lid : vec3u,
       wgz > maxComputeWorkgroupSizeZ,
       `workgroup size x: ${wgz} > limit: ${maxComputeWorkgroupSizeZ}`
     );
-    const totalInvocations = wgx *wgy * wgz;
+    const totalInvocations = wgx * wgy * wgz;
     t.skipIf(
       totalInvocations > maxComputeInvocationsPerWorkgroup,
       `workgroup size: ${totalInvocations} > limit: ${maxComputeInvocationsPerWorkgroup}`
@@ -223,10 +221,10 @@ fn main(@builtin(local_invocation_id) lid : vec3u,
         }),
         entryPoint: 'main',
         constants: {
-        override1: t.params.override1,  
-        override2: t.params.override2,  
-        override3: t.params.override3,  
-        }
+          override1: t.params.override1,
+          override2: t.params.override2,
+          override3: t.params.override3,
+        },
       },
     });
 
@@ -264,5 +262,5 @@ fn main(@builtin(local_invocation_id) lid : vec3u,
     });
     const data: Uint32Array = bufferReadback.data;
 
-    t.expectOK(checkResults(wgx, wgy,wgz, numWorkgroups, data));
+    t.expectOK(checkResults(wgx, wgy, wgz, numWorkgroups, data));
   });
