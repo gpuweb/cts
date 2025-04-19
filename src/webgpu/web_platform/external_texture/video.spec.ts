@@ -6,9 +6,11 @@ Tests for external textures from HTMLVideoElement (and other video-type sources?
 
 TODO: consider whether external_texture and copyToTexture video tests should be in the same file
 TODO(#3193): Test video in BT.2020 color space
+TODO(#4364): Test camera capture with copyExternalImageToTexture (not necessarily in this file)
 `;
 
 import { makeTestGroup } from '../../../common/framework/test_group.js';
+import { resolveOnTimeout, unreachable } from '../../../common/util/util.js';
 import { GPUTest } from '../../gpu_test.js';
 import * as ttu from '../../texture_test_utils.js';
 import { TextureUploadingUtils } from '../../util/copy_to_texture.js';
@@ -17,12 +19,13 @@ import {
   startPlayingAndWaitForVideo,
   getVideoFrameFromVideoElement,
   getVideoElement,
-  captureCameraFrame,
   convertToUnorm8,
   kPredefinedColorSpace,
   kVideoNames,
   kVideoInfo,
   kVideoExpectedColors,
+  getVideoElementFromCamera,
+  getVideoFrameFromCamera,
 } from '../../web_platform/util.js';
 
 const kHeight = 16;
@@ -633,34 +636,63 @@ compared with 2d canvas rendering result.
 `
   )
   .params(u =>
+    // NOTE: Be careful not to add too many parameters here, this test is SLOW to initialize!
     u //
       .combineWithParams(checkNonStandardIsZeroCopyIfAvailable())
+      .combine('path', ['HTMLVideoElement', 'MediaStreamTrackProcessor'] as const)
       .combine('dstColorSpace', kPredefinedColorSpace)
+      .combine('requestSize', [undefined, [64, 48], [100, 300]] as const)
   )
   .fn(async t => {
-    const { dstColorSpace } = t.params;
+    const { path, dstColorSpace, requestSize } = t.params;
 
-    const frame = await captureCameraFrame(t);
+    // Enable this while debugging to show the "actual" and "expected" canvases on screen.
+    const kDebugShowCanvasesOnScreen = false;
 
-    if (frame.displayHeight === 0 || frame.displayWidth === 0) {
-      t.skip('Captured video frame has 0 height or width.');
+    let source: HTMLVideoElement | VideoFrame;
+    let frameWidth: number, frameHeight: number;
+    switch (path) {
+      case 'HTMLVideoElement': {
+        const video = await getVideoElementFromCamera(t, requestSize?.[0], requestSize?.[1]);
+        // Pause the video so we get consistent readbacks. Wait a bit to be sure.
+        video.pause();
+        await resolveOnTimeout(10);
+        frameWidth = video.videoWidth;
+        frameHeight = video.videoHeight;
+        source = video;
+        break;
+      }
+      case 'MediaStreamTrackProcessor': {
+        const frame = await getVideoFrameFromCamera(t, requestSize?.[0], requestSize?.[1]);
+        frameWidth = frame.displayWidth;
+        frameHeight = frame.displayHeight;
+        source = frame;
+        break;
+      }
+      default:
+        unreachable();
     }
 
-    const frameWidth = frame.displayWidth;
-    const frameHeight = frame.displayHeight;
-
     // Use WebGPU + GPUExternalTexture to render the captured frame.
-    const colorAttachment = t.createTextureTracked({
+    const webgpuCanvas = createCanvas(t, 'onscreen', frameWidth, frameHeight);
+    if (kDebugShowCanvasesOnScreen) {
+      document.body.append(document.createElement('br'));
+      document.body.append(webgpuCanvas);
+    }
+
+    const webgpuContext = webgpuCanvas.getContext('webgpu')!;
+    webgpuContext.configure({
+      device: t.device,
       format: kFormat,
-      size: { width: frameWidth, height: frameHeight },
-      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
+      usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
     });
+    const colorAttachment = webgpuContext.getCurrentTexture();
 
     const pipeline = createExternalTextureSamplingTestPipeline(t);
     const bindGroup = createExternalTextureSamplingTestBindGroup(
       t,
       t.params.checkNonStandardIsZeroCopy,
-      frame,
+      source,
       pipeline,
       dstColorSpace
     );
@@ -684,6 +716,9 @@ compared with 2d canvas rendering result.
 
     // Use 2d context canvas as expected result.
     const canvas = createCanvas(t, 'onscreen', frameWidth, frameHeight);
+    if (kDebugShowCanvasesOnScreen) {
+      document.body.append(canvas);
+    }
 
     const canvasContext = canvas.getContext('2d', { colorSpace: dstColorSpace });
 
@@ -692,11 +727,21 @@ compared with 2d canvas rendering result.
     }
 
     const ctx = canvasContext as CanvasRenderingContext2D;
-    ctx.drawImage(frame, 0, 0, frameWidth, frameHeight);
+    ctx.drawImage(source, 0, 0, frameWidth, frameHeight);
 
     const imageData = ctx.getImageData(0, 0, frameWidth, frameHeight, {
       colorSpace: dstColorSpace,
     });
+
+    // Make sure the expected frame is not all black.
+    let isAllBlack = true;
+    for (let i = 0; i < imageData.data.length; i += 4) {
+      if (imageData.data[i] > 2 || imageData.data[i + 1] > 2 || imageData.data[i + 2] > 2) {
+        isAllBlack = false;
+        break;
+      }
+    }
+    t.expect(!isAllBlack, 'Video frame should not be all black');
 
     const expectedView = t.getExpectedDstPixelsFromSrcPixels({
       srcPixels: imageData.data,
