@@ -12,9 +12,11 @@ g.test('iff_uncaptured')
   .desc(
     `{validation, out-of-memory} error should fire uncapturederror iff not captured by a scope.`
   )
-  .params(u => u
-    .combine('useOnuncapturederror', [false, true])
-    .combine('errorType', kGeneratableErrorScopeFilters))
+  .params(u =>
+    u
+      .combine('useOnuncapturederror', [false, true])
+      .combine('errorType', kGeneratableErrorScopeFilters)
+  )
   .fn(async t => {
     const { useOnuncapturederror, errorType } = t.params;
     const uncapturedErrorEvent = await t.expectUncapturedError(() => {
