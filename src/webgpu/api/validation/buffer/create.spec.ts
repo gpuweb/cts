@@ -36,10 +36,9 @@ g.test('size')
     const { mappedAtCreation, size } = t.params;
     const isValid = !mappedAtCreation || size % kBufferSizeAlignment === 0;
     const usage = BufferUsage.COPY_SRC;
-    t.expectGPUError(
-      'validation',
-      () => t.createBufferTracked({ size, usage, mappedAtCreation }),
-      !isValid
+
+    t.shouldThrow(isValid ? false : 'RangeError', () =>
+      t.createBufferTracked({ size, usage, mappedAtCreation })
     );
   });
 
