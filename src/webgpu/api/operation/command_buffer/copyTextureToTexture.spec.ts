@@ -25,6 +25,7 @@ import {
   textureFormatsAreViewCompatible,
 } from '../../../format_info.js';
 import { AllFeaturesMaxLimitsGPUTest } from '../../../gpu_test.js';
+import { skipIfTextureAndFormatNotCompatibleForDevice } from '../../../shader/execution/expression/call/builtin/texture_utils.js';
 import * as ttu from '../../../texture_test_utils.js';
 import { checkElementsEqual } from '../../../util/check_contents.js';
 import { align } from '../../../util/math.js';
@@ -895,11 +896,6 @@ g.test('color_textures,compressed,non_array')
         );
       })
       .combine('dimension', kTextureDimensions)
-      .filter(
-        ({ dimension, srcFormat, dstFormat }) =>
-          textureDimensionAndFormatCompatible(dimension, srcFormat) &&
-          textureDimensionAndFormatCompatible(dimension, dstFormat)
-      )
       .beginSubcases()
       .combine('textureSizeInBlocks', [
         // The heights and widths in blocks are all power of 2
@@ -931,6 +927,8 @@ g.test('color_textures,compressed,non_array')
       srcCopyLevel,
       dstCopyLevel,
     } = t.params;
+    skipIfTextureAndFormatNotCompatibleForDevice(t, dimension, srcFormat);
+    skipIfTextureAndFormatNotCompatibleForDevice(t, dimension, dstFormat);
     t.skipIfCopyTextureToTextureNotSupportedForFormat(srcFormat, dstFormat);
     const { blockWidth: srcBlockWidth, blockHeight: srcBlockHeight } =
       getBlockInfoForColorTextureFormat(srcFormat);
@@ -1053,11 +1051,6 @@ g.test('color_textures,compressed,array')
         );
       })
       .combine('dimension', ['2d', '3d'] as const)
-      .filter(
-        ({ dimension, srcFormat, dstFormat }) =>
-          textureDimensionAndFormatCompatible(dimension, srcFormat) &&
-          textureDimensionAndFormatCompatible(dimension, dstFormat)
-      )
       .beginSubcases()
       .combine('textureSizeInBlocks', [
         // The heights and widths in blocks are all power of 2
@@ -1081,6 +1074,8 @@ g.test('color_textures,compressed,array')
     } = t.params;
     t.skipIfTextureFormatNotSupported(srcFormat, dstFormat);
     t.skipIfCopyTextureToTextureNotSupportedForFormat(srcFormat, dstFormat);
+    skipIfTextureAndFormatNotCompatibleForDevice(t, dimension, srcFormat);
+    skipIfTextureAndFormatNotCompatibleForDevice(t, dimension, dstFormat);
 
     const { blockWidth: srcBlockWidth, blockHeight: srcBlockHeight } =
       getBlockInfoForColorTextureFormat(srcFormat);
