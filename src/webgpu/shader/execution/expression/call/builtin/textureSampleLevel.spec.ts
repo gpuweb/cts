@@ -25,7 +25,6 @@ import {
   getDepthOrArrayLayersForViewDimension,
   getTextureTypeForTextureViewDimension,
   isPotentiallyFilterableAndFillable,
-  isSupportedViewFormatCombo,
   kCubeSamplePointMethods,
   kSamplePointMethods,
   kShortAddressModes,
@@ -33,6 +32,7 @@ import {
   kShortShaderStages,
   SamplePointMethods,
   skipIfTextureFormatNotSupportedOrNeedsFilteringAndIsUnfilterable,
+  skipIfTextureViewAndFormatNotCompatibleForDevice,
   TextureCall,
   vec2,
   vec3,
@@ -385,7 +385,6 @@ Parameters:
       .combine('format', kAllTextureFormats)
       .filter(t => isPotentiallyFilterableAndFillable(t.format))
       .combine('dim', ['3d', 'cube'] as const)
-      .filter(t => isSupportedViewFormatCombo(t.format, t.dim))
       .combine('filt', ['nearest', 'linear'] as const)
       .filter(t => t.filt === 'nearest' || isTextureFormatPossiblyFilterableAsTextureF32(t.format))
       .combine('mode', kShortAddressModes)
@@ -406,6 +405,7 @@ Parameters:
       offset,
     } = t.params;
     skipIfTextureFormatNotSupportedOrNeedsFilteringAndIsUnfilterable(t, minFilter, format);
+    skipIfTextureViewAndFormatNotCompatibleForDevice(t, format, viewDimension);
 
     const [width, height] = chooseTextureSize({ minSize: 32, minBlocks: 2, format, viewDimension });
     const depthOrArrayLayers = getDepthOrArrayLayersForViewDimension(viewDimension);
@@ -496,7 +496,6 @@ baseMipLevel, lodMinClamp, and lodMaxClamp, with an dwithout filtering.
       .combine('format', kAllTextureFormats)
       .filter(t => isPotentiallyFilterableAndFillable(t.format))
       .combine('dim', ['3d', 'cube'] as const)
-      .filter(t => isSupportedViewFormatCombo(t.format, t.dim))
       .combine('filt', ['nearest', 'linear'] as const)
       .filter(t => t.filt === 'nearest' || isTextureFormatPossiblyFilterableAsTextureF32(t.format))
       .beginSubcases()
@@ -522,6 +521,7 @@ baseMipLevel, lodMinClamp, and lodMaxClamp, with an dwithout filtering.
       lodMinClamp,
     } = t.params;
     skipIfTextureFormatNotSupportedOrNeedsFilteringAndIsUnfilterable(t, minFilter, format);
+    skipIfTextureViewAndFormatNotCompatibleForDevice(t, format, viewDimension);
 
     const [width, height] = chooseTextureSize({ minSize: 32, minBlocks: 2, format, viewDimension });
     const depthOrArrayLayers = getDepthOrArrayLayersForViewDimension(viewDimension);
