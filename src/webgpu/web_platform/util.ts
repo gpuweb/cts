@@ -661,15 +661,12 @@ export async function getVideoElementFromCamera(
   }
   assert(foundNonBlankFrame, 'Failed to get a non-blank video frame');
 
-  // Pause the video so we get consistent readbacks.
   if (paused) {
-    const onpause = new Promise(resolve => {
+    // Pause the video so we get consistent readbacks.
+    await new Promise(resolve => {
       video.onpause = resolve;
+      video.pause();
     });
-    video.pause();
-    // FIXME: This doesn't work, still need the timeout
-    await onpause;
-    await resolveOnTimeout(10);
   }
 
   return video;
