@@ -7,6 +7,7 @@ import {
   assert,
   raceWithRejectOnTimeout,
   resolveOnTimeout,
+  unreachable,
 } from '../../common/util/util.js';
 import { GPUTest } from '../gpu_test.js';
 import { RGBA, srgbToDisplayP3 } from '../util/color_space_conversion.js';
@@ -565,8 +566,7 @@ function callbackHelper(
 
 async function getStreamFromCamera(
   test: Fixture,
-  width: number | undefined,
-  height: number | undefined
+  videoTrackConstraints: MediaTrackConstraints | true
 ): Promise<MediaStream> {
   test.skipIf(typeof navigator === 'undefined', 'navigator does not exist in this environment');
   test.skipIf(
@@ -577,7 +577,7 @@ async function getStreamFromCamera(
 
   const stream = await navigator.mediaDevices.getUserMedia({
     audio: false,
-    video: { width, height },
+    video: videoTrackConstraints,
   });
   test.trackForCleanup({
     close() {
@@ -592,18 +592,19 @@ async function getStreamFromCamera(
 /**
  * Uses MediaStreamTrackProcessor to capture a VideoFrame from the camera.
  * Skips the test if not supported.
+ * @param videoTrackConstraints - MediaTrackConstraints (e.g. width/height) to pass to
+ *     `getUserMedia()`, or `true` if none.
  */
 export async function getVideoFrameFromCamera(
   test: Fixture,
-  width: number | undefined,
-  height: number | undefined
+  videoTrackConstraints: MediaTrackConstraints | true
 ): Promise<VideoFrame> {
   test.skipIf(
     typeof MediaStreamTrackProcessor === 'undefined',
     'MediaStreamTrackProcessor not supported'
   );
 
-  const stream = await getStreamFromCamera(test, width, height);
+  const stream = await getStreamFromCamera(test, videoTrackConstraints);
   const tracks = stream.getVideoTracks();
   assert(tracks.length > 0, 'no tracks found');
   const track = tracks[0] as MediaStreamVideoTrack;
@@ -621,13 +622,14 @@ export async function getVideoFrameFromCamera(
 
 /**
  * Create an HTMLVideoElement from the camera stream. Skips the test if not supported.
+ * @param videoTrackConstraints - MediaTrackConstraints (e.g. width/height) to pass to
+ *     `getUserMedia()`, or `true` if none.
  */
 export async function getVideoElementFromCamera(
   test: Fixture,
-  width: number | undefined,
-  height: number | undefined
+  videoTrackConstraints: MediaTrackConstraints | true
 ): Promise<HTMLVideoElement> {
-  const stream = await getStreamFromCamera(test, width, height);
+  const stream = await getStreamFromCamera(test, videoTrackConstraints);
 
   // Main thread
   const video = document.createElement('video');
@@ -635,13 +637,26 @@ export async function getVideoElementFromCamera(
   video.muted = true;
   video.setAttribute('playsinline', '');
   video.srcObject = stream;
-  await new Promise(resolve => (video.onloadedmetadata = resolve));
+  await new Promise(resolve => {
+    video.onloadedmetadata = resolve;
+  });
   await startPlayingAndWaitForVideo(video, () => {});
 
-  // Chrome takes a while before it switches from blank frames to real frames
-  await resolveOnTimeout(200);
-
-  return video;
+  // Chrome on macOS (at least) takes a while before it switches from blank frames
+  // to real frames. Wait up to 50 frames for something to show up on the camera.
+  const cvs = document.createElement('canvas');
+  [cvs.width, cvs.height] = [4, 4];
+  const ctx = cvs.getContext('2d', { willReadFrequently: true })!;
+  for (let i = 0; i < 50; ++i) {
+    ctx.drawImage(video, 0, 0, cvs.width, cvs.height);
+    const pixels = new Uint32Array(ctx.getImageData(0, 0, cvs.width, cvs.height).data.buffer);
+    // Look only at RGB, ignore alpha.
+    if (pixels.some(p => (p & 0x00ffffff) !== 0)) {
+      return video;
+    }
+    await new Promise(resolve => video.requestVideoFrameCallback(resolve));
+  }
+  unreachable('Failed to get a non-blank video frame');
 }
 
 const kFourColorsInfo = {
