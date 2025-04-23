@@ -17,6 +17,7 @@ import {
   isSintOrUintFormat,
   isStencilTextureFormat,
   kEncodableTextureFormats,
+  textureDimensionAndFormatCompatibleForDevice,
   textureViewDimensionAndFormatCompatibleForDevice,
 } from '../../../../../format_info.js';
 import { GPUTest } from '../../../../../gpu_test.js';
@@ -88,6 +89,17 @@ export function skipIfTextureViewAndFormatNotCompatibleForDevice(
   t.skipIf(
     !textureViewDimensionAndFormatCompatibleForDevice(t.device, viewDimension, format),
     `format: ${format} does not support viewDimension: ${viewDimension}`
+  );
+}
+
+export function skipIfTextureAndFormatNotCompatibleForDevice(
+  t: GPUTest,
+  dimension: GPUTextureDimension,
+  format: GPUTextureFormat
+) {
+  t.skipIf(
+    !textureDimensionAndFormatCompatibleForDevice(t.device, dimension, format),
+    `format: ${format} does not support dimension: ${dimension}`
   );
 }
 
