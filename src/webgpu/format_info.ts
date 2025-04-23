@@ -3,6 +3,7 @@ import { keysOf } from '../common/util/data_tables.js';
 import { assert, unreachable } from '../common/util/util.js';
 
 import { align } from './util/math.js';
+import { getTextureDimensionFromView } from './util/texture/base.js';
 import { ImageCopyType } from './util/texture/layout.js';
 
 //
@@ -1438,11 +1439,12 @@ const kASTCTextureFormatInfo = formatTableWithDefaults({
 /** An uncompressed (block size 1x1) format (regular | depth/stencil). */
 /* prettier-ignore */ export type UncompressedTextureFormat = keyof typeof kUncompressedTextureFormatInfo;
 
-/* prettier-ignore */ export const      kRegularTextureFormats: readonly      RegularTextureFormat[] = keysOf(     kRegularTextureFormatInfo);
-/* prettier-ignore */ export const   kSizedDepthStencilFormats: readonly   SizedDepthStencilFormat[] = keysOf(  kSizedDepthStencilFormatInfo);
-/* prettier-ignore */ export const kUnsizedDepthStencilFormats: readonly UnsizedDepthStencilFormat[] = keysOf(kUnsizedDepthStencilFormatInfo);
-/* prettier-ignore */ export const   kCompressedTextureFormats: readonly   CompressedTextureFormat[] = keysOf(  kCompressedTextureFormatInfo);
-/* prettier-ignore */ export const kBCCompressedTextureFormats: readonly   CompressedTextureFormat[] = keysOf(          kBCTextureFormatInfo);
+/* prettier-ignore */ export const        kRegularTextureFormats: readonly      RegularTextureFormat[] = keysOf(     kRegularTextureFormatInfo);
+/* prettier-ignore */ export const     kSizedDepthStencilFormats: readonly   SizedDepthStencilFormat[] = keysOf(  kSizedDepthStencilFormatInfo);
+/* prettier-ignore */ export const   kUnsizedDepthStencilFormats: readonly UnsizedDepthStencilFormat[] = keysOf(kUnsizedDepthStencilFormatInfo);
+/* prettier-ignore */ export const     kCompressedTextureFormats: readonly   CompressedTextureFormat[] = keysOf(  kCompressedTextureFormatInfo);
+/* prettier-ignore */ export const   kBCCompressedTextureFormats: readonly   CompressedTextureFormat[] = keysOf(          kBCTextureFormatInfo);
+/* prettier-ignore */ export const kASTCCompressedTextureFormats: readonly   CompressedTextureFormat[] = keysOf(        kASTCTextureFormatInfo);
 
 /* prettier-ignore */ export const        kColorTextureFormats: readonly        ColorTextureFormat[] = keysOf(       kColorTextureFormatInfo);
 /* prettier-ignore */ export const    kEncodableTextureFormats: readonly    EncodableTextureFormat[] = keysOf(   kEncodableTextureFormatInfo);
@@ -1892,6 +1894,21 @@ export function textureDimensionAndFormatCompatibleForDevice(
     return true;
   }
   return textureDimensionAndFormatCompatible(dimension, format);
+}
+
+/**
+ * Returns true iff a texture can be used with the provided GPUTextureViewDimension
+ */
+export function textureViewDimensionAndFormatCompatibleForDevice(
+  device: GPUDevice,
+  dimension: GPUTextureViewDimension,
+  format: GPUTextureFormat
+): boolean {
+  return textureDimensionAndFormatCompatibleForDevice(
+    device,
+    getTextureDimensionFromView(dimension),
+    format
+  );
 }
 
 /**
