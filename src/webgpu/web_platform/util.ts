@@ -2,12 +2,7 @@ import { Fixture, SkipTestCase } from '../../common/framework/fixture.js';
 import { getResourcePath } from '../../common/framework/resources.js';
 import { keysOf } from '../../common/util/data_tables.js';
 import { timeout } from '../../common/util/timeout.js';
-import {
-  ErrorWithExtra,
-  assert,
-  raceWithRejectOnTimeout,
-  resolveOnTimeout,
-} from '../../common/util/util.js';
+import { ErrorWithExtra, assert, raceWithRejectOnTimeout } from '../../common/util/util.js';
 import { GPUTest } from '../gpu_test.js';
 import { RGBA, srgbToDisplayP3 } from '../util/color_space_conversion.js';
 
@@ -563,6 +558,9 @@ function callbackHelper(
   return { promise, callbackAndResolve: callbackAndResolve! };
 }
 
+/**
+ * Get a MediaStream from the default webcam via `getUserMedia()`.
+ */
 async function getStreamFromCamera(
   test: Fixture,
   videoTrackConstraints: MediaTrackConstraints | true
@@ -589,6 +587,34 @@ async function getStreamFromCamera(
 }
 
 /**
+ * Chrome on macOS (at least) takes a while before it switches from blank frames
+ * to real frames. Wait up to 50 frames for something to show up on the camera.
+ */
+async function waitForNonBlankFrame({
+  getSource,
+  waitForNextFrame,
+}: {
+  getSource: () => HTMLVideoElement | VideoFrame;
+  waitForNextFrame: () => Promise<void>;
+}) {
+  const cvs = document.createElement('canvas');
+  [cvs.width, cvs.height] = [4, 4];
+  const ctx = cvs.getContext('2d', { willReadFrequently: true })!;
+  let foundNonBlankFrame = false;
+  for (let i = 0; i < 50; ++i) {
+    ctx.drawImage(getSource(), 0, 0, cvs.width, cvs.height);
+    const pixels = new Uint32Array(ctx.getImageData(0, 0, cvs.width, cvs.height).data.buffer);
+    // Look only at RGB, ignore alpha.
+    if (pixels.some(p => (p & 0x00ffffff) !== 0)) {
+      foundNonBlankFrame = true;
+      break;
+    }
+    await waitForNextFrame();
+  }
+  assert(foundNonBlankFrame, 'Failed to get a non-blank video frame');
+}
+
+/**
  * Uses MediaStreamTrackProcessor to capture a VideoFrame from the camera.
  * Skips the test if not supported.
  * @param videoTrackConstraints - MediaTrackConstraints (e.g. width/height) to pass to
@@ -608,15 +634,25 @@ export async function getVideoFrameFromCamera(
   assert(tracks.length > 0, 'no tracks found');
   const track = tracks[0] as MediaStreamVideoTrack;
 
-  // Chrome takes a while before it switches from blank frames to real frames
-  await resolveOnTimeout(200);
-
   const trackProcessor = new MediaStreamTrackProcessor({ track });
   const reader = trackProcessor.readable.getReader();
-  const result = await reader.read();
-  assert(!result.done, 'MediaStreamTrackProcessor: Cannot get valid frame from readable stream.');
 
-  return result.value;
+  const waitForNextFrame = async () => {
+    const result = await reader.read();
+    assert(!result.done, "MediaStreamTrackProcessor: Couldn't get valid frame from stream.");
+    return result.value;
+  };
+  let frame: VideoFrame = await waitForNextFrame();
+  await waitForNonBlankFrame({
+    getSource: () => frame,
+    async waitForNextFrame() {
+      frame.close();
+      frame = await waitForNextFrame();
+    },
+  });
+
+  test.trackForCleanup(frame);
+  return frame;
 }
 
 /**
@@ -643,23 +679,15 @@ export async function getVideoElementFromCamera(
   });
   await startPlayingAndWaitForVideo(video, () => {});
 
-  // Chrome on macOS (at least) takes a while before it switches from blank frames
-  // to real frames. Wait up to 50 frames for something to show up on the camera.
-  const cvs = document.createElement('canvas');
-  [cvs.width, cvs.height] = [4, 4];
-  const ctx = cvs.getContext('2d', { willReadFrequently: true })!;
-  let foundNonBlankFrame = false;
-  for (let i = 0; i < 50; ++i) {
-    ctx.drawImage(video, 0, 0, cvs.width, cvs.height);
-    const pixels = new Uint32Array(ctx.getImageData(0, 0, cvs.width, cvs.height).data.buffer);
-    // Look only at RGB, ignore alpha.
-    if (pixels.some(p => (p & 0x00ffffff) !== 0)) {
-      foundNonBlankFrame = true;
-      break;
-    }
-    await new Promise(resolve => video.requestVideoFrameCallback(resolve));
-  }
-  assert(foundNonBlankFrame, 'Failed to get a non-blank video frame');
+  await waitForNonBlankFrame({
+    getSource: () => video,
+    waitForNextFrame: () =>
+      new Promise(resolve =>
+        video.requestVideoFrameCallback(() => {
+          resolve();
+        })
+      ),
+  });
 
   if (paused) {
     // Pause the video so we get consistent readbacks.
