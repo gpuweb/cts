@@ -10,7 +10,7 @@ TODO(#4364): Test camera capture with copyExternalImageToTexture (not necessaril
 `;
 
 import { makeTestGroup } from '../../../common/framework/test_group.js';
-import { resolveOnTimeout, unreachable } from '../../../common/util/util.js';
+import { unreachable } from '../../../common/util/util.js';
 import { GPUTest } from '../../gpu_test.js';
 import * as ttu from '../../texture_test_utils.js';
 import { TextureUploadingUtils } from '../../util/copy_to_texture.js';
@@ -657,16 +657,7 @@ compared with 2d canvas rendering result.
     let frameWidth: number, frameHeight: number;
     switch (path) {
       case 'HTMLVideoElement': {
-        const video = await getVideoElementFromCamera(t, constraints);
-        // Pause the video so we get consistent readbacks.
-        const paused = new Promise(resolve => {
-          video.onpause = resolve;
-        });
-        video.pause();
-        // FIXME: This doesn't work, still need the timeout
-        await paused;
-        //await resolveOnTimeout(10);
-
+        const video = await getVideoElementFromCamera(t, constraints, true);
         frameWidth = video.videoWidth;
         frameHeight = video.videoHeight;
         source = video;

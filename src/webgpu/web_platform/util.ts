@@ -7,7 +7,6 @@ import {
   assert,
   raceWithRejectOnTimeout,
   resolveOnTimeout,
-  unreachable,
 } from '../../common/util/util.js';
 import { GPUTest } from '../gpu_test.js';
 import { RGBA, srgbToDisplayP3 } from '../util/color_space_conversion.js';
@@ -624,10 +623,12 @@ export async function getVideoFrameFromCamera(
  * Create an HTMLVideoElement from the camera stream. Skips the test if not supported.
  * @param videoTrackConstraints - MediaTrackConstraints (e.g. width/height) to pass to
  *     `getUserMedia()`, or `true` if none.
+ * @param paused - whether the video should be paused before returning.
  */
 export async function getVideoElementFromCamera(
   test: Fixture,
-  videoTrackConstraints: MediaTrackConstraints | true
+  videoTrackConstraints: MediaTrackConstraints | true,
+  paused: boolean
 ): Promise<HTMLVideoElement> {
   const stream = await getStreamFromCamera(test, videoTrackConstraints);
 
@@ -647,16 +648,31 @@ export async function getVideoElementFromCamera(
   const cvs = document.createElement('canvas');
   [cvs.width, cvs.height] = [4, 4];
   const ctx = cvs.getContext('2d', { willReadFrequently: true })!;
+  let foundNonBlankFrame = false;
   for (let i = 0; i < 50; ++i) {
     ctx.drawImage(video, 0, 0, cvs.width, cvs.height);
     const pixels = new Uint32Array(ctx.getImageData(0, 0, cvs.width, cvs.height).data.buffer);
     // Look only at RGB, ignore alpha.
     if (pixels.some(p => (p & 0x00ffffff) !== 0)) {
-      return video;
+      foundNonBlankFrame = true;
+      break;
     }
     await new Promise(resolve => video.requestVideoFrameCallback(resolve));
   }
-  unreachable('Failed to get a non-blank video frame');
+  assert(foundNonBlankFrame, 'Failed to get a non-blank video frame');
+
+  // Pause the video so we get consistent readbacks.
+  if (paused) {
+    const onpause = new Promise(resolve => {
+      video.onpause = resolve;
+    });
+    video.pause();
+    // FIXME: This doesn't work, still need the timeout
+    await onpause;
+    await resolveOnTimeout(10);
+  }
+
+  return video;
 }
 
 const kFourColorsInfo = {
