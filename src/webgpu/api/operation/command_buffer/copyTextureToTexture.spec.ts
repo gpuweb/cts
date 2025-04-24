@@ -24,7 +24,9 @@ import {
   textureDimensionAndFormatCompatible,
   textureFormatsAreViewCompatible,
 } from '../../../format_info.js';
-import { AllFeaturesMaxLimitsGPUTest, TextureTestMixin } from '../../../gpu_test.js';
+import { AllFeaturesMaxLimitsGPUTest } from '../../../gpu_test.js';
+import { skipIfTextureAndFormatNotCompatibleForDevice } from '../../../shader/execution/expression/call/builtin/texture_utils.js';
+import * as ttu from '../../../texture_test_utils.js';
 import { checkElementsEqual } from '../../../util/check_contents.js';
 import { align } from '../../../util/math.js';
 import { physicalMipSize } from '../../../util/texture/base.js';
@@ -35,7 +37,7 @@ import { findFailedPixels } from '../../../util/texture/texture_ok.js';
 
 const dataGenerator = new DataArrayGenerator();
 
-class F extends TextureTestMixin(AllFeaturesMaxLimitsGPUTest) {
+class F extends AllFeaturesMaxLimitsGPUTest {
   GetInitialDataPerMipLevel(
     dimension: GPUTextureDimension,
     textureSize: Required<GPUExtent3DDict>,
@@ -220,7 +222,7 @@ class F extends TextureTestMixin(AllFeaturesMaxLimitsGPUTest) {
 
       // Execute the equivalent of `copyTextureToTexture`, copying
       // from `initialSrcData` to `expectedData`.
-      this.updateLinearTextureDataSubBox(dstFormat, appliedSize, {
+      ttu.updateLinearTextureDataSubBox(this, dstFormat, appliedSize, {
         src: {
           dataLayout: {
             bytesPerRow: srcBlocksPerRow * bytesPerBlock,
@@ -253,7 +255,8 @@ class F extends TextureTestMixin(AllFeaturesMaxLimitsGPUTest) {
         dstTextureSizeAtLevel
       );
 
-      this.expectTexturesToMatchByRendering(
+      ttu.expectTexturesToMatchByRendering(
+        this,
         dstTexture,
         expectedTexture,
         dstCopyLevel,
@@ -893,11 +896,6 @@ g.test('color_textures,compressed,non_array')
         );
       })
       .combine('dimension', kTextureDimensions)
-      .filter(
-        ({ dimension, srcFormat, dstFormat }) =>
-          textureDimensionAndFormatCompatible(dimension, srcFormat) &&
-          textureDimensionAndFormatCompatible(dimension, dstFormat)
-      )
       .beginSubcases()
       .combine('textureSizeInBlocks', [
         // The heights and widths in blocks are all power of 2
@@ -929,6 +927,8 @@ g.test('color_textures,compressed,non_array')
       srcCopyLevel,
       dstCopyLevel,
     } = t.params;
+    skipIfTextureAndFormatNotCompatibleForDevice(t, dimension, srcFormat);
+    skipIfTextureAndFormatNotCompatibleForDevice(t, dimension, dstFormat);
     t.skipIfCopyTextureToTextureNotSupportedForFormat(srcFormat, dstFormat);
     const { blockWidth: srcBlockWidth, blockHeight: srcBlockHeight } =
       getBlockInfoForColorTextureFormat(srcFormat);
@@ -1051,11 +1051,6 @@ g.test('color_textures,compressed,array')
         );
       })
       .combine('dimension', ['2d', '3d'] as const)
-      .filter(
-        ({ dimension, srcFormat, dstFormat }) =>
-          textureDimensionAndFormatCompatible(dimension, srcFormat) &&
-          textureDimensionAndFormatCompatible(dimension, dstFormat)
-      )
       .beginSubcases()
       .combine('textureSizeInBlocks', [
         // The heights and widths in blocks are all power of 2
@@ -1079,6 +1074,8 @@ g.test('color_textures,compressed,array')
     } = t.params;
     t.skipIfTextureFormatNotSupported(srcFormat, dstFormat);
     t.skipIfCopyTextureToTextureNotSupportedForFormat(srcFormat, dstFormat);
+    skipIfTextureAndFormatNotCompatibleForDevice(t, dimension, srcFormat);
+    skipIfTextureAndFormatNotCompatibleForDevice(t, dimension, dstFormat);
 
     const { blockWidth: srcBlockWidth, blockHeight: srcBlockHeight } =
       getBlockInfoForColorTextureFormat(srcFormat);

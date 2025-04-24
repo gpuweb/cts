@@ -42,11 +42,7 @@ import {
   TypedArrayBufferView,
   unreachable,
 } from '../../../../common/util/util.js';
-import {
-  kMinDynamicBufferOffsetAlignment,
-  kBufferSizeAlignment,
-  kTextureDimensions,
-} from '../../../capability_info.js';
+import { kBufferSizeAlignment, kTextureDimensions } from '../../../capability_info.js';
 import {
   kDepthStencilFormats,
   kColorTextureFormats,
@@ -64,7 +60,8 @@ import {
   canCopyToAllAspectsOfTextureFormat,
   canCopyFromAllAspectsOfTextureFormat,
 } from '../../../format_info.js';
-import { AllFeaturesMaxLimitsGPUTest, TextureTestMixin } from '../../../gpu_test.js';
+import { AllFeaturesMaxLimitsGPUTest } from '../../../gpu_test.js';
+import * as ttu from '../../../texture_test_utils.js';
 import { checkElementsEqual } from '../../../util/check_contents.js';
 import { align } from '../../../util/math.js';
 import { physicalMipSizeFromTexture } from '../../../util/texture/base.js';
@@ -129,7 +126,7 @@ const kMethodsToTest = [
 const dataGenerator = new DataArrayGenerator();
 const altDataGenerator = new DataArrayGenerator();
 
-class ImageCopyTest extends TextureTestMixin(AllFeaturesMaxLimitsGPUTest) {
+class ImageCopyTest extends AllFeaturesMaxLimitsGPUTest {
   /**
    * This is used for testing passing undefined members of `GPUTexelCopyBufferLayout` instead of actual
    * values where possible. Passing arguments as values and not as objects so that they are passed
@@ -296,8 +293,8 @@ class ImageCopyTest extends TextureTestMixin(AllFeaturesMaxLimitsGPUTest) {
       {
         const rowLength = bytesInACompleteRow(size.width, format);
         let lastOffset = 0;
-        for (const texel of this.iterateBlockRows(size, format)) {
-          const offset = this.getTexelOffsetInBytes(dataLayout, format, texel, zero);
+        for (const texel of ttu.iterateBlockRows(size, format)) {
+          const offset = ttu.getTexelOffsetInBytes(dataLayout, format, texel, zero);
           const actualPart = actual.subarray(lastOffset, offset);
           const expectedPart = expected.subarray(lastOffset, offset);
           const error = checkElementsEqual(actualPart, expectedPart);
@@ -471,7 +468,7 @@ class ImageCopyTest extends TextureTestMixin(AllFeaturesMaxLimitsGPUTest) {
 
     // update the data for the entire mip level with the data
     // that would be copied to the "actual" texture
-    this.updateLinearTextureDataSubBox(format, copySize, {
+    ttu.updateLinearTextureDataSubBox(this, format, copySize, {
       src: {
         dataLayout: expectedDataLayout,
         origin: { x: 0, y: 0, z: 0 },
@@ -492,7 +489,8 @@ class ImageCopyTest extends TextureTestMixin(AllFeaturesMaxLimitsGPUTest) {
       mipSize
     );
 
-    this.expectTexturesToMatchByRendering(
+    ttu.expectTexturesToMatchByRendering(
+      this,
       actualTexture,
       expectedTexture,
       mipLevel,
@@ -546,7 +544,7 @@ class ImageCopyTest extends TextureTestMixin(AllFeaturesMaxLimitsGPUTest) {
     // bufferData has ...... in it.
     // Update bufferData to have the same contents as buffer.
     // When done, bufferData now has t.t.t. because the rows are padded.
-    this.updateLinearTextureDataSubBox(format, checkSize, {
+    ttu.updateLinearTextureDataSubBox(this, format, checkSize, {
       src: {
         dataLayout: expectedDataLayout,
         origin: { x: 0, y: 0, z: 0 },
@@ -596,7 +594,7 @@ class ImageCopyTest extends TextureTestMixin(AllFeaturesMaxLimitsGPUTest) {
     // other eventual async expectations to ensure it will be correct.
     this.eventualAsyncExpectation(async () => {
       const readback = await readbackPromise;
-      this.updateLinearTextureDataSubBox(format, copySize, {
+      ttu.updateLinearTextureDataSubBox(this, format, copySize, {
         dest: {
           dataLayout: { offset: 0, ...fullTextureCopyLayout },
           origin,
@@ -705,7 +703,8 @@ class ImageCopyTest extends TextureTestMixin(AllFeaturesMaxLimitsGPUTest) {
             mipLevel,
           });
 
-          const fullData = this.copyWholeTextureToNewBuffer(
+          const fullData = ttu.copyWholeTextureToNewBuffer(
+            this,
             { texture, mipLevel },
             fullTextureCopyLayout
           );
@@ -790,16 +789,46 @@ class ImageCopyTest extends TextureTestMixin(AllFeaturesMaxLimitsGPUTest) {
         unreachable();
     }
 
-    this.checkStencilTextureContent(
-      srcTexture,
-      textureSize,
-      format,
-      initialData,
-      initialDataOffset,
-      bytesPerRow,
-      rowsPerImage,
-      mipLevel
+    // Copy the stencil aspect from srcTexture into outputBuffer.
+    const outputBytesPerRow = align(bytesPerRow, kBytesPerRowAlignment);
+    const outputBufferSize = align(
+      dataBytesForCopyOrFail({
+        layout: { bytesPerRow: outputBytesPerRow, rowsPerImage },
+        format: 'stencil8',
+        copySize,
+        method: uploadMethod,
+      }),
+      kBufferSizeAlignment
     );
+    const outputBuffer = this.createBufferTracked({
+      size: outputBufferSize,
+      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
+    });
+    const encoder = this.device.createCommandEncoder();
+    encoder.copyTextureToBuffer(
+      { texture: srcTexture, aspect: 'stencil-only', mipLevel },
+      { buffer: outputBuffer, bytesPerRow: outputBytesPerRow, rowsPerImage },
+      copySize
+    );
+    this.queue.submit([encoder.finish()]);
+
+    // Validate the data in outputBuffer is what we expect.
+    const expectedData = new Uint8Array(outputBufferSize);
+    for (let z = 0; z < copySize[2]; ++z) {
+      const baseExpectedOffset = z * outputBytesPerRow * rowsPerImage;
+      const baseInitialDataOffset = initialDataOffset + z * bytesPerRow * rowsPerImage;
+      for (let y = 0; y < copySize[1]; ++y) {
+        memcpy(
+          {
+            src: initialData,
+            start: baseInitialDataOffset + y * bytesPerRow,
+            length: copySize[0],
+          },
+          { dst: expectedData, start: baseExpectedOffset + y * outputBytesPerRow }
+        );
+      }
+    }
+    this.expectGPUBufferValuesEqual(outputBuffer, expectedData);
   }
 
   DoCopyFromStencilTest(
@@ -870,233 +899,6 @@ class ImageCopyTest extends TextureTestMixin(AllFeaturesMaxLimitsGPUTest) {
       }
     }
     this.expectGPUBufferValuesEqual(outputBuffer, expectedData);
-  }
-
-  // MAINTENANCE_TODO(#881): Migrate this into the texture_ok helpers.
-  checkStencilTextureContent(
-    stencilTexture: GPUTexture,
-    stencilTextureSize: readonly [number, number, number],
-    stencilTextureFormat: GPUTextureFormat,
-    expectedStencilTextureData: Uint8Array,
-    expectedStencilTextureDataOffset: number,
-    expectedStencilTextureDataBytesPerRow: number,
-    expectedStencilTextureDataRowsPerImage: number,
-    stencilTextureMipLevel: number
-  ): void {
-    const stencilBitCount = 8;
-
-    // Prepare the uniform buffer that stores the bit indices (from 0 to 7) at stride 256 (required
-    // by Dynamic Buffer Offset).
-    const uniformBufferSize = kMinDynamicBufferOffsetAlignment * (stencilBitCount - 1) + 4;
-    const uniformBufferData = new Uint32Array(uniformBufferSize / 4);
-    for (let i = 1; i < stencilBitCount; ++i) {
-      uniformBufferData[(kMinDynamicBufferOffsetAlignment / 4) * i] = i;
-    }
-    const uniformBuffer = this.makeBufferWithContents(
-      uniformBufferData,
-      GPUBufferUsage.COPY_DST | GPUBufferUsage.UNIFORM
-    );
-
-    // Prepare the base render pipeline descriptor (all the settings expect stencilReadMask).
-    const bindGroupLayout = this.device.createBindGroupLayout({
-      entries: [
-        {
-          binding: 0,
-          visibility: GPUShaderStage.FRAGMENT,
-          buffer: {
-            type: 'uniform',
-            minBindingSize: 4,
-            hasDynamicOffset: true,
-          },
-        },
-      ],
-    });
-    const renderPipelineDescriptorBase: GPURenderPipelineDescriptor = {
-      layout: this.device.createPipelineLayout({ bindGroupLayouts: [bindGroupLayout] }),
-      vertex: {
-        module: this.device.createShaderModule({
-          code: `
-            @vertex
-            fn main(@builtin(vertex_index) VertexIndex : u32)-> @builtin(position) vec4<f32> {
-              var pos : array<vec2<f32>, 6> = array<vec2<f32>, 6>(
-                  vec2<f32>(-1.0,  1.0),
-                  vec2<f32>(-1.0, -1.0),
-                  vec2<f32>( 1.0,  1.0),
-                  vec2<f32>(-1.0, -1.0),
-                  vec2<f32>( 1.0,  1.0),
-                  vec2<f32>( 1.0, -1.0));
-              return vec4<f32>(pos[VertexIndex], 0.0, 1.0);
-            }`,
-        }),
-        entryPoint: 'main',
-      },
-
-      fragment: {
-        module: this.device.createShaderModule({
-          code: `
-            struct Params {
-              stencilBitIndex: u32
-            };
-            @group(0) @binding(0) var<uniform> param: Params;
-            @fragment
-            fn main() -> @location(0) vec4<f32> {
-              return vec4<f32>(f32(1u << param.stencilBitIndex) / 255.0, 0.0, 0.0, 0.0);
-            }`,
-        }),
-        entryPoint: 'main',
-        targets: [
-          {
-            // As we implement "rendering one bit in each draw() call" with blending operation
-            // 'add', the format of outputTexture must support blending.
-            format: 'r8unorm',
-            blend: {
-              color: { srcFactor: 'one', dstFactor: 'one', operation: 'add' },
-              alpha: {},
-            },
-          },
-        ],
-      },
-
-      primitive: {
-        topology: 'triangle-list',
-      },
-
-      depthStencil: {
-        depthWriteEnabled: false,
-        depthCompare: 'always',
-        format: stencilTextureFormat,
-        stencilFront: {
-          compare: 'equal',
-        },
-        stencilBack: {
-          compare: 'equal',
-        },
-      },
-    };
-
-    // Prepare the bindGroup that contains uniformBuffer and referenceTexture.
-    const bindGroup = this.device.createBindGroup({
-      layout: bindGroupLayout,
-      entries: [
-        {
-          binding: 0,
-          resource: {
-            buffer: uniformBuffer,
-            size: 4,
-          },
-        },
-      ],
-    });
-
-    // "Copy" the stencil value into the color attachment with 8 draws in one render pass. Each draw
-    // will "Copy" one bit of the stencil value into the color attachment. The bit of the stencil
-    // value is specified by setStencilReference().
-    const copyFromOutputTextureLayout = getTextureCopyLayout(
-      stencilTextureFormat,
-      '2d',
-      [stencilTextureSize[0], stencilTextureSize[1], 1],
-      {
-        mipLevel: stencilTextureMipLevel,
-        aspect: 'stencil-only',
-      }
-    );
-    const outputTextureSize = [
-      copyFromOutputTextureLayout.mipSize[0],
-      copyFromOutputTextureLayout.mipSize[1],
-      1,
-    ];
-    const outputTexture = this.createTextureTracked({
-      format: 'r8unorm',
-      size: outputTextureSize,
-      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
-    });
-
-    for (
-      let stencilTextureLayer = 0;
-      stencilTextureLayer < stencilTextureSize[2];
-      ++stencilTextureLayer
-    ) {
-      const encoder = this.device.createCommandEncoder();
-      const depthStencilAttachment: GPURenderPassDepthStencilAttachment = {
-        view: stencilTexture.createView({
-          baseMipLevel: stencilTextureMipLevel,
-          mipLevelCount: 1,
-          baseArrayLayer: stencilTextureLayer,
-          arrayLayerCount: 1,
-        }),
-      };
-      if (isDepthTextureFormat(stencilTextureFormat)) {
-        depthStencilAttachment.depthClearValue = 0;
-        depthStencilAttachment.depthLoadOp = 'clear';
-        depthStencilAttachment.depthStoreOp = 'store';
-      }
-      if (isStencilTextureFormat(stencilTextureFormat)) {
-        depthStencilAttachment.stencilLoadOp = 'load';
-        depthStencilAttachment.stencilStoreOp = 'store';
-      }
-      const renderPass = encoder.beginRenderPass({
-        colorAttachments: [
-          {
-            view: outputTexture.createView(),
-            clearValue: { r: 0.0, g: 0.0, b: 0.0, a: 0.0 },
-            loadOp: 'clear',
-            storeOp: 'store',
-          },
-        ],
-        depthStencilAttachment,
-      });
-
-      for (let stencilBitIndex = 0; stencilBitIndex < stencilBitCount; ++stencilBitIndex) {
-        const renderPipelineDescriptor = renderPipelineDescriptorBase;
-        assert(renderPipelineDescriptor.depthStencil !== undefined);
-        renderPipelineDescriptor.depthStencil.stencilReadMask = 1 << stencilBitIndex;
-        const renderPipeline = this.device.createRenderPipeline(renderPipelineDescriptor);
-
-        renderPass.setPipeline(renderPipeline);
-        renderPass.setStencilReference(1 << stencilBitIndex);
-        renderPass.setBindGroup(0, bindGroup, [stencilBitIndex * kMinDynamicBufferOffsetAlignment]);
-        renderPass.draw(6);
-      }
-      renderPass.end();
-
-      // Check outputTexture by copying the content of outputTexture into outputStagingBuffer and
-      // checking all the data in outputStagingBuffer.
-      const outputStagingBuffer = this.createBufferTracked({
-        size: copyFromOutputTextureLayout.byteLength,
-        usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
-      });
-      encoder.copyTextureToBuffer(
-        {
-          texture: outputTexture,
-        },
-        {
-          buffer: outputStagingBuffer,
-          bytesPerRow: copyFromOutputTextureLayout.bytesPerRow,
-          rowsPerImage: copyFromOutputTextureLayout.rowsPerImage,
-        },
-        outputTextureSize
-      );
-
-      this.queue.submit([encoder.finish()]);
-
-      // Check the valid data in outputStagingBuffer once per row.
-      for (let y = 0; y < copyFromOutputTextureLayout.mipSize[1]; ++y) {
-        const dataStart =
-          expectedStencilTextureDataOffset +
-          expectedStencilTextureDataBytesPerRow *
-            expectedStencilTextureDataRowsPerImage *
-            stencilTextureLayer +
-          expectedStencilTextureDataBytesPerRow * y;
-        this.expectGPUBufferValuesEqual(
-          outputStagingBuffer,
-          expectedStencilTextureData.slice(
-            dataStart,
-            dataStart + copyFromOutputTextureLayout.mipSize[0]
-          ),
-          copyFromOutputTextureLayout.bytesPerRow * y
-        );
-      }
-    }
   }
 
   // MAINTENANCE_TODO(#881): Consider if this can be simplified/encapsulated using TexelView.
