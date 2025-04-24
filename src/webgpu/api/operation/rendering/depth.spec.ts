@@ -283,8 +283,9 @@ g.test('depth_test_fail')
     t.runDepthStateTest(testStates, _expectedColor);
   });
 
-// Use a depth value of 0.4, which is exactly representable in 16 bits unrom (26214 / (2^16-1)),
-// 24 bits unorm (6710886 / (2^24-1)), and 32 bits unorm (1717986918 / (2^32-1)).
+// Use a depth value of 0.4, which is exactly representable in depth16unorm (26214 / (2^16-1))
+// and depth24unorm (6710886 / (2^24-1)), and closely approximated in depth32float
+// (0.4000000059604644775390625).
 // This can help prevent shaders and depthClearValue get rounded in different way making equal
 // comparison result unexpected.
 const kMiddleDepthValue = 0.4;
