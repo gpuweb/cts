@@ -33,7 +33,6 @@ import {
   isPotentiallyFilterableAndFillable,
   getTextureTypeForTextureViewDimension,
   skipIfTextureFormatNotSupportedOrNeedsFilteringAndIsUnfilterable,
-  skipIfTextureViewAndFormatNotCompatibleForDeviceFoo,
 } from './texture_utils.js';
 
 export const g = makeTestGroup(AllFeaturesMaxLimitsGPUTest);

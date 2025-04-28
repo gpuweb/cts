@@ -12,7 +12,7 @@ import {
   isDepthTextureFormat,
   kDepthStencilFormats,
   kAllTextureFormats,
-  textureDimensionAndFormatCompatible,
+  textureFormatAndDimensionPossiblyCompatible,
   isTextureFormatPossiblyFilterableAsTextureF32,
 } from '../../../../../format_info.js';
 import { AllFeaturesMaxLimitsGPUTest } from '../../../../../gpu_test.js';
@@ -38,7 +38,6 @@ import {
   getTextureTypeForTextureViewDimension,
   vec1,
   generateTextureBuiltinInputs1D,
-  skipIfTextureViewAndFormatNotCompatibleForDeviceFoo,
 } from './texture_utils.js';
 
 export const g = makeTestGroup(AllFeaturesMaxLimitsGPUTest);
@@ -58,7 +57,7 @@ Parameters:
   .params(u =>
     u
       .combine('format', kAllTextureFormats)
-      .filter(t => textureDimensionAndFormatCompatible('1d', t.format))
+      .filter(t => textureFormatAndDimensionPossiblyCompatible('1d', t.format))
       .filter(t => isPotentiallyFilterableAndFillable(t.format))
       .combine('filt', ['nearest', 'linear'] as const)
       .combine('modeU', kShortAddressModes)
@@ -67,6 +66,7 @@ Parameters:
   )
   .fn(async t => {
     const { format, samplePoints, modeU, filt: minFilter } = t.params;
+    t.skipIfTextureFormatAndDimensionNotCompatible(format, '1d');
     skipIfTextureFormatNotSupportedOrNeedsFilteringAndIsUnfilterable(t, minFilter, format);
 
     // We want at least 4 blocks or something wide enough for 3 mip levels.

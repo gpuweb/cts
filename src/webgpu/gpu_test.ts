@@ -515,7 +515,7 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
 
   skipIfTextureFormatAndDimensionNotCompatible(
     format: GPUTextureFormat,
-    dimension: GPUTextureDimension
+    dimension: GPUTextureDimension | undefined
   ) {
     this.skipIf(
       !textureDimensionAndFormatCompatibleForDevice(this.device, dimension, format),

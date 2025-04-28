@@ -30,7 +30,6 @@ import {
   kShortShaderStages,
   SamplePointMethods,
   skipIfTextureFormatNotSupportedOrNeedsFilteringAndIsUnfilterable,
-  skipIfTextureViewAndFormatNotCompatibleForDeviceFoo,
   TextureCall,
   vec2,
   vec3,
