@@ -30,7 +30,7 @@ import {
   kShortShaderStages,
   SamplePointMethods,
   skipIfTextureFormatNotSupportedOrNeedsFilteringAndIsUnfilterable,
-  skipIfTextureViewAndFormatNotCompatibleForDevice,
+  skipIfTextureViewAndFormatNotCompatibleForDeviceFoo,
   TextureCall,
   vec2,
   vec3,
@@ -186,7 +186,7 @@ Parameters:
       offset,
     } = t.params;
     skipIfTextureFormatNotSupportedOrNeedsFilteringAndIsUnfilterable(t, minFilter, format);
-    skipIfTextureViewAndFormatNotCompatibleForDevice(t, format, viewDimension);
+    t.skipIfTextureFormatAndViewDimensionNotCompatible(format, viewDimension);
 
     const size = chooseTextureSize({ minSize: 8, minBlocks: 2, format, viewDimension });
     const descriptor: GPUTextureDescriptor = {

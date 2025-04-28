@@ -25,7 +25,6 @@ import {
   textureFormatsAreViewCompatible,
 } from '../../../format_info.js';
 import { AllFeaturesMaxLimitsGPUTest } from '../../../gpu_test.js';
-import { skipIfTextureAndFormatNotCompatibleForDevice } from '../../../shader/execution/expression/call/builtin/texture_utils.js';
 import * as ttu from '../../../texture_test_utils.js';
 import { checkElementsEqual } from '../../../util/check_contents.js';
 import { align } from '../../../util/math.js';
@@ -927,8 +926,8 @@ g.test('color_textures,compressed,non_array')
       srcCopyLevel,
       dstCopyLevel,
     } = t.params;
-    skipIfTextureAndFormatNotCompatibleForDevice(t, dimension, srcFormat);
-    skipIfTextureAndFormatNotCompatibleForDevice(t, dimension, dstFormat);
+    t.skipIfTextureFormatAndDimensionNotCompatible(srcFormat, dimension);
+    t.skipIfTextureFormatAndDimensionNotCompatible(dstFormat, dimension);
     t.skipIfCopyTextureToTextureNotSupportedForFormat(srcFormat, dstFormat);
     const { blockWidth: srcBlockWidth, blockHeight: srcBlockHeight } =
       getBlockInfoForColorTextureFormat(srcFormat);
@@ -1074,8 +1073,8 @@ g.test('color_textures,compressed,array')
     } = t.params;
     t.skipIfTextureFormatNotSupported(srcFormat, dstFormat);
     t.skipIfCopyTextureToTextureNotSupportedForFormat(srcFormat, dstFormat);
-    skipIfTextureAndFormatNotCompatibleForDevice(t, dimension, srcFormat);
-    skipIfTextureAndFormatNotCompatibleForDevice(t, dimension, dstFormat);
+    t.skipIfTextureFormatAndDimensionNotCompatible(srcFormat, dimension);
+    t.skipIfTextureFormatAndDimensionNotCompatible(dstFormat, dimension);
 
     const { blockWidth: srcBlockWidth, blockHeight: srcBlockHeight } =
       getBlockInfoForColorTextureFormat(srcFormat);

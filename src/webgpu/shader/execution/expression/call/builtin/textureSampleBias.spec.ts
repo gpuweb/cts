@@ -33,7 +33,7 @@ import {
   isPotentiallyFilterableAndFillable,
   getTextureTypeForTextureViewDimension,
   skipIfTextureFormatNotSupportedOrNeedsFilteringAndIsUnfilterable,
-  skipIfTextureViewAndFormatNotCompatibleForDevice,
+  skipIfTextureViewAndFormatNotCompatibleForDeviceFoo,
 } from './texture_utils.js';
 
 export const g = makeTestGroup(AllFeaturesMaxLimitsGPUTest);
@@ -190,7 +190,7 @@ Parameters:
       offset,
     } = t.params;
     skipIfTextureFormatNotSupportedOrNeedsFilteringAndIsUnfilterable(t, minFilter, format);
-    skipIfTextureViewAndFormatNotCompatibleForDevice(t, format, viewDimension);
+    t.skipIfTextureFormatAndViewDimensionNotCompatible(format, viewDimension);
 
     const size = chooseTextureSize({ minSize: 8, minBlocks: 2, format, viewDimension });
     const descriptor: GPUTextureDescriptor = {
