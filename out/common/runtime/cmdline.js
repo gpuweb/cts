@@ -1,8 +1,6 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
-**/import * as fs from 'fs';
-
-import { dataCache } from '../framework/data_cache.js';
+**/import { dataCache } from '../framework/data_cache.js';
 import { getResourcePath, setBaseResourcePath } from '../framework/resources.js';
 import { globalTestConfig } from '../framework/test_config.js';
 import { DefaultTestFileLoader } from '../internal/file_loader.js';
@@ -152,13 +150,16 @@ Did you remember to build with code coverage instrumentation enabled?`
 dataCache.setStore({
   load: (path) => {
     return new Promise((resolve, reject) => {
-      fs.readFile(getResourcePath(`cache/${path}`), (err, data) => {
-        if (err !== null) {
-          reject(err.message);
-        } else {
-          resolve(data);
+      sys.readFile(
+        getResourcePath(`cache/${path}`),
+        (err, data) => {
+          if (err !== null) {
+            reject(err.message);
+          } else {
+            resolve(data);
+          }
         }
-      });
+      );
     });
   }
 });
