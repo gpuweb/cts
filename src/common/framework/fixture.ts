@@ -347,7 +347,13 @@ export class Fixture<S extends SubcaseBatchState = SubcaseBatchState> {
   }
 
   /** Expect that a condition is true. */
-  expect(cond: boolean, msg?: string): boolean {
+  expect(cond: boolean | (() => boolean), msg?: string): boolean {
+    if (typeof cond === 'function') {
+      if (msg === undefined) {
+        msg = cond.toString();
+      }
+      cond = cond();
+    }
     if (cond) {
       const m = msg ? ': ' + msg : '';
       this.rec.debug(new Error('expect OK' + m));
