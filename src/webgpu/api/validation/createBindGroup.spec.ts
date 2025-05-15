@@ -561,9 +561,10 @@ g.test('buffer,resource_state')
       .combine('state', kResourceStates)
       .combine('entry', bufferBindingEntries(true))
       .combine('visibilityMask', [kAllShaderStages, GPUConst.ShaderStage.COMPUTE] as const)
+      .combine('bindBufferResource', [false, true] as const)
   )
   .fn(t => {
-    const { state, entry, visibilityMask } = t.params;
+    const { state, entry, visibilityMask, bindBufferResource } = t.params;
 
     assert(entry.buffer !== undefined);
     const info = bufferBindingTypeInfo(entry.buffer);
@@ -586,15 +587,14 @@ g.test('buffer,resource_state')
       size: 4,
     });
 
+    const resource = bindBufferResource ? buffer : { buffer };
     t.expectValidationError(() => {
       t.device.createBindGroup({
         layout: bgl,
         entries: [
           {
             binding: 0,
-            resource: {
-              buffer,
-            },
+            resource,
           },
         ],
       });
