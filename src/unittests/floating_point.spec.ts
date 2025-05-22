@@ -3974,16 +3974,7 @@ g.test('tanhInterval')
     const trait = FP[t.params.trait];
     const expected = trait.toInterval(t.params.expected);
     const got = trait.tanhInterval(t.params.input);
-    if(! objectEquals(expected, got)){
-      const workingData = new ArrayBuffer(8);
-      const workingDataF64 = new Float64Array(workingData);
-      const workingDataU64 = new BigUint64Array(workingData);
-      workingDataF64[0] = got.begin;
 
-      t.warn("hold up");
-      t.warn(expected.toString());
-      t.warn(workingDataU64[0].toString(16));
-    }
     t.expect(
       objectEquals(expected, got),
       `${t.params.trait}.tanhInterval(${t.params.input}) returned ${got}. Expected ${expected}`
