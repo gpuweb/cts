@@ -175,14 +175,14 @@ g.test('buffer_binding_resource')
       .combine('bindBufferResource', [false, true] as const)
       .combine('offset', [0, 256, undefined])
       .combine('size', [4, 8, undefined])
-      .expand('bufferSize', p => [
-        (p.offset ?? 0) + (p.size ?? 16),
-        (p.offset ?? 0) + (p.size ?? 16) + 8,
-      ])
+      .combine('extraBufferSize', [0, 8])
+      // offset and size don't matter if bindBufferResource is true
+      .filter(p => !p.bindBufferResource || (p.offset === undefined && p.size === undefined))
   )
   .fn(t => {
-    const { offset, size, bufferSize, bindBufferResource } = t.params;
+    const { bindBufferResource, offset, size, extraBufferSize } = t.params;
 
+    const bufferSize = (offset ?? 0) + (size ?? 16) + extraBufferSize;
     const bufferData = new Uint8Array(bufferSize);
     for (let i = 0; i < bufferSize; ++i) {
       bufferData[i] = i + 1;
