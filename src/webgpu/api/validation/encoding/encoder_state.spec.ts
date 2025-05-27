@@ -19,6 +19,7 @@ TODO:
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { objectEquals } from '../../../../common/util/util.js';
 import { AllFeaturesMaxLimitsGPUTest } from '../../../gpu_test.js';
+import * as vtu from '../validation_test_utils.js';
 
 class F extends AllFeaturesMaxLimitsGPUTest {
   beginRenderPass(commandEncoder: GPUCommandEncoder, view: GPUTextureView): GPURenderPassEncoder {
@@ -154,7 +155,7 @@ g.test('call_after_successful_finish')
 g.test('pass_end_none')
   .desc(
     `
-  Test that ending a {compute,render} pass without ending the passes generates a validation error.
+  Test that finishing an encoder without ending a child {compute,render} pass generates a validation error.
   `
   )
   .paramsSubcasesOnly(u => u.combine('passType', ['compute', 'render']).combine('endCount', [0, 1]))
@@ -246,4 +247,86 @@ g.test('pass_end_twice,render_pass_invalid')
     t.expectValidationError(() => {
       encoder.finish();
     });
+  });
+
+g.test('pass_begin_invalid_encoder')
+  .desc(
+    `
+  Test that {compute,render} passes can still be opened on an invalid encoder.
+  `
+  )
+  .params(u =>
+    u
+      .combine('pass0Type', ['compute', 'render'])
+      .combine('pass1Type', ['compute', 'render'])
+      .beginSubcases()
+      .combine('firstPassInvalid', [false, true])
+  )
+  .beforeAllSubcases(t => t.usesMismatchedDevice())
+  .fn(t => {
+    t.skipIfDeviceDoesNotSupportQueryType('timestamp');
+
+    const { pass0Type, pass1Type, firstPassInvalid } = t.params;
+
+    const view = t.createAttachmentTextureView();
+    const mismatchedTexture = vtu.getDeviceMismatchedRenderTexture(t, 4);
+    const mismatchedView = mismatchedTexture.createView();
+
+    const querySet = t.trackForCleanup(
+      t.device.createQuerySet({
+        type: 'timestamp',
+        count: 1,
+      })
+    );
+
+    const timestampWrites = {
+      querySet,
+      beginningOfPassWriteIndex: 0,
+    };
+
+    const descriptor = {
+      timestampWrites,
+    };
+
+    const mismatchedQuerySet = t.trackForCleanup(
+      t.mismatchedDevice.createQuerySet({
+        type: 'timestamp',
+        count: 1,
+      })
+    );
+
+    const mismatchedTimestampWrites = {
+      querySet: mismatchedQuerySet,
+      beginningOfPassWriteIndex: 0,
+    };
+
+    const mismatchedDescriptor = {
+      timestampWrites: mismatchedTimestampWrites,
+    };
+
+    const encoder = t.device.createCommandEncoder();
+
+    let firstPass;
+    if (pass0Type === 'compute') {
+      firstPass = firstPassInvalid
+        ? encoder.beginComputePass(mismatchedDescriptor)
+        : encoder.beginComputePass(descriptor);
+    } else {
+      firstPass = firstPassInvalid
+        ? t.beginRenderPass(encoder, mismatchedView)
+        : t.beginRenderPass(encoder, view);
+    }
+
+    // Ending an invalid pass invalidates the encoder
+    firstPass.end();
+
+    // Passes can still be opened on an invalid encoder
+    const secondPass =
+      pass1Type === 'compute' ? encoder.beginComputePass() : t.beginRenderPass(encoder, view);
+
+    secondPass.end();
+
+    t.expectValidationError(() => {
+      encoder.finish();
+    }, firstPassInvalid);
   });
