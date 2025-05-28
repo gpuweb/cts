@@ -343,7 +343,7 @@ fn(async (t0) => {
   const expectedStatus = allSkip ? 'skip' : 'pass';
   t0.expect(
     values[0].status === expectedStatus,
-    `expect: ${values[0].status} === ${expectedStatus}}, allSkip: ${allSkip}`
+    `expect: ${values[0].status} === ${expectedStatus}, allSkip: ${allSkip}`
   );
 });
 
