@@ -5,6 +5,12 @@ import { UnitTest } from '../unittests/unit_test.js';
 
 export const g = makeTestGroup(UnitTest);
 
+g.test('skip')
+  .paramsSubcasesOnly(u => u.combine('y', [1, 2]))
+  .fn(t => {
+    t.skip('I skip!');
+  });
+
 g.test('pass_warn_fail_skip')
   .params(u =>
     u

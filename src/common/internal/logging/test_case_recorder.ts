@@ -191,15 +191,32 @@ export class TestCaseRecorder {
   makeDeferredSubRecorder(prefix: string, deferUntilPromise: Promise<void>) {
     return new Proxy(this, {
       get: (target, k) => {
-        /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-        if (k !== 'logImpl') return (target as any)[k];
-
-        globalTestConfig.testHeartbeatCallback();
-        return function (level: LogSeverity, name: string, baseException: unknown) {
-          void deferUntilPromise.then(() => {
-            target.logImpl(level, prefix + name, baseException);
-          });
-        };
+        switch (k) {
+          case 'logImpl':
+            return function (level: LogSeverity, name: string, baseException: unknown) {
+              globalTestConfig.testHeartbeatCallback();
+              void deferUntilPromise.then(() => {
+                target.logImpl(level, prefix + name, baseException);
+              });
+            };
+          case 'beginSubCase':
+            return function () {
+              globalTestConfig.testHeartbeatCallback();
+              void deferUntilPromise.then(() => {
+                target.beginSubCase();
+              });
+            };
+          case 'endSubCase':
+            return function (expectedStatus: Expectation) {
+              globalTestConfig.testHeartbeatCallback();
+              void deferUntilPromise.then(() => {
+                target.endSubCase(expectedStatus);
+              });
+            };
+          default:
+            /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+            return (target as any)[k];
+        }
       },
     });
   }
