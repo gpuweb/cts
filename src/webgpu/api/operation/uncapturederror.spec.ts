@@ -45,7 +45,7 @@ g.test('onuncapturederror_order_wrt_addEventListener')
     `
 Test that onuncapturederror and addEventListener work in the correct order.
 
-The spec says setting onuncaptrederror adds a listener via addEventListener that
+The spec says setting onuncapturederror adds a listener via addEventListener that
 calls the callback. Changing onuncapturederror changes the callback to the existing
 listener. Setting onuncapturederror to null removes the listener.
   `
