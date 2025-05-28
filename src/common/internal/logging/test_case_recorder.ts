@@ -197,7 +197,7 @@ export class TestCaseRecorder {
         globalTestConfig.testHeartbeatCallback();
         return function (level: LogSeverity, name: string, baseException: unknown) {
           void deferUntilPromise.then(() => {
-            TestCaseRecorder.prototype.logImpl.call(target, level, prefix + name, baseException);
+            target.logImpl(level, prefix + name, baseException);
           });
         };
       },
