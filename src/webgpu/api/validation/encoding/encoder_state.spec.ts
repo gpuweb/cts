@@ -81,6 +81,8 @@ g.test('pass_end_invalid_order')
 
     const passes = [firstPass, secondPass];
     for (const index of endPasses) {
+      // TODO(https://github.com/gpuweb/gpuweb/issues/5207): should a validation error
+      // be raised here if `!firstPassEnd && endPasses = [1, 0]`?
       passes[index].end();
     }
 
@@ -275,7 +277,7 @@ g.test('pass_begin_invalid_encoder')
     const querySet = t.trackForCleanup(
       t.device.createQuerySet({
         type: 'timestamp',
-        count: 1,
+        count: 2,
       })
     );
 
@@ -291,7 +293,7 @@ g.test('pass_begin_invalid_encoder')
     const mismatchedQuerySet = t.trackForCleanup(
       t.mismatchedDevice.createQuerySet({
         type: 'timestamp',
-        count: 1,
+        count: 2,
       })
     );
 
