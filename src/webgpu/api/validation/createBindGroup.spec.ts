@@ -872,6 +872,7 @@ g.test('storage_texture,format')
   )
   .fn(t => {
     const { storageTextureFormat, resourceFormat } = t.params;
+    t.skipIfTextureFormatNotSupported(storageTextureFormat, resourceFormat);
     t.skipIfTextureFormatNotUsableAsStorageTexture(storageTextureFormat, resourceFormat);
 
     const bindGroupLayout = t.device.createBindGroupLayout({
