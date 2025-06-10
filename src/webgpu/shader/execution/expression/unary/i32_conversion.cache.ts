@@ -75,7 +75,10 @@ export const d = makeCaseCache('unary/i32_conversion', {
       }
 
       if (f >= kValue.i32.positive.max) {
-        return { input: f32(f), expected: i32(kValue.i32.positive.max) };
+        // This is intentionally not kValue.i32.positive.max
+        // See https://github.com/gpuweb/gpuweb/issues/5043
+        const largestI32WhichIsF32 = i32(0x7fffff80);
+        return { input: f32(f), expected: largestI32WhichIsF32 };
       }
 
       // All f32 no larger than 2^24 has a precise interger part and a fractional part, just need
