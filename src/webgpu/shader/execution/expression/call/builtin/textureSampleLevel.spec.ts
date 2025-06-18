@@ -51,7 +51,11 @@ Parameters:
  * t  The sampled or depth texture to sample.
  * s  The sampler type.
  * coords The texture coordinates used for sampling.
- * level The mip level, clamped to 0.
+ * level
+    * The mip level, with level 0 containing a full size version of the texture.
+    * For the functions where level is a f32, fractional values may interpolate between
+      two levels if the format is filterable according to the Texture Format Capabilities.
+    * When not specified, mip level 0 is sampled.
 `
   )
   .params(u =>
@@ -85,8 +89,9 @@ Parameters:
       size: { width, height },
       usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
     };
-
+    const viewDescriptor = {};
     const { texels, texture } = await createTextureWithRandomDataAndGetTexels(t, descriptor);
+    const softwareTexture = { texels, descriptor, viewDescriptor };
     const sampler: GPUSamplerDescriptor = {
       addressModeU: kShortAddressModeToAddressMode[modeU],
       addressModeV: kShortAddressModeToAddressMode[modeV],
@@ -96,21 +101,21 @@ Parameters:
     };
 
     const calls: TextureCall<vec1>[] = generateTextureBuiltinInputs1D(50, {
-      sampler,
       method: samplePoints,
-      descriptor,
+      sampler,
+      softwareTexture,
+      mipLevel: { num: texture.mipLevelCount, type: 'f32' },
       hashInputs: [stage, format, samplePoints, modeU, modeV, minFilter],
-    }).map(({ coords }) => {
+    }).map(({ coords, mipLevel }) => {
       return {
         builtin: 'textureSampleLevel',
         coordType: 'f',
         coords,
+        mipLevel,
         levelType: 'f',
-        mipLevel: 0,
       };
     });
-    const viewDescriptor = {};
-    const textureType = 'texture_1d<f32>';
+    const textureType = appendComponentTypeForFormatToTextureType('texture_1d', format);
     const results = await doTextureCalls(
       t,
       texture,
