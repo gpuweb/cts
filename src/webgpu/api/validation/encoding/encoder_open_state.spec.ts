@@ -274,15 +274,13 @@ g.test('render_pass_commands')
     `
     Test that functions of GPURenderPassEncoder generate a validation error if the encoder or the
     pass is already finished.
-
-    - TODO: Consider testing: nothing before command, end before command, end+finish before command.
   `
   )
   .params(u =>
     u
       .combine('command', kRenderPassEncoderCommands)
       .beginSubcases()
-      .combine('finishBeforeCommand', [false, true])
+      .combine('finishBeforeCommand', ['no', 'pass', 'encoder'])
   )
   .fn(t => {
     const { command, finishBeforeCommand } = t.params;
@@ -305,8 +303,10 @@ g.test('render_pass_commands')
 
     const bindGroup = t.createBindGroupForTest();
 
-    if (finishBeforeCommand) {
+    if (finishBeforeCommand !== 'no') {
       renderPass.end();
+    }
+    if (finishBeforeCommand === 'encoder') {
       encoder.finish();
     }
 
@@ -420,7 +420,7 @@ g.test('render_pass_commands')
         default:
           unreachable();
       }
-    }, finishBeforeCommand);
+    }, finishBeforeCommand !== 'no');
   });
 
 g.test('render_bundle_commands')
@@ -524,15 +524,13 @@ g.test('compute_pass_commands')
     `
     Test that functions of GPUComputePassEncoder generate a validation error if the encoder or the
     pass is already finished.
-
-    - TODO: Consider testing: nothing before command, end before command, end+finish before command.
   `
   )
   .params(u =>
     u
       .combine('command', kComputePassEncoderCommands)
       .beginSubcases()
-      .combine('finishBeforeCommand', [false, true])
+      .combine('finishBeforeCommand', ['no', 'pass', 'encoder'])
   )
   .fn(t => {
     const { command, finishBeforeCommand } = t.params;
@@ -549,8 +547,10 @@ g.test('compute_pass_commands')
 
     const bindGroup = t.createBindGroupForTest();
 
-    if (finishBeforeCommand) {
+    if (finishBeforeCommand !== 'no') {
       computePass.end();
+    }
+    if (finishBeforeCommand === 'encoder') {
       encoder.finish();
     }
 
@@ -594,5 +594,5 @@ g.test('compute_pass_commands')
         default:
           unreachable();
       }
-    }, finishBeforeCommand);
+    }, finishBeforeCommand !== 'no');
   });
