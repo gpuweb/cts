@@ -98,7 +98,13 @@ g.test('call_after_successful_finish')
   .desc(`Test that encoding command after a successful finish generates a validation error.`)
   .params(u =>
     u
-      .combine('callCmd', ['beginComputePass', 'beginRenderPass', 'insertDebugMarker'])
+      .combine('callCmd', [
+        'beginComputePass',
+        'beginRenderPass',
+        'finishAndSubmitFirst',
+        'finishAndSubmitSecond',
+        'insertDebugMarker',
+      ])
       .beginSubcases()
       .combine('prePassType', ['compute', 'render', 'no-op'])
       .combine('IsEncoderFinished', [false, true])
@@ -115,8 +121,9 @@ g.test('call_after_successful_finish')
       pass.end();
     }
 
+    let buffer;
     if (IsEncoderFinished) {
-      encoder.finish();
+      buffer = encoder.finish();
     }
 
     switch (callCmd) {
@@ -129,6 +136,9 @@ g.test('call_after_successful_finish')
           t.expectValidationError(() => {
             pass.end();
           }, IsEncoderFinished);
+          if (buffer) {
+            t.device.queue.submit([buffer]);
+          }
         }
         break;
       case 'beginRenderPass':
@@ -140,16 +150,41 @@ g.test('call_after_successful_finish')
           t.expectValidationError(() => {
             pass.end();
           }, IsEncoderFinished);
+          if (buffer) {
+            t.device.queue.submit([buffer]);
+          }
+        }
+        break;
+      case 'finishAndSubmitFirst':
+        t.expectValidationError(() => {
+          encoder.finish();
+        }, IsEncoderFinished);
+        if (buffer) {
+          t.device.queue.submit([buffer]);
+        }
+        break;
+      case 'finishAndSubmitSecond':
+        {
+          let secondBuffer: GPUCommandBuffer;
+          t.expectValidationError(() => {
+            secondBuffer = encoder.finish();
+          }, IsEncoderFinished);
+          t.expectValidationError(() => {
+            t.device.queue.submit([secondBuffer]);
+          }, IsEncoderFinished);
         }
         break;
       case 'insertDebugMarker':
         t.expectValidationError(() => {
           encoder.insertDebugMarker('');
         }, IsEncoderFinished);
+        if (buffer) {
+          t.device.queue.submit([buffer]);
+        }
         break;
     }
 
-    if (!IsEncoderFinished) {
+    if (!IsEncoderFinished && !callCmd.startsWith("finish")) {
       encoder.finish();
     }
   });
