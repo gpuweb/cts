@@ -62,7 +62,8 @@ class F extends AllFeaturesMaxLimitsGPUTest {
     texture: GPUTexture,
     textureViewDescriptor?: GPUTextureViewDescriptor
   ): GPURenderPassColorAttachment {
-    const view = texture.createView(textureViewDescriptor);
+    const { bindTextureResource = false } = this.params as { bindTextureResource?: boolean };
+    const view = bindTextureResource ? texture : texture.createView(textureViewDescriptor);
 
     return {
       view,
@@ -76,7 +77,8 @@ class F extends AllFeaturesMaxLimitsGPUTest {
     texture: GPUTexture,
     textureViewDescriptor?: GPUTextureViewDescriptor
   ): GPURenderPassDepthStencilAttachment {
-    const view = texture.createView(textureViewDescriptor);
+    const { bindTextureResource = false } = this.params as { bindTextureResource?: boolean };
+    const view = bindTextureResource ? texture : texture.createView(textureViewDescriptor);
 
     return {
       view,
@@ -105,6 +107,7 @@ const kArrayLayerCount = 10;
 
 g.test('attachments,one_color_attachment')
   .desc(`Test that a render pass works with only one color attachment.`)
+  .paramsSubcasesOnly(u => u.combine('bindTextureResource', [false, true] as const))
   .fn(t => {
     const colorTexture = t.createTestTexture({ format: 'rgba8unorm' });
     const descriptor = {
@@ -116,6 +119,7 @@ g.test('attachments,one_color_attachment')
 
 g.test('attachments,one_depth_stencil_attachment')
   .desc(`Test that a render pass works with only one depthStencil attachment.`)
+  .paramsSubcasesOnly(u => u.combine('bindTextureResource', [false, true] as const))
   .fn(t => {
     const depthStencilTexture = t.createTestTexture({ format: 'depth24plus-stencil8' });
     const descriptor = {
