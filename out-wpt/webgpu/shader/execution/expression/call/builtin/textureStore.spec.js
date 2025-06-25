@@ -100,7 +100,7 @@ unless((t) => t.viewDimension === '1d' && t.mipLevel !== 0)
 ).
 fn((t) => {
   const { format, stage, access, viewDimension, mipLevel } = t.params;
-  t.skipIfTextureFormatNotUsableAsReadWriteStorageTexture(format);
+  t.skipIfTextureFormatNotUsableAsStorageTexture(format);
 
   const { componentType } = getTextureFormatTypeInfo(format);
   const values = inputArray(format);
