@@ -1680,7 +1680,7 @@ export const kAllTextureFormats = keysOf(kAllTextureFormatInfo);
  * * isTextureFormatResolvable
  * * isTextureFormatBlendable
  * * isTextureFormatMultisampled
- * * isTextureFormatUsableAsStorageFormat
+ * * isTextureFormatUsableAsStorageTexture
  * * isTextureFormatUsableAsReadWriteStorageTexture
  * * isTextureFormatUsableAsStorageFormatInCreateShaderModule
  *
@@ -2426,7 +2426,7 @@ export const kCompatModeUnsupportedStorageTextureFormats = [
  * can be used in general. If you want to know if the format can used when compiling
  * a shader @see {@link isTextureFormatUsableAsStorageFormatInCreateShaderModule}
  */
-export function isTextureFormatUsableAsStorageFormat(
+export function isTextureFormatUsableAsStorageTexture(
 device,
 format)
 {
@@ -2473,7 +2473,7 @@ device,
 format)
 {
   return (
-    isTextureFormatUsableAsStorageFormat(device, format) &&
+    isTextureFormatUsableAsStorageTexture(device, format) &&
     !!kTextureFormatInfo[format].color?.readWriteStorage);
 
 }

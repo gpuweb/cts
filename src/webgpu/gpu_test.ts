@@ -29,7 +29,7 @@ import {
   EncodableTextureFormat,
   isCompressedTextureFormat,
   getRequiredFeatureForTextureFormat,
-  isTextureFormatUsableAsStorageFormat,
+  isTextureFormatUsableAsStorageTexture,
   isTextureFormatUsableAsRenderAttachment,
   isTextureFormatMultisampled,
   is32Float,
@@ -567,7 +567,7 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
 
   skipIfTextureFormatNotUsableAsStorageTexture(...formats: (GPUTextureFormat | undefined)[]) {
     for (const format of formats) {
-      if (format && !isTextureFormatUsableAsStorageFormat(this.device, format)) {
+      if (format && !isTextureFormatUsableAsStorageTexture(this.device, format)) {
         this.skip(`Texture with ${format} is not usable as a storage texture`);
       }
     }

@@ -1680,7 +1680,7 @@ type TextureFormatInfo_TypeCheck = {
  * * isTextureFormatResolvable
  * * isTextureFormatBlendable
  * * isTextureFormatMultisampled
- * * isTextureFormatUsableAsStorageFormat
+ * * isTextureFormatUsableAsStorageTexture
  * * isTextureFormatUsableAsReadWriteStorageTexture
  * * isTextureFormatUsableAsStorageFormatInCreateShaderModule
  *
@@ -2426,7 +2426,7 @@ export const kCompatModeUnsupportedStorageTextureFormats: readonly GPUTextureFor
  * can be used in general. If you want to know if the format can used when compiling
  * a shader @see {@link isTextureFormatUsableAsStorageFormatInCreateShaderModule}
  */
-export function isTextureFormatUsableAsStorageFormat(
+export function isTextureFormatUsableAsStorageTexture(
   device: GPUDevice,
   format: GPUTextureFormat
 ): boolean {
@@ -2473,7 +2473,7 @@ export function isTextureFormatUsableAsReadWriteStorageTexture(
   format: GPUTextureFormat
 ): boolean {
   return (
-    isTextureFormatUsableAsStorageFormat(device, format) &&
+    isTextureFormatUsableAsStorageTexture(device, format) &&
     !!kTextureFormatInfo[format].color?.readWriteStorage
   );
 }
