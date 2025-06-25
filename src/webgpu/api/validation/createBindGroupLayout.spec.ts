@@ -22,7 +22,7 @@ import {
 } from '../../capability_info.js';
 import {
   isTextureFormatUsableAsReadWriteStorageTexture,
-  isTextureFormatUsableAsStorageFormat,
+  isTextureFormatUsableAsStorageTexture,
   kAllTextureFormats,
 } from '../../format_info.js';
 
@@ -512,7 +512,7 @@ g.test('storage_texture,formats')
     t.skipIfTextureFormatNotSupported(format);
 
     const success =
-      isTextureFormatUsableAsStorageFormat(t.device, format) &&
+      isTextureFormatUsableAsStorageTexture(t.device, format) &&
       !(
         access === 'read-write' && !isTextureFormatUsableAsReadWriteStorageTexture(t.device, format)
       );
