@@ -184,7 +184,7 @@ g.test('call_after_successful_finish')
         break;
     }
 
-    if (!IsEncoderFinished && !callCmd.startsWith("finish")) {
+    if (!IsEncoderFinished && !callCmd.startsWith('finish')) {
       encoder.finish();
     }
   });
