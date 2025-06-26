@@ -52,6 +52,9 @@ g.test('pass_end_invalid_order')
     `
   Test that beginning a {compute,render} pass before ending the previous {compute,render} pass
   causes an error.
+
+  TODO(https://github.com/gpuweb/gpuweb/issues/5207): Resolve whether a validation error
+  should be raised immediately if '!firstPassEnd && endPasses = [1, 0]'.
   `
   )
   .params(u =>
@@ -81,8 +84,6 @@ g.test('pass_end_invalid_order')
 
     const passes = [firstPass, secondPass];
     for (const index of endPasses) {
-      // TODO(https://github.com/gpuweb/gpuweb/issues/5207): should a validation error
-      // be raised here if `!firstPassEnd && endPasses = [1, 0]`?
       passes[index].end();
     }
 
