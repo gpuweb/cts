@@ -274,6 +274,10 @@ g.test('render_pass_commands')
     `
     Test that functions of GPURenderPassEncoder generate a validation error if the encoder or the
     pass is already finished.
+
+    TODO(https://github.com/gpuweb/gpuweb/issues/5207): Resolve whether the error condition
+    \`finishBeforeCommand !== 'no'\` is correct, or should be changed to
+    \`finishBeforeCommand === 'encoder'\`.
   `
   )
   .params(u =>
@@ -421,8 +425,6 @@ g.test('render_pass_commands')
           unreachable();
       }
     }, finishBeforeCommand !== 'no');
-    // TODO(https://github.com/gpuweb/gpuweb/issues/5207): resolve whether this
-    // is correct or should be changed to `finishBeforeCommand === 'encoder'`.
   });
 
 g.test('render_bundle_commands')
@@ -526,6 +528,10 @@ g.test('compute_pass_commands')
     `
     Test that functions of GPUComputePassEncoder generate a validation error if the encoder or the
     pass is already finished.
+
+    TODO(https://github.com/gpuweb/gpuweb/issues/5207): Resolve whether the error condition
+    \`finishBeforeCommand !== 'no'\` is correct, or should be changed to
+    \`finishBeforeCommand === 'encoder'\`.
   `
   )
   .params(u =>
@@ -597,6 +603,4 @@ g.test('compute_pass_commands')
           unreachable();
       }
     }, finishBeforeCommand !== 'no');
-    // TODO(https://github.com/gpuweb/gpuweb/issues/5207): resolve whether this
-    // is correct or should be changed to `finishBeforeCommand === 'encoder'`.
   });
