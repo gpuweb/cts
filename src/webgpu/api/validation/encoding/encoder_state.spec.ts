@@ -19,6 +19,7 @@ TODO:
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { objectEquals } from '../../../../common/util/util.js';
 import { AllFeaturesMaxLimitsGPUTest } from '../../../gpu_test.js';
+import * as vtu from '../validation_test_utils.js';
 
 class F extends AllFeaturesMaxLimitsGPUTest {
   beginRenderPass(commandEncoder: GPUCommandEncoder, view: GPUTextureView): GPURenderPassEncoder {
@@ -51,6 +52,9 @@ g.test('pass_end_invalid_order')
     `
   Test that beginning a {compute,render} pass before ending the previous {compute,render} pass
   causes an error.
+
+  TODO(https://github.com/gpuweb/gpuweb/issues/5207): Resolve whether a validation error
+  should be raised immediately if '!firstPassEnd && endPasses = [1, 0]'.
   `
   )
   .params(u =>
@@ -95,7 +99,13 @@ g.test('call_after_successful_finish')
   .desc(`Test that encoding command after a successful finish generates a validation error.`)
   .params(u =>
     u
-      .combine('callCmd', ['beginComputePass', 'beginRenderPass', 'insertDebugMarker'])
+      .combine('callCmd', [
+        'beginComputePass',
+        'beginRenderPass',
+        'finishAndSubmitFirst',
+        'finishAndSubmitSecond',
+        'insertDebugMarker',
+      ])
       .beginSubcases()
       .combine('prePassType', ['compute', 'render', 'no-op'])
       .combine('IsEncoderFinished', [false, true])
@@ -112,8 +122,9 @@ g.test('call_after_successful_finish')
       pass.end();
     }
 
+    let buffer;
     if (IsEncoderFinished) {
-      encoder.finish();
+      buffer = encoder.finish();
     }
 
     switch (callCmd) {
@@ -126,6 +137,9 @@ g.test('call_after_successful_finish')
           t.expectValidationError(() => {
             pass.end();
           }, IsEncoderFinished);
+          if (buffer) {
+            t.device.queue.submit([buffer]);
+          }
         }
         break;
       case 'beginRenderPass':
@@ -137,16 +151,41 @@ g.test('call_after_successful_finish')
           t.expectValidationError(() => {
             pass.end();
           }, IsEncoderFinished);
+          if (buffer) {
+            t.device.queue.submit([buffer]);
+          }
+        }
+        break;
+      case 'finishAndSubmitFirst':
+        t.expectValidationError(() => {
+          encoder.finish();
+        }, IsEncoderFinished);
+        if (buffer) {
+          t.device.queue.submit([buffer]);
+        }
+        break;
+      case 'finishAndSubmitSecond':
+        {
+          let secondBuffer: GPUCommandBuffer;
+          t.expectValidationError(() => {
+            secondBuffer = encoder.finish();
+          }, IsEncoderFinished);
+          t.expectValidationError(() => {
+            t.device.queue.submit([secondBuffer]);
+          }, IsEncoderFinished);
         }
         break;
       case 'insertDebugMarker':
         t.expectValidationError(() => {
           encoder.insertDebugMarker('');
         }, IsEncoderFinished);
+        if (buffer) {
+          t.device.queue.submit([buffer]);
+        }
         break;
     }
 
-    if (!IsEncoderFinished) {
+    if (!IsEncoderFinished && !callCmd.startsWith('finish')) {
       encoder.finish();
     }
   });
@@ -154,7 +193,7 @@ g.test('call_after_successful_finish')
 g.test('pass_end_none')
   .desc(
     `
-  Test that ending a {compute,render} pass without ending the passes generates a validation error.
+  Test that finishing an encoder without ending a child {compute,render} pass generates a validation error.
   `
   )
   .paramsSubcasesOnly(u => u.combine('passType', ['compute', 'render']).combine('endCount', [0, 1]))
@@ -246,4 +285,86 @@ g.test('pass_end_twice,render_pass_invalid')
     t.expectValidationError(() => {
       encoder.finish();
     });
+  });
+
+g.test('pass_begin_invalid_encoder')
+  .desc(
+    `
+  Test that {compute,render} passes can still be opened on an invalid encoder.
+  `
+  )
+  .params(u =>
+    u
+      .combine('pass0Type', ['compute', 'render'])
+      .combine('pass1Type', ['compute', 'render'])
+      .beginSubcases()
+      .combine('firstPassInvalid', [false, true])
+  )
+  .beforeAllSubcases(t => t.usesMismatchedDevice())
+  .fn(t => {
+    t.skipIfDeviceDoesNotSupportQueryType('timestamp');
+
+    const { pass0Type, pass1Type, firstPassInvalid } = t.params;
+
+    const view = t.createAttachmentTextureView();
+    const mismatchedTexture = vtu.getDeviceMismatchedRenderTexture(t, 4);
+    const mismatchedView = mismatchedTexture.createView();
+
+    const querySet = t.trackForCleanup(
+      t.device.createQuerySet({
+        type: 'timestamp',
+        count: 2,
+      })
+    );
+
+    const timestampWrites = {
+      querySet,
+      beginningOfPassWriteIndex: 0,
+    };
+
+    const descriptor = {
+      timestampWrites,
+    };
+
+    const mismatchedQuerySet = t.trackForCleanup(
+      t.mismatchedDevice.createQuerySet({
+        type: 'timestamp',
+        count: 2,
+      })
+    );
+
+    const mismatchedTimestampWrites = {
+      querySet: mismatchedQuerySet,
+      beginningOfPassWriteIndex: 0,
+    };
+
+    const mismatchedDescriptor = {
+      timestampWrites: mismatchedTimestampWrites,
+    };
+
+    const encoder = t.device.createCommandEncoder();
+
+    let firstPass;
+    if (pass0Type === 'compute') {
+      firstPass = firstPassInvalid
+        ? encoder.beginComputePass(mismatchedDescriptor)
+        : encoder.beginComputePass(descriptor);
+    } else {
+      firstPass = firstPassInvalid
+        ? t.beginRenderPass(encoder, mismatchedView)
+        : t.beginRenderPass(encoder, view);
+    }
+
+    // Ending an invalid pass invalidates the encoder
+    firstPass.end();
+
+    // Passes can still be opened on an invalid encoder
+    const secondPass =
+      pass1Type === 'compute' ? encoder.beginComputePass() : t.beginRenderPass(encoder, view);
+
+    secondPass.end();
+
+    t.expectValidationError(() => {
+      encoder.finish();
+    }, firstPassInvalid);
   });
