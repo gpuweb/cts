@@ -2420,13 +2420,13 @@ export const kCompatModeUnsupportedStorageTextureFormats: readonly GPUTextureFor
 ] as const;
 
 /**
- * Return true if the format can be used as a storage texture.
+ * Return true if the format can be used as a write only storage texture.
  * Note: Some formats can be compiled in a shader but can not be used
  * in a pipeline or elsewhere. This function returns whether or not the format
  * can be used in general. If you want to know if the format can used when compiling
  * a shader @see {@link isTextureFormatUsableAsStorageFormatInCreateShaderModule}
  */
-export function isTextureFormatUsableAsStorageTexture(
+function isTextureFormatUsableAsWriteOnlyStorageTexture(
   device: GPUDevice,
   format: GPUTextureFormat
 ): boolean {
@@ -2449,6 +2449,52 @@ export function isTextureFormatUsableAsStorageTexture(
 }
 
 /**
+ * Return true if the format can be used with the given access mode
+ * access can be either GPUStorageTextureAccess or WGSL access
+ * Note: Some formats can be compiled in a shader but can not be used
+ * in a pipeline or elsewhere. This function returns whether or not the format
+ * can be used in general. If you want to know if the format can used when compiling
+ * a shader @see {@link isTextureFormatUsableAsStorageFormatInCreateShaderModule}
+ */
+export function isTextureFormatUsableWithStorageAccessMode(
+  device: GPUDevice,
+  format: GPUTextureFormat,
+  access: GPUStorageTextureAccess | 'read' | 'write' | 'read_write'
+) {
+  switch (access) {
+    case 'read':
+    case 'read-only':
+      return isTextureFormatUsableAsReadOnlyStorageTexture(device, format);
+    case 'write':
+    case 'write-only':
+      return isTextureFormatUsableAsWriteOnlyStorageTexture(device, format);
+    case 'read_write':
+    case 'read-write':
+      return isTextureFormatUsableAsReadWriteStorageTexture(device, format);
+  }
+}
+
+/**
+ * Return true if the format can be used as a read only storage texture.
+ * Note: Some formats can be compiled in a shader but can not be used
+ * in a pipeline or elsewhere. This function returns whether or not the format
+ * can be used in general. If you want to know if the format can used when compiling
+ * a shader @see {@link isTextureFormatUsableAsStorageFormatInCreateShaderModule}
+ */
+function isTextureFormatUsableAsReadOnlyStorageTexture(
+  device: GPUDevice,
+  format: GPUTextureFormat
+): boolean {
+  // This is the only storage texture format that isn't readable as a storage format.
+  if (format === 'bgra8unorm') {
+    return false;
+  }
+  // All other formats that can be used as a storage texture can be used as
+  // both read-only and write-only.
+  return isTextureFormatUsableAsWriteOnlyStorageTexture(device, format);
+}
+
+/**
  * Returns true if format can be used with createShaderModule on the device.
  * Some formats may require a feature to be enabled before they can be used
  * as a storage texture. Others, can't be used in a pipeline but can be compiled
@@ -2468,12 +2514,12 @@ export function isTextureFormatUsableAsStorageFormatInCreateShaderModule(
   return !!(info.color?.storage || info.depth?.storage || info.stencil?.storage);
 }
 
-export function isTextureFormatUsableAsReadWriteStorageTexture(
+function isTextureFormatUsableAsReadWriteStorageTexture(
   device: GPUDevice,
   format: GPUTextureFormat
 ): boolean {
   return (
-    isTextureFormatUsableAsStorageTexture(device, format) &&
+    isTextureFormatUsableAsWriteOnlyStorageTexture(device, format) &&
     !!kTextureFormatInfo[format].color?.readWriteStorage
   );
 }
