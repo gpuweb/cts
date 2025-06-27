@@ -1733,6 +1733,24 @@ export const kTextureFormatsTier1EnablesStorageReadOnlyWriteOnly: readonly Color
   'rg11b10ufloat',
 ] as const;
 
+export const kTextureFormatsTier2EnablesStorageReadWrite: readonly ColorTextureFormat[] = [
+  'r8unorm',
+  'r8uint',
+  'r8sint',
+  'rgba8unorm',
+  'rgba8uint',
+  'rgba8sint',
+  'r16uint',
+  'r16sint',
+  'r16float',
+  'rgba16uint',
+  'rgba16sint',
+  'rgba16float',
+  'rgba32uint',
+  'rgba32sint',
+  'rgba32float',
+] as const;
+
 // Texture formats that may possibly be used as a storage texture.
 // Some may require certain features to be enabled.
 export const kPossibleStorageTextureFormats = [
@@ -1746,6 +1764,8 @@ export const kPossibleStorageTextureFormats = [
 // Some may require certain features to be enabled.
 export const kPossibleReadWriteStorageTextureFormats = [
   ...kPossibleStorageTextureFormats.filter(f => kTextureFormatInfo[f].color?.readWriteStorage),
+  // these can be used as storage when texture-formats-tier2 is enabled
+  ...kTextureFormatsTier2EnablesStorageReadWrite,
 ] as readonly RegularTextureFormat[];
 
 // Texture formats that may possibly be multisampled.
@@ -2175,6 +2195,10 @@ function isTextureFormatTier1EnablesStorageReadOnlyWriteOnly(format: GPUTextureF
   return kTextureFormatsTier1EnablesStorageReadOnlyWriteOnly.includes(format as ColorTextureFormat);
 }
 
+function isTextureFormatTier2EnablesStorageReadWrite(format: GPUTextureFormat) {
+  return kTextureFormatsTier2EnablesStorageReadWrite.includes(format as ColorTextureFormat);
+}
+
 export function canCopyToAspectOfTextureFormat(format: GPUTextureFormat, aspect: GPUTextureAspect) {
   const info = kTextureFormatInfo[format];
   switch (aspect) {
@@ -2389,7 +2413,10 @@ export function isTextureFormatPossiblyStorageReadable(format: GPUTextureFormat)
  * The texture may require certain features to be enabled.
  */
 export function isTextureFormatPossiblyStorageReadWritable(format: GPUTextureFormat) {
-  return !!kTextureFormatInfo[format].color?.readWriteStorage;
+  return (
+    !!kTextureFormatInfo[format].color?.readWriteStorage ||
+    isTextureFormatTier2EnablesStorageReadWrite(format)
+  );
 }
 
 export function is16Float(format: GPUTextureFormat) {
@@ -2518,10 +2545,10 @@ function isTextureFormatUsableAsReadWriteStorageTexture(
   device: GPUDevice,
   format: GPUTextureFormat
 ): boolean {
-  return (
-    isTextureFormatUsableAsWriteOnlyStorageTexture(device, format) &&
-    !!kTextureFormatInfo[format].color?.readWriteStorage
-  );
+  if (isTextureFormatTier2EnablesStorageReadWrite(format)) {
+    return device.features.has('texture-formats-tier2');
+  }
+  return !!kTextureFormatInfo[format].color?.readWriteStorage;
 }
 
 export function isRegularTextureFormat(format: GPUTextureFormat) {
