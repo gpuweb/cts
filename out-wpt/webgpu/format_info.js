@@ -1733,6 +1733,24 @@ export const kTextureFormatsTier1EnablesStorageReadOnlyWriteOnly = [
 'rg11b10ufloat'];
 
 
+export const kTextureFormatsTier2EnablesStorageReadWrite = [
+'r8unorm',
+'r8uint',
+'r8sint',
+'rgba8unorm',
+'rgba8uint',
+'rgba8sint',
+'r16uint',
+'r16sint',
+'r16float',
+'rgba16uint',
+'rgba16sint',
+'rgba16float',
+'rgba32uint',
+'rgba32sint',
+'rgba32float'];
+
+
 // Texture formats that may possibly be used as a storage texture.
 // Some may require certain features to be enabled.
 export const kPossibleStorageTextureFormats = [
@@ -1745,7 +1763,9 @@ export const kPossibleStorageTextureFormats = [
 // Texture formats that may possibly be used as a storage texture.
 // Some may require certain features to be enabled.
 export const kPossibleReadWriteStorageTextureFormats = [
-...kPossibleStorageTextureFormats.filter((f) => kTextureFormatInfo[f].color?.readWriteStorage)];
+...kPossibleStorageTextureFormats.filter((f) => kTextureFormatInfo[f].color?.readWriteStorage),
+// these can be used as storage when texture-formats-tier2 is enabled
+...kTextureFormatsTier2EnablesStorageReadWrite];
 
 
 // Texture formats that may possibly be multisampled.
@@ -2175,6 +2195,10 @@ function isTextureFormatTier1EnablesStorageReadOnlyWriteOnly(format) {
   return kTextureFormatsTier1EnablesStorageReadOnlyWriteOnly.includes(format);
 }
 
+function isTextureFormatTier2EnablesStorageReadWrite(format) {
+  return kTextureFormatsTier2EnablesStorageReadWrite.includes(format);
+}
+
 export function canCopyToAspectOfTextureFormat(format, aspect) {
   const info = kTextureFormatInfo[format];
   switch (aspect) {
@@ -2389,7 +2413,10 @@ export function isTextureFormatPossiblyStorageReadable(format) {
  * The texture may require certain features to be enabled.
  */
 export function isTextureFormatPossiblyStorageReadWritable(format) {
-  return !!kTextureFormatInfo[format].color?.readWriteStorage;
+  return (
+    !!kTextureFormatInfo[format].color?.readWriteStorage ||
+    isTextureFormatTier2EnablesStorageReadWrite(format));
+
 }
 
 export function is16Float(format) {
@@ -2518,10 +2545,10 @@ function isTextureFormatUsableAsReadWriteStorageTexture(
 device,
 format)
 {
-  return (
-    isTextureFormatUsableAsWriteOnlyStorageTexture(device, format) &&
-    !!kTextureFormatInfo[format].color?.readWriteStorage);
-
+  if (isTextureFormatTier2EnablesStorageReadWrite(format)) {
+    return device.features.has('texture-formats-tier2');
+  }
+  return !!kTextureFormatInfo[format].color?.readWriteStorage;
 }
 
 export function isRegularTextureFormat(format) {
