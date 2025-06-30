@@ -69,7 +69,7 @@ g.test('pipeline_auto_layout,storage_texture')
   .desc(
     `
   Test creating a pipeline with auto layout with a storage texture binding format enabled by
-  'texture-formats-tier1' fails if the feature is not enabled.
+  'texture-formats-tier2' fails if the feature is not enabled.
   `
   )
   .params(u =>
