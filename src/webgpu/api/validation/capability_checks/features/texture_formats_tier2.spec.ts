@@ -83,7 +83,7 @@ g.test('pipeline_auto_layout,storage_texture')
   .beforeAllSubcases(t => {
     const { enable_feature } = t.params;
     if (enable_feature) {
-      t.selectDeviceOrSkipTestCase('texture-formats-tier1');
+      t.selectDeviceOrSkipTestCase('texture-formats-tier2');
     }
   })
   .fn(t => {
