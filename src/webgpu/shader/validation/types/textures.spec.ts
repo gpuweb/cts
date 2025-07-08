@@ -5,7 +5,6 @@ Validation tests for various texture types in shaders.
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import {
   getTextureFormatType,
-  isTextureFormatUsableAsStorageFormatInCreateShaderModule,
   kAllTextureFormats,
   kPossibleStorageTextureFormats,
 } from '../../../format_info.js';
@@ -26,7 +25,8 @@ g.test('texel_formats')
   )
   .fn(t => {
     const { format, shaderScalarType } = t.params;
-    t.skipIfTextureFormatNotUsableAsStorageTexture(format);
+    t.skipIfTextureFormatNotSupported(format);
+    t.skipIfTextureFormatNotUsableWithStorageAccessMode('read-only', format);
     const validShaderScalarType = getPlainTypeInfo(getTextureFormatType(format));
     const shaderValueType = `vec4<${shaderScalarType}>`;
     const wgsl = `
@@ -108,10 +108,7 @@ Besides, the shader compilation should always pass regardless of whether the for
   )
   .fn(t => {
     const { format, access, comma } = t.params;
-    const isFormatValid = isTextureFormatUsableAsStorageFormatInCreateShaderModule(
-      t.device,
-      format
-    );
+    const isFormatValid = (kPossibleStorageTextureFormats as string[]).includes(format);
     const isAccessValid = kAccessModes.includes(access);
     const wgsl = `@group(0) @binding(0) var tex: texture_storage_2d<${format}, ${access}${comma}>;`;
     t.expectCompileResult(isFormatValid && isAccessValid, wgsl);
