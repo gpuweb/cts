@@ -5,6 +5,7 @@ Validation tests for various texture types in shaders.
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import {
   getTextureFormatType,
+  isTextureFormatUsableAsStorageFormatInCreateShaderModule,
   kAllTextureFormats,
   kPossibleStorageTextureFormats,
 } from '../../../format_info.js';
@@ -108,7 +109,10 @@ Besides, the shader compilation should always pass regardless of whether the for
   )
   .fn(t => {
     const { format, access, comma } = t.params;
-    const isFormatValid = (kPossibleStorageTextureFormats as string[]).includes(format);
+    const isFormatValid = isTextureFormatUsableAsStorageFormatInCreateShaderModule(
+      t.device,
+      format
+    );
     const isAccessValid = kAccessModes.includes(access);
     const wgsl = `@group(0) @binding(0) var tex: texture_storage_2d<${format}, ${access}${comma}>;`;
     t.expectCompileResult(isFormatValid && isAccessValid, wgsl);
