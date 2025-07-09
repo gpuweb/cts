@@ -609,10 +609,11 @@ paramsSubcasesOnly((u) =>
 u.
 combine('state', kResourceStates).
 combine('entry', sampledAndStorageBindingEntries(true, kTestFormat)).
-combine('visibilityMask', [kAllShaderStages, GPUConst.ShaderStage.COMPUTE])
+combine('visibilityMask', [kAllShaderStages, GPUConst.ShaderStage.COMPUTE]).
+combine('bindTextureResource', [false, true])
 ).
 fn((t) => {
-  const { state, entry, visibilityMask } = t.params;
+  const { state, entry, visibilityMask, bindTextureResource } = t.params;
   const info = texBindingTypeInfo(entry);
 
   const visibility = info.validStages & visibilityMask;
@@ -640,20 +641,19 @@ fn((t) => {
     sampleCount: entry.texture?.multisampled ? 4 : 1
   });
 
-  let textureView;
-  t.expectValidationError(() => {
-    textureView = texture.createView();
-  }, state === 'invalid');
+  let resource;
+  if (bindTextureResource) {
+    resource = texture;
+  } else {
+    t.expectValidationError(() => {
+      resource = texture.createView();
+    }, state === 'invalid');
+  }
 
   t.expectValidationError(() => {
     t.device.createBindGroup({
       layout: bgl,
-      entries: [
-      {
-        binding: 0,
-        resource: textureView
-      }]
-
+      entries: [{ binding: 0, resource }]
     });
   }, state === 'invalid');
 });
