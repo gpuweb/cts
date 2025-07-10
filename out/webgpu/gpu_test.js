@@ -637,6 +637,13 @@ export class GPUTestBase extends Fixture {
     }
   }
 
+  skipIfTextureFormatDoesNotSupportCopyTextureToBuffer(format) {
+    this.skipIf(
+      !this.canCallCopyTextureToBufferWithTextureFormat(format),
+      `can not use copyTextureToBuffer with ${format}`
+    );
+  }
+
   /** Skips this test case if the `langFeature` is *not* supported. */
   skipIfLanguageFeatureNotSupported(langFeature) {
     if (!this.hasLanguageFeature(langFeature)) {
