@@ -2534,11 +2534,9 @@ export function isTextureFormatUsableAsStorageFormatInCreateShaderModule(
   device: GPUDevice,
   format: GPUTextureFormat
 ): boolean {
-  if (format === 'bgra8unorm') {
-    return true;
-  }
-  const info = kTextureFormatInfo[format];
-  return !!(info.color?.storage || info.depth?.storage || info.stencil?.storage);
+  return kPossibleStorageTextureFormats.includes(
+    format as (typeof kPossibleStorageTextureFormats)[number]
+  );
 }
 
 function isTextureFormatUsableAsReadWriteStorageTexture(
