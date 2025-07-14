@@ -325,20 +325,20 @@ g.test('sample_count')
     if (sampleCount > 1) {
       usage |= GPUTextureUsage.RENDER_ATTACHMENT;
     }
+
+    const textureSize = { width: 16, height: 1, depthOrArrayLayers: 1 };
     const texture = t.createTextureTracked({
-      size: { width: 16, height: 16 },
+      size: textureSize,
       sampleCount,
       format: 'bgra8unorm',
       usage,
     });
 
-    const uploadBufferSize = 32;
+    const uploadBufferSize = 64;
     const buffer = t.createBufferTracked({
       size: uploadBufferSize,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
-
-    const textureSize = { width: 1, height: 1, depthOrArrayLayers: 1 };
 
     const isSuccess = sampleCount === 1;
 
