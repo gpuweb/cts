@@ -1057,26 +1057,31 @@ const kTextureTypeInfo = {
     componentType: 'f32',
     resultType: 'vec4f',
     resultFormat: 'rgba32float',
+    sampleType: 'depth',
   },
   float: {
     componentType: 'f32',
     resultType: 'vec4f',
     resultFormat: 'rgba32float',
+    sampleType: 'float',
   },
   'unfilterable-float': {
     componentType: 'f32',
     resultType: 'vec4f',
     resultFormat: 'rgba32float',
+    sampleType: 'unfilterable-float',
   },
   sint: {
     componentType: 'i32',
     resultType: 'vec4i',
     resultFormat: 'rgba32sint',
+    sampleType: 'sint',
   },
   uint: {
     componentType: 'u32',
     resultType: 'vec4u',
     resultFormat: 'rgba32uint',
+    sampleType: 'uint',
   },
 } as const;
 
@@ -1378,15 +1383,15 @@ export interface TextureCall<T extends Dimensionality> extends TextureCallArgs<T
   componentType?: 'i' | 'u';
 }
 
-const isBuiltinComparison = (builtin: TextureBuiltin) =>
+export const isBuiltinComparison = (builtin: TextureBuiltin) =>
   builtin === 'textureGatherCompare' ||
   builtin === 'textureSampleCompare' ||
   builtin === 'textureSampleCompareLevel';
-const isBuiltinGather = (builtin: TextureBuiltin | undefined) =>
+export const isBuiltinGather = (builtin: TextureBuiltin | undefined) =>
   builtin === 'textureGather' || builtin === 'textureGatherCompare';
-const builtinNeedsSampler = (builtin: TextureBuiltin) =>
+export const builtinNeedsSampler = (builtin: TextureBuiltin) =>
   builtin.startsWith('textureSample') || builtin.startsWith('textureGather');
-const builtinNeedsDerivatives = (builtin: TextureBuiltin) =>
+export const builtinNeedsDerivatives = (builtin: TextureBuiltin) =>
   builtin === 'textureSample' ||
   builtin === 'textureSampleBias' ||
   builtin === 'textureSampleCompare';
@@ -1517,11 +1522,13 @@ export interface SoftwareTexture {
  */
 export function convertPerTexelComponentToResultFormat(
   src: PerTexelComponent<number>,
-  format: EncodableTextureFormat
+  format: GPUTextureFormat
 ): PerTexelComponent<number> {
-  const rep = kTexelRepresentationInfo[format];
+  const components = isEncodableTextureFormat(format)
+    ? kTexelRepresentationInfo[format as EncodableTextureFormat].componentOrder
+    : kRGBAComponents;
   const out: PerTexelComponent<number> = { R: 0, G: 0, B: 0, A: 1 };
-  for (const component of rep.componentOrder) {
+  for (const component of components) {
     switch (component) {
       case 'Stencil':
       case 'Depth':
@@ -1600,6 +1607,23 @@ const kSamplerFns: Record<GPUCompareFunction, (ref: number, v: number) => boolea
   always: (ref: number, v: number) => true,
 } as const;
 
+/**
+ * Applies a comparison function to each component of a texel.
+ */
+export function applyCompareToTexel(
+  components: TexelComponent[],
+  src: PerTexelComponent<number>,
+  compare: GPUCompareFunction,
+  ref: number
+): PerTexelComponent<number> {
+  const out: PerTexelComponent<number> = {};
+  const compareFn = kSamplerFns[compare];
+  for (const component of components) {
+    out[component] = compareFn(ref, src[component]!) ? 1 : 0;
+  }
+  return out;
+}
+
 function applyCompare<T extends Dimensionality>(
   call: TextureCall<T>,
   sampler: GPUSamplerDescriptor | undefined,
@@ -1609,12 +1633,7 @@ function applyCompare<T extends Dimensionality>(
   if (isBuiltinComparison(call.builtin)) {
     assert(sampler !== undefined);
     assert(call.depthRef !== undefined);
-    const out: PerTexelComponent<number> = {};
-    const compareFn = kSamplerFns[sampler.compare!];
-    for (const component of components) {
-      out[component] = compareFn(call.depthRef, src[component]!) ? 1 : 0;
-    }
-    return out;
+    return applyCompareToTexel(components, src, sampler.compare!, call.depthRef);
   } else {
     return src;
   }
@@ -3197,9 +3216,28 @@ function createTextureFromTexelViewsLocal(
   const modifiedDescriptor = { ...desc };
   // If it's a depth or stencil texture we need to render to it to fill it with data.
   if (isDepthOrStencilTextureFormat(desc.format) || desc.sampleCount! > 1) {
-    modifiedDescriptor.usage = desc.usage | GPUTextureUsage.RENDER_ATTACHMENT;
+    modifiedDescriptor.usage =
+      desc.usage | GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC;
   }
-  return createTextureFromTexelViews(t, texelViews, modifiedDescriptor);
+  let texture = createTextureFromTexelViews(t, texelViews, modifiedDescriptor);
+  if ((texture.usage & ~GPUTextureUsage.COPY_DST) !== (desc.usage & ~GPUTextureUsage.COPY_DST)) {
+    const copy = t.createTextureTracked({
+      ...desc,
+      usage: desc.usage | GPUTextureUsage.COPY_DST,
+    });
+    const encoder = t.device.createCommandEncoder();
+    for (let mipLevel = 0; mipLevel < texture.mipLevelCount; ++mipLevel) {
+      encoder.copyTextureToTexture(
+        { texture, mipLevel },
+        { texture: copy, mipLevel },
+        physicalMipSizeFromTexture(texture, mipLevel)
+      );
+    }
+    t.device.queue.submit([encoder.finish()]);
+    texture.destroy();
+    texture = copy;
+  }
+  return texture;
 }
 
 /**
