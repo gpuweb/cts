@@ -32,10 +32,17 @@ g.test('stencil_clear_value')
       .combine('stencilFormat', kStencilTextureFormats)
       .combine('stencilClearValue', [0, 1, 0xff, 0x100 + 2, 0x10000 + 3])
       .combine('applyStencilClearValueAsStencilReferenceValue', [true, false])
+      .combine('createStencilTextureView', [false, true] as const)
+      .combine('createColorTextureView', [false, true] as const)
   )
   .fn(t => {
-    const { stencilFormat, stencilClearValue, applyStencilClearValueAsStencilReferenceValue } =
-      t.params;
+    const {
+      stencilFormat,
+      stencilClearValue,
+      applyStencilClearValueAsStencilReferenceValue,
+      createStencilTextureView,
+      createColorTextureView,
+    } = t.params;
 
     t.skipIfTextureFormatNotSupported(stencilFormat);
 
@@ -112,7 +119,7 @@ g.test('stencil_clear_value')
     const encoder = t.device.createCommandEncoder();
 
     const depthStencilAttachment: GPURenderPassDepthStencilAttachment = {
-      view: stencilTexture.createView(),
+      view: createStencilTextureView ? stencilTexture.createView() : stencilTexture,
       depthClearValue: 0,
       stencilLoadOp: 'clear',
       stencilStoreOp: 'store',
@@ -126,7 +133,7 @@ g.test('stencil_clear_value')
     const renderPassEncoder = encoder.beginRenderPass({
       colorAttachments: [
         {
-          view: colorTexture.createView(),
+          view: createColorTextureView ? colorTexture.createView() : colorTexture,
           loadOp: 'clear',
           storeOp: 'store',
           clearValue: [1, 0, 0, 1] as const,
