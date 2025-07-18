@@ -72,7 +72,7 @@ const kTextureSize = 16;
 function writeTextureAndGetExpectedTexelView(
   t: GPUTest,
   method: TextureViewWriteMethod,
-  view: GPUTextureView,
+  view: GPUTexture | GPUTextureView,
   format: RegularTextureFormat,
   sampleCount: number
 ) {
@@ -334,10 +334,19 @@ TODO: Test rgb10a2uint when TexelRepresentation.numericRange is made per-compone
 
         return true;
       })
-      .combine('viewUsageMethod', kTextureViewUsageMethods)
+      .combine('bindTextureResource', [false, true] as const)
+      .expand('viewUsageMethod', function* ({ bindTextureResource }) {
+        if (bindTextureResource) {
+          yield;
+        } else {
+          for (const method of kTextureViewUsageMethods) {
+            yield method;
+          }
+        }
+      })
   )
   .fn(t => {
-    const { format, method, sampleCount, viewUsageMethod } = t.params;
+    const { format, method, sampleCount, bindTextureResource, viewUsageMethod } = t.params;
     t.skipIfTextureFormatNotSupported(format);
     if (sampleCount > 1) {
       t.skipIfTextureFormatNotMultisampled(format);
@@ -377,9 +386,14 @@ TODO: Test rgb10a2uint when TexelRepresentation.numericRange is made per-compone
       sampleCount,
     });
 
-    const view = texture.createView({
-      usage: getTextureViewUsage(viewUsageMethod, textureUsageForMethod),
-    });
+    let view: GPUTexture | GPUTextureView;
+    if (bindTextureResource) {
+      view = texture;
+    } else {
+      view = texture.createView({
+        usage: getTextureViewUsage(viewUsageMethod!, textureUsageForMethod),
+      });
+    }
     const expectedTexelView = writeTextureAndGetExpectedTexelView(
       t,
       method,
