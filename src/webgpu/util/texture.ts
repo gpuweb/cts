@@ -1,7 +1,7 @@
 import { assert, unreachable } from '../../common/util/util.js';
 import {
+  canCopyToAllAspectsOfTextureFormat,
   getBlockInfoForTextureFormat,
-  isDepthOrStencilTextureFormat,
   isDepthTextureFormat,
   isStencilTextureFormat,
 } from '../format_info.js';
@@ -681,7 +681,7 @@ export function createTextureFromTexelViews(
     if (
       isTextureFormatDifferentThanTexelViewFormat ||
       texture.sampleCount > 1 ||
-      isDepthOrStencilTextureFormat(textureFormat)
+      !canCopyToAllAspectsOfTextureFormat(textureFormat)
     ) {
       resourcesToDestroy.push(
         ...copyBufferToTextureViaRender(
