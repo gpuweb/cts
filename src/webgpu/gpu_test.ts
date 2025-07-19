@@ -1,7 +1,6 @@
 import {
   Fixture,
   FixtureClass,
-  FixtureClassInterface,
   FixtureClassWithMixin,
   SubcaseBatchState,
   TestCaseRecorder,
@@ -328,7 +327,9 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
  * This class is a Fixture + a getter that returns a GPUDevice
  * as well as helpers that use that device.
  */
-export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
+export class GPUTestBase<
+  S extends GPUTestSubcaseBatchState = GPUTestSubcaseBatchState,
+> extends Fixture<S> {
   public static override MakeSharedState(
     recorder: TestCaseRecorder,
     params: TestParams
@@ -1378,7 +1379,9 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
 /**
  * Fixture for WebGPU tests that uses a DeviceProvider
  */
-export class GPUTest extends GPUTestBase {
+export class GPUTest<
+  S extends GPUTestSubcaseBatchState = GPUTestSubcaseBatchState,
+> extends GPUTestBase<S> {
   // Should never be undefined in a test. If it is, init() must not have run/finished.
   private provider: DeviceProvider | undefined;
   private mismatchedProvider: DeviceProvider | undefined;
@@ -1580,7 +1583,7 @@ export function RequiredLimitsTestMixin<F extends FixtureClass<GPUTestBase>>(
   requiredLimitsHelper: RequiredLimitsHelper
 ): FixtureClassWithMixin<F, RequiredLimitsTestMixinType> {
   class RequiredLimitsImpl
-    extends (Base as FixtureClassInterface<GPUTestBase>)
+    extends (Base as FixtureClass<GPUTestBase>)
     implements RequiredLimitsTestMixinType
   {
     //
@@ -1690,11 +1693,8 @@ export class UniqueFeaturesOrLimitsGPUTest extends GPUTest {}
  * You could enable it manually but that spreads enabling to every test instead of being
  * centralized in one place, here.
  */
-export class AllFeaturesMaxLimitsGPUTest extends GPUTest {
-  public static override MakeSharedState(
-    recorder: TestCaseRecorder,
-    params: TestParams
-  ): GPUTestSubcaseBatchState {
+export class AllFeaturesMaxLimitsGPUTest extends GPUTest<AllFeaturesMaxLimitsGPUTestSubcaseBatchState> {
+  public static override MakeSharedState(recorder: TestCaseRecorder, params: TestParams) {
     return new AllFeaturesMaxLimitsGPUTestSubcaseBatchState(recorder, params);
   }
 }

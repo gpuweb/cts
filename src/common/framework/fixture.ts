@@ -78,8 +78,9 @@ export class Fixture<S extends SubcaseBatchState = SubcaseBatchState> {
   }
 
   /** @internal */
-  constructor(sharedState: S, rec: TestCaseRecorder, params: TestParams) {
-    this._sharedState = sharedState;
+  constructor(sharedState: SubcaseBatchState, rec: TestCaseRecorder, params: TestParams) {
+    // sharedState will always come from our own MakeSharedState, so it's safe to cast in practice.
+    this._sharedState = sharedState as S;
     this.rec = rec;
     this._params = params;
   }
@@ -427,12 +428,7 @@ export type SubcaseBatchStateFromFixture<F> = F extends Fixture<infer S> ? S : n
  * parameter.
  */
 export type FixtureClass<F extends Fixture = Fixture> = {
-  new (sharedState: SubcaseBatchStateFromFixture<F>, log: TestCaseRecorder, params: TestParams): F;
-  MakeSharedState(recorder: TestCaseRecorder, params: TestParams): SubcaseBatchStateFromFixture<F>;
-};
-export type FixtureClassInterface<F extends Fixture = Fixture> = {
-  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-  new (...args: any[]): F;
+  new (sharedState: SubcaseBatchState, log: TestCaseRecorder, params: TestParams): F;
   MakeSharedState(recorder: TestCaseRecorder, params: TestParams): SubcaseBatchStateFromFixture<F>;
 };
 export type FixtureClassWithMixin<FC, M> = FC extends FixtureClass<infer F>
