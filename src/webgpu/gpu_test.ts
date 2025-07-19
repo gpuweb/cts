@@ -1655,13 +1655,6 @@ export class AllFeaturesMaxLimitsGPUTestSubcaseBatchState extends GPUTestSubcase
   ): void {
     unreachable('this function should not be called in AllFeaturesMaxLimitsGPUTest');
   }
-
-  /**
-   * Use skipIfDeviceDoesNotHaveFeature or skipIf(device.limits.maxXXX < requiredXXX) etc...
-   */
-  selectMismatchedDeviceOrSkipTestCase(descriptor: DeviceSelectionDescriptor): void {
-    unreachable('this function should not be called in AllFeaturesMaxLimitsGPUTest');
-  }
 }
 
 /**
