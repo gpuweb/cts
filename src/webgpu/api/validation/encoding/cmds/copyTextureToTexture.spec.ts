@@ -645,40 +645,90 @@ Test that copyTextureToTexture copy boxes must be in range of the subresource.
     }
   });
 
+g.test('copy_within_same_texture_non_2d')
+  .desc(
+    `
+Test that it is an error to use copyTextureToTexture from a 1D or 3D texture to itself.`
+  )
+  .paramsSubcasesOnly(u =>
+    u //
+      .combine(
+        'dimension',
+        kTextureDimensions.filter(d => d !== '2d')
+      )
+      .expand('height', p => [p.dimension === '1d' ? 1 : 16])
+      .expand('depthOrArrayLayers', p => [p.dimension === '1d' ? 1 : 4])
+  )
+  .fn(t => {
+    const { dimension, height, depthOrArrayLayers } = t.params;
+    const width = 16;
+
+    const testTexture = t.createTextureTracked({
+      size: { width, height },
+      dimension,
+      format: 'rgba8unorm',
+      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
+    });
+
+    t.testCopyTextureToTexture(
+      { texture: testTexture, origin: { x: 0, y: 0, z: 0 } },
+      { texture: testTexture, origin: { x: 0, y: 0, z: 0 } },
+      { width, height, depthOrArrayLayers },
+      'FinishError'
+    );
+  });
+
 g.test('copy_within_same_texture')
   .desc(
     `
-Test that it is an error to use copyTextureToTexture from one subresource to itself.
+Test that it is an error to use copyTextureToTexture from one subresource of a 2D texture to itself.
 - for various starting source/destination array layers.
 - for various copy sizes in number of array layers
-
-TODO: Extend to check the copy is allowed between different mip levels.
-TODO: Extend to 1D and 3D textures.`
+- for various source/destination mip levels.`
   )
   .paramsSubcasesOnly(u =>
     u //
       .combine('srcCopyOriginZ', [0, 2, 4])
       .combine('dstCopyOriginZ', [0, 2, 4])
       .combine('copyExtentDepth', [1, 2, 3])
+      .combine('srcCopyMipLevel', [0, 1])
+      .combine('dstCopyMipLevel', [0, 1])
   )
   .fn(t => {
-    const { srcCopyOriginZ, dstCopyOriginZ, copyExtentDepth } = t.params;
+    const { srcCopyOriginZ, dstCopyOriginZ, copyExtentDepth, srcCopyMipLevel, dstCopyMipLevel } =
+      t.params;
+
+    const textureDim = 16;
+    const copyDim = srcCopyMipLevel === 1 || dstCopyMipLevel === 1 ? 8 : 16;
 
     const kArrayLayerCount = 7;
+    const kMipLevelCount = 2;
 
     const testTexture = t.createTextureTracked({
-      size: { width: 16, height: 16, depthOrArrayLayers: kArrayLayerCount },
+      size: { width: textureDim, height: textureDim, depthOrArrayLayers: kArrayLayerCount },
+      mipLevelCount: kMipLevelCount,
       format: 'rgba8unorm',
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
     });
 
-    const isSuccess =
+    const layersDisjoint =
       Math.min(srcCopyOriginZ, dstCopyOriginZ) + copyExtentDepth <=
       Math.max(srcCopyOriginZ, dstCopyOriginZ);
+    const differentMipLevel = srcCopyMipLevel !== dstCopyMipLevel;
+    const isSuccess = layersDisjoint || differentMipLevel;
+
     t.testCopyTextureToTexture(
-      { texture: testTexture, origin: { x: 0, y: 0, z: srcCopyOriginZ } },
-      { texture: testTexture, origin: { x: 0, y: 0, z: dstCopyOriginZ } },
-      { width: 16, height: 16, depthOrArrayLayers: copyExtentDepth },
+      {
+        texture: testTexture,
+        origin: { x: 0, y: 0, z: srcCopyOriginZ },
+        mipLevel: srcCopyMipLevel,
+      },
+      {
+        texture: testTexture,
+        origin: { x: 0, y: 0, z: dstCopyOriginZ },
+        mipLevel: dstCopyMipLevel,
+      },
+      { width: copyDim, height: copyDim, depthOrArrayLayers: copyExtentDepth },
       isSuccess ? 'Success' : 'FinishError'
     );
   });
