@@ -275,14 +275,16 @@ desc(
     Test that functions of GPURenderPassEncoder generate a validation error if the encoder or the
     pass is already finished.
 
-    - TODO: Consider testing: nothing before command, end before command, end+finish before command.
+    TODO(https://github.com/gpuweb/gpuweb/issues/5207): Resolve whether the error condition
+    \`finishBeforeCommand !== 'no'\` is correct, or should be changed to
+    \`finishBeforeCommand === 'encoder'\`.
   `
 ).
 params((u) =>
 u.
 combine('command', kRenderPassEncoderCommands).
 beginSubcases().
-combine('finishBeforeCommand', [false, true])
+combine('finishBeforeCommand', ['no', 'pass', 'encoder'])
 ).
 fn((t) => {
   const { command, finishBeforeCommand } = t.params;
@@ -305,8 +307,10 @@ fn((t) => {
 
   const bindGroup = t.createBindGroupForTest();
 
-  if (finishBeforeCommand) {
+  if (finishBeforeCommand !== 'no') {
     renderPass.end();
+  }
+  if (finishBeforeCommand === 'encoder') {
     encoder.finish();
   }
 
@@ -404,23 +408,23 @@ fn((t) => {
         break;
       case 'pushDebugGroup':
         {
-          encoder.pushDebugGroup('group');
+          renderPass.pushDebugGroup('group');
         }
         break;
       case 'popDebugGroup':
         {
-          encoder.popDebugGroup();
+          renderPass.popDebugGroup();
         }
         break;
       case 'insertDebugMarker':
         {
-          encoder.insertDebugMarker('marker');
+          renderPass.insertDebugMarker('marker');
         }
         break;
       default:
         unreachable();
     }
-  }, finishBeforeCommand);
+  }, finishBeforeCommand !== 'no');
 });
 
 g.test('render_bundle_commands').
@@ -525,14 +529,16 @@ desc(
     Test that functions of GPUComputePassEncoder generate a validation error if the encoder or the
     pass is already finished.
 
-    - TODO: Consider testing: nothing before command, end before command, end+finish before command.
+    TODO(https://github.com/gpuweb/gpuweb/issues/5207): Resolve whether the error condition
+    \`finishBeforeCommand !== 'no'\` is correct, or should be changed to
+    \`finishBeforeCommand === 'encoder'\`.
   `
 ).
 params((u) =>
 u.
 combine('command', kComputePassEncoderCommands).
 beginSubcases().
-combine('finishBeforeCommand', [false, true])
+combine('finishBeforeCommand', ['no', 'pass', 'encoder'])
 ).
 fn((t) => {
   const { command, finishBeforeCommand } = t.params;
@@ -549,8 +555,10 @@ fn((t) => {
 
   const bindGroup = t.createBindGroupForTest();
 
-  if (finishBeforeCommand) {
+  if (finishBeforeCommand !== 'no') {
     computePass.end();
+  }
+  if (finishBeforeCommand === 'encoder') {
     encoder.finish();
   }
 
@@ -594,5 +602,5 @@ fn((t) => {
       default:
         unreachable();
     }
-  }, finishBeforeCommand);
+  }, finishBeforeCommand !== 'no');
 });
