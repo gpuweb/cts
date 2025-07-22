@@ -19,7 +19,6 @@ TODO:
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { objectEquals } from '../../../../common/util/util.js';
 import { AllFeaturesMaxLimitsGPUTest } from '../../../gpu_test.js';
-import * as vtu from '../validation_test_utils.js';
 
 class F extends AllFeaturesMaxLimitsGPUTest {
   beginRenderPass(commandEncoder: GPUCommandEncoder, view: GPUTextureView): GPURenderPassEncoder {
@@ -300,59 +299,23 @@ g.test('pass_begin_invalid_encoder')
       .beginSubcases()
       .combine('firstPassInvalid', [false, true])
   )
-  .beforeAllSubcases(t => t.usesMismatchedDevice())
   .fn(t => {
-    t.skipIfDeviceDoesNotSupportQueryType('timestamp');
-
     const { pass0Type, pass1Type, firstPassInvalid } = t.params;
 
     const view = t.createAttachmentTextureView();
-    const mismatchedTexture = vtu.getDeviceMismatchedRenderTexture(t, 4);
-    const mismatchedView = mismatchedTexture.createView();
-
-    const querySet = t.trackForCleanup(
-      t.device.createQuerySet({
-        type: 'timestamp',
-        count: 2,
-      })
-    );
-
-    const timestampWrites = {
-      querySet,
-      beginningOfPassWriteIndex: 0,
-    };
-
-    const descriptor = {
-      timestampWrites,
-    };
-
-    const mismatchedQuerySet = t.trackForCleanup(
-      t.mismatchedDevice.createQuerySet({
-        type: 'timestamp',
-        count: 2,
-      })
-    );
-
-    const mismatchedTimestampWrites = {
-      querySet: mismatchedQuerySet,
-      beginningOfPassWriteIndex: 0,
-    };
-
-    const mismatchedDescriptor = {
-      timestampWrites: mismatchedTimestampWrites,
-    };
 
     const encoder = t.device.createCommandEncoder();
 
     let firstPass;
     if (pass0Type === 'compute') {
-      firstPass = firstPassInvalid
-        ? encoder.beginComputePass(mismatchedDescriptor)
-        : encoder.beginComputePass(descriptor);
+      firstPass = encoder.beginComputePass();
     } else {
-      firstPass = firstPassInvalid
-        ? t.beginRenderPass(encoder, mismatchedView)
-        : t.beginRenderPass(encoder, view);
+      firstPass = t.beginRenderPass(encoder, view);
+    }
+
+    if (firstPassInvalid) {
+      // Popping an empty debug group stack invalidates the pass.
+      firstPass.popDebugGroup();
     }
 
     // Ending an invalid pass invalidates the encoder
