@@ -1,5 +1,5 @@
 {
-  "webgpu/shader/execution/binary/af_addition.bin": "d938ca8",
+    "webgpu/shader/execution/binary/af_addition.bin": "d938ca8",
   "webgpu/shader/execution/binary/af_logical.bin": "df722626",
   "webgpu/shader/execution/binary/af_division.bin": "c4d0cbe0",
   "webgpu/shader/execution/binary/af_matrix_addition.bin": "7dcdac51",
