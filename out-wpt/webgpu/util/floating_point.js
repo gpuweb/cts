@@ -4422,7 +4422,11 @@ export class FPTraits {
 
   TanhIntervalOp = {
     impl: (n) => {
-      return this.divisionInterval(this.sinhInterval(n), this.coshInterval(n));
+      const approx_abs_error = 1.0e-5;
+      return this.spanIntervals(
+        this.divisionInterval(this.sinhInterval(n), this.coshInterval(n)),
+        this.absoluteErrorInterval(Math.tanh(n), approx_abs_error)
+      );
     }
   };
 
