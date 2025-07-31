@@ -14,7 +14,7 @@ when the feature is not enabled. This includes:
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import {
-  kTextureFormatTier1AllowsRenderAttachmentBlendableMultisampleResolve,
+  kTextureFormatTier1AllowsRenderAttachmentBlendableMultisample,
   kTextureFormatsTier1EnablesStorageReadOnlyWriteOnly,
 } from '../../../../format_info.js';
 import { UniqueFeaturesOrLimitsGPUTest } from '../../../../gpu_test.js';
@@ -42,7 +42,7 @@ g.test('texture_usage,render_attachment')
   )
   .params(u =>
     u
-      .combine('format', kTextureFormatTier1AllowsRenderAttachmentBlendableMultisampleResolve)
+      .combine('format', kTextureFormatTier1AllowsRenderAttachmentBlendableMultisample)
       .combine('enable_feature', [true, false])
   )
   .beforeAllSubcases(t => {
@@ -72,7 +72,7 @@ g.test('texture_usage,multisample')
   )
   .params(u =>
     u
-      .combine('format', kTextureFormatTier1AllowsRenderAttachmentBlendableMultisampleResolve)
+      .combine('format', kTextureFormatTier1AllowsRenderAttachmentBlendableMultisample)
       .combine('enable_feature', [true, false])
   )
   .beforeAllSubcases(t => {
@@ -140,7 +140,7 @@ g.test('render_pipeline,color_target')
       .combine('isAsync', [false, true])
       .combine('format', [
         'rgba8unorm',
-        ...kTextureFormatTier1AllowsRenderAttachmentBlendableMultisampleResolve,
+        ...kTextureFormatTier1AllowsRenderAttachmentBlendableMultisample,
       ] as const)
       .combine('enable_feature', [true, false])
       .combine('check', ['RENDER_ATTACHMENT', 'blendable', 'multisample'] as const)
