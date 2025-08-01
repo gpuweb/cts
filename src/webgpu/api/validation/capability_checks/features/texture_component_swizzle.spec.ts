@@ -19,17 +19,13 @@ import {
 
 export const g = makeTestGroup(UniqueFeaturesOrLimitsGPUTest);
 
-g.test('no_default_swizzle')
+g.test('only_identity_swizzle')
   .desc(
     `
   Test that if texture-component-swizzle is not enabled, having a non-default swizzle property generates a validation error.
   `
   )
-  .params(u =>
-    u
-      .beginSubcases()
-      .combine('swizzleSpec', kSwizzleTests)
-  )
+  .params(u => u.beginSubcases().combine('swizzleSpec', kSwizzleTests))
   .fn(t => {
     const { swizzleSpec } = t.params;
     const swizzle = swizzleSpecToGPUTextureComponentSwizzle(swizzleSpec);
