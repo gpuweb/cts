@@ -19,21 +19,29 @@ import {
 
 export const g = makeTestGroup(UniqueFeaturesOrLimitsGPUTest);
 
-g.test('no_swizzle')
+g.test('no_default_swizzle')
   .desc(
     `
-  Test that if texture-component-swizzle is not enabled, having a swizzle property generates a validation error.
+  Test that if texture-component-swizzle is not enabled, having a non-default swizzle property generates a validation error.
   `
   )
+  .params(u =>
+    u
+      .beginSubcases()
+      .combine('swizzleSpec', kSwizzleTests)
+  )
   .fn(t => {
+    const { swizzleSpec } = t.params;
+    const swizzle = swizzleSpecToGPUTextureComponentSwizzle(swizzleSpec);
     const texture = t.createTextureTracked({
       format: 'rgba8unorm',
       size: [1],
       usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
     });
+    const shouldError = !isIdentitySwizzle(swizzle);
     t.expectValidationError(() => {
-      texture.createView({ swizzle: {} });
-    });
+      texture.createView({ swizzle });
+    }, shouldError);
   });
 
 g.test('no_render_nor_storage')
