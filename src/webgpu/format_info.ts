@@ -1710,8 +1710,26 @@ export const kStencilTextureFormats = kDepthStencilFormats.filter(
   v => kTextureFormatInfo[v].stencil
 );
 
-export const kTextureFormatTier1AllowsRenderAttachmentBlendableMultisampleResolve: readonly ColorTextureFormat[] =
-  ['r8snorm', 'rg8snorm', 'rgba8snorm', 'rg11b10ufloat'] as const;
+export const kTextureFormatTier1AllowsResolve: readonly ColorTextureFormat[] = [
+  'r8snorm',
+  'rg8snorm',
+  'rgba8snorm',
+  'rg11b10ufloat',
+] as const;
+
+export const kTextureFormatTier1AllowsRenderAttachmentBlendableMultisample: readonly ColorTextureFormat[] =
+  [
+    'r16unorm',
+    'r16snorm',
+    'rg16unorm',
+    'rg16snorm',
+    'rgba16unorm',
+    'rgba16snorm',
+    'r8snorm',
+    'rg8snorm',
+    'rgba8snorm',
+    'rg11b10ufloat',
+  ] as const;
 
 export const kTextureFormatsTier1EnablesStorageReadOnlyWriteOnly: readonly ColorTextureFormat[] = [
   'r8unorm',
@@ -2183,12 +2201,14 @@ export function filterFormatsByFeature<T>(
   return formats.filter(f => f === undefined || kTextureFormatInfo[f].feature === feature);
 }
 
-function isTextureFormatTier1EnablesRenderAttachmentBlendableMultisampleResolve(
-  format: GPUTextureFormat
-) {
-  return kTextureFormatTier1AllowsRenderAttachmentBlendableMultisampleResolve.includes(
+function isTextureFormatTier1EnablesRenderAttachmentBlendableMultisample(format: GPUTextureFormat) {
+  return kTextureFormatTier1AllowsRenderAttachmentBlendableMultisample.includes(
     format as ColorTextureFormat
   );
+}
+
+function isTextureFormatTier1EnablesResolve(format: GPUTextureFormat) {
+  return kTextureFormatTier1AllowsResolve.includes(format as ColorTextureFormat);
 }
 
 function isTextureFormatTier1EnablesStorageReadOnlyWriteOnly(format: GPUTextureFormat) {
@@ -2318,7 +2338,7 @@ export function isTextureFormatColorRenderable(
   if (format === 'rg11b10ufloat') {
     return device.features.has('rg11b10ufloat-renderable');
   }
-  if (isTextureFormatTier1EnablesRenderAttachmentBlendableMultisampleResolve(format)) {
+  if (isTextureFormatTier1EnablesRenderAttachmentBlendableMultisample(format)) {
     return device.features.has('texture-formats-tier1');
   }
   return !!kAllTextureFormatInfo[format].colorRender;
@@ -2369,7 +2389,7 @@ export function isTextureFormatPossiblyUsableAsRenderAttachment(format: GPUTextu
   return (
     isDepthOrStencilTextureFormat(format) ||
     !!info.colorRender ||
-    isTextureFormatTier1EnablesRenderAttachmentBlendableMultisampleResolve(format)
+    isTextureFormatTier1EnablesRenderAttachmentBlendableMultisample(format)
   );
 }
 
@@ -2380,8 +2400,7 @@ export function isTextureFormatPossiblyUsableAsRenderAttachment(format: GPUTextu
 export function isTextureFormatPossiblyUsableAsColorRenderAttachment(format: GPUTextureFormat) {
   const info = kTextureFormatInfo[format];
   return (
-    !!info.colorRender ||
-    isTextureFormatTier1EnablesRenderAttachmentBlendableMultisampleResolve(format)
+    !!info.colorRender || isTextureFormatTier1EnablesRenderAttachmentBlendableMultisample(format)
   );
 }
 
@@ -2392,8 +2411,7 @@ export function isTextureFormatPossiblyUsableAsColorRenderAttachment(format: GPU
 export function isTextureFormatPossiblyMultisampled(format: GPUTextureFormat) {
   const info = kTextureFormatInfo[format];
   return (
-    info.multisample ||
-    isTextureFormatTier1EnablesRenderAttachmentBlendableMultisampleResolve(format)
+    info.multisample || isTextureFormatTier1EnablesRenderAttachmentBlendableMultisample(format)
   );
 }
 
@@ -2602,7 +2620,7 @@ export function isTextureFormatMultisampled(device: GPUDevice, format: GPUTextur
   if (format === 'rg11b10ufloat') {
     return device.features.has('rg11b10ufloat-renderable');
   }
-  if (isTextureFormatTier1EnablesRenderAttachmentBlendableMultisampleResolve(format)) {
+  if (isTextureFormatTier1EnablesRenderAttachmentBlendableMultisample(format)) {
     return device.features.has('texture-formats-tier1');
   }
   return kAllTextureFormatInfo[format].multisample;
@@ -2616,7 +2634,7 @@ export function isTextureFormatResolvable(device: GPUDevice, format: GPUTextureF
   if (format === 'rg11b10ufloat') {
     return device.features.has('rg11b10ufloat-renderable');
   }
-  if (isTextureFormatTier1EnablesRenderAttachmentBlendableMultisampleResolve(format)) {
+  if (isTextureFormatTier1EnablesResolve(format)) {
     return device.features.has('texture-formats-tier1');
   }
   // You can't resolve a non-multisampled format.
