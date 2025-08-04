@@ -10,8 +10,8 @@ TODO:
 * test texture_2d<f32> with textureGatherCompare
 `;
 
-import { makeTestGroup } from '../../../../../common/framework/test_group.js';
-import { assert, range, unreachable } from '../../../../../common/util/util.js';
+import { makeTestGroup } from '../../../../common/framework/test_group.js';
+import { assert, range, unreachable } from '../../../../common/util/util.js';
 import {
   isSintOrUintFormat,
   isDepthOrStencilTextureFormat,
@@ -20,8 +20,8 @@ import {
   getBlockInfoForTextureFormat,
   isStencilTextureFormat,
   isDepthStencilTextureFormat,
-} from '../../../../format_info.js';
-import { AllFeaturesMaxLimitsGPUTest } from '../../../../gpu_test.js';
+} from '../../../format_info.js';
+import { AllFeaturesMaxLimitsGPUTest } from '../../../gpu_test.js';
 import {
   applyCompareToTexel,
   chooseTextureSize,
@@ -32,18 +32,17 @@ import {
   isBuiltinGather,
   isFillable,
   TextureBuiltin,
-} from '../../../../shader/execution/expression/call/builtin/texture_utils.js';
-import * as ttu from '../../../../texture_test_utils.js';
-import { PerTexelComponent, TexelComponent } from '../../../../util/texture/texel_data.js';
-import { TexelView } from '../../../../util/texture/texel_view.js';
-
+} from '../../../shader/execution/expression/call/builtin/texture_utils.js';
+import * as ttu from '../../../texture_test_utils.js';
+import { PerTexelComponent, TexelComponent } from '../../../util/texture/texel_data.js';
+import { TexelView } from '../../../util/texture/texel_view.js';
 import {
   kSwizzleTests,
   swizzlesAreTheSame,
   swizzleSpecToGPUTextureComponentSwizzle,
   SwizzleSpec,
   swizzleTexel,
-} from './texture_component_swizzle_utils.js';
+} from '../../validation/capability_checks/features/texture_component_swizzle_utils.js';
 
 function altResultForSwizzle(component: GPUComponentSwizzle): number {
   switch (component) {
