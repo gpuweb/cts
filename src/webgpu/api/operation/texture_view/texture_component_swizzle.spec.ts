@@ -336,6 +336,18 @@ g.test('read_swizzle')
       t.params;
     t.skipIfTextureFormatNotSupported(format);
 
+    const otherSwizzleSpec = getSwizzleSpecByOffsetFromSwizzleSpec(
+      swizzleSpec,
+      otherSwizzleIndexOffset
+    );
+    const swizzle = swizzleSpecToGPUTextureComponentSwizzle(swizzleSpec);
+    const otherSwizzle = swizzleSpecToGPUTextureComponentSwizzle(otherSwizzleSpec);
+
+    t.skipIf(
+      t.isCompatibility && !swizzlesAreTheSame(swizzle, otherSwizzle),
+      `swizzles must be equivalent in compatibility mode: ${swizzleSpec} != ${otherSwizzleSpec}`
+    );
+
     const depthRef = 0.5;
     const size = chooseTextureSize({ minSize: 2, minBlocks: 2, format });
     const { blockWidth, blockHeight } = getBlockInfoForTextureFormat(format);
@@ -381,12 +393,7 @@ ${sampledColors.map((c, i) => `${i % 2}, ${(i / 2) | 0}, ${JSON.stringify(c)}`).
       resultFormat: expFormat,
     } = getTextureFormatTypeInfo(format, aspect);
 
-    const otherSwizzleSpec = getSwizzleSpecByOffsetFromSwizzleSpec(
-      swizzleSpec,
-      otherSwizzleIndexOffset
-    );
-    const testData = [swizzleSpec, otherSwizzleSpec].map(swizzleSpec => {
-      const swizzle = swizzleSpecToGPUTextureComponentSwizzle(swizzleSpec);
+    const testData = [swizzle, otherSwizzle].map(swizzle => {
       const validMask = makeValidMaskAndAltResultForFormatSwizzle(
         swizzle,
         format,
