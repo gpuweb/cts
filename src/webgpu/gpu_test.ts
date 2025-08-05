@@ -1,7 +1,6 @@
 import {
   Fixture,
   FixtureClass,
-  FixtureClassInterface,
   FixtureClassWithMixin,
   SubcaseBatchState,
   TestCaseRecorder,
@@ -19,6 +18,7 @@ import {
   TypedArrayBufferView,
   TypedArrayBufferViewConstructor,
   unreachable,
+  skipTestCase,
 } from '../common/util/util.js';
 
 import { kLimits, kQueryTypeInfo, WGSLLanguageFeature } from './capability_info.js';
@@ -185,7 +185,7 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
     descriptor: DeviceSelectionDescriptor,
     descriptorModifier?: DescriptorModifier
   ): void {
-    assert(this.provider === undefined, "Can't selectDeviceOrSkipTestCase() multiple times");
+    assert(this.provider === undefined, "Can't change device parameters after getting a device");
     this.provider = devicePool.acquire(
       this.recorder,
       initUncanonicalizedDeviceDescriptor(descriptor),
@@ -328,7 +328,9 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
  * This class is a Fixture + a getter that returns a GPUDevice
  * as well as helpers that use that device.
  */
-export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
+export class GPUTestBase<
+  S extends GPUTestSubcaseBatchState = GPUTestSubcaseBatchState,
+> extends Fixture<S> {
   public static override MakeSharedState(
     recorder: TestCaseRecorder,
     params: TestParams
@@ -484,23 +486,7 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
   /**
    * Skips test if any format is not supported.
    */
-  skipIfTextureFormatNotSupported(...formats: (GPUTextureFormat | undefined)[]) {
-    for (const format of formats) {
-      if (!format) {
-        continue;
-      }
-      if (format === 'bgra8unorm-srgb') {
-        if (isCompatibilityDevice(this.device)) {
-          this.skip(`texture format '${format}' is not supported`);
-        }
-      }
-      const feature = getRequiredFeatureForTextureFormat(format);
-      this.skipIf(
-        !!feature && !this.device.features.has(feature),
-        `texture format '${format}' requires feature: '${feature}'`
-      );
-    }
-  }
+  skipIfTextureFormatNotSupported = skipIfTextureFormatNotSupported_unbound.bind(this);
 
   skipIfTextureFormatAndViewDimensionNotCompatible(
     format: GPUTextureFormat,
@@ -1378,7 +1364,9 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
 /**
  * Fixture for WebGPU tests that uses a DeviceProvider
  */
-export class GPUTest extends GPUTestBase {
+export class GPUTest<
+  S extends GPUTestSubcaseBatchState = GPUTestSubcaseBatchState,
+> extends GPUTestBase<S> {
   // Should never be undefined in a test. If it is, init() must not have run/finished.
   private provider: DeviceProvider | undefined;
   private mismatchedProvider: DeviceProvider | undefined;
@@ -1580,7 +1568,7 @@ export function RequiredLimitsTestMixin<F extends FixtureClass<GPUTestBase>>(
   requiredLimitsHelper: RequiredLimitsHelper
 ): FixtureClassWithMixin<F, RequiredLimitsTestMixinType> {
   class RequiredLimitsImpl
-    extends (Base as FixtureClassInterface<GPUTestBase>)
+    extends (Base as FixtureClass<GPUTestBase>)
     implements RequiredLimitsTestMixinType
   {
     //
@@ -1599,12 +1587,20 @@ export function RequiredLimitsTestMixin<F extends FixtureClass<GPUTestBase>>(
  * Used by AllFeaturesMaxLimitsGPUTest to request a device with all limits and features of the adapter.
  */
 export class AllFeaturesMaxLimitsGPUTestSubcaseBatchState extends GPUTestSubcaseBatchState {
+  public device: GPUDevice = undefined!; // Will be set in init()
+
   constructor(
     protected override readonly recorder: TestCaseRecorder,
     public override readonly params: TestParams
   ) {
     super(recorder, params);
   }
+
+  override async init(): Promise<void> {
+    // AllFeaturesMaxLimits can get the device at init() rather than waiting for postInit().
+    this.device = (await this.acquireProvider()).device;
+  }
+
   override requestDeviceWithRequiredParametersOrSkip(
     descriptor: DeviceSelectionDescriptor,
     descriptorModifier?: DescriptorModifier
@@ -1654,10 +1650,28 @@ export class AllFeaturesMaxLimitsGPUTestSubcaseBatchState extends GPUTestSubcase
   }
 
   /**
-   * Use skipIfDeviceDoesNotHaveFeature or skipIf(device.limits.maxXXX < requiredXXX) etc...
+   * Skips test if any format is not supported.
    */
-  selectMismatchedDeviceOrSkipTestCase(descriptor: DeviceSelectionDescriptor): void {
-    unreachable('this function should not be called in AllFeaturesMaxLimitsGPUTest');
+  skipIfTextureFormatNotSupported = skipIfTextureFormatNotSupported_unbound.bind(this);
+}
+
+function skipIfTextureFormatNotSupported_unbound(
+  this: { device: GPUDevice },
+  ...formats: (GPUTextureFormat | undefined)[]
+) {
+  for (const format of formats) {
+    if (!format) {
+      continue;
+    }
+    if (format === 'bgra8unorm-srgb') {
+      if (isCompatibilityDevice(this.device)) {
+        skipTestCase(`texture format '${format}' is not supported`);
+      }
+    }
+    const feature = getRequiredFeatureForTextureFormat(format);
+    if (!!feature && !this.device.features.has(feature)) {
+      skipTestCase(`texture format '${format}' requires feature: '${feature}'`);
+    }
   }
 }
 
@@ -1690,11 +1704,8 @@ export class UniqueFeaturesOrLimitsGPUTest extends GPUTest {}
  * You could enable it manually but that spreads enabling to every test instead of being
  * centralized in one place, here.
  */
-export class AllFeaturesMaxLimitsGPUTest extends GPUTest {
-  public static override MakeSharedState(
-    recorder: TestCaseRecorder,
-    params: TestParams
-  ): GPUTestSubcaseBatchState {
+export class AllFeaturesMaxLimitsGPUTest extends GPUTest<AllFeaturesMaxLimitsGPUTestSubcaseBatchState> {
+  public static override MakeSharedState(recorder: TestCaseRecorder, params: TestParams) {
     return new AllFeaturesMaxLimitsGPUTestSubcaseBatchState(recorder, params);
   }
 }
