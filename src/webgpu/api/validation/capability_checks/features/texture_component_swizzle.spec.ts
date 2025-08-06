@@ -28,6 +28,12 @@ g.test('only_identity_swizzle')
   )
   .params(u => u.beginSubcases().combine('swizzleSpec', kSwizzleTests))
   .fn(t => {
+    // MAINTENANCE_TODO: Remove this check if the spec is updated to say that all implementations must validate this.
+    t.skipIf(
+      !t.adapter.features.has('texture-component-swizzle'),
+      'skip on browsers that have not implemented texture-component-swizzle'
+    );
+
     const { swizzleSpec } = t.params;
     const swizzle = swizzleSpecToGPUTextureComponentSwizzle(swizzleSpec);
     const texture = t.createTextureTracked({
