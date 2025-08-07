@@ -1896,8 +1896,10 @@ function runPrimitiveIdTest(
     firstVertex = 0,
     firstInstance = 0,
     firstIndex = 0,
+    vertices = null,
     indices = null,
     topology = 'triangle-list',
+    cullMode = 'none',
     expected,
   }: {
     count: number;
@@ -1905,8 +1907,10 @@ function runPrimitiveIdTest(
     firstVertex?: number;
     firstInstance?: number;
     firstIndex?: number;
+    vertices?: number[] | null;
     indices?: number[] | null;
     topology?: GPUPrimitiveTopology;
+    cullMode?: GPUCullMode;
     expected: number;
   }
 ) {
@@ -1914,11 +1918,16 @@ function runPrimitiveIdTest(
 enable chromium_experimental_primitive_id;
 
 @vertex
-fn vsMain(@builtin(vertex_index) index : u32) -> @builtin(position) vec4f {
+fn vsFullscreenMain(@builtin(vertex_index) index : u32) -> @builtin(position) vec4f {
   const vertices = array(
-    vec2(-1, -1), vec2(-1,  3), vec2( 3,  -1),
+    vec2(-1, -1), vec2( 3,  -1), vec2(-1,  3),
   );
   return vec4f(vec2f(vertices[index%3]), 0, 1);
+}
+
+@vertex
+fn vsBufferMain(@builtin(vertex_index) index : u32, @location(0) pos : vec2f) -> @builtin(position) vec4f {
+  return vec4f(pos, 0, 1);
 }
 
 @fragment
@@ -1932,15 +1941,33 @@ fn fsMain(@builtin(primitive_id) pid : u32) -> @location(0) vec4u {
 
   const module = t.device.createShaderModule({ code: shader });
 
+  let buffers : GPUVertexBufferLayout[] = [];
+
+  if (vertices) {
+    buffers.push({
+      arrayStride: Float32Array.BYTES_PER_ELEMENT * 2,
+      attributes: [{
+        format: 'float32x2',
+        offset: 0,
+        shaderLocation: 0,
+      }],
+    });
+  }
+
   const pipeline = t.device.createRenderPipeline({
     layout: 'auto',
-    vertex: { module },
+    vertex: {
+      module,
+      entryPoint: vertices ? 'vsBufferMain' : 'vsFullscreenMain',
+      buffers,
+    },
     fragment: {
       module,
       targets: [{ format }],
     },
     primitive: {
       topology,
+      cullMode,
       stripIndexFormat: topology.includes('list') ? undefined : 'uint32',
     },
   });
@@ -1954,6 +1981,18 @@ fn fsMain(@builtin(primitive_id) pid : u32) -> @location(0) vec4u {
       GPUTextureUsage.TEXTURE_BINDING,
     format,
   });
+
+  let vertexBuffer: GPUBuffer | null = null;
+  if (vertices) {
+    vertexBuffer = t.createBufferTracked({
+      size: vertices.length * Float32Array.BYTES_PER_ELEMENT,
+      usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.VERTEX,
+      mappedAtCreation: true,
+    });
+    const float32Array = new Float32Array(vertexBuffer.getMappedRange());
+    float32Array.set(vertices);
+    vertexBuffer.unmap();
+  }
 
   let indexBuffer: GPUBuffer | null = null;
   if (indices) {
@@ -1979,7 +2018,11 @@ fn fsMain(@builtin(primitive_id) pid : u32) -> @location(0) vec4u {
     ],
   });
   pass.setPipeline(pipeline);
-  // Draw the fullscreen triangle
+  // Draw the primitives
+  if (vertexBuffer) {
+    pass.setVertexBuffer(0, vertexBuffer);
+  }
+
   if (indexBuffer) {
     pass.setIndexBuffer(indexBuffer, 'uint32');
     pass.drawIndexed(count, instances, firstIndex, firstVertex, firstInstance);
@@ -2049,5 +2092,32 @@ g.test('primitive_id,primitive_reset')
       topology: 'triangle-strip',
       indices: [0, 1, 2, 0, 1, 0xffffffff, 0, 1, 2, 0],
       expected: 4,
+    });
+  });
+
+g.test('primitive_id,discarded_primitves')
+  .desc(
+    'Tests that the primitives which are discarded due to culling, size, or shape still increment the primitive_id built-in'
+  )
+  .params(u =>
+    u
+      .beginSubcases()
+      .combine('vertices', [
+        [0.3, 0.3,  0.3, 0.3,  0.3, 0.3], // Zero size triangle
+        [0.3, 0.3,  0.3, 0.3,  0.3, 1.3], // Degenerate triangle
+        [0.3, 0.3,  0.30001, 0.3,  0.3, 0.30001], // Sub-pixel triangle
+        [2, 2,  2, 3,  3, 2], // Offscreen triangle
+        [-1, -1,  -1, 3,  3, -1,], // Backface culled triangle
+      ])
+  )
+  .fn(t => {
+    const { vertices } = t.params;
+    t.skipIfDeviceDoesNotHaveFeature('chromium-experimental-primitive-id' as GPUFeatureName);
+
+    runPrimitiveIdTest(t, {
+      count: 6,
+      vertices: [...vertices, -1, -1,  3, -1,  -1, 3], // Append a fulscreen triangle to the test vertices
+      cullMode: 'back',
+      expected: 1,
     });
   });
