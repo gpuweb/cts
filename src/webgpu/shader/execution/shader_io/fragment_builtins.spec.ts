@@ -1875,3 +1875,249 @@ fn fsMain(
       }
     );
   });
+
+/**
+ * Checks primitive_id value consistency
+ *
+ * Renders fullscreen triangles using the given draw arguments, writing the
+ * primitive_id of each to the render target. Then reads back the texture and
+ * compares the last primitive_id written to the expected value. All args are
+ * passed directly to draw/drawIndexed unless specified otherwise.
+ * @param indices An array of indices to be used as a 32 bit index buffer.
+ *                Causes drawIndexed to be used instead of draw.
+ * @param topology The primitive topology to use.
+ * @param expected The expected value of the last primitive_id drawn.
+ */
+function runPrimitiveIdTest(
+  t: FragmentBuiltinTest,
+  {
+    count,
+    instances = 1,
+    firstVertex = 0,
+    firstInstance = 0,
+    firstIndex = 0,
+    vertices = null,
+    indices = null,
+    topology = 'triangle-list',
+    cullMode = 'none',
+    expected,
+  }: {
+    count: number;
+    instances?: number;
+    firstVertex?: number;
+    firstInstance?: number;
+    firstIndex?: number;
+    vertices?: number[] | null;
+    indices?: number[] | null;
+    topology?: GPUPrimitiveTopology;
+    cullMode?: GPUCullMode;
+    expected: number;
+  }
+) {
+  const shader = `
+enable chromium_experimental_primitive_id;
+
+@vertex
+fn vsFullscreenMain(@builtin(vertex_index) index : u32) -> @builtin(position) vec4f {
+  const vertices = array(
+    vec2(-1, -1), vec2( 3,  -1), vec2(-1,  3),
+  );
+  return vec4f(vec2f(vertices[index%3]), 0, 1);
+}
+
+@vertex
+fn vsBufferMain(@builtin(vertex_index) index : u32, @location(0) pos : vec2f) -> @builtin(position) vec4f {
+  return vec4f(pos, 0, 1);
+}
+
+@fragment
+fn fsMain(@builtin(primitive_id) pid : u32) -> @location(0) vec4u {
+  return vec4u(pid, 0, 0, 0);
+}`;
+
+  const format = 'r32uint';
+  const width = 4;
+  const height = 4;
+
+  const module = t.device.createShaderModule({ code: shader });
+
+  let buffers : GPUVertexBufferLayout[] = [];
+
+  if (vertices) {
+    buffers.push({
+      arrayStride: Float32Array.BYTES_PER_ELEMENT * 2,
+      attributes: [{
+        format: 'float32x2',
+        offset: 0,
+        shaderLocation: 0,
+      }],
+    });
+  }
+
+  const pipeline = t.device.createRenderPipeline({
+    layout: 'auto',
+    vertex: {
+      module,
+      entryPoint: vertices ? 'vsBufferMain' : 'vsFullscreenMain',
+      buffers,
+    },
+    fragment: {
+      module,
+      targets: [{ format }],
+    },
+    primitive: {
+      topology,
+      cullMode,
+      stripIndexFormat: topology.includes('list') ? undefined : 'uint32',
+    },
+  });
+
+  const framebuffer = t.createTextureTracked({
+    size: [width, height],
+    usage:
+      GPUTextureUsage.COPY_SRC |
+      GPUTextureUsage.COPY_DST |
+      GPUTextureUsage.RENDER_ATTACHMENT |
+      GPUTextureUsage.TEXTURE_BINDING,
+    format,
+  });
+
+  let vertexBuffer: GPUBuffer | null = null;
+  if (vertices) {
+    vertexBuffer = t.createBufferTracked({
+      size: vertices.length * Float32Array.BYTES_PER_ELEMENT,
+      usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.VERTEX,
+      mappedAtCreation: true,
+    });
+    const float32Array = new Float32Array(vertexBuffer.getMappedRange());
+    float32Array.set(vertices);
+    vertexBuffer.unmap();
+  }
+
+  let indexBuffer: GPUBuffer | null = null;
+  if (indices) {
+    indexBuffer = t.createBufferTracked({
+      size: indices.length * Uint32Array.BYTES_PER_ELEMENT,
+      usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.INDEX,
+      mappedAtCreation: true,
+    });
+    const uint32Array = new Uint32Array(indexBuffer.getMappedRange());
+    uint32Array.set(indices);
+    indexBuffer.unmap();
+  }
+
+  const encoder = t.device.createCommandEncoder();
+  const pass = encoder.beginRenderPass({
+    colorAttachments: [
+      {
+        view: framebuffer.createView(),
+        loadOp: 'clear',
+        clearValue: [0xffffffff, 0, 0, 0], // Clear to max uint32 to ensure that primitive id 0 is testable
+        storeOp: 'store',
+      },
+    ],
+  });
+  pass.setPipeline(pipeline);
+  // Draw the primitives
+  if (vertexBuffer) {
+    pass.setVertexBuffer(0, vertexBuffer);
+  }
+
+  if (indexBuffer) {
+    pass.setIndexBuffer(indexBuffer, 'uint32');
+    pass.drawIndexed(count, instances, firstIndex, firstVertex, firstInstance);
+  } else {
+    pass.draw(count, instances, firstVertex, firstInstance);
+  }
+  pass.end();
+  t.queue.submit([encoder.finish()]);
+
+  ttu.expectSingleColorWithTolerance(t, framebuffer, format, {
+    size: [width, height, 1],
+    exp: { R: expected },
+    layout: { mipLevel: 0 },
+    maxFractionalDiff: 0,
+  });
+}
+
+g.test('primitive_id,basic')
+  .desc('Tests primitive_id built-in value')
+  .params(u =>
+    u
+      .beginSubcases()
+      .combine('triCount', [1, 4, 16])
+      // None of the following should affect the primitive_id
+      .combine('instances', [1, 4, 16])
+      .combine('firstVertex', [0, 1, 4])
+      .combine('firstIndex', [0, 3, 9])
+      .combine('firstInstance', [0, 1, 4])
+  )
+  .fn(t => {
+    const { triCount, instances, firstVertex, firstIndex, firstInstance } = t.params;
+    t.skipIfDeviceDoesNotHaveFeature('chromium-experimental-primitive-id' as GPUFeatureName);
+
+    runPrimitiveIdTest(t, {
+      count: triCount * 3,
+      instances,
+      firstVertex,
+      firstInstance,
+      expected: triCount - 1,
+    });
+
+    const indices: number[] = [];
+    for (let i = 0; i < triCount + Math.ceil(firstIndex / 3); ++i) {
+      indices.push(0, 1, 2);
+    }
+
+    runPrimitiveIdTest(t, {
+      count: triCount * 3,
+      instances,
+      firstVertex,
+      firstInstance,
+      firstIndex,
+      indices,
+      expected: triCount - 1,
+    });
+  });
+
+g.test('primitive_id,primitive_reset')
+  .desc(
+    'Tests that the primitive_id built-in value does not increment or reset across primitive resets'
+  )
+  .fn(t => {
+    t.skipIfDeviceDoesNotHaveFeature('chromium-experimental-primitive-id' as GPUFeatureName);
+
+    runPrimitiveIdTest(t, {
+      count: 10,
+      topology: 'triangle-strip',
+      indices: [0, 1, 2, 0, 1, 0xffffffff, 0, 1, 2, 0],
+      expected: 4,
+    });
+  });
+
+g.test('primitive_id,discarded_primitves')
+  .desc(
+    'Tests that the primitives which are discarded due to culling, size, or shape still increment the primitive_id built-in'
+  )
+  .params(u =>
+    u
+      .beginSubcases()
+      .combine('vertices', [
+        [0.3, 0.3,  0.3, 0.3,  0.3, 0.3], // Zero size triangle
+        [0.3, 0.3,  0.3, 0.3,  0.3, 1.3], // Degenerate triangle
+        [0.3, 0.3,  0.30001, 0.3,  0.3, 0.30001], // Sub-pixel triangle
+        [2, 2,  2, 3,  3, 2], // Offscreen triangle
+        [-1, -1,  -1, 3,  3, -1,], // Backface culled triangle
+      ])
+  )
+  .fn(t => {
+    const { vertices } = t.params;
+    t.skipIfDeviceDoesNotHaveFeature('chromium-experimental-primitive-id' as GPUFeatureName);
+
+    runPrimitiveIdTest(t, {
+      count: 6,
+      vertices: [...vertices, -1, -1,  3, -1,  -1, 3], // Append a fulscreen triangle to the test vertices
+      cullMode: 'back',
+      expected: 1,
+    });
+  });
