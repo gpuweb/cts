@@ -2,7 +2,9 @@ import { assert, unreachable } from '../../common/util/util.js';
 import {
   getBlockInfoForTextureFormat,
   isDepthOrStencilTextureFormat,
+  isDepthStencilTextureFormat,
   isDepthTextureFormat,
+  isSintOrUintFormat,
   isStencilTextureFormat,
 } from '../format_info.js';
 import { GPUTestBase } from '../gpu_test.js';
@@ -322,22 +324,31 @@ const kLoadValueFromStorageInfo: Partial<{
   },
 };
 
-function getDepthStencilOptionsForFormat(format: GPUTextureFormat) {
-  // Note: For now we prefer depth over stencil. To fix this would require passing GPUTextureAspect all the way down.
+function getDepthStencilOptionsForFormat(
+  format: GPUTextureFormat,
+  aspect: GPUTextureAspect | undefined
+) {
   return {
-    useFragDepth: isDepthTextureFormat(format),
-    discardWithStencil: isStencilTextureFormat(format) && !isDepthTextureFormat(format),
+    useFragDepth:
+      isDepthTextureFormat(format) && (!aspect || aspect === 'all' || aspect === 'depth-only'),
+    discardWithStencil:
+      isStencilTextureFormat(format) && (!aspect || aspect === 'all' || aspect === 'stencil-only'),
   };
 }
 
 function getCopyBufferToTextureViaRenderCode(
   srcFormat: GPUTextureFormat,
-  dstFormat: GPUTextureFormat
+  dstFormat: GPUTextureFormat,
+  dstAspect: GPUTextureAspect | undefined
 ) {
   const info = kLoadValueFromStorageInfo[srcFormat];
   assert(!!info);
   const { storageType, texelType, unpackWGSL } = info;
-  const { useFragDepth, discardWithStencil } = getDepthStencilOptionsForFormat(dstFormat);
+  const { useFragDepth, discardWithStencil } = getDepthStencilOptionsForFormat(
+    dstFormat,
+    dstAspect
+  );
+  assert(!useFragDepth || !discardWithStencil, 'can not do both aspects at once');
 
   const [depthDecl, depthCode] = useFragDepth
     ? ['@builtin(frag_depth) d: f32,', 'fs.d = fs.v[0];']
@@ -497,7 +508,10 @@ function copyBufferToTextureViaRender(
   const { format: textureFormat, sampleCount } = dest.texture;
   const origin = reifyOrigin3D(dest.origin ?? [0]);
   const copySize = reifyExtent3D(size);
-  const { useFragDepth, discardWithStencil } = getDepthStencilOptionsForFormat(dest.texture.format);
+  const { useFragDepth, discardWithStencil } = getDepthStencilOptionsForFormat(
+    dest.texture.format,
+    dest.aspect
+  );
   const resourcesToDestroy: (GPUTexture | GPUBuffer)[] = [];
 
   const { device } = t;
@@ -505,7 +519,8 @@ function copyBufferToTextureViaRender(
   for (let blitCount = 0; blitCount < numBlits; ++blitCount) {
     const { code, dataFormat } = getCopyBufferToTextureViaRenderCode(
       sourceFormat,
-      dest.texture.format
+      dest.texture.format,
+      dest.aspect
     );
     const stencilWriteMask = 1 << blitCount;
     const id = JSON.stringify({
@@ -619,6 +634,7 @@ function copyBufferToTextureViaRender(
                   mipLevelCount,
                   arrayLayerCount,
                 }),
+                depthReadOnly: true,
                 stencilClearValue: 0,
                 stencilLoadOp: 'load',
                 stencilStoreOp: 'store',
@@ -713,7 +729,15 @@ export function createTextureFromTexelViews(
     usage: desc.usage | GPUTextureUsage.COPY_DST,
     mipLevelCount: texelViews.length,
   });
-  copyTexelViewsToTexture(t, texture, 'all', texelViews);
+  // Note: At the time of this writing there is no such thing as a depth-stencil TexelView
+  // so we couldn't have passed in data for "all" aspects. This seems like a code smell issue
+  // but it's a big change to fix.
+  const aspect = isDepthStencilTextureFormat(textureFormat)
+    ? isSintOrUintFormat(viewsFormat)
+      ? 'stencil-only'
+      : 'depth-only'
+    : 'all';
+  copyTexelViewsToTexture(t, texture, aspect, texelViews);
   return texture;
 }
 
@@ -763,10 +787,9 @@ export function copyTexelViewsToTexture(
     stagingBuffer.unmap();
 
     const copyB2TOk =
-      (viewsFormat === 'stencil8' && aspect === 'stencil-only') ||
-      (!isTextureFormatDifferentThanTexelViewFormat &&
-        texture.sampleCount === 1 &&
-        !isDepthOrStencilTextureFormat(texture.format));
+      !isTextureFormatDifferentThanTexelViewFormat &&
+      texture.sampleCount === 1 &&
+      !isDepthOrStencilTextureFormat(texture.format);
 
     if (!copyB2TOk) {
       resourcesToDestroy.push(
@@ -775,7 +798,7 @@ export function copyTexelViewsToTexture(
           commandEncoder,
           { buffer: stagingBuffer, bytesPerRow, rowsPerImage },
           viewsFormat,
-          { texture, mipLevel },
+          { texture, mipLevel, aspect },
           [mipWidth, mipHeight, mipDepthOrArray]
         )
       );
