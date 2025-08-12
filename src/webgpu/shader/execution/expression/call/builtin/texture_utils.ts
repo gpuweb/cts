@@ -2738,7 +2738,7 @@ we can not do that easily with compressed textures. ###
                 if (useTexelFormatForGPUTexture) {
                   descriptor.format = texels[0].format;
                 }
-                const gpuTexture = createTextureFromTexelViewsLocal(t, texels, descriptor);
+                const gpuTexture = createTextureFromTexelViewsLocal(t, [texels], descriptor);
                 const result = (await checkInfo.runner.run(gpuTexture))[callIdx];
                 gpuTexture.destroy();
                 return result;
@@ -3216,9 +3216,17 @@ export async function readTextureToTexelViews(
   return texelViews;
 }
 
+/**
+ * Creates a texture from an array of TexelViews.
+ * @param t the current test
+ * @param texelViews Array of TexelViews per aspect per mip level. Note that only depth-stencil textures
+ *    have 2 aspects, in which case it's assumed the texelViews are in the order [depth, stencil]
+ * @param desc description for the texture to be created
+ * @returns created texture
+ */
 function createTextureFromTexelViewsLocal(
   t: GPUTest,
-  texelViews: TexelView[],
+  texelViews: TexelView[][],
   desc: GPUTextureDescriptor
 ): GPUTexture {
   const modifiedDescriptor = { ...desc };
@@ -3227,7 +3235,12 @@ function createTextureFromTexelViewsLocal(
     modifiedDescriptor.usage =
       desc.usage | GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC;
   }
-  let texture = createTextureFromTexelViews(t, texelViews, modifiedDescriptor);
+  let texture = createTextureFromTexelViews(t, texelViews[0], modifiedDescriptor);
+  if (texelViews.length > 1) {
+    copyTexelViewsToTexture(t, texture, 'stencil-only', texelViews[1]);
+  }
+
+  // If we had to add usages to make the texture, make a copy that doesn't have the usages we added.
   if ((texture.usage & ~GPUTextureUsage.COPY_DST) !== (desc.usage & ~GPUTextureUsage.COPY_DST)) {
     const copy = t.createTextureTracked({
       ...desc,
@@ -3289,25 +3302,25 @@ export async function createTextureWithRandomDataAndGetTexelsForEachAspect(
       ...descriptor,
       format: 'depth32float' as GPUTextureFormat,
     };
-    const tempTexels = createRandomTexelViewMipmap(d32Descriptor, options);
-    const texture = createTextureFromTexelViewsLocal(t, tempTexels, descriptor);
+    const stencilTexels = isStencilTextureFormat(descriptor.format)
+      ? [createRandomTexelViewMipmap({ ...descriptor, format: 'stencil8' })]
+      : [];
+    const texture = createTextureFromTexelViewsLocal(
+      t,
+      [createRandomTexelViewMipmap(d32Descriptor, options), ...stencilTexels],
+      descriptor
+    );
     const texels = await readTextureToTexelViews(
       t,
       texture,
       descriptor,
       getTexelViewFormatForTextureFormat(texture.format)
     );
-    const texelsPerAspect = [texels];
-    if (isStencilTextureFormat(descriptor.format)) {
-      // fill in the stencil with random values.
-      const texels = createRandomTexelViewMipmap({ ...descriptor, format: 'stencil8' });
-      texelsPerAspect.push(texels);
-      copyTexelViewsToTexture(t, texture, 'stencil-only', texels);
-    }
+    const texelsPerAspect = [texels, ...stencilTexels];
     return { texture, texels: texelsPerAspect };
   } else {
     const texels = createRandomTexelViewMipmap(descriptor, options);
-    const texture = createTextureFromTexelViewsLocal(t, texels, descriptor);
+    const texture = createTextureFromTexelViewsLocal(t, [texels], descriptor);
     return { texture, texels: [texels] };
   }
 }
