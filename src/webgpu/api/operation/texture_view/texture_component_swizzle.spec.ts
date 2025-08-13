@@ -335,7 +335,9 @@ g.test('read_swizzle')
     const { format, func, channel, compare, input, aspect, swizzleSpec, otherSwizzleIndexOffset } =
       t.params;
     t.skipIfTextureFormatNotSupported(format);
-
+    if (func === 'textureLoad') {
+      t.skipIfTextureLoadNotSupportedForTextureType(input);
+    }
     const otherSwizzleSpec = getSwizzleSpecByOffsetFromSwizzleSpec(
       swizzleSpec,
       otherSwizzleIndexOffset
@@ -343,10 +345,16 @@ g.test('read_swizzle')
     const swizzle = swizzleSpecToGPUTextureComponentSwizzle(swizzleSpec);
     const otherSwizzle = swizzleSpecToGPUTextureComponentSwizzle(otherSwizzleSpec);
 
-    t.skipIf(
-      t.isCompatibility && !swizzlesAreTheSame(swizzle, otherSwizzle),
-      `swizzles must be equivalent in compatibility mode: ${swizzleSpec} != ${otherSwizzleSpec}`
-    );
+    if (t.isCompatibility) {
+      t.skipIf(
+        !swizzlesAreTheSame(swizzle, otherSwizzle),
+        `swizzles must be equivalent in compatibility mode: ${swizzleSpec} != ${otherSwizzleSpec}`
+      );
+      t.skipIf(
+        !isBuiltinComparison(func) && input === 'texture_depth_2d',
+        'can not use depth textures with non-comparison samplers in compatibility mode'
+      );
+    }
 
     const depthRef = 0.5;
     const size = chooseTextureSize({ minSize: 2, minBlocks: 2, format });
