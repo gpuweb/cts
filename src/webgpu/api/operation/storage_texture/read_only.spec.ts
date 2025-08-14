@@ -21,10 +21,31 @@ import { kValidShaderStages, TValidShaderStage } from '../../../util/shader.js';
 
 function getComponentCountForFormat(format: ColorTextureFormat): number {
   switch (format) {
+    case 'r8unorm':
+    case 'r8uint':
+    case 'r8snorm':
+    case 'r8sint':
+    case 'r16unorm':
+    case 'r16uint':
+    case 'r16snorm':
+    case 'r16sint':
+    case 'r16float':
     case 'r32float':
     case 'r32sint':
     case 'r32uint':
+    case 'rgb10a2uint':
+    case 'rgb10a2unorm':
+    case 'rg11b10ufloat':
       return 1;
+    case 'rg8unorm':
+    case 'rg8uint':
+    case 'rg8snorm':
+    case 'rg8sint':
+    case 'rg16unorm':
+    case 'rg16uint':
+    case 'rg16snorm':
+    case 'rg16sint':
+    case 'rg16float':
     case 'rg32float':
     case 'rg32sint':
     case 'rg32uint':
@@ -40,6 +61,8 @@ function getComponentCountForFormat(format: ColorTextureFormat): number {
     case 'rgba16sint':
     case 'rgba16uint':
     case 'bgra8unorm':
+    case 'rgba16unorm':
+    case 'rgba16snorm':
       return 4;
     default:
       unreachable();
@@ -86,22 +109,37 @@ class F extends AllFeaturesMaxLimitsGPUTest {
           outputBufferTypedData[4 * texelDataIndex] = 0;
           outputBufferTypedData[4 * texelDataIndex + 1] = 0;
           outputBufferTypedData[4 * texelDataIndex + 2] = 0;
-          outputBufferTypedData[4 * texelDataIndex + 3] = 1;
+          if (format === 'rgb10a2uint' || format === 'rgb10a2unorm') {
+            outputBufferTypedData[4 * texelDataIndex + 3] = 0;
+          } else {
+            outputBufferTypedData[4 * texelDataIndex + 3] = 1;
+          }
           for (let component = 0; component < componentCount; ++component) {
             switch (format) {
               case 'r32uint':
               case 'rg32uint':
               case 'rgba16uint':
-              case 'rgba32uint': {
+              case 'rgba32uint':
+              case 'rgb10a2uint': {
                 const texelValue = 4 * texelDataIndex + component + 1;
                 setData(texelValue, texelValue, texelDataIndex, component);
                 break;
               }
+              case 'r8uint':
+              case 'rg8uint':
               case 'rgba8uint': {
                 const texelValue = (4 * texelDataIndex + component + 1) % 256;
                 setData(texelValue, texelValue, texelDataIndex, component);
                 break;
               }
+              case 'r16uint':
+              case 'rg16uint': {
+                const texelValue = (4 * texelDataIndex + component + 1) % 65536;
+                setData(texelValue, texelValue, texelDataIndex, component);
+                break;
+              }
+              case 'r8unorm':
+              case 'rg8unorm':
               case 'rgba8unorm': {
                 const texelValue = (4 * texelDataIndex + component + 1) % 256;
                 const outputValue = texelValue / 255.0;
@@ -117,6 +155,14 @@ class F extends AllFeaturesMaxLimitsGPUTest {
                 setData(texelValue, outputValue, texelDataIndex, component, outputComponent);
                 break;
               }
+              case 'r16unorm':
+              case 'rg16unorm':
+              case 'rgba16unorm': {
+                const texelValue = (4 * texelDataIndex + component + 1) % 65536;
+                const outputValue = texelValue / 65535.0;
+                setData(texelValue, outputValue, texelDataIndex, component);
+                break;
+              }
               case 'r32sint':
               case 'rg32sint':
               case 'rgba16sint':
@@ -126,14 +172,34 @@ class F extends AllFeaturesMaxLimitsGPUTest {
                 setData(texelValue, texelValue, texelDataIndex, component);
                 break;
               }
+              case 'r8sint':
+              case 'rg8sint':
               case 'rgba8sint': {
                 const texelValue = ((4 * texelDataIndex + component + 1) % 256) - 128;
                 setData(texelValue, texelValue, texelDataIndex, component);
                 break;
               }
+              case 'r16sint':
+              case 'rg16sint': {
+                const signedValue =
+                  (texelDataIndex & 1 ? 1 : -1) *
+                  (((4 * texelDataIndex + component + 1) % 65536) - 32768);
+                setData(signedValue, signedValue, texelDataIndex, component);
+                break;
+              }
+              case 'r8snorm':
+              case 'rg8snorm':
               case 'rgba8snorm': {
                 const texelValue = ((4 * texelDataIndex + component + 1) % 256) - 128;
                 const outputValue = Math.max(texelValue / 127.0, -1.0);
+                setData(texelValue, outputValue, texelDataIndex, component);
+                break;
+              }
+              case 'r16snorm':
+              case 'rg16snorm':
+              case 'rgba16snorm': {
+                const texelValue = ((4 * texelDataIndex + component + 1) % 65536) - 32768;
+                const outputValue = Math.max(texelValue / 32767.0, -1.0);
                 setData(texelValue, outputValue, texelDataIndex, component);
                 break;
               }
@@ -144,11 +210,42 @@ class F extends AllFeaturesMaxLimitsGPUTest {
                 setData(texelValue, texelValue, texelDataIndex, component);
                 break;
               }
+              case 'r16float':
+              case 'rg16float':
               case 'rgba16float': {
                 const texelValue = (4 * texelDataIndex + component + 1) / 10.0;
                 const f16Array = new Float16Array(1);
                 f16Array[0] = texelValue;
                 setData(texelValue, f16Array[0], texelDataIndex, component);
+                break;
+              }
+              case 'rgb10a2unorm': {
+                const texelValue = 4 * texelDataIndex + component + 1;
+                const r = texelValue % 1024;
+                const g = (texelValue * 2) % 1024;
+                const b = (texelValue * 3) % 1024;
+                const a = 3;
+                const packedValue = (a << 30) | (b << 20) | (g << 10) | r;
+                const texelComponentIndex = texelDataIndex * componentCount;
+                texelTypedDataView[texelComponentIndex] = packedValue;
+                outputBufferTypedData[texelDataIndex * 4] = r / 1023.0;
+                outputBufferTypedData[texelDataIndex * 4 + 1] = g / 1023.0;
+                outputBufferTypedData[texelDataIndex * 4 + 2] = b / 1023.0;
+                outputBufferTypedData[texelDataIndex * 4 + 3] = a / 3.0;
+                break;
+              }
+              case 'rg11b10ufloat': {
+                const kFloat11One = 0x3c0;
+                const kFloat10Zero = 0;
+                const r = kFloat11One;
+                const g = kFloat11One;
+                const b = kFloat10Zero;
+                const packedValue = (b << 22) | (g << 11) | r;
+                const texelComponentIndex = texelDataIndex * componentCount;
+                texelTypedDataView[texelComponentIndex] = packedValue;
+                outputBufferTypedData[texelDataIndex * 4] = 1.0;
+                outputBufferTypedData[texelDataIndex * 4 + 1] = 1.0;
+                outputBufferTypedData[texelDataIndex * 4 + 2] = 0;
                 break;
               }
               default:
@@ -193,26 +290,49 @@ class F extends AllFeaturesMaxLimitsGPUTest {
       case 'r32uint':
       case 'rg32uint':
       case 'rgba32uint':
+      case 'rgb10a2uint':
+      case 'rgb10a2unorm':
         return new Uint32Array(arrayBuffer);
       case 'rgba8uint':
       case 'rgba8unorm':
       case 'bgra8unorm':
+      case 'r8unorm':
+      case 'r8uint':
+      case 'rg8unorm':
+      case 'rg8uint':
         return new Uint8Array(arrayBuffer);
       case 'rgba16uint':
+      case 'r16unorm':
+      case 'rg16unorm':
+      case 'rgba16unorm':
+      case 'r16uint':
+      case 'rg16uint':
         return new Uint16Array(arrayBuffer);
       case 'r32sint':
       case 'rg32sint':
       case 'rgba32sint':
+      case 'rg11b10ufloat':
         return new Int32Array(arrayBuffer);
       case 'rgba8sint':
       case 'rgba8snorm':
+      case 'r8snorm':
+      case 'r8sint':
+      case 'rg8snorm':
+      case 'rg8sint':
         return new Int8Array(arrayBuffer);
       case 'rgba16sint':
+      case 'r16snorm':
+      case 'rg16snorm':
+      case 'rgba16snorm':
+      case 'r16sint':
+      case 'rg16sint':
         return new Int16Array(arrayBuffer);
       case 'r32float':
       case 'rg32float':
       case 'rgba32float':
         return new Float32Array(arrayBuffer);
+      case 'r16float':
+      case 'rg16float':
       case 'rgba16float':
         return new Float16Array(arrayBuffer);
       default:
