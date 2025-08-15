@@ -112,6 +112,8 @@ class F extends AllFeaturesMaxLimitsGPUTest {
           outputBufferTypedData[4 * texelDataIndex + 2] = 0;
           outputBufferTypedData[4 * texelDataIndex + 3] = 0;
 
+          // Packed formats like rgb10a2unorm, rg11b10ufloat, and rgb10a2uint store multiple color components within a single 32-bit integer.
+          // This means their TypedArray uses a single element per texel, so they are handled separately from other formats
           if (format === 'rgb10a2unorm') {
             const texelValue = 4 * texelDataIndex + 1;
             const r = texelValue % 1024;
