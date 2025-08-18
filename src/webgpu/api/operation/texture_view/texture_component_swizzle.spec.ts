@@ -3,11 +3,6 @@ Operational tests for the 'texture-component-swizzle' feature.
 
 Test that:
 * when the feature is on, swizzling is applied correctly.
-
-TODO:
-* test stencil aspect of depth-stencil formats
-* test texture_depth_xxx with textureSample
-* test texture_2d<f32> with textureGatherCompare
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
