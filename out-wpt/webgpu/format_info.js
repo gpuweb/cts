@@ -1717,6 +1717,15 @@ export const kTextureFormatTier1AllowsResolve = [
 'rg11b10ufloat'];
 
 
+export const kTextureFormatTier1ThrowsWhenNotEnabled = [
+'r16unorm',
+'r16snorm',
+'rg16unorm',
+'rg16snorm',
+'rgba16unorm',
+'rgba16snorm'];
+
+
 export const kTextureFormatTier1AllowsRenderAttachmentBlendableMultisample =
 [
 'r16unorm',

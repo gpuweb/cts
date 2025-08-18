@@ -1211,6 +1211,23 @@ export class GPUTestBase extends Fixture {
     }
   }
 
+  /**
+   * Expect a validation error or exception inside the callback.
+   *
+   * Tests should always do just one WebGPU call in the callback, to make sure that's what's tested.
+   */
+  expectValidationErrorOrException(
+  fn,
+  shouldError = true,
+  shouldThrow = true)
+  {
+    if (shouldThrow) {
+      this.shouldThrow(shouldError, fn);
+    } else {
+      this.expectValidationError(fn, shouldError);
+    }
+  }
+
   /** Create a GPUBuffer and track it for cleanup at the end of the test. */
   createBufferTracked(descriptor) {
     return this.trackForCleanup(this.device.createBuffer(descriptor));

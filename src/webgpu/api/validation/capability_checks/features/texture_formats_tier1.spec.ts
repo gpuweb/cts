@@ -15,6 +15,7 @@ when the feature is not enabled. This includes:
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import {
   kTextureFormatTier1AllowsRenderAttachmentBlendableMultisample,
+  kTextureFormatTier1ThrowsWhenNotEnabled,
   kTextureFormatsTier1EnablesStorageReadOnlyWriteOnly,
 } from '../../../../format_info.js';
 import { UniqueFeaturesOrLimitsGPUTest } from '../../../../gpu_test.js';
@@ -54,13 +55,17 @@ g.test('texture_usage,render_attachment')
   .fn(t => {
     const { format, enable_feature } = t.params;
 
-    t.expectValidationError(() => {
-      t.createTextureTracked({
-        format,
-        size: [1, 1, 1],
-        usage: GPUTextureUsage.RENDER_ATTACHMENT,
-      });
-    }, !enable_feature);
+    t.expectValidationErrorOrException(
+      () => {
+        t.createTextureTracked({
+          format,
+          size: [1, 1, 1],
+          usage: GPUTextureUsage.RENDER_ATTACHMENT,
+        });
+      },
+      !enable_feature,
+      kTextureFormatTier1ThrowsWhenNotEnabled.includes(format)
+    );
   });
 
 g.test('texture_usage,multisample')
@@ -84,14 +89,18 @@ g.test('texture_usage,multisample')
   .fn(t => {
     const { format, enable_feature } = t.params;
 
-    t.expectValidationError(() => {
-      t.createTextureTracked({
-        format,
-        size: [1, 1, 1],
-        usage: GPUTextureUsage.RENDER_ATTACHMENT,
-        sampleCount: 4,
-      });
-    }, !enable_feature);
+    t.expectValidationErrorOrException(
+      () => {
+        t.createTextureTracked({
+          format,
+          size: [1, 1, 1],
+          usage: GPUTextureUsage.RENDER_ATTACHMENT,
+          sampleCount: 4,
+        });
+      },
+      !enable_feature,
+      kTextureFormatTier1ThrowsWhenNotEnabled.includes(format)
+    );
   });
 
 g.test('texture_usage,storage_binding')
@@ -115,13 +124,17 @@ g.test('texture_usage,storage_binding')
   .fn(t => {
     const { format, enable_feature } = t.params;
 
-    t.expectValidationError(() => {
-      t.createTextureTracked({
-        format,
-        size: [1, 1, 1],
-        usage: GPUTextureUsage.STORAGE_BINDING,
-      });
-    }, !enable_feature);
+    t.expectValidationErrorOrException(
+      () => {
+        t.createTextureTracked({
+          format,
+          size: [1, 1, 1],
+          usage: GPUTextureUsage.STORAGE_BINDING,
+        });
+      },
+      !enable_feature,
+      kTextureFormatTier1ThrowsWhenNotEnabled.includes(format)
+    );
   });
 
 g.test('render_pipeline,color_target')
@@ -196,7 +209,7 @@ g.test('render_pipeline,color_target')
       isAsync,
       enable_feature || format === 'rgba8unorm',
       pipelineDescriptor,
-      'GPUPipelineError'
+      kTextureFormatTier1ThrowsWhenNotEnabled.includes(format) ? 'TypeError' : 'GPUPipelineError'
     );
   });
 
@@ -234,20 +247,24 @@ g.test('bind_group_layout,storage_texture')
   .fn(t => {
     const { format, access, enable_feature } = t.params;
 
-    t.expectValidationError(() => {
-      t.device.createBindGroupLayout({
-        entries: [
-          {
-            binding: 0,
-            visibility: GPUShaderStage.COMPUTE,
-            storageTexture: {
-              format,
-              access,
+    t.expectValidationErrorOrException(
+      () => {
+        t.device.createBindGroupLayout({
+          entries: [
+            {
+              binding: 0,
+              visibility: GPUShaderStage.COMPUTE,
+              storageTexture: {
+                format,
+                access,
+              },
             },
-          },
-        ],
-      });
-    }, !enable_feature);
+          ],
+        });
+      },
+      !enable_feature,
+      kTextureFormatTier1ThrowsWhenNotEnabled.includes(format)
+    );
   });
 
 g.test('pipeline_auto_layout,storage_texture')
