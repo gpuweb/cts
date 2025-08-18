@@ -3240,8 +3240,10 @@ function createTextureFromTexelViewsLocal(
     copyTexelViewsToTexture(t, texture, 'stencil-only', texelViews[1]);
   }
 
-  // If we had to add usages to make the texture, make a copy that doesn't have the usages we added.
-  if ((texture.usage & ~GPUTextureUsage.COPY_DST) !== (desc.usage & ~GPUTextureUsage.COPY_DST)) {
+  // If we had to add RENDER_ATTACHMENT, make a copy that doesn't have RENDER_ATTACHMENT
+  const textureHasRenderAttachment = (texture.usage & GPUTextureUsage.RENDER_ATTACHMENT) !== 0;
+  const wantRenderAttachment = (desc.usage & GPUTextureUsage.RENDER_ATTACHMENT) !== 0;
+  if (textureHasRenderAttachment && !wantRenderAttachment) {
     const copy = t.createTextureTracked({
       ...desc,
       usage: desc.usage | GPUTextureUsage.COPY_DST,
