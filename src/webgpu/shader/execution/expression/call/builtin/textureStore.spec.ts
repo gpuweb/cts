@@ -97,7 +97,7 @@ function inputArray(format: string): number[] {
     case 'rgb10a2unorm':
       return [-0.1, 0, 0.5, 1.0, 1.1];
     case 'rg11b10ufloat':
-      return [1, 1, 1, 1];
+      return [1, 0.5, 0, 100000];
     default:
       unreachable(`unhandled format ${format}`);
       break;
@@ -562,11 +562,15 @@ struct VOut {
               return (a << 30) | (b << 20) | (g << 10) | r;
             }
             case 'rg11b10ufloat': {
-              const kFloat11One = 0x3c0;
-              const kFloat10One = 0x1e0;
-              const r = kFloat11One & 0x7ff;
-              const g = kFloat11One & 0x7ff;
-              const b = kFloat10One & 0x3ff;
+              const float11 = { zero: 0, one: 0x3c0, half: 0x380 }; // 11 bits: 1, 0, 0.5
+              const float10 = { zero: 0, one: 0x1e0, half: 0x1c0 }; // 10 bits: 1, 0, 0.5
+              const mapValue = (
+                val: number,
+                { zero, one, half }: { zero: number; one: number; half: number }
+              ) => (val === 0 ? zero : val === 1 ? one : half);
+              const r = mapValue(getValue(id), float11);
+              const g = mapValue(getValue(id + 1), float11);
+              const b = mapValue(getValue(id + 2), float10);
               return (b << 22) | (g << 11) | r;
             }
             default:
