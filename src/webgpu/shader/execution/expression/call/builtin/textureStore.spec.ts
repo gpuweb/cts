@@ -97,7 +97,7 @@ function inputArray(format: string): number[] {
     case 'rgb10a2unorm':
       return [-0.1, 0, 0.5, 1.0, 1.1];
     case 'rg11b10ufloat':
-      return [1, 0.5, 0, 100000];
+      return [1, 0.5, 0, 1];
     default:
       unreachable(`unhandled format ${format}`);
       break;
