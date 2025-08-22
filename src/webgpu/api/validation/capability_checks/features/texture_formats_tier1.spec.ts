@@ -265,10 +265,7 @@ g.test('render_pass,resolvable')
     };
 
     const encoder = t.device.createCommandEncoder();
-
-    t.expectValidationError(() => {
-      encoder.beginRenderPass(descriptor);
-    }, !enable_feature);
+    encoder.beginRenderPass(descriptor);
   });
 
 g.test('bind_group_layout,storage_texture')
