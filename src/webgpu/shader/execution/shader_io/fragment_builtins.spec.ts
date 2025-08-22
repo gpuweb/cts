@@ -1877,18 +1877,18 @@ fn fsMain(
   });
 
 /**
- * Checks primitive_id value consistency
+ * Checks primitive_index value consistency
  *
  * Renders fullscreen triangles using the given draw arguments, writing the
- * primitive_id of each to the render target. Then reads back the texture and
- * compares the last primitive_id written to the expected value. All args are
+ * primitive_index of each to the render target. Then reads back the texture and
+ * compares the last primitive_index written to the expected value. All args are
  * passed directly to draw/drawIndexed unless specified otherwise.
  * @param indices An array of indices to be used as a 32 bit index buffer.
  *                Causes drawIndexed to be used instead of draw.
  * @param topology The primitive topology to use.
- * @param expected The expected value of the last primitive_id drawn.
+ * @param expected The expected value of the last primitive_index drawn.
  */
-function runPrimitiveIdTest(
+function runPrimitiveIndexTest(
   t: FragmentBuiltinTest,
   {
     count,
@@ -1900,6 +1900,8 @@ function runPrimitiveIdTest(
     indices = null,
     topology = 'triangle-list',
     cullMode = 'none',
+    width = 4,
+    height = 4,
     expected,
   }: {
     count: number;
@@ -1911,11 +1913,13 @@ function runPrimitiveIdTest(
     indices?: number[] | null;
     topology?: GPUPrimitiveTopology;
     cullMode?: GPUCullMode;
+    width?: number;
+    height?: number;
     expected: number;
   }
 ) {
   const shader = `
-enable chromium_experimental_primitive_id;
+enable primitive_index;
 
 @vertex
 fn vsFullscreenMain(@builtin(vertex_index) index : u32) -> @builtin(position) vec4f {
@@ -1931,13 +1935,11 @@ fn vsBufferMain(@builtin(vertex_index) index : u32, @location(0) pos : vec2f) ->
 }
 
 @fragment
-fn fsMain(@builtin(primitive_id) pid : u32) -> @location(0) vec4u {
+fn fsMain(@builtin(primitive_index) pid : u32) -> @location(0) vec4u {
   return vec4u(pid, 0, 0, 0);
 }`;
 
   const format = 'r32uint';
-  const width = 4;
-  const height = 4;
 
   const module = t.device.createShaderModule({ code: shader });
 
@@ -2040,13 +2042,13 @@ fn fsMain(@builtin(primitive_id) pid : u32) -> @location(0) vec4u {
   });
 }
 
-g.test('primitive_id,basic')
-  .desc('Tests primitive_id built-in value')
+g.test('primitive_index,basic')
+  .desc('Tests primitive_index built-in value')
   .params(u =>
     u
       .beginSubcases()
       .combine('triCount', [1, 4, 16])
-      // None of the following should affect the primitive_id
+      // None of the following should affect the primitive_index
       .combine('instances', [1, 4, 16])
       .combine('firstVertex', [0, 1, 4])
       .combine('firstIndex', [0, 3, 9])
@@ -2054,9 +2056,9 @@ g.test('primitive_id,basic')
   )
   .fn(t => {
     const { triCount, instances, firstVertex, firstIndex, firstInstance } = t.params;
-    t.skipIfDeviceDoesNotHaveFeature('chromium-experimental-primitive-id' as GPUFeatureName);
+    t.skipIfDeviceDoesNotHaveFeature('primitive-index' as GPUFeatureName);
 
-    runPrimitiveIdTest(t, {
+    runPrimitiveIndexTest(t, {
       count: triCount * 3,
       instances,
       firstVertex,
@@ -2069,7 +2071,7 @@ g.test('primitive_id,basic')
       indices.push(0, 1, 2);
     }
 
-    runPrimitiveIdTest(t, {
+    runPrimitiveIndexTest(t, {
       count: triCount * 3,
       instances,
       firstVertex,
@@ -2080,14 +2082,14 @@ g.test('primitive_id,basic')
     });
   });
 
-g.test('primitive_id,primitive_reset')
+g.test('primitive_index,primitive_reset')
   .desc(
-    'Tests that the primitive_id built-in value does not increment or reset across primitive resets'
+    'Tests that the primitive_index built-in value does not increment or reset across primitive resets'
   )
   .fn(t => {
-    t.skipIfDeviceDoesNotHaveFeature('chromium-experimental-primitive-id' as GPUFeatureName);
+    t.skipIfDeviceDoesNotHaveFeature('primitive-index' as GPUFeatureName);
 
-    runPrimitiveIdTest(t, {
+    runPrimitiveIndexTest(t, {
       count: 10,
       topology: 'triangle-strip',
       indices: [0, 1, 2, 0, 1, 0xffffffff, 0, 1, 2, 0],
@@ -2095,9 +2097,9 @@ g.test('primitive_id,primitive_reset')
     });
   });
 
-g.test('primitive_id,discarded_primitves')
+g.test('primitive_index,discarded_primitves')
   .desc(
-    'Tests that the primitives which are discarded due to culling, size, or shape still increment the primitive_id built-in'
+    'Tests that the primitives which are discarded due to culling, size, or shape still increment the primitive_index built-in'
   )
   .params(u =>
     u
@@ -2112,12 +2114,72 @@ g.test('primitive_id,discarded_primitves')
   )
   .fn(t => {
     const { vertices } = t.params;
-    t.skipIfDeviceDoesNotHaveFeature('chromium-experimental-primitive-id' as GPUFeatureName);
+    t.skipIfDeviceDoesNotHaveFeature('primitive-index' as GPUFeatureName);
 
-    runPrimitiveIdTest(t, {
+    runPrimitiveIndexTest(t, {
       count: 6,
       vertices: [...vertices, -1, -1,  3, -1,  -1, 3], // Append a fulscreen triangle to the test vertices
       cullMode: 'back',
       expected: 1,
+    });
+  });
+
+g.test('primitive_index,topologies')
+  .desc(
+    'Tests that the primitive_index built-in value works for non-triangle topologies'
+  )
+  .fn(t => {
+    t.skipIfDeviceDoesNotHaveFeature('primitive-index' as GPUFeatureName);
+
+    const lineVertices = [0, -1, 0, 1,  0, -1, 0, 1,  0, -1, 0, 1,  0, -1, 0, 1];
+    runPrimitiveIndexTest(t, {
+      count: 4,
+      topology: 'line-list',
+      vertices: lineVertices,
+      width: 1,
+      expected: 1,
+    });
+
+    runPrimitiveIndexTest(t, {
+      count: 8,
+      topology: 'line-list',
+      vertices: lineVertices,
+      width: 1,
+      expected: 3,
+    });
+
+    runPrimitiveIndexTest(t, {
+      count: 4,
+      topology: 'line-strip',
+      vertices: lineVertices,
+      width: 1,
+      expected: 2,
+    });
+
+    runPrimitiveIndexTest(t, {
+      count: 8,
+      topology: 'line-strip',
+      vertices: lineVertices,
+      width: 1,
+      expected: 6,
+    });
+
+    const pointVertices = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    runPrimitiveIndexTest(t, {
+      count: 4,
+      topology: 'point-list',
+      vertices: pointVertices,
+      width: 1,
+      height: 1,
+      expected: 3,
+    });
+
+    runPrimitiveIndexTest(t, {
+      count: 8,
+      topology: 'point-list',
+      vertices: pointVertices,
+      width: 1,
+      height: 1,
+      expected: 7,
     });
   });
