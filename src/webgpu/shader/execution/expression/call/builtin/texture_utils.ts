@@ -45,7 +45,10 @@ import {
   TexelRepresentationInfo,
 } from '../../../../../util/texture/texel_data.js';
 import { PerPixelAtLevel, TexelView } from '../../../../../util/texture/texel_view.js';
-import { createTextureFromTexelViews } from '../../../../../util/texture.js';
+import {
+  copyTexelViewsToTexture,
+  createTextureFromTexelViews,
+} from '../../../../../util/texture.js';
 import { reifyExtent3D } from '../../../../../util/unions.js';
 import { ShaderStage } from '../../../../validation/decl/util.js';
 
@@ -1057,31 +1060,39 @@ const kTextureTypeInfo = {
     componentType: 'f32',
     resultType: 'vec4f',
     resultFormat: 'rgba32float',
+    sampleType: 'depth',
   },
   float: {
     componentType: 'f32',
     resultType: 'vec4f',
     resultFormat: 'rgba32float',
+    sampleType: 'float',
   },
   'unfilterable-float': {
     componentType: 'f32',
     resultType: 'vec4f',
     resultFormat: 'rgba32float',
+    sampleType: 'unfilterable-float',
   },
   sint: {
     componentType: 'i32',
     resultType: 'vec4i',
     resultFormat: 'rgba32sint',
+    sampleType: 'sint',
   },
   uint: {
     componentType: 'u32',
     resultType: 'vec4u',
     resultFormat: 'rgba32uint',
+    sampleType: 'uint',
   },
 } as const;
 
-export function getTextureFormatTypeInfo(format: GPUTextureFormat) {
-  const type = getTextureFormatType(format);
+export function getTextureFormatTypeInfo(
+  format: GPUTextureFormat,
+  aspect: GPUTextureAspect = 'all'
+) {
+  const type = getTextureFormatType(format, aspect);
   assert(!!type);
   return kTextureTypeInfo[type];
 }
@@ -1378,15 +1389,15 @@ export interface TextureCall<T extends Dimensionality> extends TextureCallArgs<T
   componentType?: 'i' | 'u';
 }
 
-const isBuiltinComparison = (builtin: TextureBuiltin) =>
+export const isBuiltinComparison = (builtin: TextureBuiltin) =>
   builtin === 'textureGatherCompare' ||
   builtin === 'textureSampleCompare' ||
   builtin === 'textureSampleCompareLevel';
-const isBuiltinGather = (builtin: TextureBuiltin | undefined) =>
+export const isBuiltinGather = (builtin: TextureBuiltin | undefined) =>
   builtin === 'textureGather' || builtin === 'textureGatherCompare';
-const builtinNeedsSampler = (builtin: TextureBuiltin) =>
+export const builtinNeedsSampler = (builtin: TextureBuiltin) =>
   builtin.startsWith('textureSample') || builtin.startsWith('textureGather');
-const builtinNeedsDerivatives = (builtin: TextureBuiltin) =>
+export const builtinNeedsDerivatives = (builtin: TextureBuiltin) =>
   builtin === 'textureSample' ||
   builtin === 'textureSampleBias' ||
   builtin === 'textureSampleCompare';
@@ -1517,11 +1528,15 @@ export interface SoftwareTexture {
  */
 export function convertPerTexelComponentToResultFormat(
   src: PerTexelComponent<number>,
-  format: EncodableTextureFormat
+  format: GPUTextureFormat,
+  aspect: GPUTextureAspect = 'all'
 ): PerTexelComponent<number> {
-  const rep = kTexelRepresentationInfo[format];
+  const effectiveFormat = aspect === 'stencil-only' ? 'stencil8' : format;
+  const components = isEncodableTextureFormat(effectiveFormat)
+    ? kTexelRepresentationInfo[effectiveFormat as EncodableTextureFormat].componentOrder
+    : kRGBAComponents;
   const out: PerTexelComponent<number> = { R: 0, G: 0, B: 0, A: 1 };
-  for (const component of rep.componentOrder) {
+  for (const component of components) {
     switch (component) {
       case 'Stencil':
       case 'Depth':
@@ -1600,6 +1615,23 @@ const kSamplerFns: Record<GPUCompareFunction, (ref: number, v: number) => boolea
   always: (ref: number, v: number) => true,
 } as const;
 
+/**
+ * Applies a comparison function to each component of a texel.
+ */
+export function applyCompareToTexel(
+  components: TexelComponent[],
+  src: PerTexelComponent<number>,
+  compare: GPUCompareFunction,
+  ref: number
+): PerTexelComponent<number> {
+  const out: PerTexelComponent<number> = {};
+  const compareFn = kSamplerFns[compare];
+  for (const component of components) {
+    out[component] = compareFn(ref, src[component]!) ? 1 : 0;
+  }
+  return out;
+}
+
 function applyCompare<T extends Dimensionality>(
   call: TextureCall<T>,
   sampler: GPUSamplerDescriptor | undefined,
@@ -1609,12 +1641,7 @@ function applyCompare<T extends Dimensionality>(
   if (isBuiltinComparison(call.builtin)) {
     assert(sampler !== undefined);
     assert(call.depthRef !== undefined);
-    const out: PerTexelComponent<number> = {};
-    const compareFn = kSamplerFns[sampler.compare!];
-    for (const component of components) {
-      out[component] = compareFn(call.depthRef, src[component]!) ? 1 : 0;
-    }
-    return out;
+    return applyCompareToTexel(components, src, sampler.compare!, call.depthRef);
   } else {
     return src;
   }
@@ -2711,7 +2738,7 @@ we can not do that easily with compressed textures. ###
                 if (useTexelFormatForGPUTexture) {
                   descriptor.format = texels[0].format;
                 }
-                const gpuTexture = createTextureFromTexelViewsLocal(t, texels, descriptor);
+                const gpuTexture = createTextureFromTexelViewsLocal(t, [texels], descriptor);
                 const result = (await checkInfo.runner.run(gpuTexture))[callIdx];
                 gpuTexture.destroy();
                 return result;
@@ -3189,22 +3216,59 @@ export async function readTextureToTexelViews(
   return texelViews;
 }
 
+/**
+ * Creates a texture from an array of TexelViews.
+ * @param t the current test
+ * @param texelViews Array of TexelViews per aspect per mip level. Note that only depth-stencil textures
+ *    have 2 aspects, in which case it's assumed the texelViews are in the order [depth, stencil]
+ * @param desc description for the texture to be created
+ * @returns created texture
+ */
 function createTextureFromTexelViewsLocal(
   t: GPUTest,
-  texelViews: TexelView[],
+  texelViews: TexelView[][],
   desc: GPUTextureDescriptor
 ): GPUTexture {
   const modifiedDescriptor = { ...desc };
   // If it's a depth or stencil texture we need to render to it to fill it with data.
   if (isDepthOrStencilTextureFormat(desc.format) || desc.sampleCount! > 1) {
-    modifiedDescriptor.usage = desc.usage | GPUTextureUsage.RENDER_ATTACHMENT;
+    modifiedDescriptor.usage =
+      desc.usage | GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC;
   }
-  return createTextureFromTexelViews(t, texelViews, modifiedDescriptor);
+  let texture = createTextureFromTexelViews(t, texelViews[0], modifiedDescriptor);
+  if (texelViews.length > 1) {
+    copyTexelViewsToTexture(t, texture, 'stencil-only', texelViews[1]);
+  }
+
+  // If we had to add RENDER_ATTACHMENT, make a copy that doesn't have RENDER_ATTACHMENT
+  const textureHasRenderAttachment = (texture.usage & GPUTextureUsage.RENDER_ATTACHMENT) !== 0;
+  const wantRenderAttachment = (desc.usage & GPUTextureUsage.RENDER_ATTACHMENT) !== 0;
+  if (textureHasRenderAttachment && !wantRenderAttachment) {
+    const copy = t.createTextureTracked({
+      ...desc,
+      usage: desc.usage | GPUTextureUsage.COPY_DST,
+    });
+    const encoder = t.device.createCommandEncoder();
+    for (let mipLevel = 0; mipLevel < texture.mipLevelCount; ++mipLevel) {
+      encoder.copyTextureToTexture(
+        { texture, mipLevel },
+        { texture: copy, mipLevel },
+        physicalMipSizeFromTexture(texture, mipLevel)
+      );
+    }
+    t.device.queue.submit([encoder.finish()]);
+    texture.destroy();
+    texture = copy;
+  }
+  return texture;
 }
 
 /**
  * Fills a texture with random data and returns that data as
- * an array of TexelView.
+ * an array of arrays of TexelView. The top level arrays are
+ * per aspect. For textures with 1 aspect it would just be
+ * `[[textureViewsByMipLevel]]`. For a depth-stencil textures
+ * it would be [[depthViewsByMipLevel], [stencilViewsByMipLevel]]
  *
  * For compressed textures the texture is filled with random bytes
  * and then read back from the GPU by sampling so the GPU decompressed
@@ -3213,7 +3277,7 @@ function createTextureFromTexelViewsLocal(
  * For uncompressed textures the TexelViews are generated and then
  * copied to the texture.
  */
-export async function createTextureWithRandomDataAndGetTexels(
+export async function createTextureWithRandomDataAndGetTexelsForEachAspect(
   t: GPUTest,
   descriptor: GPUTextureDescriptor,
   options?: RandomTextureOptions
@@ -3229,7 +3293,7 @@ export async function createTextureWithRandomDataAndGetTexels(
       descriptor,
       getTexelViewFormatForTextureFormat(texture.format)
     );
-    return { texture, texels };
+    return { texture, texels: [texels] };
   } else if (isUnencodableDepthFormat(descriptor.format)) {
     // This is round about. We can't directly write to depth24plus, depth24plus-stencil8, depth32float-stencil8
     // and they are not encodable. So: (1) we make random data using `depth32float`. We create a texture with
@@ -3240,20 +3304,46 @@ export async function createTextureWithRandomDataAndGetTexels(
       ...descriptor,
       format: 'depth32float' as GPUTextureFormat,
     };
-    const tempTexels = createRandomTexelViewMipmap(d32Descriptor, options);
-    const texture = createTextureFromTexelViewsLocal(t, tempTexels, descriptor);
+    const stencilTexels = isStencilTextureFormat(descriptor.format)
+      ? [createRandomTexelViewMipmap({ ...descriptor, format: 'stencil8' })]
+      : [];
+    const texture = createTextureFromTexelViewsLocal(
+      t,
+      [createRandomTexelViewMipmap(d32Descriptor, options), ...stencilTexels],
+      descriptor
+    );
     const texels = await readTextureToTexelViews(
       t,
       texture,
       descriptor,
       getTexelViewFormatForTextureFormat(texture.format)
     );
-    return { texture, texels };
+    const texelsPerAspect = [texels, ...stencilTexels];
+    return { texture, texels: texelsPerAspect };
   } else {
     const texels = createRandomTexelViewMipmap(descriptor, options);
-    const texture = createTextureFromTexelViewsLocal(t, texels, descriptor);
-    return { texture, texels };
+    const texture = createTextureFromTexelViewsLocal(t, [texels], descriptor);
+    return { texture, texels: [texels] };
   }
+}
+
+/**
+ * Fills a texture with random data and returns that data an arrays of TexelView.
+ * Note: If the texture has multiple aspects it only returns the `depth-only`
+ * TexelViews. If you need views for both aspects use
+ * @see {@link createTextureWithRandomDataAndGetTexelsForEachAspect}.
+ */
+export async function createTextureWithRandomDataAndGetTexels(
+  t: GPUTest,
+  descriptor: GPUTextureDescriptor,
+  options?: RandomTextureOptions
+) {
+  const { texture, texels } = await createTextureWithRandomDataAndGetTexelsForEachAspect(
+    t,
+    descriptor,
+    options
+  );
+  return { texture, texels: texels[0] };
 }
 
 function valueIfAllComponentsAreEqual(
