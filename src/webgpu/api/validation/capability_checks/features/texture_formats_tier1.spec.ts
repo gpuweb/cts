@@ -235,7 +235,7 @@ g.test('render_pass,resolvable')
     }
   })
   .fn(t => {
-    const { format, enable_feature } = t.params;
+    const { format } = t.params;
 
     const size = [1, 1, 1];
     const sampleCount = 4;
