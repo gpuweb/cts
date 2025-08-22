@@ -15,6 +15,8 @@ import {
   getBlockInfoForTextureFormat,
   isStencilTextureFormat,
   isDepthStencilTextureFormat,
+  isTextureFormatPossiblyMultisampled,
+  isTextureFormatUsableAsRenderAttachment,
 } from '../../../format_info.js';
 import { AllFeaturesMaxLimitsGPUTest } from '../../../gpu_test.js';
 import {
@@ -56,10 +58,27 @@ function altResultForSwizzle(component: GPUComponentSwizzle): number {
   }
 }
 
-type TextureInput = 'texture_2d<f32>' | 'texture_2d<u32>' | 'texture_2d<i32>' | 'texture_depth_2d';
+type TextureInput =
+  | 'texture_2d<f32>'
+  | 'texture_2d<u32>'
+  | 'texture_2d<i32>'
+  | 'texture_depth_2d'
+  | 'texture_multisampled_2d<f32>'
+  | 'texture_multisampled_2d<u32>'
+  | 'texture_multisampled_2d<i32>'
+  | 'texture_depth_multisampled_2d';
 
 function isSingleChannelInput(input: TextureInput) {
-  return input === 'texture_depth_2d';
+  return input === 'texture_depth_2d' || input === 'texture_depth_multisampled_2d';
+}
+
+function isMultisampledInput(input: TextureInput) {
+  return (
+    input === 'texture_multisampled_2d<f32>' ||
+    input === 'texture_multisampled_2d<u32>' ||
+    input === 'texture_multisampled_2d<i32>' ||
+    input === 'texture_depth_multisampled_2d'
+  );
 }
 
 // This returns a validMask vec4u for if a channel is valid (1) or not-valid (0)
@@ -298,6 +317,29 @@ g.test('read_swizzle')
         ) {
           yield `texture_depth_2d`;
         }
+        if (t.func === 'textureLoad' && isTextureFormatPossiblyMultisampled(t.format)) {
+          const { componentType } = getTextureFormatTypeInfo(t.format, t.aspect);
+          switch (componentType) {
+            case 'f32':
+              yield `texture_multisampled_2d<f32>`;
+              break;
+            case 'u32':
+              yield `texture_multisampled_2d<u32>`;
+              break;
+            case 'i32':
+              yield `texture_multisampled_2d<i32>`;
+              break;
+            default:
+              unreachable();
+          }
+          if (
+            isDepthTextureFormat(t.format) &&
+            canBuiltinTakeTextureDepth(t.func) &&
+            t.aspect === 'depth-only'
+          ) {
+            yield `texture_depth_multisampled_2d`;
+          }
+        }
       })
       .expand('channel', function* (t) {
         if (t.func === 'textureGather' && !isSingleChannelInput(t.input)) {
@@ -333,6 +375,9 @@ g.test('read_swizzle')
     if (func === 'textureLoad') {
       t.skipIfTextureLoadNotSupportedForTextureType(input);
     }
+    if (isMultisampledInput(input)) {
+      t.skipIfTextureFormatNotMultisampled(format);
+    }
     const otherSwizzleSpec = getSwizzleSpecByOffsetFromSwizzleSpec(
       swizzleSpec,
       otherSwizzleIndexOffset
@@ -362,7 +407,13 @@ g.test('read_swizzle')
     const descriptor: GPUTextureDescriptor = {
       format,
       size,
-      usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
+      usage:
+        GPUTextureUsage.COPY_DST |
+        GPUTextureUsage.TEXTURE_BINDING |
+        (isTextureFormatUsableAsRenderAttachment(t.device, format)
+          ? GPUTextureUsage.RENDER_ATTACHMENT
+          : 0),
+      sampleCount: isMultisampledInput(input) ? 4 : 1,
     };
     const { texels: srcTexelViews, texture } =
       await createTextureWithRandomDataAndGetTexelsForEachAspect(t, descriptor);
@@ -419,7 +470,11 @@ ${sampledColors.map((c, i) => `${i % 2}, ${(i / 2) | 0}, ${JSON.stringify(c)}`).
             }
           : expRGBAColor;
       const expTexelView = TexelView.fromTexelsAsColors(expFormat, _coords => expColor);
-      const textureView = texture.createView({ swizzle, aspect });
+      const textureView = texture.createView({
+        swizzle,
+        aspect,
+        usage: GPUTextureUsage.TEXTURE_BINDING,
+      });
 
       // BA  in a 2x2 texel area this is
       // RG  the order of gather.
@@ -533,6 +588,8 @@ ${testData
       ? isBuiltinComparison(func)
         ? 'depth'
         : 'unfilterable-float'
+      : srcSampleType === 'float' && isMultisampledInput(input)
+      ? 'unfilterable-float'
       : srcSampleType;
     const samplerType = isBuiltinComparison(func) ? 'comparison' : 'non-filtering';
 
@@ -550,6 +607,7 @@ ${testData
             visibility: GPUShaderStage.COMPUTE | GPUShaderStage.FRAGMENT | GPUShaderStage.VERTEX,
             texture: {
               sampleType,
+              multisampled: isMultisampledInput(input),
             },
           },
           {
@@ -581,6 +639,7 @@ ${testData
             visibility: GPUShaderStage.COMPUTE | GPUShaderStage.FRAGMENT | GPUShaderStage.VERTEX,
             texture: {
               sampleType,
+              multisampled: isMultisampledInput(input),
             },
           },
         ],
