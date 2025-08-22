@@ -50,7 +50,7 @@ g.test('only_identity_swizzle')
 g.test('no_render_nor_storage')
   .desc(
     `
-  Test that setting the swizzle on the texture with RENDER_ATTACHMENT or STORAGE_BINDING usage works
+  Test that setting the swizzle on the texture view with RENDER_ATTACHMENT or STORAGE_BINDING usage works
   if the swizzle is the identity but generates a validation error otherwise.
   `
   )
@@ -63,20 +63,28 @@ g.test('no_render_nor_storage')
         GPUConst.TextureUsage.RENDER_ATTACHMENT,
         GPUConst.TextureUsage.STORAGE_BINDING,
       ] as const)
+      .combine('sampleCount', [1, 4] as const)
       .beginSubcases()
       .combine('swizzleSpec', kSwizzleTests)
+      .unless(t => t.sampleCount > 1 && t.usage === GPUConst.TextureUsage.STORAGE_BINDING)
   )
   .beforeAllSubcases(t => {
     // MAINTENANCE_TODO: Remove this cast once texture-component-swizzle is added to @webgpu/types
     t.selectDeviceOrSkipTestCase('texture-component-swizzle' as GPUFeatureName);
   })
   .fn(t => {
-    const { swizzleSpec, usage } = t.params;
+    const { swizzleSpec, usage, sampleCount } = t.params;
     const swizzle = swizzleSpecToGPUTextureComponentSwizzle(swizzleSpec);
     const texture = t.createTextureTracked({
       format: 'rgba8unorm',
       size: [1],
-      usage,
+      usage:
+        GPUTextureUsage.COPY_SRC |
+        GPUTextureUsage.COPY_DST |
+        GPUTextureUsage.TEXTURE_BINDING |
+        GPUTextureUsage.RENDER_ATTACHMENT |
+        (sampleCount === 1 ? GPUTextureUsage.STORAGE_BINDING : 0),
+      sampleCount,
     });
     const badUsage =
       (usage &
@@ -84,7 +92,7 @@ g.test('no_render_nor_storage')
       0;
     const shouldError = badUsage && !isIdentitySwizzle(swizzle);
     t.expectValidationError(() => {
-      texture.createView({ swizzle });
+      texture.createView({ swizzle, usage });
     }, shouldError);
   });
 
