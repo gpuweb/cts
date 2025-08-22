@@ -463,7 +463,7 @@ paramsSubcasesOnly([
 // Unaligned buffer offset is invalid
 { offset: 1, size: 256, _success: false },
 { offset: 1, size: undefined, _success: false },
-{ offset: 128, size: 256, _success: false },
+{ offset: 127, size: 256, _success: false },
 { offset: 255, size: 256, _success: false },
 
 // Out-of-bounds
