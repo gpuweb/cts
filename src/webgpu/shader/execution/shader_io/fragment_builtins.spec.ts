@@ -26,8 +26,9 @@ import { getProvokingVertexForFlatInterpolationEitherSampling } from '../../../i
 import { getMultisampleFragmentOffsets } from '../../../multisample_info.js';
 import * as ttu from '../../../texture_test_utils.js';
 import { dotProduct, subtractVectors, align } from '../../../util/math.js';
+import { PerTexelComponent } from '../../../util/texture/texel_data.js';
 import { TexelView } from '../../../util/texture/texel_view.js';
-import { findFailedPixels } from '../../../util/texture/texture_ok.js';
+import { findFailedPixels, PerPixelComparison } from '../../../util/texture/texture_ok.js';
 
 class FragmentBuiltinTest extends AllFeaturesMaxLimitsGPUTest {}
 
@@ -1915,7 +1916,7 @@ function runPrimitiveIndexTest(
     cullMode?: GPUCullMode;
     width?: number;
     height?: number;
-    expected: number;
+    expected: number | PerPixelComparison<PerTexelComponent<number>>[];
   }
 ) {
   const shader = `
@@ -1943,16 +1944,18 @@ fn fsMain(@builtin(primitive_index) pid : u32) -> @location(0) vec4u {
 
   const module = t.device.createShaderModule({ code: shader });
 
-  let buffers : GPUVertexBufferLayout[] = [];
+  const buffers: GPUVertexBufferLayout[] = [];
 
   if (vertices) {
     buffers.push({
       arrayStride: Float32Array.BYTES_PER_ELEMENT * 2,
-      attributes: [{
-        format: 'float32x2',
-        offset: 0,
-        shaderLocation: 0,
-      }],
+      attributes: [
+        {
+          format: 'float32x2',
+          offset: 0,
+          shaderLocation: 0,
+        },
+      ],
     });
   }
 
@@ -2034,12 +2037,16 @@ fn fsMain(@builtin(primitive_index) pid : u32) -> @location(0) vec4u {
   pass.end();
   t.queue.submit([encoder.finish()]);
 
-  ttu.expectSingleColorWithTolerance(t, framebuffer, format, {
-    size: [width, height, 1],
-    exp: { R: expected },
-    layout: { mipLevel: 0 },
-    maxFractionalDiff: 0,
-  });
+  if (Array.isArray(expected)) {
+    ttu.expectSinglePixelComparisonsAreOkInTexture(t, { texture: framebuffer }, expected);
+  } else {
+    ttu.expectSingleColorWithTolerance(t, framebuffer, format, {
+      size: [width, height, 1],
+      exp: { R: expected },
+      layout: { mipLevel: 0 },
+      maxFractionalDiff: 0,
+    });
+  }
 }
 
 g.test('primitive_index,basic')
@@ -2102,15 +2109,13 @@ g.test('primitive_index,discarded_primitves')
     'Tests that the primitives which are discarded due to culling, size, or shape still increment the primitive_index built-in'
   )
   .params(u =>
-    u
-      .beginSubcases()
-      .combine('vertices', [
-        [0.3, 0.3,  0.3, 0.3,  0.3, 0.3], // Zero size triangle
-        [0.3, 0.3,  0.3, 0.3,  0.3, 1.3], // Degenerate triangle
-        [0.3, 0.3,  0.30001, 0.3,  0.3, 0.30001], // Sub-pixel triangle
-        [2, 2,  2, 3,  3, 2], // Offscreen triangle
-        [-1, -1,  -1, 3,  3, -1,], // Backface culled triangle
-      ])
+    u.beginSubcases().combine('vertices', [
+      [0.3, 0.3, 0.3, 0.3, 0.3, 0.3], // Zero size triangle
+      [0.3, 0.3, 0.3, 0.3, 0.3, 1.3], // Degenerate triangle
+      [0.3, 0.3, 0.30001, 0.3, 0.3, 0.30001], // Sub-pixel triangle
+      [2, 2, 2, 3, 3, 2], // Offscreen triangle
+      [-1, -1, -1, 3, 3, -1], // Backface culled triangle
+    ])
   )
   .fn(t => {
     const { vertices } = t.params;
@@ -2118,68 +2123,130 @@ g.test('primitive_index,discarded_primitves')
 
     runPrimitiveIndexTest(t, {
       count: 6,
-      vertices: [...vertices, -1, -1,  3, -1,  -1, 3], // Append a fulscreen triangle to the test vertices
+      vertices: [...vertices, -1, -1, 3, -1, -1, 3], // Append a fulscreen triangle to the test vertices
       cullMode: 'back',
       expected: 1,
     });
   });
 
 g.test('primitive_index,topologies')
-  .desc(
-    'Tests that the primitive_index built-in value works for non-triangle topologies'
-  )
+  .desc('Tests that the primitive_index built-in value works every topology')
   .fn(t => {
     t.skipIfDeviceDoesNotHaveFeature('primitive-index' as GPUFeatureName);
 
-    const lineVertices = [0, -1, 0, 1,  0, -1, 0, 1,  0, -1, 0, 1,  0, -1, 0, 1];
+    const triListVertices = [
+      0, 0, -2, 0, 0, 2, 0, 0, 0, 2, 2, 0, 0, 0, -2, 0, 0, -2, 0, 0, 0, -2, 2, 0,
+    ];
+    runPrimitiveIndexTest(t, {
+      count: 12,
+      topology: 'triangle-list',
+      vertices: triListVertices,
+      width: 2,
+      height: 2,
+      expected: [
+        { coord: [0, 0, 0], exp: { R: 0 } },
+        { coord: [1, 0, 0], exp: { R: 1 } },
+        { coord: [0, 1, 0], exp: { R: 2 } },
+        { coord: [1, 1, 0], exp: { R: 3 } },
+      ],
+    });
+
+    const triStripVertices = [-2, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0, -2, 0, 0, -2, 0];
+    runPrimitiveIndexTest(t, {
+      count: 8,
+      topology: 'triangle-strip',
+      vertices: triStripVertices,
+      width: 2,
+      height: 2,
+      expected: [
+        { coord: [0, 0, 0], exp: { R: 0 } },
+        { coord: [1, 0, 0], exp: { R: 2 } },
+        { coord: [1, 1, 0], exp: { R: 3 } },
+        { coord: [0, 1, 0], exp: { R: 5 } },
+      ],
+    });
+
+    const lineVertices = [-0.5, -1, -0.5, 1, 0.5, 1, 0.5, -1, -0.5, -1, -0.5, 1, 0.5, 1, 0.5, -1];
     runPrimitiveIndexTest(t, {
       count: 4,
       topology: 'line-list',
       vertices: lineVertices,
-      width: 1,
-      expected: 1,
+      width: 2,
+      expected: [
+        { coord: [0, 0, 0], exp: { R: 0 } },
+        { coord: [0, 1, 0], exp: { R: 0 } },
+        { coord: [1, 0, 0], exp: { R: 1 } },
+        { coord: [1, 1, 0], exp: { R: 1 } },
+      ],
     });
 
     runPrimitiveIndexTest(t, {
       count: 8,
       topology: 'line-list',
       vertices: lineVertices,
-      width: 1,
-      expected: 3,
+      width: 2,
+      expected: [
+        { coord: [0, 0, 0], exp: { R: 2 } },
+        { coord: [0, 1, 0], exp: { R: 2 } },
+        { coord: [1, 0, 0], exp: { R: 3 } },
+        { coord: [1, 1, 0], exp: { R: 3 } },
+      ],
     });
 
     runPrimitiveIndexTest(t, {
       count: 4,
       topology: 'line-strip',
       vertices: lineVertices,
-      width: 1,
-      expected: 2,
+      width: 2,
+      expected: [
+        { coord: [0, 0, 0], exp: { R: 0 } },
+        { coord: [0, 1, 0], exp: { R: 0 } },
+        { coord: [1, 0, 0], exp: { R: 2 } },
+        { coord: [1, 1, 0], exp: { R: 2 } },
+      ],
     });
 
     runPrimitiveIndexTest(t, {
       count: 8,
       topology: 'line-strip',
       vertices: lineVertices,
-      width: 1,
-      expected: 6,
+      width: 2,
+      expected: [
+        { coord: [0, 0, 0], exp: { R: 4 } },
+        { coord: [0, 1, 0], exp: { R: 4 } },
+        { coord: [1, 0, 0], exp: { R: 6 } },
+        { coord: [1, 1, 0], exp: { R: 6 } },
+      ],
     });
 
-    const pointVertices = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    const pointVertices = [
+      -0.5, -0.5, 0.5, -0.5, -0.5, 0.5, 0.5, 0.5, -0.5, -0.5, 0.5, -0.5, -0.5, 0.5, 0.5, 0.5,
+    ];
     runPrimitiveIndexTest(t, {
       count: 4,
       topology: 'point-list',
       vertices: pointVertices,
-      width: 1,
-      height: 1,
-      expected: 3,
+      width: 2,
+      height: 2,
+      expected: [
+        { coord: [0, 1, 0], exp: { R: 0 } },
+        { coord: [1, 1, 0], exp: { R: 1 } },
+        { coord: [0, 0, 0], exp: { R: 2 } },
+        { coord: [1, 0, 0], exp: { R: 3 } },
+      ],
     });
 
     runPrimitiveIndexTest(t, {
       count: 8,
       topology: 'point-list',
       vertices: pointVertices,
-      width: 1,
-      height: 1,
-      expected: 7,
+      width: 2,
+      height: 2,
+      expected: [
+        { coord: [0, 1, 0], exp: { R: 4 } },
+        { coord: [1, 1, 0], exp: { R: 5 } },
+        { coord: [0, 0, 0], exp: { R: 6 } },
+        { coord: [1, 0, 0], exp: { R: 7 } },
+      ],
     });
   });
