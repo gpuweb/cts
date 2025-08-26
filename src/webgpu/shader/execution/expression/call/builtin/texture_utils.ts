@@ -1615,6 +1615,15 @@ const kSamplerFns: Record<GPUCompareFunction, (ref: number, v: number) => boolea
   always: (ref: number, v: number) => true,
 } as const;
 
+const kDefaultValueForDepthTextureComponents: Record<TexelComponent, number> = {
+  R: 0,
+  G: 0,
+  B: 0,
+  A: 1,
+  Depth: 0,
+  Stencil: 0,
+} as const;
+
 /**
  * Applies a comparison function to each component of a texel.
  */
@@ -1627,7 +1636,12 @@ export function applyCompareToTexel(
   const out: PerTexelComponent<number> = {};
   const compareFn = kSamplerFns[compare];
   for (const component of components) {
-    out[component] = compareFn(ref, src[component]!) ? 1 : 0;
+    out[component] =
+      component === 'R' || component === 'Depth'
+        ? compareFn(ref, src[component]!)
+          ? 1
+          : 0
+        : kDefaultValueForDepthTextureComponents[component];
   }
   return out;
 }
@@ -2162,6 +2176,7 @@ function isOutOfBoundsCall<T extends Dimensionality>(
 }
 
 function isValidOutOfBoundsValue(
+  device: GPUDevice,
   softwareTexture: SoftwareTexture,
   gotRGBA: PerTexelComponent<number>,
   maxFractionalDiff: number
@@ -2204,6 +2219,7 @@ function isValidOutOfBoundsValue(
             const rgba = convertPerTexelComponentToResultFormat(texel, mipTexels.format);
             if (
               texelsApproximatelyEqual(
+                device,
                 gotRGBA,
                 softwareTexture.descriptor.format,
                 rgba,
@@ -2231,6 +2247,7 @@ function isValidOutOfBoundsValue(
  * * 0 if a depth texture
  */
 function okBecauseOutOfBounds<T extends Dimensionality>(
+  device: GPUDevice,
   softwareTexture: SoftwareTexture,
   call: TextureCall<T>,
   gotRGBA: PerTexelComponent<number>,
@@ -2240,7 +2257,7 @@ function okBecauseOutOfBounds<T extends Dimensionality>(
     return false;
   }
 
-  return isValidOutOfBoundsValue(softwareTexture, gotRGBA, maxFractionalDiff);
+  return isValidOutOfBoundsValue(device, softwareTexture, gotRGBA, maxFractionalDiff);
 }
 
 const kRGBAComponents = [
@@ -2256,6 +2273,7 @@ const kRComponent = [TexelComponent.R] as const;
  * Compares two Texels
  */
 export function texelsApproximatelyEqual(
+  device: GPUDevice,
   gotRGBA: PerTexelComponent<number>,
   gotFormat: GPUTextureFormat,
   expectRGBA: PerTexelComponent<number>,
@@ -2274,9 +2292,10 @@ export function texelsApproximatelyEqual(
     expectedFormat
   );
 
-  const rgbaComponentsToCheck = isDepthOrStencilTextureFormat(gotFormat)
-    ? kRComponent
-    : kRGBAComponents;
+  const rgbaComponentsToCheck =
+    isDepthOrStencilTextureFormat(gotFormat) && !device.features.has('texel-component-swizzle')
+      ? kRComponent
+      : kRGBAComponents;
 
   for (const component of rgbaComponentsToCheck) {
     const g = gotRGBA[component]!;
@@ -2486,16 +2505,19 @@ export async function checkCallResults<T extends Dimensionality>(
 
     // The spec says depth and stencil have implementation defined values for G, B, and A
     // so if this is `textureGather` and component > 0 then there's nothing to check.
+    // except if texture-component-swizzle is on. Then G = 0, B = 0, A = 1
     if (
       isDepthOrStencilTextureFormat(format) &&
       isBuiltinGather(call.builtin) &&
-      call.component! > 0
+      call.component! > 0 &&
+      !t.device.features.has('texture-component-swizzle')
     ) {
       continue;
     }
 
     if (
       texelsApproximatelyEqual(
+        t.device,
         gotRGBA,
         softwareTexture.descriptor.format,
         expectRGBA,
@@ -2508,7 +2530,7 @@ export async function checkCallResults<T extends Dimensionality>(
 
     if (
       !sampler &&
-      okBecauseOutOfBounds(softwareTexture, call, gotRGBA, callSpecificMaxFractionalDiff)
+      okBecauseOutOfBounds(t.device, softwareTexture, call, gotRGBA, callSpecificMaxFractionalDiff)
     ) {
       continue;
     }
@@ -2517,9 +2539,11 @@ export async function checkCallResults<T extends Dimensionality>(
     const eULP = getULPFromZeroForComponents(expectRGBA, format, call.builtin, call.component);
 
     // from the spec: https://gpuweb.github.io/gpuweb/#reading-depth-stencil
-    // depth and stencil values are D, ?, ?, ?
+    // depth and stencil values are D, ?, ?, ? unless texture-component-swizzle is enabled
+    // in which case it's D, 0, 0, 1
     const rgbaComponentsToCheck =
-      isBuiltinGather(call.builtin) || !isDepthOrStencilTextureFormat(format)
+      (isBuiltinGather(call.builtin) || !isDepthOrStencilTextureFormat(format)) &&
+      t.device.features.has('texture-component-swizzle')
         ? kRGBAComponents
         : kRComponent;
 
