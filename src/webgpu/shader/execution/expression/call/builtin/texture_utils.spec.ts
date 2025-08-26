@@ -155,6 +155,7 @@ g.test('readTextureToTexelViews')
               const maxFractionalDiff = 0;
               if (
                 !texelsApproximatelyEqual(
+                  t.device,
                   actualRGBA,
                   actualMipLevelTexelView.format,
                   expectedRGBA,
