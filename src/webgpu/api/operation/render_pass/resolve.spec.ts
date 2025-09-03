@@ -44,6 +44,13 @@ Test basic render pass resolve behavior for combinations of:
       .combine('slotsToResolve', kSlotsToResolve)
       .combine('resolveTargetBaseMipLevel', [0, 1] as const)
       .combine('resolveTargetBaseArrayLayer', [0, 1] as const)
+      .combine('createColorAttachmentView', [false, true] as const)
+      .combine('createResolveTargetTextureView', [false, true] as const)
+      .unless(
+        p =>
+          !p.createResolveTargetTextureView &&
+          (p.resolveTargetBaseMipLevel !== 0 || p.resolveTargetBaseArrayLayer !== 0)
+      )
   )
   .fn(t => {
     const targets: GPUColorTargetState[] = [];
@@ -108,18 +115,23 @@ Test basic render pass resolve behavior for combinations of:
     const kResolveTargetSize = kSize << t.params.resolveTargetBaseMipLevel;
 
     for (let i = 0; i < t.params.numColorAttachments; i++) {
-      const colorAttachment = t
-        .createTextureTracked({
-          format: kFormat,
-          size: [kSize, kSize, 1],
-          sampleCount: 4,
-          mipLevelCount: 1,
-          usage:
-            GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
-        })
-        .createView();
+      const colorAttachmentTexture = t.createTextureTracked({
+        format: kFormat,
+        size: [kSize, kSize, 1],
+        sampleCount: 4,
+        mipLevelCount: 1,
+        usage:
+          GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
+      });
 
-      let resolveTarget: GPUTextureView | undefined;
+      let colorAttachment: GPUTexture | GPUTextureView;
+      if (t.params.createResolveTargetTextureView) {
+        colorAttachment = colorAttachmentTexture.createView();
+      } else {
+        colorAttachment = colorAttachmentTexture;
+      }
+
+      let resolveTarget: GPUTexture | GPUTextureView | undefined;
       if (t.params.slotsToResolve.includes(i)) {
         const resolveTargetTexture = t.createTextureTracked({
           format: kFormat,
@@ -130,10 +142,14 @@ Test basic render pass resolve behavior for combinations of:
         });
         resolveTargets.push(resolveTargetTexture);
 
-        resolveTarget = resolveTargetTexture.createView({
-          baseMipLevel: t.params.resolveTargetBaseMipLevel,
-          baseArrayLayer: t.params.resolveTargetBaseArrayLayer,
-        });
+        if (t.params.createResolveTargetTextureView) {
+          resolveTarget = resolveTargetTexture.createView({
+            baseMipLevel: t.params.resolveTargetBaseMipLevel,
+            baseArrayLayer: t.params.resolveTargetBaseArrayLayer,
+          });
+        } else {
+          resolveTarget = resolveTargetTexture;
+        }
       }
 
       // Clear to black for the load operation. After the draw, the top left half of the attachment

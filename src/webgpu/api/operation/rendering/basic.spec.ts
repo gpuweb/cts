@@ -9,40 +9,44 @@ import { checkElementsEqual } from '../../../util/check_contents.js';
 
 export const g = makeTestGroup(AllFeaturesMaxLimitsGPUTest);
 
-g.test('clear').fn(t => {
-  const dst = t.createBufferTracked({
-    size: 4,
-    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
-  });
+g.test('clear')
+  .params(u => u.beginSubcases().combine('createColorAttachmentView', [false, true] as const))
+  .fn(t => {
+    const dst = t.createBufferTracked({
+      size: 4,
+      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
+    });
 
-  const colorAttachment = t.createTextureTracked({
-    format: 'rgba8unorm',
-    size: { width: 1, height: 1, depthOrArrayLayers: 1 },
-    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
-  });
-  const colorAttachmentView = colorAttachment.createView();
+    const colorAttachment = t.createTextureTracked({
+      format: 'rgba8unorm',
+      size: { width: 1, height: 1, depthOrArrayLayers: 1 },
+      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
+    });
+    const colorAttachmentView = t.params.createColorAttachmentView
+      ? colorAttachment.createView()
+      : colorAttachment;
 
-  const encoder = t.device.createCommandEncoder();
-  const pass = encoder.beginRenderPass({
-    colorAttachments: [
-      {
-        view: colorAttachmentView,
-        clearValue: { r: 0.0, g: 1.0, b: 0.0, a: 1.0 },
-        loadOp: 'clear',
-        storeOp: 'store',
-      },
-    ],
-  });
-  pass.end();
-  encoder.copyTextureToBuffer(
-    { texture: colorAttachment, mipLevel: 0, origin: { x: 0, y: 0, z: 0 } },
-    { buffer: dst, bytesPerRow: 256 },
-    { width: 1, height: 1, depthOrArrayLayers: 1 }
-  );
-  t.device.queue.submit([encoder.finish()]);
+    const encoder = t.device.createCommandEncoder();
+    const pass = encoder.beginRenderPass({
+      colorAttachments: [
+        {
+          view: colorAttachmentView,
+          clearValue: { r: 0.0, g: 1.0, b: 0.0, a: 1.0 },
+          loadOp: 'clear',
+          storeOp: 'store',
+        },
+      ],
+    });
+    pass.end();
+    encoder.copyTextureToBuffer(
+      { texture: colorAttachment, mipLevel: 0, origin: { x: 0, y: 0, z: 0 } },
+      { buffer: dst, bytesPerRow: 256 },
+      { width: 1, height: 1, depthOrArrayLayers: 1 }
+    );
+    t.device.queue.submit([encoder.finish()]);
 
-  t.expectGPUBufferValuesEqual(dst, new Uint8Array([0x00, 0xff, 0x00, 0xff]));
-});
+    t.expectGPUBufferValuesEqual(dst, new Uint8Array([0x00, 0xff, 0x00, 0xff]));
+  });
 
 g.test('fullscreen_quad').fn(t => {
   const dst = t.createBufferTracked({
