@@ -2334,6 +2334,9 @@ export function isTextureFormatUsableAsRenderAttachment(
   if (format === 'rg11b10ufloat') {
     return device.features.has('rg11b10ufloat-renderable');
   }
+  if (isTextureFormatTier1EnablesRenderAttachmentBlendableMultisample(format)) {
+    return device.features.has('texture-formats-tier1');
+  }
   return kTextureFormatInfo[format].colorRender || isDepthOrStencilTextureFormat(format);
 }
 
