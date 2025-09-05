@@ -3256,33 +3256,11 @@ function createTextureFromTexelViewsLocal(
   const modifiedDescriptor = { ...desc };
   // If it's a depth or stencil texture we need to render to it to fill it with data.
   if (isDepthOrStencilTextureFormat(desc.format) || desc.sampleCount! > 1) {
-    modifiedDescriptor.usage =
-      desc.usage | GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC;
+    modifiedDescriptor.usage = desc.usage | GPUTextureUsage.RENDER_ATTACHMENT;
   }
-  let texture = createTextureFromTexelViews(t, texelViews[0], modifiedDescriptor);
+  const texture = createTextureFromTexelViews(t, texelViews[0], modifiedDescriptor);
   if (texelViews.length > 1) {
     copyTexelViewsToTexture(t, texture, 'stencil-only', texelViews[1]);
-  }
-
-  // If we had to add RENDER_ATTACHMENT, make a copy that doesn't have RENDER_ATTACHMENT
-  const textureHasRenderAttachment = (texture.usage & GPUTextureUsage.RENDER_ATTACHMENT) !== 0;
-  const wantRenderAttachment = (desc.usage & GPUTextureUsage.RENDER_ATTACHMENT) !== 0;
-  if (textureHasRenderAttachment && !wantRenderAttachment) {
-    const copy = t.createTextureTracked({
-      ...desc,
-      usage: desc.usage | GPUTextureUsage.COPY_DST,
-    });
-    const encoder = t.device.createCommandEncoder();
-    for (let mipLevel = 0; mipLevel < texture.mipLevelCount; ++mipLevel) {
-      encoder.copyTextureToTexture(
-        { texture, mipLevel },
-        { texture: copy, mipLevel },
-        physicalMipSizeFromTexture(texture, mipLevel)
-      );
-    }
-    t.device.queue.submit([encoder.finish()]);
-    texture.destroy();
-    texture = copy;
   }
   return texture;
 }
