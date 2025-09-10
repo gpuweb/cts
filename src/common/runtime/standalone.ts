@@ -697,12 +697,18 @@ void (async () => {
     setTreeCheckedRecursively();
   });
 
+  function getResultsText() {
+    const onlyFailures = document.getElementById('saveOnlyFailures').checked;
+    const predFunc = (key, value) => value.status === 'fail' || !onlyFailures;
+    return logger.asJSON(2, predFunc);
+  }
+
   document.getElementById('copyResultsJSON')!.addEventListener('click', () => {
-    void navigator.clipboard.writeText(logger.asJSON(2));
+    void navigator.clipboard.writeText(getResultsText());
   });
 
   document.getElementById('saveResultsJSON')!.addEventListener('click', () => {
-    const text = logger.asJSON(2);
+    const text = getResultsText();
     const blob = new Blob([text], { type: 'text/plain' });
     const link = document.createElement('a');
     link.download = 'results-webgpu-cts.json';

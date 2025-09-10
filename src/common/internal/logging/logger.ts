@@ -23,7 +23,16 @@ export class Logger {
     ];
   }
 
-  asJSON(space?: number): string {
-    return JSON.stringify({ version, results: Array.from(this.results) }, undefined, space);
+  asJSON(space?: number, predFunc?: any): string {
+    return JSON.stringify(
+      {
+        version,
+        results: Array.from(
+          new Map([...this.results].filter(([key, value]) => predFunc(key, value)))
+        ),
+      },
+      undefined,
+      space
+    );
   }
 }
