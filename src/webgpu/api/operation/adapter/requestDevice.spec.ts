@@ -277,20 +277,6 @@ g.test('limits,supported')
 
     const requiredLimits: Record<string, number | undefined> = { [limit]: value };
 
-    if (
-      limit === 'maxStorageBuffersInFragmentStage' ||
-      limit === 'maxStorageBuffersInVertexStage'
-    ) {
-      requiredLimits['maxStorageBuffersPerShaderStage'] = value;
-    }
-
-    if (
-      limit === 'maxStorageTexturesInFragmentStage' ||
-      limit === 'maxStorageTexturesInVertexStage'
-    ) {
-      requiredLimits['maxStorageTexturesPerShaderStage'] = value;
-    }
-
     const device = await t.requestDeviceTracked(adapter, { requiredLimits });
     assert(device !== null);
     t.expect(
