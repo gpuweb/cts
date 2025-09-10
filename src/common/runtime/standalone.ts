@@ -698,7 +698,8 @@ void (async () => {
   });
 
   function getResultsText() {
-    const onlyFailures = document.getElementById('saveOnlyFailures')!.value;
+    const saveOptionElement = <HTMLInputElement> document.getElementById('saveOnlyFailures');
+    const onlyFailures = saveOptionElement!.checked;
     const predFunc = (key: string, value:LiveTestCaseResult) => value.status === 'fail' || !onlyFailures;
     return logger.asJSON(2, predFunc);
   }
