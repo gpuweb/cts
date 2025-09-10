@@ -446,13 +446,18 @@
     <div id="resultsVis"></div>
     <div id="progress" style="display: none;"><button type="button">stop</button><div class="progress-test-name"></div></div>
 
-    <p>
-      <input type="button" id="copyResultsJSON" value="Copy results as JSON">
-    </p>
-
-    <p>
-      <input type="button" id="saveResultsJSON" value="Save results to JSON file">
-    </p>
+    <fieldset>
+      <legend>Serialize results:</legend>
+      <p>
+        <label><input type="checkbox" id="saveOnlyFailures">Only result failures</label>
+      </p>
+      <p>
+         <input type="button" id="copyResultsJSON" value="Copy results as JSON">
+      </p>
+      <p>
+         <input type="button" id="saveResultsJSON" value="Save results to JSON file">
+      </p>
+    </fieldset>
 
     <script type="module" src="../out/common/runtime/standalone.js"></script>
   </body>
