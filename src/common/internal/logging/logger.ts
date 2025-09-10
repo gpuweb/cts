@@ -23,12 +23,14 @@ export class Logger {
     ];
   }
 
-  asJSON(space?: number, predFunc?: any): string {
+  asJSON(space?: number, predFunc?: (key: string, value: LiveTestCaseResult) => boolean): string {
     return JSON.stringify(
       {
         version,
         results: Array.from(
-          new Map([...this.results].filter(([key, value]) => predFunc(key, value)))
+          new Map(
+            [...this.results].filter(([key, value]) => (predFunc ? predFunc(key, value) : true))
+          )
         ),
       },
       undefined,
