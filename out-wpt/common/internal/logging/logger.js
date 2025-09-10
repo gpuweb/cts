@@ -23,7 +23,18 @@ export class Logger {
 
   }
 
-  asJSON(space) {
-    return JSON.stringify({ version, results: Array.from(this.results) }, undefined, space);
+  asJSON(space, predFunc) {
+    return JSON.stringify(
+      {
+        version,
+        results: Array.from(
+          new Map(
+            [...this.results].filter(([key, value]) => predFunc ? predFunc(key, value) : true)
+          )
+        )
+      },
+      undefined,
+      space
+    );
   }
 }
