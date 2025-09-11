@@ -181,6 +181,9 @@ Test the computation of requiredBytesInCopy by computing the minimum data size f
         return [p._offsetMultiplier * getBlockInfoForSizedTextureFormat(p.format).bytesPerBlock];
       })
   )
+  .beforeAllSubcases(t => {
+    t.skipIfTextureFormatNotSupported(t.params.format);
+  })
   .fn(t => {
     const {
       offset,
