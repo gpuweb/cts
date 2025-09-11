@@ -510,6 +510,10 @@ g.test('storage_texture,formats')
     const { format, access } = t.params;
     t.skipIfTextureFormatNotSupported(format);
 
+    if (format === 'bgra8unorm' && access !== 'write-only') {
+      t.skip(`bgra8unorm only supports write access mode`);
+    }
+
     const success = isTextureFormatUsableWithStorageAccessMode(t.device, format, access);
 
     t.expectValidationError(() => {
