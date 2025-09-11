@@ -796,6 +796,10 @@ generates a validation error at createComputePipeline(Async)
     const { format, isAsync, access, dimension } = t.params;
     t.skipIfTextureFormatNotSupported(format);
 
+    if (format === 'bgra8unorm' && access !== 'write') {
+      t.skip(`bgra8unorm only supports write access mode`);
+    }
+
     const code = `
       @group(0) @binding(0) var tex: texture_storage_${dimension}<${format}, ${access}>;
       @compute @workgroup_size(1) fn main() {
