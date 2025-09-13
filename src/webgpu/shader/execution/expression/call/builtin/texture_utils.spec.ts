@@ -107,7 +107,12 @@ g.test('readTextureToTexelViews')
       dimension: getTextureDimensionFromView(viewDimension),
       size,
       mipLevelCount: viewDimension === '1d' || sampleCount > 1 ? 1 : 3,
-      usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
+      usage:
+        sampleCount > 1
+          ? GPUTextureUsage.COPY_DST |
+            GPUTextureUsage.TEXTURE_BINDING |
+            GPUTextureUsage.RENDER_ATTACHMENT
+          : GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
       sampleCount,
       ...(t.isCompatibility && { textureBindingViewDimension: viewDimension }),
     };
@@ -150,6 +155,7 @@ g.test('readTextureToTexelViews')
               const maxFractionalDiff = 0;
               if (
                 !texelsApproximatelyEqual(
+                  t.device,
                   actualRGBA,
                   actualMipLevelTexelView.format,
                   expectedRGBA,

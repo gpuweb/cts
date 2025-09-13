@@ -216,7 +216,8 @@ export function reifyTextureDescriptor(
 export function reifyTextureViewDescriptor(
   textureDescriptor: Readonly<GPUTextureDescriptor>,
   view: Readonly<GPUTextureViewDescriptor>
-): Required<Omit<GPUTextureViewDescriptor, 'label'>> {
+  // MAINTENANCE_TODO: Remove | swizzle cast once texture-component-swizzle is added to @webgpu/types
+): Required<Omit<GPUTextureViewDescriptor, 'label' | 'swizzle'>> {
   const texture = reifyTextureDescriptor(textureDescriptor);
 
   // IDL defaulting
