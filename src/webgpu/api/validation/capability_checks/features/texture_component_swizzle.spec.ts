@@ -11,14 +11,35 @@ import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { GPUConst } from '../../../../constants.js';
 import { UniqueFeaturesOrLimitsGPUTest } from '../../../../gpu_test.js';
 
-import {
-  isIdentitySwizzle,
-  kSwizzleTests,
-  swizzlesAreTheSame,
-  swizzleSpecToGPUTextureComponentSwizzle,
-} from './texture_component_swizzle_utils.js';
+import { isIdentitySwizzle, kSwizzleTests } from './texture_component_swizzle_utils.js';
 
 export const g = makeTestGroup(UniqueFeaturesOrLimitsGPUTest);
+
+g.test('invalid_swizzle')
+  .desc(
+    `
+  Test that setting an invalid swizzle value on a texture view throws an exception.
+  `
+  )
+  .params(u =>
+    u.beginSubcases().combine('invalidSwizzle', ['rgbA', 'rgb', 'rgba01', '', 1234, null])
+  )
+  .beforeAllSubcases(t => {
+    // MAINTENANCE_TODO: Remove this cast once texture-component-swizzle is added to @webgpu/types
+    t.selectDeviceOrSkipTestCase('texture-component-swizzle' as GPUFeatureName);
+  })
+  .fn(t => {
+    const { invalidSwizzle } = t.params;
+    const texture = t.createTextureTracked({
+      format: 'rgba8unorm',
+      size: [1],
+      usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
+    });
+
+    t.shouldThrow('TypeError', () => {
+      texture.createView({ swizzle: invalidSwizzle as GPUTextureComponentSwizzle });
+    });
+  });
 
 g.test('only_identity_swizzle')
   .desc(
@@ -26,7 +47,7 @@ g.test('only_identity_swizzle')
   Test that if texture-component-swizzle is not enabled, having a non-default swizzle property generates a validation error.
   `
   )
-  .params(u => u.beginSubcases().combine('swizzleSpec', kSwizzleTests))
+  .params(u => u.beginSubcases().combine('swizzle', kSwizzleTests))
   .fn(t => {
     // MAINTENANCE_TODO: Remove this check if the spec is updated to say that all implementations must validate this.
     t.skipIf(
@@ -34,8 +55,7 @@ g.test('only_identity_swizzle')
       'skip on browsers that have not implemented texture-component-swizzle'
     );
 
-    const { swizzleSpec } = t.params;
-    const swizzle = swizzleSpecToGPUTextureComponentSwizzle(swizzleSpec);
+    const { swizzle } = t.params;
     const texture = t.createTextureTracked({
       format: 'rgba8unorm',
       size: [1],
@@ -65,7 +85,7 @@ g.test('no_render_nor_storage')
       ] as const)
       .combine('sampleCount', [1, 4] as const)
       .beginSubcases()
-      .combine('swizzleSpec', kSwizzleTests)
+      .combine('swizzle', kSwizzleTests)
       .unless(t => t.sampleCount > 1 && t.usage === GPUConst.TextureUsage.STORAGE_BINDING)
   )
   .beforeAllSubcases(t => {
@@ -73,8 +93,7 @@ g.test('no_render_nor_storage')
     t.selectDeviceOrSkipTestCase('texture-component-swizzle' as GPUFeatureName);
   })
   .fn(t => {
-    const { swizzleSpec, usage, sampleCount } = t.params;
-    const swizzle = swizzleSpecToGPUTextureComponentSwizzle(swizzleSpec);
+    const { swizzle, usage, sampleCount } = t.params;
     const texture = t.createTextureTracked({
       format: 'rgba8unorm',
       size: [1],
@@ -109,14 +128,12 @@ g.test('compatibility_mode')
   .params(u =>
     u
       .beginSubcases()
-      .combine('swizzleSpec', kSwizzleTests)
-      .combine('otherSwizzleSpec', kSwizzleTests)
+      .combine('swizzle', kSwizzleTests)
+      .combine('otherSwizzle', kSwizzleTests)
       .combine('pipelineType', ['render', 'compute'] as const)
   )
   .fn(t => {
-    const { swizzleSpec, otherSwizzleSpec, pipelineType } = t.params;
-    const swizzle = swizzleSpecToGPUTextureComponentSwizzle(swizzleSpec);
-    const otherSwizzle = swizzleSpecToGPUTextureComponentSwizzle(otherSwizzleSpec);
+    const { swizzle, otherSwizzle, pipelineType } = t.params;
 
     const module = t.device.createShaderModule({
       code: `
@@ -206,7 +223,7 @@ g.test('compatibility_mode')
       }
     }
 
-    const shouldError = t.isCompatibility && !swizzlesAreTheSame(swizzle, otherSwizzle);
+    const shouldError = t.isCompatibility && swizzle !== otherSwizzle;
 
     t.expectValidationError(() => {
       encoder.finish();
