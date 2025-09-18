@@ -35,19 +35,9 @@ import { PerTexelComponent, TexelComponent } from '../../../util/texture/texel_d
 import { TexelView } from '../../../util/texture/texel_view.js';
 import {
   kSwizzleTests,
-  swizzlesAreTheSame,
-  swizzleSpecToGPUTextureComponentSwizzle,
   SwizzleSpec,
   swizzleTexel,
 } from '../../validation/capability_checks/features/texture_component_swizzle_utils.js';
-
-/**
- * Hacky way to make {"R":"r","B":"one"} into {R:"r",B:"one"}
- */
-/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-function toObjectString(v: any) {
-  return JSON.stringify(v).replaceAll(/"(\w+)":/g, '$1:');
-}
 
 type TextureInput =
   | 'texture_2d<f32>'
@@ -72,11 +62,8 @@ function isMultisampledInput(input: TextureInput) {
   );
 }
 
-function getSwizzleSpecByOffsetFromSwizzleSpec(
-  swizzleSpec: SwizzleSpec,
-  offset: number
-): SwizzleSpec {
-  return kSwizzleTests[(kSwizzleTests.indexOf(swizzleSpec) + offset) % kSwizzleTests.length];
+function getSwizzleByOffsetFromSwizzle(swizzle: SwizzleSpec, offset: number): SwizzleSpec {
+  return kSwizzleTests[(kSwizzleTests.indexOf(swizzle) + offset) % kSwizzleTests.length];
 }
 
 const kTextureBuiltinFunctions = [
@@ -263,13 +250,13 @@ g.test('read_swizzle')
             yield 0;
           }
         })
-        .combine('swizzleSpec', kSwizzleTests)
+        .combine('swizzle', kSwizzleTests)
         .combine('otherSwizzleIndexOffset', [0, 1, 5]) // used to choose a different 2nd swizzle. 0 = same swizzle as 1st
   )
   .fn(async t => {
     // MAINTENANCE_TODO: Remove this cast once texture-component-swizzle is added to @webgpu/types
     t.skipIfDeviceDoesNotHaveFeature('texture-component-swizzle' as GPUFeatureName);
-    const { format, func, channel, compare, input, aspect, swizzleSpec, otherSwizzleIndexOffset } =
+    const { format, func, channel, compare, input, aspect, swizzle, otherSwizzleIndexOffset } =
       t.params;
     t.skipIfTextureFormatNotSupported(format);
     if (func === 'textureLoad') {
@@ -278,19 +265,13 @@ g.test('read_swizzle')
     if (isMultisampledInput(input)) {
       t.skipIfTextureFormatNotMultisampled(format);
     }
-    const otherSwizzleSpec = getSwizzleSpecByOffsetFromSwizzleSpec(
-      swizzleSpec,
-      otherSwizzleIndexOffset
-    );
-    t.debug(() => `swizzle: ${swizzleSpec}, otherSwizzle: ${otherSwizzleSpec}`);
-
-    const swizzle = swizzleSpecToGPUTextureComponentSwizzle(swizzleSpec);
-    const otherSwizzle = swizzleSpecToGPUTextureComponentSwizzle(otherSwizzleSpec);
+    const otherSwizzle = getSwizzleByOffsetFromSwizzle(swizzle, otherSwizzleIndexOffset);
+    t.debug(() => `swizzle: ${swizzle}, otherSwizzle: ${otherSwizzle}`);
 
     if (t.isCompatibility) {
       t.skipIf(
-        !swizzlesAreTheSame(swizzle, otherSwizzle),
-        `swizzles must be equivalent in compatibility mode: ${swizzleSpec} != ${otherSwizzleSpec}`
+        swizzle !== otherSwizzle,
+        `swizzles must be equivalent in compatibility mode: ${swizzle} != ${otherSwizzle}`
       );
       t.skipIf(
         !isBuiltinComparison(func) && input === 'texture_depth_2d',
@@ -334,7 +315,7 @@ g.test('read_swizzle')
     });
     t.debug(
       () => `samples:
-${sampledColors.map((c, i) => `${i % 2}, ${(i / 2) | 0}, ${toObjectString(c)}`).join('\n')}`
+${sampledColors.map((c, i) => `${i % 2}, ${(i / 2) | 0}, ${JSON.stringify(c)}`).join('\n')}`
     );
 
     const components = [TexelComponent.R, TexelComponent.G, TexelComponent.B, TexelComponent.A];
@@ -366,7 +347,7 @@ ${sampledColors.map((c, i) => `${i % 2}, ${(i / 2) | 0}, ${toObjectString(c)}`).
           : expRGBAColor;
       const expTexelView = TexelView.fromTexelsAsColors(expFormat, _coords => expColor);
       const textureView = texture.createView({
-        label: `sizzle texture view(${toObjectString(swizzle)})`,
+        label: `swizzle texture view(${swizzle})`,
         swizzle,
         aspect,
         usage: GPUTextureUsage.TEXTURE_BINDING,
@@ -376,26 +357,26 @@ ${sampledColors.map((c, i) => `${i % 2}, ${(i / 2) | 0}, ${toObjectString(c)}`).
       // RG  the order of gather.
       t.debug(
         () => `\
-  swizzleSpec: ${toObjectString(swizzle)}, channel: ${channel}, ${
+  swizzle: ${swizzle}, channel: ${channel}, ${
     compare === 'always' ? '' : `compare: ${depthRef} is ${compare} than Texel`
   }
   readColors:
 ${readColors
-  .map((c, i) => `${i % 2}, ${(i / 2) | 0}, ${toObjectString(c)} ${kGatherComponentOrder[i]}`)
+  .map((c, i) => `${i % 2}, ${(i / 2) | 0}, ${JSON.stringify(c)} ${kGatherComponentOrder[i]}`)
   .join('\n')}
   swizzledColors:
 ${swizzledColors
-  .map((c, i) => `${i % 2}, ${(i / 2) | 0}, ${toObjectString(c)} ${kGatherComponentOrder[i]}`)
+  .map((c, i) => `${i % 2}, ${(i / 2) | 0}, ${JSON.stringify(c)} ${kGatherComponentOrder[i]}`)
   .join('\n')}
   `
       );
-      return { swizzleSpec, swizzle, expColor, expFormat, expTexelView, textureView };
+      return { swizzle, expColor, expFormat, expTexelView, textureView };
     });
 
     t.debug(
       () => `expColors:
 ${testData
-  .map(({ expColor }, i) => `${i % 2}, ${(i / 2) | 0}, ${toObjectString(expColor)}`)
+  .map(({ expColor }, i) => `${i % 2}, ${(i / 2) | 0}, ${JSON.stringify(expColor)}`)
   .join('\n')}`
     );
 
@@ -591,7 +572,7 @@ ${testData
     pass.draw(1);
     pass.end();
 
-    if (t.isCompatibility && !swizzlesAreTheSame(testData[0].swizzle, testData[1].swizzle)) {
+    if (t.isCompatibility && testData[0].swizzle !== testData[1].swizzle) {
       // Swizzles can not be different in compatibility mode
       t.expectValidationError(() => {
         t.device.queue.submit([encoder.finish()]);
@@ -599,8 +580,8 @@ ${testData
     } else {
       t.device.queue.submit([encoder.finish()]);
 
-      testData.forEach(({ swizzleSpec, expTexelView }, i) => {
-        t.debug(() => `${i}: ${swizzleSpec}`);
+      testData.forEach(({ swizzle, expTexelView }, i) => {
+        t.debug(() => `${i}: ${swizzle}`);
 
         ttu.expectTexelViewComparisonIsOkInTexture(
           t,
