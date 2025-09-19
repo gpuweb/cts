@@ -39,6 +39,7 @@ import {
   textureViewDimensionAndFormatCompatibleForDevice,
   textureDimensionAndFormatCompatibleForDevice,
   isTextureFormatUsableWithStorageAccessMode,
+  isTextureFormatUsableWithCopyExternalImageToTexture,
 } from './format_info.js';
 import { checkElementsEqual, checkElementsBetween } from './util/check_contents.js';
 import { CommandBufferMaker, EncoderType } from './util/command_buffer_maker.js';
@@ -641,6 +642,13 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
     this.skipIf(
       !this.canCallCopyTextureToBufferWithTextureFormat(format),
       `can not use copyTextureToBuffer with ${format}`
+    );
+  }
+
+  skipIfTextureFormatPossiblyNotUsableWithCopyExternalImageToTexture(format: GPUTextureFormat) {
+    this.skipIf(
+      !isTextureFormatUsableWithCopyExternalImageToTexture(this.device, format),
+      `can not use copyExternalImageToTexture with ${format}`
     );
   }
 
