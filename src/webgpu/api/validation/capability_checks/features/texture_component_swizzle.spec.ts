@@ -22,7 +22,26 @@ g.test('invalid_swizzle')
   `
   )
   .params(u =>
-    u.beginSubcases().combine('invalidSwizzle', ['rgbA', 'rgb', 'rgba01', '', 1234, null])
+    u.beginSubcases().combine('invalidSwizzle', [
+      'rgbA', // swizzles are case-sensitive
+      'RGBA', // swizzles are case-sensitive
+      'rgb', // must have 4 components
+      'rgba01',
+      'ɲgba', // r with 0x200 added to each code point to make sure values are not truncated.
+      'ɲɧɢɡ', // rgba with 0x200 added to each code point to make sure values are not truncated.
+      '𝐫𝐠𝐛𝐚', // various unicode values that normalize to rgba
+      '𝑟𝑔𝑏𝑎',
+      '𝗋𝗀𝖻𝖺',
+      '𝓇ℊ𝒷𝒶',
+      'ⓡⓖⓑⓐ',
+      'ｒｇｂａ',
+      'ʳᵍᵇᵃ',
+      'rgba',
+      1234,
+      0x72676261, // big endian rgba
+      0x71726772, // little endian rgba
+      null,
+    ])
   )
   .beforeAllSubcases(t => {
     // MAINTENANCE_TODO: Remove this cast once texture-component-swizzle is added to @webgpu/types
