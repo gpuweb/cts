@@ -36,10 +36,13 @@ g.test('invalid_swizzle')
       'ⓡⓖⓑⓐ',
       'ｒｇｂａ',
       'ʳᵍᵇᵃ',
-      'rgba',
+      '',
+      'rgba\0',
+      'rgb\0',
+      '\0\0\0\0',
       1234,
       0x72676261, // big endian rgba
-      0x71726772, // little endian rgba
+      0x61626772, // little endian rgba
       null,
     ])
   )
