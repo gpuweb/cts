@@ -388,7 +388,7 @@ export const kPerStageBindingLimits: {
     /** Which `PerShaderStage` binding limit class. */
     readonly class: k;
     /** Maximum number of allowed bindings in that class. */
-    readonly maxLimits: { [key in ShaderStageKey]: (typeof kLimits)[number] };
+    readonly maxLimits: { [key in ShaderStageKey]: (typeof kPossibleLimits)[number] };
     // Add fields as needed
   };
 } =
@@ -412,7 +412,7 @@ export const kPerPipelineBindingLimits: {
     /**
      * The name of the limit for the maximum number of allowed bindings with `hasDynamicOffset: true` in that class.
      */
-    readonly maxDynamicLimit: (typeof kLimits)[number] | '';
+    readonly maxDynamicLimit: (typeof kPossibleLimits)[number] | '';
     // Add fields as needed
   };
 } =
@@ -740,6 +740,8 @@ const [kLimitInfoKeys, kLimitInfoDefaults, kLimitInfoData] =
   'maxDynamicStorageBuffersPerPipelineLayout': [           ,         4,               4,                          ],
   'maxSampledTexturesPerShaderStage':          [           ,        16,              16,                          ],
   'maxSamplersPerShaderStage':                 [           ,        16,              16,                          ],
+  'maxStorageBuffersInFragmentStage':          [           ,         8,               4,                          ],
+  'maxStorageBuffersInVertexStage':            [           ,         8,               0,                          ],
   'maxStorageBuffersPerShaderStage':           [           ,         8,               8,                          ],
   'maxStorageTexturesInFragmentStage':         [           ,         4,               4,                          ],
   'maxStorageTexturesInVertexStage':           [           ,         4,               0,                          ],
@@ -767,6 +769,14 @@ const [kLimitInfoKeys, kLimitInfoDefaults, kLimitInfoData] =
   'maxComputeWorkgroupSizeZ':                  [           ,        64,              64,                          ],
   'maxComputeWorkgroupsPerDimension':          [           ,     65535,           65535,                          ],
 } as const];
+
+// MAINTENANCE_TODO: Remove when the compat spec is merged.
+const kCompatOnlyLimits = [
+  'maxStorageTexturesInFragmentStage',
+  'maxStorageTexturesInVertexStage',
+  'maxStorageBuffersInFragmentStage',
+  'maxStorageBuffersInVertexStage',
+] as const;
 
 /**
  * Feature levels corresponding to core WebGPU and WebGPU
@@ -805,7 +815,14 @@ export const kLimitClasses = Object.fromEntries(
 );
 
 export function getDefaultLimits(featureLevel: FeatureLevel) {
-  return kLimitInfos[featureLevel];
+  return Object.fromEntries(
+    Object.entries(kLimitInfos[featureLevel]).filter(([k]) => {
+      // Filter out compat-only limits when in core mode
+      return featureLevel === 'core'
+        ? !kCompatOnlyLimits.includes(k as (typeof kCompatOnlyLimits)[number])
+        : true;
+    })
+  ) as typeof kLimitInfoCore;
 }
 
 /**
@@ -862,8 +879,8 @@ export function getBindingLimitForBindingType(
   return limits.length > 0 ? Math.min(...limits) : 0;
 }
 
-/** List of all entries of GPUSupportedLimits. */
-export const kLimits = keysOf(kLimitInfoCore);
+/** List of all possible entries of GPUSupportedLimits. */
+export const kPossibleLimits = keysOf(kLimitInfoCore);
 
 /**
  * The number of color attachments to test.
