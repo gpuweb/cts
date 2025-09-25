@@ -21,7 +21,7 @@ import {
   unreachable,
 } from '../common/util/util.js';
 
-import { kLimits, kQueryTypeInfo, WGSLLanguageFeature } from './capability_info.js';
+import { kPossibleLimits, kQueryTypeInfo, WGSLLanguageFeature } from './capability_info.js';
 import { InterpolationType, InterpolationSampling } from './constants.js';
 import {
   resolvePerAspectFormat,
@@ -352,7 +352,7 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
     return globalTestConfig.compatibility;
   }
 
-  makeLimitVariant(limit: (typeof kLimits)[number], variant: ValueTestVariant) {
+  makeLimitVariant(limit: (typeof kPossibleLimits)[number], variant: ValueTestVariant) {
     return makeValueTestVariant(this.device.limits[limit]!, variant);
   }
 
