@@ -740,6 +740,8 @@ const [kLimitInfoKeys, kLimitInfoDefaults, kLimitInfoData] =
   'maxDynamicStorageBuffersPerPipelineLayout': [, 4, 4],
   'maxSampledTexturesPerShaderStage': [, 16, 16],
   'maxSamplersPerShaderStage': [, 16, 16],
+  'maxStorageBuffersInFragmentStage': [, 8, 4],
+  'maxStorageBuffersInVertexStage': [, 8, 0],
   'maxStorageBuffersPerShaderStage': [, 8, 8],
   'maxStorageTexturesInFragmentStage': [, 4, 4],
   'maxStorageTexturesInVertexStage': [, 4, 0],
@@ -767,6 +769,14 @@ const [kLimitInfoKeys, kLimitInfoDefaults, kLimitInfoData] =
   'maxComputeWorkgroupSizeZ': [, 64, 64],
   'maxComputeWorkgroupsPerDimension': [, 65535, 65535]
 }];
+
+// MAINTENANCE_TODO: Remove when the compat spec is merged.
+const kCompatOnlyLimits = [
+'maxStorageTexturesInFragmentStage',
+'maxStorageTexturesInVertexStage',
+'maxStorageBuffersInFragmentStage',
+'maxStorageBuffersInVertexStage'];
+
 
 /**
  * Feature levels corresponding to core WebGPU and WebGPU
@@ -805,7 +815,14 @@ export const kLimitClasses = Object.fromEntries(
 );
 
 export function getDefaultLimits(featureLevel) {
-  return kLimitInfos[featureLevel];
+  return Object.fromEntries(
+    Object.entries(kLimitInfos[featureLevel]).filter(([k]) => {
+      // Filter out compat-only limits when in core mode
+      return featureLevel === 'core' ?
+      !kCompatOnlyLimits.includes(k) :
+      true;
+    })
+  );
 }
 
 /**
@@ -862,8 +879,8 @@ e)
   return limits.length > 0 ? Math.min(...limits) : 0;
 }
 
-/** List of all entries of GPUSupportedLimits. */
-export const kLimits = keysOf(kLimitInfoCore);
+/** List of all possible entries of GPUSupportedLimits. */
+export const kPossibleLimits = keysOf(kLimitInfoCore);
 
 /**
  * The number of color attachments to test.
