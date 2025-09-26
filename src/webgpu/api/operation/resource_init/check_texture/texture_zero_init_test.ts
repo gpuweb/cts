@@ -1,4 +1,8 @@
-import { TestCaseRecorder, TestParams } from '../../../../../common/framework/fixture.js';
+import {
+  SubcaseBatchState,
+  TestCaseRecorder,
+  TestParams,
+} from '../../../../../common/framework/fixture.js';
 import {
   kUnitCaseParamsBuilder,
   ParamTypeOf,
@@ -22,7 +26,7 @@ import {
   isTextureFormatColorRenderable,
   isTextureFormatPossiblyUsableAsColorRenderAttachment,
 } from '../../../../format_info.js';
-import { AllFeaturesMaxLimitsGPUTest, GPUTestSubcaseBatchState } from '../../../../gpu_test.js';
+import { AllFeaturesMaxLimitsGPUTest } from '../../../../gpu_test.js';
 import { virtualMipSize } from '../../../../util/texture/base.js';
 import { createTextureUploadBuffer } from '../../../../util/texture/layout.js';
 import { BeginEndRange, SubresourceRange } from '../../../../util/texture/subresource.js';
@@ -187,7 +191,7 @@ export class TextureZeroInitTest extends AllFeaturesMaxLimitsGPUTest {
   readonly stateToTexelComponents: { [k in InitializedState]: PerTexelComponent<number> };
 
   private p: TextureZeroParams;
-  constructor(sharedState: GPUTestSubcaseBatchState, rec: TestCaseRecorder, params: TestParams) {
+  constructor(sharedState: SubcaseBatchState, rec: TestCaseRecorder, params: TestParams) {
     super(sharedState, rec, params);
     this.p = params as TextureZeroParams;
 
