@@ -10,6 +10,7 @@ export class Logger {
 
   results = new Map();
 
+
   constructor({ overrideDebugMode } = {}) {
     this.overriddenDebugMode = overrideDebugMode;
   }
@@ -27,6 +28,7 @@ export class Logger {
     return JSON.stringify(
       {
         version,
+        defaultDevice: this.defaultDeviceDescription,
         results: Array.from(
           new Map(
             [...this.results].filter(([key, value]) => predFunc ? predFunc(key, value) : true)
