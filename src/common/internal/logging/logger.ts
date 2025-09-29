@@ -9,6 +9,7 @@ export type LogResults = Map<string, LiveTestCaseResult>;
 export class Logger {
   readonly overriddenDebugMode: boolean | undefined;
   readonly results: LogResults = new Map();
+  defaultDeviceDescription: string | undefined;
 
   constructor({ overrideDebugMode }: { overrideDebugMode?: boolean } = {}) {
     this.overriddenDebugMode = overrideDebugMode;
@@ -27,6 +28,7 @@ export class Logger {
     return JSON.stringify(
       {
         version,
+        defaultDevice: this.defaultDeviceDescription,
         results: Array.from(
           new Map(
             [...this.results].filter(([key, value]) => (predFunc ? predFunc(key, value) : true))
