@@ -11,7 +11,11 @@ import { LiveTestCaseResult } from '../internal/logging/result.js';
 import { parseQuery } from '../internal/query/parseQuery.js';
 import { TestQueryLevel } from '../internal/query/query.js';
 import { TestTreeNode, TestSubtree, TestTreeLeaf, TestTree } from '../internal/tree.js';
-import { setDefaultRequestAdapterOptions } from '../util/navigator_gpu.js';
+import {
+  getDefaultRequestAdapterOptions,
+  getGPU,
+  setDefaultRequestAdapterOptions,
+} from '../util/navigator_gpu.js';
 import { ErrorWithExtra, unreachable } from '../util/util.js';
 
 import {
@@ -651,6 +655,14 @@ void (async () => {
     });
   };
   addOptionsToPage(options, kStandaloneOptionsInfos);
+
+  let deviceDescription = '<unable to get WebGPU adapter>';
+  const adapter = await getGPU(null).requestAdapter(getDefaultRequestAdapterOptions());
+  if (adapter) {
+    deviceDescription = `${adapter.info.vendor} ${adapter.info.architecture} (${adapter.info.description})`;
+  }
+  $('#device')[0].textContent = 'Default WebGPU adapter: ' + deviceDescription;
+  logger.defaultDeviceDescription = deviceDescription;
 
   if (qs.length !== 1) {
     showInfo('currently, there must be exactly one ?q=');
