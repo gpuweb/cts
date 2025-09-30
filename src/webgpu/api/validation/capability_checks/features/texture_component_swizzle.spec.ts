@@ -36,9 +36,21 @@ g.test('invalid_swizzle')
       'ⓡⓖⓑⓐ',
       'ｒｇｂａ',
       'ʳᵍᵇᵃ',
+      '000',
+      '00000',
+      '111',
+      '11111',
+      0,
+      1,
+      1111, // passes because toString is '1111'
       1234,
+      1111.1,
       0x72676261, // big endian rgba
       0x61626772, // little endian rgba
+      0x30303030, // 0000
+      0x31313131, // 1111
+      true,
+      false,
       null,
     ])
   )
@@ -54,7 +66,8 @@ g.test('invalid_swizzle')
       usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
     });
 
-    t.shouldThrow('TypeError', () => {
+    const failure = typeof invalidSwizzle !== 'number' || invalidSwizzle !== 1111;
+    t.shouldThrow(failure ? 'TypeError' : false, () => {
       texture.createView({ swizzle: invalidSwizzle as GPUTextureComponentSwizzle });
     });
   });
