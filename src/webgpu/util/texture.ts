@@ -25,6 +25,13 @@ const kLoadValueFromStorageInfo: Partial<{
     unpackWGSL: string;
   };
 }> = {
+  r8snorm: {
+    storageType: 'u32',
+    texelType: 'vec4f',
+    unpackWGSL: `
+    return vec4f(unpack4x8snorm(getSrc(byteOffset / 4))[byteOffset % 4], 0.123, 0.123, 0.123)
+  `,
+  },
   r8unorm: {
     storageType: 'u32',
     texelType: 'vec4f',
@@ -44,6 +51,14 @@ const kLoadValueFromStorageInfo: Partial<{
     texelType: 'vec4i',
     unpackWGSL: `
     return vec4i(unpack4xI8(getSrc(byteOffset / 4))[byteOffset % 4], 123, 123, 123)
+  `,
+  },
+  rg8snorm: {
+    storageType: 'u32',
+    texelType: 'vec4f',
+    unpackWGSL: `
+    let v = unpack4x8snorm(getSrc(byteOffset / 4));
+    return vec4f(select(v.rg, v.ba, byteOffset % 4 >= 2), 0.123, 0.123)
   `,
   },
   rg8unorm: {
@@ -69,6 +84,11 @@ const kLoadValueFromStorageInfo: Partial<{
     let v = unpack4xI8(getSrc(byteOffset / 4));
     return vec4i(select(v.rg, v.ba, byteOffset % 4 >= 2), 123, 123)
   `,
+  },
+  rgba8snorm: {
+    storageType: 'u32',
+    texelType: 'vec4f',
+    unpackWGSL: 'return unpack4x8snorm(getSrc(byteOffset / 4))',
   },
   rgba8unorm: {
     storageType: 'u32',
