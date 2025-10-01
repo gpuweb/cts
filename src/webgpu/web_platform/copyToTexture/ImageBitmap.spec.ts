@@ -13,7 +13,8 @@ TODO: Test zero-sized copies from all sources (just make sure params cover it) (
 import { makeTestGroup } from '../../../common/framework/test_group.js';
 import {
   getBaseFormatForRegularTextureFormat,
-  kPossibleValidTextureFormatsForCopyE2T,
+  isTextureFormatPossiblyUsableWithCopyExternalImageToTexture,
+  kRegularTextureFormats,
 } from '../../format_info.js';
 import { TextureUploadingUtils, kCopySubrectInfo } from '../../util/copy_to_texture.js';
 
@@ -55,7 +56,8 @@ g.test('from_ImageData')
       .combine('orientation', ['none', 'flipY'] as const)
       .combine('colorSpaceConversion', ['none', 'default'] as const)
       .combine('srcFlipYInCopy', [true, false])
-      .combine('dstFormat', kPossibleValidTextureFormatsForCopyE2T)
+      .combine('dstFormat', kRegularTextureFormats)
+      .filter(t => isTextureFormatPossiblyUsableWithCopyExternalImageToTexture(t.dstFormat))
       .combine('dstPremultiplied', [true, false])
       .beginSubcases()
       .combine('width', [1, 2, 4, 15, 255, 256])
@@ -177,7 +179,8 @@ g.test('from_canvas')
       .combine('orientation', ['none', 'flipY'] as const)
       .combine('colorSpaceConversion', ['none', 'default'] as const)
       .combine('srcFlipYInCopy', [true, false])
-      .combine('dstFormat', kPossibleValidTextureFormatsForCopyE2T)
+      .combine('dstFormat', kRegularTextureFormats)
+      .filter(t => isTextureFormatPossiblyUsableWithCopyExternalImageToTexture(t.dstFormat))
       .combine('dstPremultiplied', [true, false])
       .beginSubcases()
       .combine('width', [1, 2, 4, 15, 255, 256])
