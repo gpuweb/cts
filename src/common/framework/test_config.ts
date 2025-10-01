@@ -13,10 +13,16 @@ export type TestConfig = {
   maxSubcasesInFlight: number;
 
   /**
-   * Every `subcasesBetweenAttemptingGC` subcases, run `attemptGarbageCollection()`.
+   * After this many subcases run on the page, run `attemptGarbageCollection()`.
    * Setting to `Infinity` disables this. Setting to 1 attempts GC every time (slow!).
    */
   subcasesBetweenAttemptingGC: number;
+
+  /**
+   * After this many cases use a device, destroy and replace it to free GPU resources.
+   * Setting to `Infinity` disables this. Setting to 1 gets a new device every time (slow!).
+   */
+  casesBetweenReplacingDevice: number;
 
   testHeartbeatCallback: () => void;
 
@@ -67,6 +73,7 @@ export const globalTestConfig: TestConfig = {
   enableDebugLogs: false,
   maxSubcasesInFlight: 100,
   subcasesBetweenAttemptingGC: 5000,
+  casesBetweenReplacingDevice: Infinity,
   testHeartbeatCallback: () => {},
   noRaceWithRejectOnTimeout: false,
   unrollConstEvalLoops: false,
