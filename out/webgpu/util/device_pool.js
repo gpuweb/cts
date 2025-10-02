@@ -1,6 +1,7 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
-**/import { SkipTestCase } from '../../common/framework/fixture.js';import { attemptGarbageCollection } from '../../common/util/collect_garbage.js';import { getGPU, getDefaultRequestAdapterOptions } from '../../common/util/navigator_gpu.js';
+**/import { SkipTestCase } from '../../common/framework/fixture.js';import { globalTestConfig } from '../../common/framework/test_config.js';import { attemptGarbageCollection } from '../../common/util/collect_garbage.js';
+import { getGPU, getDefaultRequestAdapterOptions } from '../../common/util/navigator_gpu.js';
 import {
   assert,
   raceWithRejectOnTimeout,
@@ -97,6 +98,7 @@ export class DevicePool {
     assert(holder instanceof DeviceHolder, 'DeviceProvider should always be a DeviceHolder');
 
     assert(holder.state === 'acquired', 'trying to release a device while already released');
+    let deviceNeedsReplacement = false;
     try {
       await holder.endTestScope();
 
@@ -111,15 +113,17 @@ export class DevicePool {
       // Any error that isn't explicitly TestFailedButDeviceReusable forces a new device to be
       // created for the next test.
       if (!(ex instanceof TestFailedButDeviceReusable)) {
-        this.holders.delete(holder);
-        // Wait for destruction (or actual device loss if any) to complete.
-        await holder.device.lost;
+        deviceNeedsReplacement = true;
 
-        // Try to clean up, in case there are stray GPU resources in need of collection.
+        // Try to clean up, in case there are stray resources in need of collection that won't be
+        // cleaned up by destroying the device - either outside the device (related to
+        // interop/video/canvas/ImageBitmap/etc.) or not destroyed along with the device for some
+        // other reason.
         if (ex instanceof TestOOMedShouldAttemptGC) {
           await attemptGarbageCollection();
         }
       }
+
       // In the try block, we may throw an error if the device is lost in order to force device
       // reinitialization, however, if the device lost was expected we want to suppress the error
       // The device lost is expected when `holder.expectedLostReason` is equal to
@@ -132,6 +136,15 @@ export class DevicePool {
         throw ex;
       }
     } finally {
+      const deviceDueForReplacement =
+      holder.testCaseUseCounter >= globalTestConfig.casesBetweenReplacingDevice;
+      if (deviceNeedsReplacement || deviceDueForReplacement) {
+        this.holders.delete(holder);
+        if (deviceDueForReplacement) holder.device.destroy();
+        // Wait for destruction (or actual device loss if any) to complete.
+        await holder.device.lost;
+      }
+
       // Mark the holder as free so the device can be reused (if it's still in this.devices).
       holder.state = 'free';
     }
@@ -340,6 +353,8 @@ class DeviceHolder {
 
   /** Set if the device is expected to be lost. */
 
+  /** Number of test cases the device has been used for. */
+  testCaseUseCounter = 0;
 
   // Gets a device and creates a DeviceHolder.
   // If the device is lost, DeviceHolder.lost gets set.
@@ -374,13 +389,13 @@ class DeviceHolder {
   }
 
   get device() {
-    assert(this._device !== undefined);
     return this._device;
   }
 
   /** Push error scopes that surround test execution. */
   beginTestScope() {
     assert(this.state === 'acquired');
+    this.testCaseUseCounter++;
     this.device.pushErrorScope('validation');
     this.device.pushErrorScope('internal');
     this.device.pushErrorScope('out-of-memory');

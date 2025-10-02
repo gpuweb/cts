@@ -59,6 +59,12 @@ globalTestConfig.unrollConstEvalLoops = options.unrollConstEvalLoops;
 globalTestConfig.compatibility = compatibility;
 globalTestConfig.enforceDefaultLimits = options.enforceDefaultLimits;
 globalTestConfig.blockAllFeatures = options.blockAllFeatures;
+if (options.subcasesBetweenAttemptingGC) {
+  globalTestConfig.subcasesBetweenAttemptingGC = Number(options.subcasesBetweenAttemptingGC);
+}
+if (options.casesBetweenReplacingDevice) {
+  globalTestConfig.casesBetweenReplacingDevice = Number(options.casesBetweenReplacingDevice);
+}
 globalTestConfig.logToWebSocket = options.logToWebSocket;
 
 const logger = new Logger();

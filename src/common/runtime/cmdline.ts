@@ -113,6 +113,10 @@ for (let i = 0; i < sys.args.length; ++i) {
       globalTestConfig.enforceDefaultLimits = true;
     } else if (a === '--block-all-features') {
       globalTestConfig.blockAllFeatures = true;
+    } else if (a === '--subcases-between-attempting-gc') {
+      globalTestConfig.subcasesBetweenAttemptingGC = Number(sys.args[++i]);
+    } else if (a === '--cases-between-replacing-device') {
+      globalTestConfig.casesBetweenReplacingDevice = Number(sys.args[++i]);
     } else if (a === '--log-to-websocket') {
       globalTestConfig.logToWebSocket = true;
     } else {
