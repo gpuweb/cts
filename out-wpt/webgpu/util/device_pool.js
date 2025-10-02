@@ -102,13 +102,19 @@ export class DevicePool {
     try {
       await holder.endTestScope();
 
-      // (Hopefully if the device was lost, it has been reported by the time endErrorScopes()
-      // has finished (or timed out). If not, it could cause a finite number of extra test
-      // failures following this one (but should recover eventually).)
-      assert(
-        holder.lostInfo === undefined,
-        `Device was unexpectedly lost. Reason: ${holder.lostInfo?.reason}, Message: ${holder.lostInfo?.message}`
-      );
+      if (holder.expectedLostReason) {
+        deviceNeedsReplacement = true;
+        assert(holder.lostInfo !== undefined, 'Device expected to be lost, but was not lost');
+        assert(
+          holder.lostInfo.reason === holder.expectedLostReason,
+          `Expected device loss reason "${holder.expectedLostReason}", got "${holder.lostInfo?.reason}"`
+        );
+      } else {
+        // Hopefully if the device was lost, it has been reported by the time endErrorScopes()
+        // has finished (or timed out). If not, it could cause a finite number of extra test
+        // failures following this test. (It should recover after one test in most cases.)
+        assert(holder.lostInfo === undefined, 'Device lost unexpectedly during test');
+      }
     } catch (ex) {
       // Any error that isn't explicitly TestFailedButDeviceReusable forces a new device to be
       // created for the next test.
@@ -123,25 +129,12 @@ export class DevicePool {
           await attemptGarbageCollection();
         }
       }
-
-      // In the try block, we may throw an error if the device is lost in order to force device
-      // reinitialization, however, if the device lost was expected we want to suppress the error
-      // The device lost is expected when `holder.expectedLostReason` is equal to
-      // `holder.lostInfo.reason`.
-      const expectedDeviceLost =
-      holder.expectedLostReason !== undefined &&
-      holder.lostInfo !== undefined &&
-      holder.expectedLostReason === holder.lostInfo.reason;
-      if (!expectedDeviceLost) {
-        throw ex;
-      }
     } finally {
       const deviceDueForReplacement =
       holder.testCaseUseCounter >= globalTestConfig.casesBetweenReplacingDevice;
       if (deviceNeedsReplacement || deviceDueForReplacement) {
         this.holders.delete(holder);
-        if (deviceDueForReplacement) holder.device.destroy();
-        // Wait for destruction (or actual device loss if any) to complete.
+        holder.device.destroy();
         await holder.device.lost;
       }
 
@@ -429,30 +422,28 @@ class DeviceHolder {
     let gpuInternalError;
     let gpuOutOfMemoryError;
 
-    // Submit to the queue to attempt to force a GPU flush.
-    this.device.queue.submit([]);
+    // Wait for queue to be idle just in case there are any implementation bugs where errors are not
+    // reported promptly. (This won't catch everything, e.g. deferred pipeline creations, but is
+    // still slightly more likely to catch things.)
+    await this.device.queue.onSubmittedWorkDone();
 
     try {
-      // May reject if the device was lost.
+      // If the device is lost, all of these should return null.
       [gpuOutOfMemoryError, gpuInternalError, gpuValidationError] = await Promise.all([
       this.device.popErrorScope(),
       this.device.popErrorScope(),
       this.device.popErrorScope()]
       );
     } catch (ex) {
-      assert(this.lostInfo !== undefined, 'popErrorScope failed; did the test body steal it?');
-      throw ex;
+      unreachable('popErrorScope failed. Did the test body pop too many scopes?');
     }
 
-    // Attempt to wait for the queue to be idle.
-    if (this.device.queue.onSubmittedWorkDone) {
-      await this.device.queue.onSubmittedWorkDone();
+    if (!this.expectedLostReason) {
+      await assertReject('OperationError', this.device.popErrorScope(), {
+        allowMissingStack: true,
+        message: 'There was an extra error scope on the stack after a test'
+      });
     }
-
-    await assertReject('OperationError', this.device.popErrorScope(), {
-      allowMissingStack: true,
-      message: 'There was an extra error scope on the stack after a test'
-    });
 
     if (gpuOutOfMemoryError !== null) {
       assert(gpuOutOfMemoryError instanceof GPUOutOfMemoryError);
