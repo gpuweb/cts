@@ -1,9 +1,9 @@
 export const description = `Test override execution`;
 
 import { makeTestGroup } from '../../../common/framework/test_group.js';
+import { keysOf } from '../../../common/util/data_tables.js';
 import { AllFeaturesMaxLimitsGPUTest } from '../../gpu_test.js';
 import { checkElementsEqual } from '../../util/check_contents.js';
-import { keysOf } from '../../../common/util/data_tables.js';
 
 export const g = makeTestGroup(AllFeaturesMaxLimitsGPUTest);
 
@@ -16,14 +16,12 @@ const kOverrideCases = {
   },
   logical_both_override: {
     code: `x > 2 || x == 2`,
-  }
+  },
 };
 
 g.test('logical')
   .desc(`Test replacing an override in the LHS of a logical statement`)
-  .params(u =>
-    u.combine('case', keysOf(kOverrideCases))
-  )
+  .params(u => u.combine('case', keysOf(kOverrideCases)))
   .fn(async t => {
     const expr = kOverrideCases[t.params.case].code;
     const code = `
