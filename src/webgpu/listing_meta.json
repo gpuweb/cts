@@ -1900,8 +1900,6 @@
   "webgpu:shader,execution,memory_model,weak:read:*": { "subcaseMS": 185.400 },
   "webgpu:shader,execution,memory_model,weak:store:*": { "subcaseMS": 184.500 },
   "webgpu:shader,execution,memory_model,weak:store_buffer:*": { "subcaseMS": 185.850 },
-  "webgpu:shader,execution,override:logical:*": { "subcaseMS": 87.335 },
-  "webgpu:shader,execution,override:logical_lhs:*": { "subcaseMS": 66.057 },
   "webgpu:shader,execution,padding:array_of_matCx3:*": { "subcaseMS": 8.650 },
   "webgpu:shader,execution,padding:array_of_struct:*": { "subcaseMS": 5.801 },
   "webgpu:shader,execution,padding:array_of_vec3:*": { "subcaseMS": 10.500 },
