@@ -220,7 +220,7 @@ const kInitCases = {
     code: `override x = 2;
       override y = x > 2 || x == 2;`,
     valid: true,
-  }
+  },
 };
 
 g.test('initializer')
