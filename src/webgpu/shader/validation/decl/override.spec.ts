@@ -206,6 +206,21 @@ const kInitCases = {
     override y : i32;`,
     valid: true,
   },
+  logical_lhs_override: {
+    code: `override x = 2;
+      override y = x == 2 && 1 < 2;`,
+    valid: true,
+  },
+  logical_rhs_override: {
+    code: `override x = 2;
+      override y = 1 < 2 || x == 2;`,
+    valid: true,
+  },
+  logical_both_override: {
+    code: `override x = 2;
+      override y = x > 2 || x == 2;`,
+    valid: true,
+  },
 };
 
 g.test('initializer')
