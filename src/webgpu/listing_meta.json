@@ -2002,6 +2002,7 @@
   "webgpu:shader,validation,decl,let:initializer:*": { "subcaseMS": 0.706 },
   "webgpu:shader,validation,decl,let:module_scope:*": { "subcaseMS": 0.619 },
   "webgpu:shader,validation,decl,let:type:*": { "subcaseMS": 122.199 },
+  "webgpu:shader,validation,decl,override:array_size:*": { "subcaseMS": 44.868 },
   "webgpu:shader,validation,decl,override:function_scope:*": { "subcaseMS": 1.003 },
   "webgpu:shader,validation,decl,override:id:*": { "subcaseMS": 69.432 },
   "webgpu:shader,validation,decl,override:initializer:*": { "subcaseMS": 4.810 },
