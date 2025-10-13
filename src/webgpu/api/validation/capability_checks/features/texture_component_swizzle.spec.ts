@@ -8,7 +8,6 @@ Test that:
 `;
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
-import { GPUConst } from '../../../../constants.js';
 import { UniqueFeaturesOrLimitsGPUTest } from '../../../../gpu_test.js';
 
 import { isIdentitySwizzle, kSwizzleTests } from './texture_component_swizzle_utils.js';
@@ -98,52 +97,164 @@ g.test('only_identity_swizzle')
     }, shouldError);
   });
 
-g.test('no_render_nor_storage')
+g.test('no_render_no_resolve_no_storage')
   .desc(
     `
-  Test that setting the swizzle on the texture view with RENDER_ATTACHMENT or STORAGE_BINDING usage works
-  if the swizzle is the identity but generates a validation error otherwise.
+  Test that setting a non-identity swizzle gets an error if used as a render attachment,
+  a resolve target, or a storage binding.
   `
   )
   .params(u =>
     u
-      .combine('usage', [
-        GPUConst.TextureUsage.COPY_SRC,
-        GPUConst.TextureUsage.COPY_DST,
-        GPUConst.TextureUsage.TEXTURE_BINDING,
-        GPUConst.TextureUsage.RENDER_ATTACHMENT,
-        GPUConst.TextureUsage.STORAGE_BINDING,
+      .combine('useCase', [
+        'texture-binding',
+        'color-attachment',
+        'depth-attachment',
+        'stencil-attachment',
+        'resolve-target',
+        'storage-binding',
       ] as const)
-      .combine('sampleCount', [1, 4] as const)
       .beginSubcases()
       .combine('swizzle', kSwizzleTests)
-      .unless(t => t.sampleCount > 1 && t.usage === GPUConst.TextureUsage.STORAGE_BINDING)
   )
   .beforeAllSubcases(t => {
     // MAINTENANCE_TODO: Remove this cast once texture-component-swizzle is added to @webgpu/types
     t.selectDeviceOrSkipTestCase('texture-component-swizzle' as GPUFeatureName);
   })
   .fn(t => {
-    const { swizzle, usage, sampleCount } = t.params;
+    const { swizzle, useCase } = t.params;
     const texture = t.createTextureTracked({
-      format: 'rgba8unorm',
+      format:
+        useCase === 'depth-attachment'
+          ? 'depth16unorm'
+          : useCase === 'stencil-attachment'
+          ? 'stencil8'
+          : 'rgba8unorm',
       size: [1],
       usage:
         GPUTextureUsage.COPY_SRC |
         GPUTextureUsage.COPY_DST |
         GPUTextureUsage.TEXTURE_BINDING |
         GPUTextureUsage.RENDER_ATTACHMENT |
-        (sampleCount === 1 ? GPUTextureUsage.STORAGE_BINDING : 0),
-      sampleCount,
+        (useCase === 'storage-binding' ? GPUTextureUsage.STORAGE_BINDING : 0),
     });
-    const badUsage =
-      (usage &
-        (GPUConst.TextureUsage.RENDER_ATTACHMENT | GPUConst.TextureUsage.STORAGE_BINDING)) !==
-      0;
-    const shouldError = badUsage && !isIdentitySwizzle(swizzle);
-    t.expectValidationError(() => {
-      texture.createView({ swizzle, usage });
-    }, shouldError);
+    const view = texture.createView({ swizzle });
+    const shouldError = useCase !== 'texture-binding' && !isIdentitySwizzle(swizzle);
+    switch (useCase) {
+      case 'texture-binding': {
+        const bindGroupLayout = t.device.createBindGroupLayout({
+          entries: [
+            {
+              binding: 0,
+              visibility: GPUShaderStage.FRAGMENT,
+              texture: {},
+            },
+          ],
+        });
+        t.expectValidationError(() => {
+          t.device.createBindGroup({
+            layout: bindGroupLayout,
+            entries: [{ binding: 0, resource: view }],
+          });
+        }, shouldError);
+        break;
+      }
+      case 'color-attachment': {
+        t.expectValidationError(() => {
+          const encoder = t.device.createCommandEncoder();
+          const pass = encoder.beginRenderPass({
+            colorAttachments: [
+              {
+                view,
+                loadOp: 'clear',
+                storeOp: 'store',
+              },
+            ],
+          });
+          pass.end();
+          encoder.finish();
+        }, shouldError);
+        break;
+      }
+      case 'depth-attachment': {
+        t.expectValidationError(() => {
+          const encoder = t.device.createCommandEncoder();
+          const pass = encoder.beginRenderPass({
+            colorAttachments: [],
+            depthStencilAttachment: {
+              view,
+              depthClearValue: 1,
+              depthLoadOp: 'clear',
+              depthStoreOp: 'store',
+            },
+          });
+          pass.end();
+          encoder.finish();
+        }, shouldError);
+        break;
+      }
+      case 'stencil-attachment': {
+        t.expectValidationError(() => {
+          const encoder = t.device.createCommandEncoder();
+          const pass = encoder.beginRenderPass({
+            colorAttachments: [],
+            depthStencilAttachment: {
+              view,
+              stencilClearValue: 0,
+              stencilLoadOp: 'clear',
+              stencilStoreOp: 'store',
+            },
+          });
+          pass.end();
+          encoder.finish();
+        }, shouldError);
+        break;
+      }
+      case 'resolve-target': {
+        t.expectValidationError(() => {
+          const encoder = t.device.createCommandEncoder();
+          const pass = encoder.beginRenderPass({
+            colorAttachments: [
+              {
+                view: t.createTextureTracked({
+                  format: 'rgba8unorm',
+                  size: [1],
+                  usage: GPUTextureUsage.RENDER_ATTACHMENT,
+                  sampleCount: 4,
+                }),
+                resolveTarget: view,
+                loadOp: 'clear',
+                storeOp: 'store',
+              },
+            ],
+          });
+          pass.end();
+          encoder.finish();
+        }, shouldError);
+        break;
+      }
+      case 'storage-binding': {
+        const bindGroupLayout = t.device.createBindGroupLayout({
+          entries: [
+            {
+              binding: 0,
+              visibility: GPUShaderStage.COMPUTE,
+              storageTexture: {
+                access: 'read-only',
+                format: 'rgba8unorm',
+              },
+            },
+          ],
+        });
+        t.expectValidationError(() => {
+          t.device.createBindGroup({
+            layout: bindGroupLayout,
+            entries: [{ binding: 0, resource: view }],
+          });
+        }, shouldError);
+        break;
+      }
+    }
   });
 
 g.test('compatibility_mode')
