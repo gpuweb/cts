@@ -216,6 +216,7 @@ desc)
 export function reifyTextureViewDescriptor(
 textureDescriptor,
 view)
+
 {
   const texture = reifyTextureDescriptor(textureDescriptor);
 
