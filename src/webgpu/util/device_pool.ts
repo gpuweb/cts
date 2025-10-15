@@ -130,19 +130,7 @@ export class DevicePool {
         }
       }
 
-      // In the try block, we may throw an error if the device is lost in order to force device
-      // reinitialization, however, if the device lost was expected we want to suppress the error
-      // The device lost is expected when `holder.expectedLostReason` is equal to
-      // `holder.lostInfo.reason`.
-      const expectedDeviceLost =
-        holder.expectedLostReason !== undefined &&
-        holder.lostInfo !== undefined &&
-        holder.expectedLostReason === holder.lostInfo.reason;
-      if (!expectedDeviceLost) {
-        // Throws unexpected device lost, as well as unexpected validation/out-of-memory/internal errors
-        // from popErrorScope.
-        throw ex;
-      }
+      throw ex;
     } finally {
       const deviceDueForReplacement =
         holder.testCaseUseCounter >= globalTestConfig.casesBetweenReplacingDevice;
