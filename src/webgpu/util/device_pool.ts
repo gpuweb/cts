@@ -129,6 +129,8 @@ export class DevicePool {
           await attemptGarbageCollection();
         }
       }
+
+      throw ex;
     } finally {
       const deviceDueForReplacement =
         holder.testCaseUseCounter >= globalTestConfig.casesBetweenReplacingDevice;
