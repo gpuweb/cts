@@ -5,12 +5,6 @@ declare global {
 
   // Note this is a four-character string that only includes `"r"`, `"g"`, `"b"`, `"a"`, `"0"`, or `"1"`.
   type GPUTextureComponentSwizzle = string;
-
-  // MAINTENANCE_TODO: Remove these types once texture-component-swizzle is added to @webgpu/types
-  /* prettier-ignore */
-  interface GPUTextureViewDescriptor {
-    swizzle?: GPUTextureComponentSwizzle; // "rgba" by default
-  }
 }
 
 // Note: There are 4 settings with 6 options which is 1296 combinations. So we don't check them all. Just a few below.

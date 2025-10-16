@@ -924,6 +924,8 @@ export const kFeatureNameInfo: {
   'core-features-and-limits':           {},
   'texture-formats-tier1':              {},
   'texture-formats-tier2':              {},
+  'primitive-index':                    {},
+  'texture-component-swizzle':          {},
 };
 /** List of all GPUFeatureName values. */
 export const kFeatureNames = keysOf(kFeatureNameInfo);

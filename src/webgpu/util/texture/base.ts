@@ -216,8 +216,7 @@ export function reifyTextureDescriptor(
 export function reifyTextureViewDescriptor(
   textureDescriptor: Readonly<GPUTextureDescriptor>,
   view: Readonly<GPUTextureViewDescriptor>
-  // MAINTENANCE_TODO: Remove | swizzle cast once texture-component-swizzle is added to @webgpu/types
-): Required<Omit<GPUTextureViewDescriptor, 'label' | 'swizzle'>> {
+): Required<Omit<GPUTextureViewDescriptor, 'label'>> {
   const texture = reifyTextureDescriptor(textureDescriptor);
 
   // IDL defaulting
@@ -225,6 +224,7 @@ export function reifyTextureViewDescriptor(
   const baseMipLevel = view.baseMipLevel ?? 0;
   const baseArrayLayer = view.baseArrayLayer ?? 0;
   const aspect = view.aspect ?? 'all';
+  const swizzle = view.swizzle ?? 'rgba';
 
   // Spec defaulting
 
@@ -253,6 +253,7 @@ export function reifyTextureViewDescriptor(
     mipLevelCount,
     baseArrayLayer,
     arrayLayerCount,
+    swizzle,
   };
 }
 
