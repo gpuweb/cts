@@ -7,12 +7,6 @@
 
 
 
-
-
-
-
-
-
 // Note: There are 4 settings with 6 options which is 1296 combinations. So we don't check them all. Just a few below.
 export const kSwizzleTests = [
 'rgba',

@@ -254,7 +254,6 @@ params(
   combine('otherSwizzleIndexOffset', [0, 1, 5]) // used to choose a different 2nd swizzle. 0 = same swizzle as 1st
 ).
 fn(async (t) => {
-  // MAINTENANCE_TODO: Remove this cast once texture-component-swizzle is added to @webgpu/types
   t.skipIfDeviceDoesNotHaveFeature('texture-component-swizzle');
   const { format, func, channel, compare, input, aspect, swizzle, otherSwizzleIndexOffset } =
   t.params;

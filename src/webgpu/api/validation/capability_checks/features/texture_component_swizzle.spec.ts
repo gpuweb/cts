@@ -54,8 +54,7 @@ g.test('invalid_swizzle')
     ])
   )
   .beforeAllSubcases(t => {
-    // MAINTENANCE_TODO: Remove this cast once texture-component-swizzle is added to @webgpu/types
-    t.selectDeviceOrSkipTestCase('texture-component-swizzle' as GPUFeatureName);
+    t.selectDeviceOrSkipTestCase('texture-component-swizzle');
   })
   .fn(t => {
     const { invalidSwizzle } = t.params;
@@ -79,12 +78,6 @@ g.test('only_identity_swizzle')
   )
   .params(u => u.beginSubcases().combine('swizzle', kSwizzleTests))
   .fn(t => {
-    // MAINTENANCE_TODO: Remove this check if the spec is updated to say that all implementations must validate this.
-    t.skipIf(
-      !t.adapter.features.has('texture-component-swizzle'),
-      'skip on browsers that have not implemented texture-component-swizzle'
-    );
-
     const { swizzle } = t.params;
     const texture = t.createTextureTracked({
       format: 'rgba8unorm',
@@ -118,8 +111,7 @@ g.test('no_render_no_resolve_no_storage')
       .combine('swizzle', kSwizzleTests)
   )
   .beforeAllSubcases(t => {
-    // MAINTENANCE_TODO: Remove this cast once texture-component-swizzle is added to @webgpu/types
-    t.selectDeviceOrSkipTestCase('texture-component-swizzle' as GPUFeatureName);
+    t.selectDeviceOrSkipTestCase('texture-component-swizzle');
   })
   .fn(t => {
     const { swizzle, useCase } = t.params;
@@ -264,8 +256,7 @@ g.test('compatibility_mode')
   `
   )
   .beforeAllSubcases(t => {
-    // MAINTENANCE_TODO: Remove this cast once texture-component-swizzle is added to @webgpu/types
-    t.selectDeviceOrSkipTestCase('texture-component-swizzle' as GPUFeatureName);
+    t.selectDeviceOrSkipTestCase('texture-component-swizzle');
   })
   .params(u =>
     u

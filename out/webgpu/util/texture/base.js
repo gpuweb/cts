@@ -216,7 +216,6 @@ desc)
 export function reifyTextureViewDescriptor(
 textureDescriptor,
 view)
-
 {
   const texture = reifyTextureDescriptor(textureDescriptor);
 
@@ -225,6 +224,7 @@ view)
   const baseMipLevel = view.baseMipLevel ?? 0;
   const baseArrayLayer = view.baseArrayLayer ?? 0;
   const aspect = view.aspect ?? 'all';
+  const swizzle = view.swizzle ?? 'rgba';
 
   // Spec defaulting
 
@@ -252,7 +252,8 @@ view)
     baseMipLevel,
     mipLevelCount,
     baseArrayLayer,
-    arrayLayerCount
+    arrayLayerCount,
+    swizzle
   };
 }
 
