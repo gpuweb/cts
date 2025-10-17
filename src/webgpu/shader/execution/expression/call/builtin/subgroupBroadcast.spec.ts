@@ -196,7 +196,6 @@ g.test('workgroup_uniform_load')
     const wgsl = `
 enable subgroups;
 
-diagnostic(off, subgroup_branching);
 
 var<workgroup> wgmem : u32;
 
