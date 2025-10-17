@@ -192,7 +192,6 @@ g.test('compute,split')
 enable subgroups;
 
 diagnostic(off, subgroup_uniformity);
-diagnostic(off, subgroup_branching);
 
 @group(0) @binding(0)
 var<storage, read_write> size : u32;
@@ -228,7 +227,6 @@ g.test('predicate')
     const wgsl = `
 enable subgroups;
 
-diagnostic(off, subgroup_branching);
 
 @group(0) @binding(0)
 var<storage, read_write> size : u32;
@@ -317,7 +315,6 @@ g.test('predicate_and_control_flow')
     const wgsl = `
 enable subgroups;
 
-diagnostic(off, subgroup_branching);
 diagnostic(off, subgroup_uniformity);
 
 @group(0) @binding(0)
