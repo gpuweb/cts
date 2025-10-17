@@ -7,7 +7,8 @@ import { skipTestCase } from '../../../common/util/util.js';
 import { kCanvasAlphaModes } from '../../capability_info.js';
 import {
   getBaseFormatForRegularTextureFormat,
-  kPossibleValidTextureFormatsForCopyE2T } from
+  isTextureFormatPossiblyUsableWithCopyExternalImageToTexture,
+  kRegularTextureFormats } from
 
 '../../format_info.js';
 import { TextureUploadingUtils } from '../../util/copy_to_texture.js';
@@ -486,7 +487,8 @@ desc(
 params((u) =>
 u.
 combine('canvasType', kAllCanvasTypes).
-combine('dstColorFormat', kPossibleValidTextureFormatsForCopyE2T).
+combine('dstColorFormat', kRegularTextureFormats).
+filter((t) => isTextureFormatPossiblyUsableWithCopyExternalImageToTexture(t.dstColorFormat)).
 combine('dstAlphaMode', kCanvasAlphaModes).
 combine('srcDoFlipYDuringCopy', [true, false]).
 beginSubcases().
@@ -548,7 +550,8 @@ params((u) =>
 u.
 combine('canvasType', kAllCanvasTypes).
 combine('contextName', ['webgl', 'webgl2']).
-combine('dstColorFormat', kPossibleValidTextureFormatsForCopyE2T).
+combine('dstColorFormat', kRegularTextureFormats).
+filter((t) => isTextureFormatPossiblyUsableWithCopyExternalImageToTexture(t.dstColorFormat)).
 combine('srcPremultiplied', [true, false]).
 combine('dstAlphaMode', kCanvasAlphaModes).
 combine('srcDoFlipYDuringCopy', [true, false]).
@@ -623,7 +626,8 @@ params((u) =>
 u.
 combine('canvasType', kAllCanvasTypes).
 combine('srcAndDstInSameGPUDevice', [true, false]).
-combine('dstColorFormat', kPossibleValidTextureFormatsForCopyE2T)
+combine('dstColorFormat', kRegularTextureFormats).
+filter((t) => isTextureFormatPossiblyUsableWithCopyExternalImageToTexture(t.dstColorFormat))
 // .combine('srcAlphaMode', kCanvasAlphaModes)
 .combine('srcAlphaMode', ['premultiplied']).
 combine('dstAlphaMode', kCanvasAlphaModes).
@@ -699,7 +703,8 @@ desc(
 params((u) =>
 u.
 combine('canvasType', kAllCanvasTypes).
-combine('dstColorFormat', kPossibleValidTextureFormatsForCopyE2T).
+combine('dstColorFormat', kRegularTextureFormats).
+filter((t) => isTextureFormatPossiblyUsableWithCopyExternalImageToTexture(t.dstColorFormat)).
 combine('dstAlphaMode', kCanvasAlphaModes).
 combine('srcDoFlipYDuringCopy', [true, false]).
 beginSubcases().
@@ -774,7 +779,8 @@ params((u) =>
 u.
 combine('srcColorSpace', ['srgb', 'display-p3']).
 combine('dstColorSpace', ['srgb', 'display-p3']).
-combine('dstColorFormat', kPossibleValidTextureFormatsForCopyE2T).
+combine('dstColorFormat', kRegularTextureFormats).
+filter((t) => isTextureFormatPossiblyUsableWithCopyExternalImageToTexture(t.dstColorFormat)).
 combine('dstPremultiplied', [true, false]).
 combine('srcDoFlipYDuringCopy', [true, false]).
 beginSubcases().
