@@ -185,7 +185,17 @@ function generateOp(op: string): string {
   }
 }
 
-const kStatementKinds = ['if', 'for', 'while', 'switch', 'break-if'] as const;
+const kStatementKinds = [
+  'if',
+  'for',
+  'while',
+  'switch',
+  'break-if',
+  'loop-return-only-inside',
+  'loop-return-only-continuing',
+  'loop-return-only-break-if-then-after',
+  'loop-return-only-after',
+] as const;
 type kStatementType = (typeof kStatementKinds)[number];
 
 function generateConditionalStatement(
@@ -234,6 +244,48 @@ function generateConditionalStatement(
           break if ${generateCondition(condition)};
         }
       }
+      `;
+    }
+    case 'loop-return-only-inside': {
+      // The loop body only returns. The uniformity of the operation
+      // is immaterial. Check analysis inside the loop body, after
+      // the unconditional return.
+      return `loop {
+        return;
+        if ${generateCondition(condition)} { ${generateOp(op)} }
+      }
+      `;
+    }
+    case 'loop-return-only-continuing': {
+      // The loop body only returns. The uniformity of the operation
+      // is immaterial. Check analysis in the continuing block.
+      return `loop {
+        return;
+        continuing {
+          if ${generateCondition(condition)} { ${generateOp(op)} }
+        }
+      }
+      `;
+    }
+    case 'loop-return-only-break-if-then-after': {
+      // The loop body only returns. The uniformity of the operation
+      // is immaterial.
+      return `loop {
+        return;
+        continuing {
+          break if true;
+        }
+      }
+      if ${generateCondition(condition)} { ${generateOp(op)} }
+      `;
+    }
+    case 'loop-return-only-after': {
+      // The loop body only returns. The uniformity of the operation
+      // is immaterial. Check analysis after the loop.
+      return `loop {
+        return;
+      }
+      if ${generateCondition(condition)} { ${generateOp(op)} }
       `;
     }
   }
@@ -297,7 +349,12 @@ g.test('basics')
 
     code += `\n}\n`;
 
-    t.expectCompileResult(t.params.expectation || t.params.op.startsWith('control_case'), code);
+    t.expectCompileResult(
+      t.params.expectation ||
+        t.params.op.startsWith('control_case') ||
+        t.params.statement.startsWith('loop-return-only'),
+      code
+    );
   });
 
 const kSubgroupOps = [
@@ -384,7 +441,12 @@ g.test('basics,subgroups')
 
     code += `\n}\n`;
 
-    t.expectCompileResult(t.params.expectation || t.params.op.startsWith('control_case'), code);
+    t.expectCompileResult(
+      t.params.expectation ||
+        t.params.op.startsWith('control_case') ||
+        t.params.statement.startsWith('loop-return-only'),
+      code
+    );
   });
 
 const kFragmentBuiltinValues = [
