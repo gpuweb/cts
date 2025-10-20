@@ -54,7 +54,7 @@ runRefTest(async (t) => {
 
   const target = document.getElementById('target');
   t.queue.copyElementImageToTexture(
-    ctx, target, { texture: ctx.getCurrentTexture() });
+    target, { texture: ctx.getCurrentTexture() });
 
   await new Promise(requestAnimationFrame);
   await new Promise(requestAnimationFrame);
