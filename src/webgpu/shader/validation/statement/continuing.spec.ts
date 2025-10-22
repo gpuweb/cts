@@ -163,6 +163,10 @@ const kTests = {
     src: 'loop { if a == 4 { break; } continuing { for(;a < 4;) { return vec4f(2); } } }',
     pass: false,
   },
+  continuing_semicolon_break_if: {
+    src: 'loop { continuing { ; break if (true); } }',
+    pass: true,
+  },
 };
 
 g.test('placement')
