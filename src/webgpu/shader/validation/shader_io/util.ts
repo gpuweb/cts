@@ -27,6 +27,9 @@ export function generateShader({
   if (attribute.includes('subgroup')) {
     code += 'enable subgroups;\n';
   }
+  if (attribute.includes('subgroup_id') || attribute.includes('num_subgroups')) {
+    code += 'requires subgroup_id;\n';
+  }
   if (attribute.includes('clip_distances')) {
     code += 'enable clip_distances;\n';
   }

@@ -39,6 +39,8 @@ export const kBuiltins = [
   { name: 'clip_distances', stage: 'vertex', io: 'out', type: 'array<f32,7>' },
   { name: 'clip_distances', stage: 'vertex', io: 'out', type: 'array<f32,8>' },
   { name: 'primitive_id', stage: 'fragment', io: 'in', type: 'u32' },
+  { name: 'subgroup_id', stage: 'compute', io: 'in', type: 'u32' },
+  { name: 'num_subgroups', stage: 'compute', io: 'in', type: 'u32' },
 ] as const;
 
 // List of types to test against.
@@ -109,6 +111,9 @@ g.test('stage_inout')
         !t.params.use_struct,
       'missing @builtin(position) in the vertex output when the vertex output is not a struct'
     );
+    if (t.params.name === 'subgroup_id' || t.params.name === 'num_subgroups') {
+      t.skipIfLanguageFeatureNotSupported('subgroup_id');
+    }
   })
   .fn(t => {
     const code = generateShader({
@@ -154,6 +159,9 @@ g.test('type')
         !t.params.use_struct,
       'missing @builtin(position) in the vertex output'
     );
+    if (t.params.name === 'subgroup_id' || t.params.name === 'num_subgroups') {
+      t.skipIfLanguageFeatureNotSupported('subgroup_id');
+    }
   })
   .fn(t => {
     let code = '';
@@ -324,10 +332,15 @@ g.test('reuse_builtin_name')
       .combine('use', ['alias', 'struct', 'function', 'module-var', 'function-var'])
       .combine('enable_extension', [true, false])
       .unless(
-        t => t.enable_extension && !(t.name.includes('subgroup') || t.name === 'clip_distances')
+        t =>
+          t.enable_extension &&
+          !(t.name.includes('subgroup') || t.name === 'clip_distances' || t.name === 'primitive_id')
       )
   )
   .beforeAllSubcases(t => {
+    if (t.params.name === 'subgroup_id' || t.params.name === 'num_subgroups') {
+      t.skipIfLanguageFeatureNotSupported('subgroup_id');
+    }
     if (!t.params.enable_extension) {
       return;
     }
@@ -335,12 +348,15 @@ g.test('reuse_builtin_name')
   .fn(t => {
     let code = '';
     if (t.params.enable_extension) {
-      if (t.params.name.includes('subgroups')) {
-        code += 'enable subgroup;\n';
+      if (t.params.name.includes('subgroup')) {
+        code += 'enable subgroups;\n';
       } else if (t.params.name === 'clip_distances') {
         code += 'enable clip_distances;\n';
       } else if (t.params.name === 'primitive_id') {
         code += 'enable chromium_experimental_primitive_id;\n';
+      }
+      if (t.params.name.includes('subgroup_id') || t.params.name.includes('num_subgroups')) {
+        code += 'requires subgroup_id;\n';
       }
     }
     if (t.params.use === 'alias') {

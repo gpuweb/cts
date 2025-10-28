@@ -1913,6 +1913,8 @@
   "webgpu:shader,execution,robust_access:linear_memory:*": { "subcaseMS": 5.293 },
   "webgpu:shader,execution,robust_access_vertex:vertex_buffer_access:*": { "subcaseMS": 6.487 },
   "webgpu:shader,execution,shader_io,compute_builtins:inputs:*": { "subcaseMS": 19.342 },
+  "webgpu:shader,execution,shader_io,compute_builtins:num_subgroups:*": { "subcaseMS": 139.178 },
+  "webgpu:shader,execution,shader_io,compute_builtins:subgroup_id:*": { "subcaseMS": 430.747 },
   "webgpu:shader,execution,shader_io,compute_builtins:subgroup_invocation_id:*": { "subcaseMS": 217.700 },
   "webgpu:shader,execution,shader_io,compute_builtins:subgroup_size:*": { "subcaseMS": 644.206 },
   "webgpu:shader,execution,shader_io,fragment_builtins:inputs,front_facing:*": { "subcaseMS": 1.001 },
