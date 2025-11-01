@@ -15,23 +15,19 @@ export function generateShader({
   stage,
   io,
   use_struct,
+  enable,
 }: {
   attribute: string;
   type: string;
   stage: string;
   io: string;
   use_struct: boolean;
+  enable?: string;
 }) {
   let code = '';
 
-  if (attribute.includes('subgroup')) {
-    code += 'enable subgroups;\n';
-  }
-  if (attribute.includes('clip_distances')) {
-    code += 'enable clip_distances;\n';
-  }
-  if (attribute.includes('primitive_id')) {
-    code += 'enable chromium_experimental_primitive_id;\n';
+  if (enable) {
+    code += `enable ${enable};\n`;
   }
 
   if (use_struct) {
