@@ -509,12 +509,27 @@ const kComputeBuiltinValues = [
   builtin: `subgroup_size`,
   type: `u32`,
   uniform: true
+},
+{
+  builtin: `subgroup_id`,
+  type: `u32`,
+  uniform: false
+},
+{
+  builtin: `num_subgroups`,
+  type: `u32`,
+  uniform: true
 }];
 
 
 g.test('compute_builtin_values').
 desc(`Test uniformity of compute built-in values`).
 params((u) => u.combineWithParams(kComputeBuiltinValues).beginSubcases()).
+beforeAllSubcases((t) => {
+  if (t.params.builtin === `subgroup_id` || t.params.builtin === `num_subgroups`) {
+    t.skipIfLanguageFeatureNotSupported('subgroup_id');
+  }
+}).
 fn((t) => {
   let cond = ``;
   switch (t.params.type) {

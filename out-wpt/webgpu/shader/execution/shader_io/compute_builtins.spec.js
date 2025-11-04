@@ -753,3 +753,367 @@ fn main(@builtin(subgroup_size) size : u32,
     )
   );
 });
+
+const skipValue = 0xffff0000;
+
+/**
+ * Checks subgroup_id consistency
+ *
+ * @param outputData An array of vec4u
+ *                   * 0: comparison of subgroup_id among subgroup
+ *                   * 1: comparison of subgroup_id < num_subgroups
+ *                   * 2: subgroup_id (for first member) or skipValue
+ *                   * 3: unused
+ * @param wgSize Invocations in the workgroup
+ * @param numWGs Number of workgroups
+ */
+function checkSubgroupIdConsistency(
+outputData,
+wgSize,
+numWGs)
+{
+  for (let wg = 0; wg < numWGs; wg++) {
+    // Max wgSize is 256 and min subgroup size is 4
+    const seen = new Array(Math.ceil(wgSize / 4));
+    seen.fill(0);
+    for (let inv = 0; inv < wgSize; inv++) {
+      const gid = wg * wgSize + inv;
+      const outputIdx = gid * 4;
+      const compare = outputData[outputIdx];
+      const in_range = outputData[outputIdx + 1];
+      const sid = outputData[outputIdx + 2];
+
+      if (compare !== 1) {
+        return new Error(
+          `Invocation ${gid}: not all invocations in subgroup have same subgroup_id: ${compare}`
+        );
+      }
+      if (in_range !== 1) {
+        return new Error(
+          `Invocation ${gid}: subgroup_id out of range of num_subgroups: ${in_range}`
+        );
+      }
+
+      if (sid !== skipValue) {
+        if (seen[sid] !== 0) {
+          return new Error(`Invocation ${gid}: subgroup_id reused among different subgroups`);
+        }
+        seen[sid] = 1;
+      }
+    }
+
+    const firstZero = seen.findIndex((ele) => ele === 0);
+    const lastOne = seen.findLastIndex((ele) => ele === 1);
+    if (firstZero !== -1 && firstZero < lastOne) {
+      return new Error(`Subgroup id values are not densely packed: missing ${firstZero}`);
+    }
+  }
+
+  return undefined;
+}
+
+g.test('subgroup_id').
+desc(
+  'Tests subgroup_id values. No mapping between local_invocation_index and subgroup_id can be relied upon.'
+).
+params((u) =>
+u.
+combine('sizes', kWGSizes).
+beginSubcases().
+combine('numWGs', [1, 2]).
+combine('lid', [
+[0, 1, 2],
+[0, 2, 1],
+[1, 0, 2],
+[1, 2, 0],
+[2, 0, 1],
+[2, 1, 0]]
+)
+).
+fn(async (t) => {
+  t.skipIfDeviceDoesNotHaveFeature('subgroups');
+  t.skipIfLanguageFeatureNotSupported('subgroup_id');
+  const wgx = t.params.sizes[0];
+  const wgy = t.params.sizes[1];
+  const wgz = t.params.sizes[2];
+  const lid = t.params.lid;
+  const wgThreads = wgx * wgy * wgz;
+
+  // Compatibility mode has lower workgroup limits.
+  const {
+    maxComputeInvocationsPerWorkgroup,
+    maxComputeWorkgroupSizeX,
+    maxComputeWorkgroupSizeY,
+    maxComputeWorkgroupSizeZ
+  } = t.device.limits;
+  t.skipIf(
+    maxComputeInvocationsPerWorkgroup < wgThreads ||
+    maxComputeWorkgroupSizeX < wgx ||
+    maxComputeWorkgroupSizeY < wgy ||
+    maxComputeWorkgroupSizeZ < wgz,
+    'Workgroup size too large'
+  );
+
+  const wgsl = `
+enable subgroups;
+requires subgroup_id;
+
+const stride = ${wgThreads};
+
+${genLID(lid[0], lid[1], lid[2], t.params.sizes)}
+
+@group(0) @binding(0)
+var<storage, read_write> output : array<vec4u>;
+
+@compute @workgroup_size(${wgx}, ${wgy}, ${wgz})
+fn main(@builtin(local_invocation_id) local_id : vec3u,
+        @builtin(workgroup_id) wgid : vec3u,
+        @builtin(subgroup_id) sid : u32,
+        @builtin(num_subgroups) num_subgroups : u32) {
+  // Remapped local id.
+  let lid = getLID(local_id);
+
+  let gid = lid + stride * wgid.x;
+
+  // Is the subgroup_id equivalent for all members?
+  let broadcast_id = subgroupBroadcastFirst(sid);
+  let compare = subgroupAll(broadcast_id == sid);
+
+  // Is subgroup_id in the range of num_subgroups?
+  let in_range = sid < num_subgroups;
+
+  var out_sid = ${skipValue}u;
+  if subgroupElect() {
+    out_sid = sid;
+  }
+
+  output[gid] = vec4u(
+    select(0u, 1u, compare),
+    select(0u, 1u, in_range),
+    out_sid,
+    0);
+}
+`;
+
+  const numInvocations = wgThreads * t.params.numWGs;
+  const numUints = 4 * numInvocations;
+  const placeholderValue = 999;
+  const outputBuffer = t.makeBufferWithContents(
+    new Uint32Array([...iterRange(numUints, (x) => placeholderValue)]),
+    GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
+  );
+  t.trackForCleanup(outputBuffer);
+
+  const pipeline = t.device.createComputePipeline({
+    layout: 'auto',
+    compute: {
+      module: t.device.createShaderModule({
+        code: wgsl
+      }),
+      entryPoint: 'main'
+    }
+  });
+  const bg = t.device.createBindGroup({
+    layout: pipeline.getBindGroupLayout(0),
+    entries: [
+    {
+      binding: 0,
+      resource: {
+        buffer: outputBuffer
+      }
+    }]
+
+  });
+
+  const encoder = t.device.createCommandEncoder();
+  const pass = encoder.beginComputePass();
+  pass.setPipeline(pipeline);
+  pass.setBindGroup(0, bg);
+  pass.dispatchWorkgroups(t.params.numWGs, 1, 1);
+  pass.end();
+  t.queue.submit([encoder.finish()]);
+
+  const outputReadback = await t.readGPUBufferRangeTyped(outputBuffer, {
+    srcByteOffset: 0,
+    type: Uint32Array,
+    typedLength: numUints,
+    method: 'copy'
+  });
+  const outputData = outputReadback.data;
+
+  t.expectOK(checkSubgroupIdConsistency(outputData, wgThreads, t.params.numWGs));
+});
+
+/**
+ * Checks num_subgroups consistency
+ *
+ * @param countData An array with numWGs elements containing the counted number of subgroups
+ * @param outputData An array numWGs * wgSize elements containing the value of num_subgroups
+ * @param wgSize Number of invocations in the workgroup
+ * @param numWGs Number of workgroups
+ */
+function checkNumSubgroupsConsistency(
+countData,
+outputData,
+wgSize,
+numWGs)
+{
+  for (let wg = 0; wg < numWGs; wg++) {
+    const count = countData[wg];
+    const slice = outputData.slice(wg * wgSize, (wg + 1) * wgSize);
+    const index = slice.findIndex((ele) => ele !== count);
+    if (index !== -1) {
+      return new Error(`Workgroup ${wg}: inconsistent num_subgroups:
+- expected: ${count}
+-      got: ${slice[index]}`);
+    }
+  }
+
+  return undefined;
+}
+
+g.test('num_subgroups').
+desc('Tests num_subgroups values.').
+params((u) =>
+u.
+combine('sizes', kWGSizes).
+beginSubcases().
+combine('numWGs', [1, 2]).
+combine('lid', [
+[0, 1, 2],
+[0, 2, 1],
+[1, 0, 2],
+[1, 2, 0],
+[2, 0, 1],
+[2, 1, 0]]
+)
+).
+fn(async (t) => {
+  t.skipIfDeviceDoesNotHaveFeature('subgroups');
+  t.skipIfLanguageFeatureNotSupported('subgroup_id');
+  const wgx = t.params.sizes[0];
+  const wgy = t.params.sizes[1];
+  const wgz = t.params.sizes[2];
+  const lid = t.params.lid;
+  const wgThreads = wgx * wgy * wgz;
+
+  // Compatibility mode has lower workgroup limits.
+  const {
+    maxComputeInvocationsPerWorkgroup,
+    maxComputeWorkgroupSizeX,
+    maxComputeWorkgroupSizeY,
+    maxComputeWorkgroupSizeZ
+  } = t.device.limits;
+  t.skipIf(
+    maxComputeInvocationsPerWorkgroup < wgThreads ||
+    maxComputeWorkgroupSizeX < wgx ||
+    maxComputeWorkgroupSizeY < wgy ||
+    maxComputeWorkgroupSizeZ < wgz,
+    'Workgroup size too large'
+  );
+
+  const wgsl = `
+enable subgroups;
+requires subgroup_id;
+
+const stride = ${wgThreads};
+
+${genLID(lid[0], lid[1], lid[2], t.params.sizes)}
+
+@group(0) @binding(0)
+var<storage, read_write> numSubgroups : array<u32>;
+
+@group(0) @binding(1)
+var<storage, read_write> output : array<u32>;
+
+var<workgroup> count : atomic<u32>;
+
+@compute @workgroup_size(${wgx}, ${wgy}, ${wgz})
+fn main(@builtin(local_invocation_id) local_id : vec3u,
+        @builtin(workgroup_id) wgid : vec3u,
+        @builtin(subgroup_id) sid : u32,
+        @builtin(num_subgroups) num_subgroups : u32) {
+  // Remapped local id.
+  let lid = getLID(local_id);
+
+  let gid = lid + stride * wgid.x;
+
+  if subgroupElect() {
+    atomicAdd(&count, 1);
+  }
+
+  workgroupBarrier();
+
+  if lid == 0 {
+    numSubgroups[wgid.x] = atomicLoad(&count);
+  }
+
+  output[gid] = num_subgroups;
+}
+`;
+
+  const numInvocations = wgThreads * t.params.numWGs;
+  const placeholderValue = 999;
+  const countBuffer = t.makeBufferWithContents(
+    new Uint32Array([...iterRange(t.params.numWGs, (x) => placeholderValue)]),
+    GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
+  );
+  t.trackForCleanup(countBuffer);
+  const outputBuffer = t.makeBufferWithContents(
+    new Uint32Array([...iterRange(numInvocations * 4, (x) => placeholderValue)]),
+    GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
+  );
+  t.trackForCleanup(outputBuffer);
+
+  const pipeline = t.device.createComputePipeline({
+    layout: 'auto',
+    compute: {
+      module: t.device.createShaderModule({
+        code: wgsl
+      }),
+      entryPoint: 'main'
+    }
+  });
+  const bg = t.device.createBindGroup({
+    layout: pipeline.getBindGroupLayout(0),
+    entries: [
+    {
+      binding: 0,
+      resource: {
+        buffer: countBuffer
+      }
+    },
+    {
+      binding: 1,
+      resource: {
+        buffer: outputBuffer
+      }
+    }]
+
+  });
+
+  const encoder = t.device.createCommandEncoder();
+  const pass = encoder.beginComputePass();
+  pass.setPipeline(pipeline);
+  pass.setBindGroup(0, bg);
+  pass.dispatchWorkgroups(t.params.numWGs, 1, 1);
+  pass.end();
+  t.queue.submit([encoder.finish()]);
+
+  const countReadback = await t.readGPUBufferRangeTyped(countBuffer, {
+    srcByteOffset: 0,
+    type: Uint32Array,
+    typedLength: t.params.numWGs,
+    method: 'copy'
+  });
+  const countData = countReadback.data;
+  const outputReadback = await t.readGPUBufferRangeTyped(outputBuffer, {
+    srcByteOffset: 0,
+    type: Uint32Array,
+    typedLength: numInvocations,
+    method: 'copy'
+  });
+  const outputData = outputReadback.data;
+
+  t.expectOK(checkNumSubgroupsConsistency(countData, outputData, wgThreads, t.params.numWGs));
+});
