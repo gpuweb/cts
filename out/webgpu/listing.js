@@ -188,6 +188,15 @@ export const listing = [
       "operation",
       "command_buffer",
       "render",
+      "render_bundle"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "operation",
+      "command_buffer",
+      "render",
       "state_tracking"
     ]
   },
