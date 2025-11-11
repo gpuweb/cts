@@ -1,5 +1,3 @@
-import { PerTexelComponent } from '../../../../util/texture/texel_data.js';
-
 declare global {
   type GPUComponentSwizzle = 'r' | 'g' | 'b' | 'a' | '0' | '1';
 
@@ -31,46 +29,7 @@ export const kSwizzleTests = [
 ] as const;
 export type SwizzleSpec = (typeof kSwizzleTests)[number];
 
-function swizzleComponentToTexelComponent(
-  src: PerTexelComponent<number>,
-  component: GPUComponentSwizzle
-): number {
-  switch (component) {
-    case '0':
-      return 0;
-    case '1':
-      return 1;
-    case 'r':
-      return src.R!;
-    case 'g':
-      return src.G!;
-    case 'b':
-      return src.B!;
-    case 'a':
-      return src.A!;
-  }
-}
-
-export function swizzleTexel(
-  src: PerTexelComponent<number>,
-  swizzle: GPUTextureComponentSwizzle
-): PerTexelComponent<number> {
-  return {
-    R: swizzle[0]
-      ? swizzleComponentToTexelComponent(src, swizzle[0] as GPUComponentSwizzle)
-      : src.R,
-    G: swizzle[1]
-      ? swizzleComponentToTexelComponent(src, swizzle[1] as GPUComponentSwizzle)
-      : src.G,
-    B: swizzle[2]
-      ? swizzleComponentToTexelComponent(src, swizzle[2] as GPUComponentSwizzle)
-      : src.B,
-    A: swizzle[3]
-      ? swizzleComponentToTexelComponent(src, swizzle[3] as GPUComponentSwizzle)
-      : src.A,
-  };
-}
-
-export function isIdentitySwizzle(swizzle: GPUTextureComponentSwizzle): boolean {
-  return swizzle === 'rgba';
+// Returns true if swizzle is identity
+export function isIdentitySwizzle(swizzle: GPUTextureComponentSwizzle | undefined): boolean {
+  return swizzle === undefined || swizzle === 'rgba';
 }
