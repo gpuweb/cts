@@ -178,6 +178,15 @@ export const listing = [
       "api",
       "operation",
       "command_buffer",
+      "queries",
+      "timestampQuery"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "operation",
+      "command_buffer",
       "render",
       "dynamic_state"
     ]
