@@ -1204,7 +1204,7 @@ export class LimitTestsImpl extends GPUTestBase {
 
     this.skipIf(
       numRequired > device.limits.maxStorageBuffersPerShaderStage,
-      `maxStorageBuffersPerShaderStage = ${device.limits.maxSamplersPerShaderStage} which is less than ${numRequired}`
+      `maxStorageBuffersPerShaderStage = ${device.limits.maxStorageBuffersPerShaderStage} which is less than ${numRequired}`
     );
 
     this.skipIf(
