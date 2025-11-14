@@ -5,6 +5,7 @@ Tests for texture_utils.ts
 `;import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { assert } from '../../../../../../common/util/util.js';
 import {
+  getTextureFormatType,
   isTextureFormatPossiblyMultisampled,
   kDepthStencilFormats } from
 '../../../../../format_info.js';
@@ -124,6 +125,16 @@ fn(async (t) => {
 
   assert(actualTexelViews.length === expectedTexelViews.length, 'num mip levels match');
 
+  const type = getTextureFormatType(srcFormat, 'all');
+  const textureType =
+  type === 'depth' ?
+  'texture_depth_2d' :
+  type === 'uint' ?
+  'texture_2d<u32>' :
+  type === 'sint' ?
+  'texture_2d<i32>' :
+  'texture_2d<f32>';
+
   const errors = [];
   for (let mipLevel = 0; mipLevel < actualTexelViews.length; ++mipLevel) {
     const actualMipLevelTexelView = actualTexelViews[mipLevel];
@@ -156,6 +167,8 @@ fn(async (t) => {
             if (
             !texelsApproximatelyEqual(
               t.device,
+              'textureLoad',
+              textureType,
               actualRGBA,
               actualMipLevelTexelView.format,
               expectedRGBA,

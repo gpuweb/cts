@@ -27,16 +27,16 @@ import {
   getTextureFormatTypeInfo,
   isBuiltinComparison,
   isBuiltinGather,
-  isFillable } from
+  isFillable,
+  swizzleTexel } from
 
 '../../../shader/execution/expression/call/builtin/texture_utils.js';
 import * as ttu from '../../../texture_test_utils.js';
 import { TexelComponent } from '../../../util/texture/texel_data.js';
 import { TexelView } from '../../../util/texture/texel_view.js';
 import {
-  kSwizzleTests,
+  kSwizzleTests } from
 
-  swizzleTexel } from
 '../../validation/capability_checks/features/texture_component_swizzle_utils.js';
 
 
