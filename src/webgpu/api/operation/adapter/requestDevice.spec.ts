@@ -8,7 +8,7 @@ potentially limited native resources.
 import { Fixture } from '../../../../common/framework/fixture.js';
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { getGPU } from '../../../../common/util/navigator_gpu.js';
-import { assert, assertReject, typedEntries } from '../../../../common/util/util.js';
+import { assert, assertReject, hasFeature, typedEntries } from '../../../../common/util/util.js';
 import {
   getDefaultLimitsForCTS,
   kFeatureNames,
@@ -44,7 +44,7 @@ g.test('default')
 
     if (device.features.size === 1) {
       t.expect(
-        device.features.has('core-features-and-limits'),
+        hasFeature(device.features, 'core-features-and-limits'),
         'Default device should not have any features other than "core-features-and-limits"'
       );
     } else {
@@ -204,9 +204,9 @@ g.test('features,known')
     assert(adapter !== null);
 
     const promise = t.requestDeviceTracked(adapter, { requiredFeatures: [feature] });
-    if (adapter.features.has(feature)) {
+    if (hasFeature(adapter.features, feature)) {
       const device = await promise;
-      t.expect(device.features.has(feature), 'Device should include the required feature');
+      t.expect(hasFeature(device.features, feature), 'Device should include the required feature');
     } else {
       t.shouldReject('TypeError', promise);
     }
@@ -496,12 +496,12 @@ g.test('always_returns_device')
       const device = await t.requestDeviceTracked(adapter);
       assert(device instanceof GPUDevice, 'requestDevice must return a device or throw');
 
-      if (featureLevel === 'core' && adapter.features.has('core-features-and-limits')) {
+      if (featureLevel === 'core' && hasFeature(adapter.features, 'core-features-and-limits')) {
         // Check if the device supports core, when featureLevel is core and adapter supports core.
         // This check is to make sure something lower-level is not forcing compatibility mode.
 
         t.expect(
-          device.features.has('core-features-and-limits'),
+          hasFeature(device.features, 'core-features-and-limits'),
           'must not get a Compatibility adapter if not requested'
         );
       }

@@ -1,5 +1,5 @@
 import { keysOf } from '../../../../../../common/util/data_tables.js';
-import { assert, range, unreachable } from '../../../../../../common/util/util.js';
+import { assert, range, unreachable, hasFeature } from '../../../../../../common/util/util.js';
 import { Float16Array } from '../../../../../../external/petamoriken/float16/float16.js';
 import {
   ColorTextureFormat,
@@ -2438,7 +2438,8 @@ function getComponentsToCheck(
   }
 
   const gbaUndefined =
-    isDepthOrStencilTextureFormat(format) && !device.features.has('texel-component-swizzle');
+    isDepthOrStencilTextureFormat(format) &&
+    !hasFeature(device.features, 'texture-component-swizzle');
   if (gbaUndefined) {
     return kRComponent;
   }
@@ -2585,7 +2586,7 @@ export async function checkCallResults<T extends Dimensionality>(
       isDepthOrStencilTextureFormat(format) &&
       isBuiltinGather(call.builtin) &&
       call.component! > 0 &&
-      !t.device.features.has('texture-component-swizzle')
+      !hasFeature(t.device.features, 'texture-component-swizzle')
     ) {
       continue;
     }
@@ -5320,7 +5321,7 @@ ${stageWGSL}
     : type ?? 'float';
   if (isFiltering && sampleType === 'unfilterable-float') {
     assert(is32Float(format));
-    assert(t.device.features.has('float32-filterable'));
+    assert(hasFeature(t.device.features, 'float32-filterable'));
     sampleType = 'float';
   }
   if (sampleCount > 1 && sampleType === 'float') {

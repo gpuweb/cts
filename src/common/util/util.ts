@@ -496,3 +496,12 @@ export function filterUniqueValueTestVariants(valueTestVariants: ValueTestVarian
 export function makeValueTestVariant(base: number, variant: ValueTestVariant) {
   return base * variant.mult + variant.add;
 }
+
+/**
+ * Use instead of features.has because feature's has takes any string
+ * and we want to prevent typos.
+ */
+export function hasFeature(features: GPUSupportedFeatures, feature: GPUFeatureName) {
+  // eslint-disable-next-line no-restricted-syntax
+  return features.has(feature);
+}

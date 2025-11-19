@@ -58,6 +58,11 @@
             "message": "Use requestDeviceTracked() instead of requestDevice().",
             // We don't seem to need direct calls to requestDevice() at all so we can just disallow all of them.
             "selector": "CallExpression > MemberExpression > Identifier[name=\"requestDevice\"]"
+          },
+          {
+            "message": "Use hasFeature() instead of features.has().",
+            // features.has takes any string. We want only valid feature names.
+            "selector": "CallExpression[callee.property.name='has'][callee.object.name='features'],CallExpression[callee.property.name='has'][callee.object.property.name='features']"
           }
         ],
 
