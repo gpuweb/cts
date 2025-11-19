@@ -18,7 +18,8 @@ import {
 
 
 
-  unreachable } from
+  unreachable,
+  hasFeature } from
 '../common/util/util.js';
 
 import { kQueryTypeInfo } from './capability_info.js';
@@ -460,7 +461,10 @@ export class GPUTestBase extends Fixture {
    * Note: Try to use one of the more specific skipIf tests if possible.
    */
   skipIfDeviceDoesNotHaveFeature(feature) {
-    this.skipIf(!this.device.features.has(feature), `device does not have feature: '${feature}'`);
+    this.skipIf(
+      !hasFeature(this.device.features, feature),
+      `device does not have feature: '${feature}'`
+    );
   }
 
   /**
@@ -497,7 +501,7 @@ export class GPUTestBase extends Fixture {
       }
       const feature = getRequiredFeatureForTextureFormat(format);
       this.skipIf(
-        !!feature && !this.device.features.has(feature),
+        !!feature && !hasFeature(this.device.features, feature),
         `texture format '${format}' requires feature: '${feature}'`
       );
     }
@@ -603,7 +607,7 @@ export class GPUTestBase extends Fixture {
       this.skipIf(isSintOrUintFormat(format), 'sint/uint formats are not blendable');
       if (is32Float(format)) {
         this.skipIf(
-          !this.device.features.has('float32-blendable'),
+          !hasFeature(this.device.features, 'float32-blendable'),
           `texture format '${format}' is not blendable`
         );
       }
@@ -616,7 +620,7 @@ export class GPUTestBase extends Fixture {
       this.skipIf(isSintOrUintFormat(format), 'sint/uint formats are not filterable');
       if (is32Float(format)) {
         this.skipIf(
-          !this.device.features.has('float32-filterable'),
+          !hasFeature(this.device.features, 'float32-filterable'),
           `texture format '${format}' is not filterable`
         );
       }

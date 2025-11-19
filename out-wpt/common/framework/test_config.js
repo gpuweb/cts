@@ -1,6 +1,6 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
-**/import { assert } from '../util/util.js';
+**/import { assert, hasFeature } from '../util/util.js';
 
 
 
@@ -90,7 +90,7 @@ export const globalTestConfig = {
 // is trying to test that compatibility devices have the correct validation.
 export function isCompatibilityDevice(device) {
   if (globalTestConfig.compatibility) {
-    assert(!device.features.has('core-features-and-limits'));
+    assert(!hasFeature(device.features, 'core-features-and-limits'));
   }
   return globalTestConfig.compatibility;
 }
