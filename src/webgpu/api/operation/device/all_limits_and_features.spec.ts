@@ -103,6 +103,7 @@ changes to WebGPU do not break sites requesting everything.
 
     // Test that all the adapter features are on the device.
     for (const feature of t.adapter.features) {
+      // eslint-disable-next-line no-restricted-syntax
       t.expect(t.device.features.has(feature), `device has feature: ${feature}`);
     }
   });

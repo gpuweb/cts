@@ -6,7 +6,7 @@ import { Fixture } from '../../../../common/framework/fixture.js';
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { keysOf } from '../../../../common/util/data_tables.js';
 import { getGPU } from '../../../../common/util/navigator_gpu.js';
-import { assert, objectEquals } from '../../../../common/util/util.js';
+import { assert, hasFeature, objectEquals } from '../../../../common/util/util.js';
 import { isPowerOfTwo } from '../../../util/math.js';
 
 export const g = makeTestGroup(Fixture);
@@ -158,7 +158,7 @@ If they exist, they must both exist and be powers of two, and
     // Once 'subgroups' lands, the properties should be defined with default values 4 and 128
     // when adapter does not support the feature.
     // https://github.com/gpuweb/gpuweb/pull/4963
-    if (adapter.features.has('subgroups')) {
+    if (hasFeature(adapter.features, 'subgroups')) {
       t.expect(
         subgroupMinSize !== undefined,
         'GPUAdapterInfo.subgroupMinSize must exist when subgroups supported'

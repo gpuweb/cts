@@ -1,6 +1,6 @@
 import { isCompatibilityDevice } from '../common/framework/test_config.js';
 import { keysOf } from '../common/util/data_tables.js';
-import { assert, unreachable } from '../common/util/util.js';
+import { assert, unreachable, hasFeature } from '../common/util/util.js';
 
 import { align, roundDown } from './util/math.js';
 import { getTextureDimensionFromView } from './util/texture/base.js';
@@ -2068,8 +2068,10 @@ export function textureDimensionAndFormatCompatibleForDevice(
 ): boolean {
   if (
     dimension === '3d' &&
-    ((isBCTextureFormat(format) && device.features.has('texture-compression-bc-sliced-3d')) ||
-      (isASTCTextureFormat(format) && device.features.has('texture-compression-astc-sliced-3d')))
+    ((isBCTextureFormat(format) &&
+      hasFeature(device.features, 'texture-compression-bc-sliced-3d')) ||
+      (isASTCTextureFormat(format) &&
+        hasFeature(device.features, 'texture-compression-astc-sliced-3d')))
   ) {
     return true;
   }
@@ -2357,10 +2359,10 @@ export function isTextureFormatUsableAsRenderAttachment(
   format: GPUTextureFormat
 ) {
   if (format === 'rg11b10ufloat') {
-    return device.features.has('rg11b10ufloat-renderable');
+    return hasFeature(device.features, 'rg11b10ufloat-renderable');
   }
   if (isTextureFormatTier1EnablesRenderAttachmentBlendableMultisample(format)) {
-    return device.features.has('texture-formats-tier1');
+    return hasFeature(device.features, 'texture-formats-tier1');
   }
   return kTextureFormatInfo[format].colorRender || isDepthOrStencilTextureFormat(format);
 }
@@ -2373,10 +2375,10 @@ export function isTextureFormatColorRenderable(
   format: GPUTextureFormat
 ): boolean {
   if (format === 'rg11b10ufloat') {
-    return device.features.has('rg11b10ufloat-renderable');
+    return hasFeature(device.features, 'rg11b10ufloat-renderable');
   }
   if (isTextureFormatTier1EnablesRenderAttachmentBlendableMultisample(format)) {
-    return device.features.has('texture-formats-tier1');
+    return hasFeature(device.features, 'texture-formats-tier1');
   }
   return !!kAllTextureFormatInfo[format].colorRender;
 }
@@ -2389,10 +2391,10 @@ export function isTextureFormatBlendable(device: GPUDevice, format: GPUTextureFo
     return false;
   }
   if (format === 'rg11b10ufloat') {
-    return device.features.has('rg11b10ufloat-renderable');
+    return hasFeature(device.features, 'rg11b10ufloat-renderable');
   }
   if (is32Float(format)) {
-    return device.features.has('float32-blendable');
+    return hasFeature(device.features, 'float32-blendable');
   }
   return !!kAllTextureFormatInfo[format].colorRender?.blend;
 }
@@ -2528,12 +2530,12 @@ function isTextureFormatUsableAsWriteOnlyStorageTexture(
       return false;
     }
   }
-  if (format === 'bgra8unorm' && device.features.has('bgra8unorm-storage')) {
+  if (format === 'bgra8unorm' && hasFeature(device.features, 'bgra8unorm-storage')) {
     return true;
   }
   if (
     isTextureFormatTier1EnablesStorageReadOnlyWriteOnly(format) &&
-    device.features.has('texture-formats-tier1')
+    hasFeature(device.features, 'texture-formats-tier1')
   ) {
     return true;
   }
@@ -2610,7 +2612,7 @@ function isTextureFormatUsableAsReadWriteStorageTexture(
   format: GPUTextureFormat
 ): boolean {
   if (isTextureFormatTier2EnablesStorageReadWrite(format)) {
-    return device.features.has('texture-formats-tier2');
+    return hasFeature(device.features, 'texture-formats-tier2');
   }
   return !!kTextureFormatInfo[format].color?.readWriteStorage;
 }
@@ -2666,10 +2668,10 @@ export function isTextureFormatMultisampled(device: GPUDevice, format: GPUTextur
     }
   }
   if (format === 'rg11b10ufloat') {
-    return device.features.has('rg11b10ufloat-renderable');
+    return hasFeature(device.features, 'rg11b10ufloat-renderable');
   }
   if (isTextureFormatTier1EnablesRenderAttachmentBlendableMultisample(format)) {
-    return device.features.has('texture-formats-tier1');
+    return hasFeature(device.features, 'texture-formats-tier1');
   }
   return kAllTextureFormatInfo[format].multisample;
 }
@@ -2680,10 +2682,10 @@ export function isTextureFormatMultisampled(device: GPUDevice, format: GPUTextur
  */
 export function isTextureFormatResolvable(device: GPUDevice, format: GPUTextureFormat): boolean {
   if (format === 'rg11b10ufloat') {
-    return device.features.has('rg11b10ufloat-renderable');
+    return hasFeature(device.features, 'rg11b10ufloat-renderable');
   }
   if (isTextureFormatTier1EnablesResolve(format)) {
-    return device.features.has('texture-formats-tier1');
+    return hasFeature(device.features, 'texture-formats-tier1');
   }
   // You can't resolve a non-multisampled format.
   if (!isTextureFormatMultisampled(device, format)) {
