@@ -343,7 +343,10 @@ g.test('sampleCount,valid_sampleCount_with_other_parameter_varies')
               dimension !== '2d')) ||
           ((usage & GPUConst.TextureUsage.STORAGE_BINDING) !== 0 &&
             !isTextureFormatPossiblyStorageReadable(format)) ||
-          (mipLevelCount !== 1 && dimension === '1d')
+          (mipLevelCount !== 1 && dimension === '1d') ||
+          ((usage & GPUConst.TextureUsage.TRANSIENT_ATTACHMENT) !== 0 &&
+            (usage === (GPUConst.TextureUsage.RENDER_ATTACHMENT |
+              GPUConst.TextureUsage.TRANSIENT_ATTACHMENT)))
         );
       })
   )
@@ -1036,6 +1039,11 @@ g.test('texture_usage')
       if (appliedDimension === '1d') success = false;
       if (isColorTextureFormat(format) && !isTextureFormatColorRenderable(t.device, format))
         success = false;
+    }
+    if (usage & GPUTextureUsage.TRANSIENT_ATTACHMENT) {
+      if (usage !== (GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TRANSIENT_ATTACHMENT)) {
+        success = false;
+      }
     }
 
     t.expectValidationError(() => {

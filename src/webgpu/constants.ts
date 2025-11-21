@@ -25,6 +25,7 @@ const TextureUsage = {
   STORAGE_BINDING: 0x08,
   STORAGE: 0x08,
   RENDER_ATTACHMENT: 0x10,
+  TRANSIENT_ATTACHMENT: 0x20,
 } as const;
 checkType<typeof GPUTextureUsage>(TextureUsage);
 
