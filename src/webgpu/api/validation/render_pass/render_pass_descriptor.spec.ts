@@ -1084,19 +1084,18 @@ g.test('depth_stencil_attachment,loadOp_storeOp_match_depthReadOnly_stencilReadO
     - if the format has a depth aspect:
       - if depthReadOnly is true
         - depthLoadOp and depthStoreOp must not be provided
-        - if usage includes TRANSIENT_ATTACHMENT
-          - depthLoadOp must be clear
-          - depthStoreOp must be discard
       - else:
         - depthLoadOp and depthStoreOp must be provided
     - if the format has a stencil aspect:
       - if stencilReadOnly is true
         - stencilLoadOp and stencilStoreOp must not be provided
-        - if usage includes TRANSIENT_ATTACHMENT
-          - stencilLoadOp must be clear
-          - stencilStoreOp must be discard
       - else:
         - stencilLoadOp and stencilStoreOp must be provided
+    - if usage includes TRANSIENT_ATTACHMENT
+      - depthLoadOp must be clear
+      - stencilLoadOp must be clear
+      - depthStoreOp must be discard
+      - stencilStoreOp must be discard
   `
   )
   .params(u =>
@@ -1169,19 +1168,19 @@ g.test('depth_stencil_attachment,loadOp_storeOp_match_depthReadOnly_stencilReadO
     const hasNeitherDepthOps = !depthLoadOp && !depthStoreOp;
     const hasNeitherStencilOps = !stencilLoadOp && !stencilStoreOp;
 
-    const validTransientDepth =
-      !transientTexture || (depthLoadOp === 'clear' && depthStoreOp === 'discard');
-    const validTransientStencil =
-      !transientTexture || (stencilLoadOp === 'clear' && stencilStoreOp === 'discard');
+    const goodTransient =
+      !transientTexture ||
+      (depthLoadOp === 'clear' &&
+        stencilLoadOp === 'clear' &&
+        depthStoreOp === 'discard' &&
+        stencilStoreOp === 'discard');
 
-    const goodDepthCombo =
-      hasDepth && !depthReadOnly ? hasBothDepthOps && validTransientDepth : hasNeitherDepthOps;
+    const goodDepthCombo = hasDepth && !depthReadOnly ? hasBothDepthOps : hasNeitherDepthOps;
     const goodStencilCombo =
-      hasStencil && !stencilReadOnly
-        ? hasBothStencilOps && validTransientStencil
-        : hasNeitherStencilOps;
+      hasStencil && !stencilReadOnly ? hasBothStencilOps : hasNeitherStencilOps;
 
-    const shouldError = !goodAspectSettingsPresent || !goodDepthCombo || !goodStencilCombo;
+    const shouldError =
+      !goodAspectSettingsPresent || !goodDepthCombo || !goodStencilCombo || !goodTransient;
 
     t.expectValidationError(() => {
       encoder.finish();
