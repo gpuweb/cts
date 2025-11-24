@@ -17,6 +17,13 @@ const BufferUsage = {
 } as const;
 checkType<typeof GPUBufferUsage>(BufferUsage);
 
+declare global {
+  // MAINTENANCE_TODO: Remove this once TRANSIENT_ATTACHMENT is added to @webgpu/types
+  interface GPUTextureUsage {
+    readonly TRANSIENT_ATTACHMENT: GPUFlagsConstant;
+  }
+}
+
 const TextureUsage = {
   COPY_SRC: 0x01,
   COPY_DST: 0x02,
