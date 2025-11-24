@@ -1168,16 +1168,16 @@ g.test('depth_stencil_attachment,loadOp_storeOp_match_depthReadOnly_stencilReadO
     const hasNeitherDepthOps = !depthLoadOp && !depthStoreOp;
     const hasNeitherStencilOps = !stencilLoadOp && !stencilStoreOp;
 
+    const goodDepthCombo = hasDepth && !depthReadOnly ? hasBothDepthOps : hasNeitherDepthOps;
+    const goodStencilCombo =
+      hasStencil && !stencilReadOnly ? hasBothStencilOps : hasNeitherStencilOps;
+
     const goodTransient =
       !transientTexture ||
       (depthLoadOp === 'clear' &&
         stencilLoadOp === 'clear' &&
         depthStoreOp === 'discard' &&
         stencilStoreOp === 'discard');
-
-    const goodDepthCombo = hasDepth && !depthReadOnly ? hasBothDepthOps : hasNeitherDepthOps;
-    const goodStencilCombo =
-      hasStencil && !stencilReadOnly ? hasBothStencilOps : hasNeitherStencilOps;
 
     const shouldError =
       !goodAspectSettingsPresent || !goodDepthCombo || !goodStencilCombo || !goodTransient;

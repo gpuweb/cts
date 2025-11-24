@@ -345,7 +345,7 @@ g.test('sampleCount,valid_sampleCount_with_other_parameter_varies')
             !isTextureFormatPossiblyStorageReadable(format)) ||
           (mipLevelCount !== 1 && dimension === '1d') ||
           ((usage & GPUConst.TextureUsage.TRANSIENT_ATTACHMENT) !== 0 &&
-            usage ===
+            usage !==
               (GPUConst.TextureUsage.RENDER_ATTACHMENT |
                 GPUConst.TextureUsage.TRANSIENT_ATTACHMENT))
         );
