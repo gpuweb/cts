@@ -1081,21 +1081,21 @@ g.test('depth_stencil_attachment,loadOp_storeOp_match_depthReadOnly_stencilReadO
   .desc(
     `
   Test GPURenderPassDepthStencilAttachment Usage:
-    - if the format has a depth aspect:
-      - if depthReadOnly is true
-        - depthLoadOp and depthStoreOp must not be provided
-      - else:
-        - depthLoadOp and depthStoreOp must be provided
-    - if the format has a stencil aspect:
-      - if stencilReadOnly is true
-        - stencilLoadOp and stencilStoreOp must not be provided
-      - else:
-        - stencilLoadOp and stencilStoreOp must be provided
+    - if the format has a depth aspect and depthReadOnly is false
+      - depthLoadOp and depthStoreOp must be provided
+    - else:
+      - depthLoadOp and depthStoreOp must not be provided
+    - if the format has a stencil aspect and stencilReadOnly is false
+      - stencilLoadOp and stencilStoreOp must be provided
+    - else:
+      - stencilLoadOp and stencilStoreOp must not be provided
     - if usage includes TRANSIENT_ATTACHMENT
-      - depthLoadOp must be clear
-      - stencilLoadOp must be clear
-      - depthStoreOp must be discard
-      - stencilStoreOp must be discard
+      - if the format has a depth aspect:
+        - depthLoadOp must be clear
+        - depthStoreOp must be discard
+      - if the format has a stencil aspect:
+        - stencilLoadOp must be clear
+        - stencilStoreOp must be discard
   `
   )
   .params(u =>
@@ -1174,10 +1174,8 @@ g.test('depth_stencil_attachment,loadOp_storeOp_match_depthReadOnly_stencilReadO
 
     const goodTransient =
       !transientTexture ||
-      (depthLoadOp === 'clear' &&
-        stencilLoadOp === 'clear' &&
-        depthStoreOp === 'discard' &&
-        stencilStoreOp === 'discard');
+      ((!hasDepth || (depthLoadOp === 'clear' && depthStoreOp === 'discard')) &&
+        (!hasStencil || (stencilLoadOp === 'clear' && stencilStoreOp === 'discard')));
 
     const shouldError =
       !goodAspectSettingsPresent || !goodDepthCombo || !goodStencilCombo || !goodTransient;
