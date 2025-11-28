@@ -35,6 +35,7 @@ const kTextureUsageExp = {
   TEXTURE_BINDING: 0x04,
   STORAGE_BINDING: 0x08,
   RENDER_ATTACHMENT: 0x10,
+  TRANSIENT_ATTACHMENT: 0x20,
 };
 g.test('TextureUsage,count').fn(t => {
   t.assertMemberCount(GPUTextureUsage, kTextureUsageExp);
