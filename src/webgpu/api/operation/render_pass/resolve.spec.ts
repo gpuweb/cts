@@ -39,6 +39,9 @@ Test basic render pass resolve behavior for combinations of:
     u
       .combine('separateResolvePass', [false, true])
       .combine('storeOperation', ['discard', 'store'] as const)
+      .combine('transientAttachment', [false, true])
+      // Exclude if transient AND (separate pass OR storing)
+      .unless(t => t.transientAttachment && (t.separateResolvePass || t.storeOperation === 'store'))
       .beginSubcases()
       .combine('numColorAttachments', [2, 4] as const)
       .combine('slotsToResolve', kSlotsToResolve)
@@ -114,8 +117,9 @@ Test basic render pass resolve behavior for combinations of:
           size: [kSize, kSize, 1],
           sampleCount: 4,
           mipLevelCount: 1,
-          usage:
-            GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
+          usage: t.params.transientAttachment
+            ? GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TRANSIENT_ATTACHMENT
+            : GPUTextureUsage.RENDER_ATTACHMENT,
         })
         .createView();
 
