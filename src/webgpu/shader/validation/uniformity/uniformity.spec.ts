@@ -185,60 +185,296 @@ function generateOp(op: string): string {
   }
 }
 
-const kStatementKinds = ['if', 'for', 'while', 'switch', 'break-if'] as const;
+const kStatementKinds = [
+  'if',
+  'for',
+  'while',
+  'switch',
+  'break-if',
+  'loop-always-break-op-inside',
+  'loop-always-return-op-inside',
+  'loop-always-break-op-continuing',
+  'loop-always-return-op-continuing',
+  'loop-always-break-op-after',
+  'loop-always-return-op-after',
+  'for-with-cond-always-break-op-inside',
+  'for-with-cond-always-return-op-inside',
+  'for-with-cond-always-break-op-after',
+  'for-with-cond-always-return-op-after',
+  'for-without-cond-always-break-op-inside',
+  'for-without-cond-always-return-op-inside',
+  'for-without-cond-always-break-op-after',
+  'for-without-cond-always-return-op-after',
+  'while-always-break-op-inside',
+  'while-always-return-op-inside',
+  'while-always-break-op-after',
+  'while-always-return-op-after',
+] as const;
 type kStatementType = (typeof kStatementKinds)[number];
 
+type kSnippetInfo = {
+  // A WGSL code sippet that embeds a condition and operation-operation-under-test
+  // in a larger construct.
+  code: string;
+  // Is the operation-under-test sensitive to the uniformity of the condition?
+  sensitive: boolean;
+};
 function generateConditionalStatement(
   statement: kStatementType,
-  condition: string,
-  op: string
-): string {
-  const code = ``;
+  condition_name: string,
+  op_name: string
+): kSnippetInfo {
+  const cond = generateCondition(condition_name);
+  const uniform_cond = generateCondition('uniform_storage_ro');
+  const op = generateOp(op_name);
   switch (statement) {
     case 'if': {
-      return `if ${generateCondition(condition)} {
-        ${generateOp(op)};
-      }
-      `;
+      return {
+        sensitive: true,
+        code: `
+          if ${cond} {
+            ${op};
+          }`,
+      };
     }
     case 'for': {
-      return `for (; ${generateCondition(condition)};) {
-        ${generateOp(op)};
-      }
-      `;
+      return {
+        sensitive: true,
+        code: `
+          for (; ${cond}; ) {
+            ${op};
+          }`,
+      };
     }
     case 'while': {
-      return `while ${generateCondition(condition)} {
-        ${generateOp(op)};
-      }
-      `;
+      return {
+        sensitive: true,
+        code: `
+          while ${cond} {
+            ${op};
+          }`,
+      };
     }
     case 'switch': {
-      return `switch u32(${generateCondition(condition)}) {
-        case 0: {
-          ${generateOp(op)};
-        }
-        default: { }
-      }
-      `;
+      return {
+        sensitive: true,
+        code: `
+          switch u32(${cond}) {
+            case 0: {
+              ${op};
+            }
+            default: { }
+          }`,
+      };
     }
     case 'break-if': {
       // The initial 'if' prevents the loop from being infinite.  Its condition
       // is uniform, to ensure the first iteration of the the body executes
       // uniformly. The uniformity of the second iteration depends entirely on
       // the uniformity of the break-if condition.
-      return `loop {
-        if ${generateCondition('uniform_storage_ro')} { break; }
-        ${generateOp(op)}
-        continuing {
-          break if ${generateCondition(condition)};
-        }
-      }
-      `;
+      return {
+        sensitive: true,
+        code: `
+          loop {
+            if ${uniform_cond} { break; }
+            ${op}
+            continuing {
+              break if ${cond};
+            }
+          }`,
+      };
+    }
+    case 'loop-always-break-op-inside': {
+      return {
+        sensitive: false, // The op is unreachable.
+        code: `
+          loop {
+            break;
+            if ${cond} { ${op} }
+          }`,
+      };
+    }
+    case 'loop-always-return-op-inside': {
+      return {
+        sensitive: false, // The op is unreachable.
+        code: `
+          loop {
+            return;
+            if ${cond} { ${op} }
+          }`,
+      };
+    }
+    case 'loop-always-break-op-continuing': {
+      return {
+        sensitive: false, // The op is unreachable.
+        code: `
+          loop {
+            break;
+            continuing {
+              if ${cond} { ${op} }
+            }
+          }`,
+      };
+    }
+    case 'loop-always-return-op-continuing': {
+      return {
+        sensitive: false, // The op is unreachable.
+        code: `
+          loop {
+            return;
+            continuing {
+              if ${cond} { ${op} }
+            }
+          }`,
+      };
+    }
+    case 'loop-always-break-op-after': {
+      return {
+        sensitive: true,
+        code: `
+          loop {
+            break;
+          }
+          if ${cond} { ${op} }`,
+      };
+    }
+    case 'loop-always-return-op-after': {
+      return {
+        sensitive: false, // The op is unreachable.
+        code: `
+          loop {
+            return;
+          }
+          if ${cond} { ${op} }`,
+      };
+    }
+    case 'for-with-cond-always-break-op-inside': {
+      return {
+        sensitive: false, // The op is unreachable.
+        code: `
+          for ( ;${uniform_cond}; ) {
+            break;
+            if ${cond} { ${op} }
+          }`,
+      };
+    }
+    case 'for-with-cond-always-return-op-inside': {
+      return {
+        sensitive: false, // The op is unreachable.
+        code: `
+          for ( ;${uniform_cond}; ) {
+            return;
+            if ${cond} { ${op} }
+          }`,
+      };
+    }
+    case 'for-with-cond-always-break-op-after': {
+      return {
+        sensitive: true,
+        code: `
+          for ( ;${uniform_cond}; ) {
+            break;
+          }
+          if ${cond} { ${op} }`,
+      };
+    }
+    case 'for-with-cond-always-return-op-after': {
+      return {
+        // Desugars to a loop with a conditional break,
+        // before reaching the loop.
+        sensitive: true,
+        code: `
+          for ( ;${uniform_cond}; ) {
+            return;
+          }
+          if ${cond} { ${op} }`,
+      };
+    }
+    case 'for-without-cond-always-break-op-inside': {
+      return {
+        sensitive: false, // The op is unreachable.
+        code: `
+          for ( ; ; ) {
+            break;
+            if ${cond} { ${op} }
+          }`,
+      };
+    }
+    case 'for-without-cond-always-return-op-inside': {
+      return {
+        sensitive: false, // The op is unreachable.
+        code: `
+          for ( ; ; ) {
+            return;
+            if ${cond} { ${op} }
+          }`,
+      };
+    }
+    case 'for-without-cond-always-break-op-after': {
+      return {
+        sensitive: true,
+        code: `
+          for ( ; ; ) {
+            break;
+          }
+          if ${cond} { ${op} }`,
+      };
+    }
+    case 'for-without-cond-always-return-op-after': {
+      return {
+        // Desugars to a loop without a conditional break.
+        // So the op is unreachable.
+        sensitive: false,
+        code: `
+          for ( ; ; ) {
+            return;
+          }
+          if ${cond} { ${op} }`,
+      };
+    }
+    case 'while-always-break-op-inside': {
+      return {
+        sensitive: false, // The op is unreachable.
+        code: `
+          while (${uniform_cond}) {
+            break;
+            if ${cond} { ${op} }
+          }`,
+      };
+    }
+    case 'while-always-return-op-inside': {
+      return {
+        sensitive: false, // The op is unreachable.
+        code: `
+          while (${uniform_cond}) {
+            return;
+            if ${cond} { ${op} }
+          }`,
+      };
+    }
+    case 'while-always-break-op-after': {
+      return {
+        sensitive: true,
+        code: `
+          while (${uniform_cond}) {
+            break;
+          }
+          if ${cond} { ${op} }`,
+      };
+    }
+    case 'while-always-return-op-after': {
+      return {
+        // Desugars to a loop with a conditional break,
+        // before reaching the loop.
+        sensitive: true,
+        code: `
+          while (${uniform_cond}) {
+            return;
+          }
+          if ${cond} { ${op} }`,
+      };
     }
   }
-
-  return code;
 }
 
 g.test('basics')
@@ -293,11 +529,15 @@ g.test('basics')
     `;
 
     // Simple control statement containing the op.
-    code += generateConditionalStatement(t.params.statement, t.params.cond, t.params.op);
+    const snippet = generateConditionalStatement(t.params.statement, t.params.cond, t.params.op);
+    code += snippet.code;
 
     code += `\n}\n`;
 
-    t.expectCompileResult(t.params.expectation || t.params.op.startsWith('control_case'), code);
+    t.expectCompileResult(
+      t.params.expectation || t.params.op.startsWith('control_case') || !snippet.sensitive,
+      code
+    );
   });
 
 const kSubgroupOps = [
@@ -380,11 +620,15 @@ g.test('basics,subgroups')
     `;
 
     // Simple control statement containing the op.
-    code += generateConditionalStatement(t.params.statement, t.params.cond, t.params.op);
+    const snippet = generateConditionalStatement(t.params.statement, t.params.cond, t.params.op);
+    code += snippet.code;
 
     code += `\n}\n`;
 
-    t.expectCompileResult(t.params.expectation || t.params.op.startsWith('control_case'), code);
+    t.expectCompileResult(
+      t.params.expectation || t.params.op.startsWith('control_case') || !snippet.sensitive,
+      code
+    );
   });
 
 const kFragmentBuiltinValues = [
