@@ -109,5 +109,10 @@ export const listing = [
     "file": [
       "texture_ok"
     ]
+  },
+  {
+    "file": [
+      "uniformity_snippet"
+    ]
   }
 ];
