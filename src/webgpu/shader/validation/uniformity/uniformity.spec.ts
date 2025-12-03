@@ -5,6 +5,8 @@ import { keysOf } from '../../../../common/util/data_tables.js';
 import { unreachable } from '../../../../common/util/util.js';
 import { ShaderValidationTest } from '../shader_validation_test.js';
 
+import { Snippet, LoopCase, compileShouldSucceed } from './snippet.js';
+
 export const g = makeTestGroup(ShaderValidationTest);
 
 const kCollectiveOps = [
@@ -185,67 +187,240 @@ function generateOp(op: string): string {
   }
 }
 
-const kStatementKinds = ['if', 'for', 'while', 'switch', 'break-if'] as const;
-type kStatementType = (typeof kStatementKinds)[number];
+const kStatementCases = [
+  // Basic non-loop cases.
+  {
+    name: 'if',
+    code: 'if <cond> { <op> }',
+    verdict: 'sensitive',
+  },
+  {
+    name: 'switch',
+    code: `
+          switch u32(<cond>) {
+            case 0: {
+              <op>
+            }
+            default: { }
+          }`,
+    verdict: 'sensitive',
+  },
+
+  // Loops
+
+  // loop without continuing
+  //   op before the interruption
+  LoopCase('loop-op-always-break', 'permit'),
+  LoopCase('loop-op-cond-break', 'sensitive'),
+  LoopCase('loop-op-always-return', 'permit'),
+  LoopCase('loop-op-cond-return', 'sensitive'),
+  LoopCase('loop-unif-break-op-always-continue', 'permit'),
+  LoopCase('loop-unif-break-op-cond-continue', 'sensitive'),
+
+  //   op after the interruption
+  LoopCase('loop-always-break-op', 'permit'),
+  LoopCase('loop-cond-break-op', 'sensitive'),
+  LoopCase('loop-always-return-op', 'permit'),
+  LoopCase('loop-cond-return-op', 'sensitive'),
+  LoopCase('loop-unif-break-always-continue-op', 'permit'),
+  LoopCase('loop-unif-break-cond-continue-op', 'sensitive'),
+
+  //   op after the end of the loop
+  //   Without a return, any non-uniformity introduced in the
+  //   loop is resolved by the end of the loop.
+  LoopCase('loop-always-break-end-op', 'permit'),
+  LoopCase('loop-unif-break-end-op', 'permit'),
+  LoopCase('loop-cond-break-end-op', 'permit'),
+  LoopCase('loop-always-return-end-op', 'permit'),
+  LoopCase('loop-cond-return-end-op', 'permit'), // the loop can only return
+  LoopCase('loop-unif-break-always-continue-end-op', 'permit'),
+  LoopCase('loop-unif-break-cond-continue-end-op', 'permit'),
+
+  // loop with continuing block
+  //   op before the interruption before continuing
+  LoopCase('loop-op-always-break-continuing', 'permit'),
+  LoopCase('loop-op-unif-break-continuing', 'permit'),
+  LoopCase('loop-op-cond-break-continuing', 'sensitive'),
+  LoopCase('loop-op-always-return-continuing', 'permit'),
+  LoopCase('loop-op-cond-return-continuing', 'sensitive'),
+  LoopCase('loop-unif-break-op-always-continue-continuing', 'permit'),
+  //  non re-convergence at the continuing block.
+  LoopCase('loop-unif-break-op-cond-continue-continuing', 'sensitive'),
+
+  //   op in body, interruption in continiuing
+  //     The only permitted interruption in the continuing block
+  //     is cond-break.
+  LoopCase('loop-op-continuing-cond-break', 'sensitive'),
+
+  //   interruption in body, op in continuing
+  LoopCase('loop-always-break-continuing-op', 'permit'),
+  LoopCase('loop-cond-break-continuing-op', 'sensitive'),
+  LoopCase('loop-always-return-continuing-op', 'permit'),
+  LoopCase('loop-cond-return-continuing-op', 'sensitive'),
+
+  //   op and interruption in continuing
+  LoopCase('loop-continuing-op-cond-break', 'sensitive'),
+
+  //   interruption in body, op after end
+  LoopCase('loop-always-break-continuing-end-op', 'permit'),
+  LoopCase('loop-cond-break-continuing-end-op', 'permit'),
+  LoopCase('loop-always-return-continuing-end-op', 'permit'),
+  LoopCase('loop-cond-return-continuing-end-op', 'permit'), // the looop can only return
+  LoopCase('loop-unif-break-always-continue-continuing-end-op', 'permit'),
+  LoopCase('loop-unif-break-cond-continue-continuing-end-op', 'permit'),
+
+  //   interruption in continuing, op after end
+  LoopCase('loop-continuing-cond-break-end-op', 'permit'),
+  LoopCase('loop-always-break-continuing-cond-break-end-op', 'permit'),
+  LoopCase('loop-always-return-continuing-cond-break-end-op', 'permit'),
+
+  // Unconditional for
+  //   interruption then op
+  LoopCase('for-always-break-op', 'permit'),
+  LoopCase('for-cond-break-op', 'sensitive'),
+  LoopCase('for-always-return-op', 'permit'),
+  LoopCase('for-cond-return-op', 'sensitive'),
+  LoopCase('for-unif-unif-break-always-continue-op', 'permit'),
+  LoopCase('for-unif-unif-break-cond-continue-op', 'sensitive'),
+  //   op then interruption
+  LoopCase('for-op-always-break', 'permit'),
+  LoopCase('for-op-cond-break', 'sensitive'),
+  LoopCase('for-op-always-return', 'permit'),
+  LoopCase('for-op-cond-return', 'sensitive'),
+  LoopCase('for-op-unif-break-always-continue', 'permit'),
+  LoopCase('for-op-unif-break-cond-continue', 'sensitive'),
+
+  // For with uniform condition
+  LoopCase('for-unif-op', 'permit'),
+  //   interruption, then op
+  LoopCase('for-unif-always-break-op', 'permit'),
+  LoopCase('for-unif-cond-break-op', 'sensitive'),
+  LoopCase('for-unif-always-return-op', 'permit'),
+  LoopCase('for-unif-cond-return-op', 'sensitive'),
+  LoopCase('for-unif-always-continue-op', 'permit'),
+  LoopCase('for-unif-cond-continue-op', 'sensitive'),
+  //   op, then interruption
+  LoopCase('for-unif-op-always-break', 'permit'),
+  LoopCase('for-unif-op-cond-break', 'sensitive'),
+  LoopCase('for-unif-op-always-return', 'permit'),
+  LoopCase('for-unif-op-cond-return', 'sensitive'),
+  LoopCase('for-unif-op-always-continue', 'permit'),
+  LoopCase('for-unif-op-cond-continue', 'sensitive'),
+  //   interruption, then op after loop
+  LoopCase('for-unif-end-op', 'permit'),
+  LoopCase('for-unif-always-break-end-op', 'permit'),
+  LoopCase('for-unif-cond-break-end-op', 'permit'),
+  LoopCase('for-unif-always-return-end-op', 'permit'),
+  LoopCase('for-unif-cond-return-end-op', 'sensitive'),
+  LoopCase('for-unif-always-continue-end-op', 'permit'),
+  LoopCase('for-unif-cond-continue-end-op', 'permit'),
+
+  // For with non-uniform condition
+  LoopCase('for-nonunif-op', 'forbid'),
+  //   interruption, then op
+  LoopCase('for-nonunif-always-break-op', 'permit'),
+  LoopCase('for-nonunif-cond-break-op', 'forbid'),
+  LoopCase('for-nonunif-always-return-op', 'permit'),
+  LoopCase('for-nonunif-cond-return-op', 'forbid'),
+  LoopCase('for-nonunif-always-continue-op', 'permit'),
+  LoopCase('for-nonunif-cond-continue-op', 'forbid'),
+  //   op, then interruption
+  LoopCase('for-nonunif-op-always-break', 'forbid'),
+  LoopCase('for-nonunif-op-cond-break', 'forbid'),
+  LoopCase('for-nonunif-op-always-return', 'forbid'),
+  LoopCase('for-nonunif-op-cond-return', 'forbid'),
+  LoopCase('for-nonunif-op-always-continue', 'forbid'),
+  LoopCase('for-nonunif-op-cond-continue', 'forbid'),
+  //   interruption, then op after loop
+  LoopCase('for-nonunif-end-op', 'permit'),
+  LoopCase('for-nonunif-always-break-end-op', 'permit'),
+  LoopCase('for-nonunif-cond-break-end-op', 'permit'),
+  LoopCase('for-nonunif-always-return-end-op', 'forbid'),
+  LoopCase('for-nonunif-cond-return-end-op', 'forbid'),
+  LoopCase('for-nonunif-always-continue-end-op', 'permit'),
+  LoopCase('for-nonunif-cond-continue-end-op', 'permit'),
+
+  // While with uniform condition
+  LoopCase('while-unif-op', 'permit'),
+  //   interruption, then op
+  LoopCase('while-unif-always-break-op', 'permit'),
+  LoopCase('while-unif-cond-break-op', 'sensitive'),
+  LoopCase('while-unif-always-return-op', 'permit'),
+  LoopCase('while-unif-cond-return-op', 'sensitive'),
+  LoopCase('while-unif-always-continue-op', 'permit'),
+  LoopCase('while-unif-cond-continue-op', 'sensitive'),
+  //   op, then interruption
+  LoopCase('while-unif-op-always-break', 'permit'),
+  LoopCase('while-unif-op-cond-break', 'sensitive'),
+  LoopCase('while-unif-op-always-return', 'permit'),
+  LoopCase('while-unif-op-cond-return', 'sensitive'),
+  LoopCase('while-unif-op-always-continue', 'permit'),
+  LoopCase('while-unif-op-cond-continue', 'sensitive'),
+  //   interruption, then op after loop
+  LoopCase('while-unif-end-op', 'permit'),
+  LoopCase('while-unif-always-break-end-op', 'permit'),
+  LoopCase('while-unif-cond-break-end-op', 'permit'),
+  LoopCase('while-unif-always-return-end-op', 'permit'),
+  LoopCase('while-unif-cond-return-end-op', 'sensitive'),
+  LoopCase('while-unif-always-continue-end-op', 'permit'),
+  LoopCase('while-unif-cond-continue-end-op', 'permit'),
+
+  // While with non-uniform condition
+  LoopCase('while-nonunif-op', 'forbid'),
+  //   interruption, then op
+  LoopCase('while-nonunif-always-break-op', 'permit'),
+  LoopCase('while-nonunif-cond-break-op', 'forbid'),
+  LoopCase('while-nonunif-always-return-op', 'permit'),
+  LoopCase('while-nonunif-cond-return-op', 'forbid'),
+  LoopCase('while-nonunif-always-continue-op', 'permit'),
+  LoopCase('while-nonunif-cond-continue-op', 'forbid'),
+  //   op, then interruption
+  LoopCase('while-nonunif-op-always-break', 'forbid'),
+  LoopCase('while-nonunif-op-cond-break', 'forbid'),
+  LoopCase('while-nonunif-op-always-return', 'forbid'),
+  LoopCase('while-nonunif-op-cond-return', 'forbid'),
+  LoopCase('while-nonunif-op-always-continue', 'forbid'),
+  LoopCase('while-nonunif-op-cond-continue', 'forbid'),
+  //   interruption, then op after loop
+  LoopCase('while-nonunif-end-op', 'permit'),
+  LoopCase('while-nonunif-always-break-end-op', 'permit'),
+  LoopCase('while-nonunif-cond-break-end-op', 'permit'),
+  LoopCase('while-nonunif-always-return-end-op', 'forbid'),
+  LoopCase('while-nonunif-cond-return-end-op', 'forbid'),
+  LoopCase('while-nonunif-always-continue-end-op', 'permit'),
+  LoopCase('while-nonunif-cond-continue-end-op', 'permit'),
+];
+
+const kStatementNames = kStatementCases.map(sc => sc.name);
+type StatementName = (typeof kStatementNames)[number];
+// Lookup table by statement name
+const kStatementDict = Object.fromEntries(kStatementCases.map(sc => [sc.name, sc])) as Record<
+  StatementName,
+  Snippet
+>;
 
 function generateConditionalStatement(
-  statement: kStatementType,
-  condition: string,
-  op: string
-): string {
-  const code = ``;
-  switch (statement) {
-    case 'if': {
-      return `if ${generateCondition(condition)} {
-        ${generateOp(op)};
-      }
-      `;
-    }
-    case 'for': {
-      return `for (; ${generateCondition(condition)};) {
-        ${generateOp(op)};
-      }
-      `;
-    }
-    case 'while': {
-      return `while ${generateCondition(condition)} {
-        ${generateOp(op)};
-      }
-      `;
-    }
-    case 'switch': {
-      return `switch u32(${generateCondition(condition)}) {
-        case 0: {
-          ${generateOp(op)};
-        }
-        default: { }
-      }
-      `;
-    }
-    case 'break-if': {
-      // The initial 'if' prevents the loop from being infinite.  Its condition
-      // is uniform, to ensure the first iteration of the the body executes
-      // uniformly. The uniformity of the second iteration depends entirely on
-      // the uniformity of the break-if condition.
-      return `loop {
-        if ${generateCondition('uniform_storage_ro')} { break; }
-        ${generateOp(op)}
-        continuing {
-          break if ${generateCondition(condition)};
-        }
-      }
-      `;
-    }
-  }
-
-  return code;
+  name: StatementName,
+  condition_name: string,
+  op_name: string
+): Snippet {
+  const cond = generateCondition(condition_name);
+  const op = generateOp(op_name);
+  const snippet = kStatementDict[name];
+  let code = snippet.code;
+  code = code
+    .replace('<op>', op)
+    .replace('<cond>', cond)
+    .replaceAll('<uniform_cond>', generateCondition('uniform_storage_ro'))
+    .replaceAll('<nonuniform_cond>', generateCondition('nonuniform_storage_ro'));
+  return { name, code, verdict: snippet.verdict };
 }
 
 g.test('basics')
   .desc(`Test collective operations in simple uniform or non-uniform control flow.`)
   .params(u =>
     u
-      .combine('statement', kStatementKinds)
+      .combine('statement', kStatementNames)
       .beginSubcases()
       .combineWithParams(kConditions)
       .combineWithParams(kCollectiveOps)
@@ -286,18 +461,26 @@ g.test('basics')
       code += `@builtin(position) p : vec4<f32>`;
     }
     code += `) {
-      let u_let = uniform_buffer.x;
-      let n_let = rw_buffer[0];
-      var u_f = uniform_buffer.z;
-      var n_f = rw_buffer[1];
-    `;
+  let u_let = uniform_buffer.x;
+  let n_let = rw_buffer[0];
+  var u_f = uniform_buffer.z;
+  var n_f = rw_buffer[1];
+`;
 
     // Simple control statement containing the op.
-    code += generateConditionalStatement(t.params.statement, t.params.cond, t.params.op);
+    const snippet = generateConditionalStatement(t.params.statement, t.params.cond, t.params.op);
+    code += snippet.code;
 
     code += `\n}\n`;
 
-    t.expectCompileResult(t.params.expectation || t.params.op.startsWith('control_case'), code);
+    t.expectCompileResult(
+      compileShouldSucceed({
+        requires_uniformity: !t.params.op.startsWith('control_case'),
+        condition_is_uniform: t.params.expectation,
+        verdict: snippet.verdict,
+      }),
+      code
+    );
   });
 
 const kSubgroupOps = [
@@ -333,7 +516,7 @@ g.test('basics,subgroups')
   .desc(`Test subgroup operations in simple uniform or non-uniform control flow.`)
   .params(u =>
     u
-      .combine('statement', kStatementKinds)
+      .combine('statement', kStatementNames)
       .beginSubcases()
       .combineWithParams(kConditions)
       .combine('op', kSubgroupOps)
@@ -380,11 +563,19 @@ g.test('basics,subgroups')
     `;
 
     // Simple control statement containing the op.
-    code += generateConditionalStatement(t.params.statement, t.params.cond, t.params.op);
+    const snippet = generateConditionalStatement(t.params.statement, t.params.cond, t.params.op);
+    code += snippet.code;
 
     code += `\n}\n`;
 
-    t.expectCompileResult(t.params.expectation || t.params.op.startsWith('control_case'), code);
+    t.expectCompileResult(
+      compileShouldSucceed({
+        requires_uniformity: !t.params.op.startsWith('control_case'),
+        condition_is_uniform: t.params.expectation,
+        verdict: snippet.verdict,
+      }),
+      code
+    );
   });
 
 const kFragmentBuiltinValues = [
