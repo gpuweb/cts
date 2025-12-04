@@ -52,6 +52,7 @@ Test basic render pass resolve behavior for combinations of:
       .combine('resolveTargetBaseArrayLayer', [0, 1] as const)
       .combine('transientDepthStencilAttachment', [false, true])
       .combine('depthStencilAttachment', [false, true])
+      .unless(t => !t.depthStencilAttachment && t.transientDepthStencilAttachment)
   )
   .fn(t => {
     const targets: GPUColorTargetState[] = [];
