@@ -3,7 +3,11 @@ export const description = `createTexture validation tests.`;
 import { AllFeaturesMaxLimitsGPUTest } from '../.././gpu_test.js';
 import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { assert, makeValueTestVariant } from '../../../common/util/util.js';
-import { kTextureDimensions, kTextureUsages } from '../../capability_info.js';
+import {
+  kTextureDimensions,
+  kTextureUsages,
+  IsInvalidTransientAttachmentUsage,
+} from '../../capability_info.js';
 import { GPUConst } from '../../constants.js';
 import {
   kAllTextureFormats,
@@ -1012,6 +1016,12 @@ g.test('texture_usage')
       .filter(({ dimension, format }) =>
         textureFormatAndDimensionPossiblyCompatible(dimension, format)
       )
+      .unless(({ usage0, usage1 }) => {
+        return (
+          IsInvalidTransientAttachmentUsage(usage0, usage1) ||
+          IsInvalidTransientAttachmentUsage(usage1, usage0)
+        );
+      })
   )
   .fn(t => {
     const { dimension, format, usage0, usage1 } = t.params;

@@ -215,6 +215,17 @@ export const kTextureUsageInfo: {
 /** List of all GPUTextureUsage values. */
 export const kTextureUsages = numericKeysOf<GPUTextureUsageFlags>(kTextureUsageInfo);
 
+/** Check if `usage0` is TRANSIENT_ATTACHMENT and `usage1` is not RENDER_ATTACHMENT. */
+export function IsInvalidTransientAttachmentUsage(
+  usage0: GPUTextureUsageFlags,
+  usage1: GPUTextureUsageFlags
+): boolean {
+  return (
+    usage0 === GPUConst.TextureUsage.TRANSIENT_ATTACHMENT &&
+    usage1 !== GPUConst.TextureUsage.RENDER_ATTACHMENT
+  );
+}
+
 // Texture View
 
 /** Per-GPUTextureViewDimension info. */
