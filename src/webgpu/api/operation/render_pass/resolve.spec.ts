@@ -120,8 +120,6 @@ Test basic render pass resolve behavior for combinations of:
     const resolveTargets: GPUTexture[] = [];
     const drawPassAttachments: GPURenderPassColorAttachment[] = [];
     const resolvePassAttachments: GPURenderPassColorAttachment[] = [];
-    let drawPassDepthStencilAttachment: GPURenderPassDepthStencilAttachment | undefined;
-    let resolvePassDepthStencilAttachment: GPURenderPassDepthStencilAttachment | undefined;
 
     // The resolve target must be the same size as the color attachment. If we're resolving to mip
     // level 1, the resolve target base mip level should be 2x the color attachment size.
@@ -139,23 +137,6 @@ Test basic render pass resolve behavior for combinations of:
             : GPUTextureUsage.RENDER_ATTACHMENT,
         })
         .createView();
-
-      const depthStencilTexture = t.createTextureTracked({
-        format: kDepthStencilFormat,
-        size: [kSize, kSize, 1],
-        sampleCount: 4,
-        usage: t.params.transientDepthStencilAttachment
-          ? GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TRANSIENT_ATTACHMENT
-          : GPUTextureUsage.RENDER_ATTACHMENT,
-      });
-      const depthStencilAttachment: GPURenderPassDepthStencilAttachment = {
-        view: depthStencilTexture.createView(),
-        depthClearValue: 1.0,
-        depthLoadOp: 'clear',
-        depthStoreOp: 'discard',
-        stencilLoadOp: 'clear',
-        stencilStoreOp: 'discard',
-      };
 
       let resolveTarget: GPUTextureView | undefined;
       if (t.params.slotsToResolve.includes(i)) {
@@ -189,10 +170,6 @@ Test basic render pass resolve behavior for combinations of:
           loadOp: 'load',
           storeOp: t.params.storeOperation,
         });
-        if (t.params.depthStencilAttachment) {
-          drawPassDepthStencilAttachment = depthStencilAttachment;
-          resolvePassDepthStencilAttachment = depthStencilAttachment;
-        }
       } else {
         drawPassAttachments.push({
           view: colorAttachment,
@@ -201,16 +178,33 @@ Test basic render pass resolve behavior for combinations of:
           loadOp: 'clear',
           storeOp: t.params.storeOperation,
         });
-        if (t.params.depthStencilAttachment) {
-          drawPassDepthStencilAttachment = depthStencilAttachment;
-        }
       }
+    }
+
+    let depthStencilAttachment: GPURenderPassDepthStencilAttachment | undefined;
+    if (t.params.depthStencilAttachment) {
+      const depthStencilTexture = t.createTextureTracked({
+        format: kDepthStencilFormat,
+        size: [kSize, kSize, 1],
+        sampleCount: 4,
+        usage: t.params.transientDepthStencilAttachment
+          ? GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TRANSIENT_ATTACHMENT
+          : GPUTextureUsage.RENDER_ATTACHMENT,
+      });
+      depthStencilAttachment = {
+        view: depthStencilTexture.createView(),
+        depthClearValue: 1.0,
+        depthLoadOp: 'clear',
+        depthStoreOp: 'discard',
+        stencilLoadOp: 'clear',
+        stencilStoreOp: 'discard',
+      };
     }
 
     const encoder = t.device.createCommandEncoder();
     const pass = encoder.beginRenderPass({
       colorAttachments: drawPassAttachments,
-      depthStencilAttachment: drawPassDepthStencilAttachment,
+      depthStencilAttachment,
     });
     pass.setPipeline(pipeline);
     pass.draw(3);
@@ -218,7 +212,7 @@ Test basic render pass resolve behavior for combinations of:
     if (t.params.separateResolvePass) {
       const pass = encoder.beginRenderPass({
         colorAttachments: resolvePassAttachments,
-        depthStencilAttachment: resolvePassDepthStencilAttachment,
+        depthStencilAttachment,
       });
       pass.end();
     }
