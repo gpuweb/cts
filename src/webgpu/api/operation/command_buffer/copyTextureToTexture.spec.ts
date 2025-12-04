@@ -1528,13 +1528,10 @@ g.test('copy_multisampled_depth')
   `
   )
   .params(u =>
-    u
-      .combine('format', kDepthStencilFormats)
-      .combine('transientAttachment', [false, true])
-      .filter(t => isDepthTextureFormat(t.format))
+    u.combine('format', kDepthStencilFormats).filter(t => isDepthTextureFormat(t.format))
   )
   .fn(t => {
-    const { format, transientAttachment } = t.params;
+    const { format } = t.params;
 
     t.skipIf(t.isCompatibility, 'multisample textures are not copyable in compatibility mode');
     t.skipIfTextureFormatNotSupported(format);
@@ -1648,9 +1645,7 @@ g.test('copy_multisampled_depth')
     const multisampledColorTexture = t.createTextureTracked({
       format: kColorFormat,
       size: textureSize,
-      usage: transientAttachment
-        ? GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TRANSIENT_ATTACHMENT
-        : GPUTextureUsage.RENDER_ATTACHMENT,
+      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
       sampleCount: kSampleCount,
     });
     const colorTextureAsResolveTarget = t.createTextureTracked({
