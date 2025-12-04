@@ -11,7 +11,7 @@ const kSlotsToResolve = [
 ];
 
 const kSize = 4;
-const kColorFormat: GPUTextureFormat = 'rgba8unorm';
+const kFormat: GPUTextureFormat = 'rgba8unorm';
 const kDepthStencilFormat: GPUTextureFormat = 'depth24plus-stencil8';
 
 export const g = makeTestGroup(AllFeaturesMaxLimitsGPUTest);
@@ -57,7 +57,7 @@ Test basic render pass resolve behavior for combinations of:
   .fn(t => {
     const targets: GPUColorTargetState[] = [];
     for (let i = 0; i < t.params.numColorAttachments; i++) {
-      targets.push({ format: kColorFormat });
+      targets.push({ format: kFormat });
     }
 
     let depthStencil: GPUDepthStencilState | undefined;
@@ -130,7 +130,7 @@ Test basic render pass resolve behavior for combinations of:
     for (let i = 0; i < t.params.numColorAttachments; i++) {
       const colorAttachment = t
         .createTextureTracked({
-          format: kColorFormat,
+          format: kFormat,
           size: [kSize, kSize, 1],
           sampleCount: 4,
           mipLevelCount: 1,
@@ -160,7 +160,7 @@ Test basic render pass resolve behavior for combinations of:
       let resolveTarget: GPUTextureView | undefined;
       if (t.params.slotsToResolve.includes(i)) {
         const resolveTargetTexture = t.createTextureTracked({
-          format: kColorFormat,
+          format: kFormat,
           size: [kResolveTargetSize, kResolveTargetSize, t.params.resolveTargetBaseArrayLayer + 1],
           sampleCount: 1,
           mipLevelCount: t.params.resolveTargetBaseMipLevel + 1,
