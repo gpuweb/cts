@@ -3,7 +3,7 @@ setImmediates validation tests.
 
 Test different encoder types (compute pass, render pass, render bundle):
 * Interpretation:
-  - Passing a TypedArray the data offset and size is not given in elements.
+  - Passing a TypedArray, the data offset and size are given in elements (not bytes).
 * Alignment:
   - rangeOffset is not a multiple of 4 bytes.
   - content size, converted to bytes, is not a multiple of 4 bytes.
@@ -116,7 +116,8 @@ g.test('overflow')
   )
   .fn(t => {
     const { encoderType, offset, contentByteSize, _rangeValid, _contentValid } = t.params;
-    const data = new Uint8Array(t.device.limits.maxImmediateSize);
+    // Allocate enough data to avoid bounds errors when testing overflow.
+    const data = new Uint8Array(contentByteSize);
 
     const { encoder, validateFinish } = t.createEncoder(encoderType);
 
