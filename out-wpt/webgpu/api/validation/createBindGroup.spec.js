@@ -22,7 +22,8 @@ import {
   kTextureUsages,
   kTextureViewDimensions,
   sampledAndStorageBindingEntries,
-  texBindingTypeInfo } from
+  texBindingTypeInfo,
+  IsValidTransientAttachmentUsage } from
 '../../capability_info.js';
 import { GPUConst } from '../../constants.js';
 import { kPossibleStorageTextureFormats, kRegularTextureFormats } from '../../format_info.js';
@@ -199,6 +200,13 @@ u //
 combine('usage', kTextureUsages).
 unless(({ entry, usage }) => {
   const info = texBindingTypeInfo(entry);
+  // TRANSIENT_ATTACHMENT is only valid when combined with RENDER_ATTACHMENT, so skip.
+  if (
+  usage === GPUConst.TextureUsage.TRANSIENT_ATTACHMENT &&
+  info.resource !== 'sampledTexMS')
+  {
+    return true;
+  }
   // Can't create the texture for this (usage=STORAGE_BINDING and sampleCount=4), so skip.
   return usage === GPUConst.TextureUsage.STORAGE_BINDING && info.resource === 'sampledTexMS';
 })
@@ -780,7 +788,14 @@ u //
 // If usage0 and usage1 are the same, the usage being test is a single usage. Otherwise, it's
 // a combined usage.
 .combine('usage0', kTextureUsages).
-combine('usage1', kTextureUsages)
+combine('usage1', kTextureUsages).
+unless(({ usage0, usage1 }) => {
+  const usage = usage0 | usage1;
+  return (
+    (usage & GPUConst.TextureUsage.TRANSIENT_ATTACHMENT) !== 0 &&
+    !IsValidTransientAttachmentUsage(usage));
+
+})
 ).
 fn((t) => {
   const { usage0, usage1 } = t.params;
@@ -1211,7 +1226,14 @@ u //
 // If usage0 and usage1 are the same, the usage being test is a single usage. Otherwise, it's
 // a combined usage.
 .combine('usage0', kTextureUsages).
-combine('usage1', kTextureUsages)
+combine('usage1', kTextureUsages).
+unless(({ usage0, usage1 }) => {
+  const usage = usage0 | usage1;
+  return (
+    (usage & GPUConst.TextureUsage.TRANSIENT_ATTACHMENT) !== 0 &&
+    !IsValidTransientAttachmentUsage(usage));
+
+})
 ).
 fn((t) => {
   const { usage0, usage1 } = t.params;
