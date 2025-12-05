@@ -769,6 +769,7 @@ const [kLimitInfoKeys, kLimitInfoDefaults, kLimitInfoData] =
   'maxComputeWorkgroupSizeY':                  [           ,       256,             128,                          ],
   'maxComputeWorkgroupSizeZ':                  [           ,        64,              64,                          ],
   'maxComputeWorkgroupsPerDimension':          [           ,     65535,           65535,                          ],
+  'maxImmediateSize':                          [           ,        64,              64,                          ],
 } as const];
 
 // MAINTENANCE_TODO: Remove when the compat spec is merged.
