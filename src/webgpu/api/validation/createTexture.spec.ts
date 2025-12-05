@@ -6,7 +6,7 @@ import { assert, makeValueTestVariant } from '../../../common/util/util.js';
 import {
   kTextureDimensions,
   kTextureUsages,
-  IsInvalidTransientAttachmentUsage,
+  IsValidTransientAttachmentUsage,
 } from '../../capability_info.js';
 import { GPUConst } from '../../constants.js';
 import {
@@ -1017,9 +1017,10 @@ g.test('texture_usage')
         textureFormatAndDimensionPossiblyCompatible(dimension, format)
       )
       .unless(({ usage0, usage1 }) => {
+        const usage = usage0 | usage1;
         return (
-          IsInvalidTransientAttachmentUsage(usage0, usage1) ||
-          IsInvalidTransientAttachmentUsage(usage1, usage0)
+          (usage & GPUConst.TextureUsage.TRANSIENT_ATTACHMENT) !== 0 &&
+          !IsValidTransientAttachmentUsage(usage)
         );
       })
   )
