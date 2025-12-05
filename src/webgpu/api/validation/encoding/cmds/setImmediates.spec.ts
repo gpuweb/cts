@@ -10,8 +10,8 @@ Test different encoder types (compute pass, render pass, render bundle):
 * Arithmetic overflow
   - rangeOffset + contentSize is overflow
 * Bounds:
-  - dataOffset + size (in bytes) exceeds the content data size.
-  - rangeOffset + size (in bytes) exceeds the maxImmediateSize.
+  - dataOffset + contentSize (in bytes) exceeds the content data size.
+  - rangeOffset + contentSize (in bytes) exceeds the maxImmediateSize.
 `;
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
