@@ -116,8 +116,7 @@ g.test('overflow')
   )
   .fn(t => {
     const { encoderType, offset, contentByteSize, _rangeValid, _contentValid } = t.params;
-    // Allocate enough data to avoid bounds errors when testing overflow.
-    const data = new Uint8Array(contentByteSize);
+    const data = new Uint8Array(t.device.limits.maxImmediateSize);
 
     const { encoder, validateFinish } = t.createEncoder(encoderType);
 
