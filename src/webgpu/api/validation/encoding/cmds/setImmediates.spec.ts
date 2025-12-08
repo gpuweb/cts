@@ -105,7 +105,7 @@ g.test('overflow')
       .combineWithParams([
         // control case
         { offset: 4, contentByteSize: 4, _rangeValid: true, _contentValid: true },
-        // rangeOffset + contentSize is overflow
+        // rangeOffset + contentSize overflows
         {
           offset: 8,
           contentByteSize: kMaxSafeMultipleOf8,
