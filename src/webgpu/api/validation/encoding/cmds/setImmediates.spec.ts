@@ -98,7 +98,7 @@ g.test('alignment')
   });
 
 g.test('overflow')
-  .desc('Tests that rangeOffset + contentSize exceed Number.MAX_SAFE_INTEGER.')
+  .desc('Tests that rangeOffset + contentSize exceeds Number.MAX_SAFE_INTEGER.')
   .paramsSubcasesOnly(u =>
     u //
       .combine('encoderType', kProgrammableEncoderTypes)
@@ -107,7 +107,7 @@ g.test('overflow')
         { offset: 4, contentByteSize: 4, _rangeValid: true, _contentValid: true },
         // rangeOffset + contentSize is overflow
         {
-          offset: 4,
+          offset: 8,
           contentByteSize: kMaxSafeMultipleOf8,
           _rangeValid: true,
           _contentValid: false,
@@ -163,6 +163,7 @@ g.test('out_of_bounds')
         {
           rangeRemainSpace: 8,
           dataByteSize: 4,
+          dataOffset: 0,
           size: 8,
           _rangeValid: true,
           _contentValid: false,
