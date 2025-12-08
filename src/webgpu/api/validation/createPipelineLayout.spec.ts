@@ -512,3 +512,45 @@ g.test('bind_group_layouts,set_pipeline_with_null_bind_group_layouts')
       }
     }
   });
+
+g.test('immediate_data_size')
+  .desc(
+    `
+    Test that creating a pipeline layout with immediateSize validates:
+    - immediateSize must be a multiple of 4.
+    - immediateSize must be <= device.limits.maxImmediateSize.
+  `
+  )
+  .params(u => u.combine('immediateSize', [0, 4, 'max', 'max+4', 1, 2, 3, 5] as const))
+  .fn(t => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const maxImmediateSize = (t.device.limits as any).maxImmediateSize;
+
+    if (maxImmediateSize === undefined) {
+      t.skip('maxImmediateSize limit is not supported on this device.');
+      return;
+    }
+
+    const { immediateSize: sizeVariant } = t.params;
+    let size: number;
+    if (sizeVariant === 'max') {
+      size = maxImmediateSize;
+    } else if (sizeVariant === 'max+4') {
+      size = maxImmediateSize + 4;
+    } else {
+      size = sizeVariant as number;
+    }
+
+    const descriptor = {
+      bindGroupLayouts: [],
+      immediateSize: size,
+    };
+
+    const isMultipleOf4 = size % 4 === 0;
+    const isWithinLimit = size <= maxImmediateSize;
+    const shouldSucceed = isMultipleOf4 && isWithinLimit;
+
+    t.expectValidationError(() => {
+      t.device.createPipelineLayout(descriptor);
+    }, !shouldSucceed);
+  });
