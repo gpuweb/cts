@@ -1052,8 +1052,11 @@ g.test('texture_usage')
       if (isColorTextureFormat(format) && !isTextureFormatColorRenderable(t.device, format))
         success = false;
     }
-    if (usage & GPUTextureUsage.TRANSIENT_ATTACHMENT) {
-      if (usage !== (GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TRANSIENT_ATTACHMENT)) {
+    if (usage & GPUConst.TextureUsage.TRANSIENT_ATTACHMENT) {
+      if (
+        usage !==
+        (GPUTextureUsage.RENDER_ATTACHMENT | GPUConst.TextureUsage.TRANSIENT_ATTACHMENT)
+      ) {
         success = false;
       }
     }

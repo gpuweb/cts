@@ -8,7 +8,11 @@ TODO:
 
 import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { assert } from '../../../common/util/util.js';
-import { kCanvasTextureFormats, kTextureUsages } from '../../capability_info.js';
+import {
+  kCanvasTextureFormats,
+  kTextureUsages,
+  IsValidTransientAttachmentUsage,
+} from '../../capability_info.js';
 import { GPUConst } from '../../constants.js';
 import {
   kAllTextureFormats,
@@ -211,6 +215,12 @@ g.test('usage')
           }
         }
         return usageSet;
+      })
+      .unless(({ usage }) => {
+        return (
+          (usage & GPUConst.TextureUsage.TRANSIENT_ATTACHMENT) !== 0 &&
+          !IsValidTransientAttachmentUsage(usage)
+        );
       })
   )
   .fn(t => {

@@ -742,8 +742,8 @@ g.test('color_attachments,loadOp_storeOp')
     t.skipIfTextureFormatNotUsableAsRenderAttachment(format);
 
     const usage = transientTexture
-      ? GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TRANSIENT_ATTACHMENT
-      : GPUTextureUsage.RENDER_ATTACHMENT;
+      ? GPUConst.TextureUsage.RENDER_ATTACHMENT | GPUConst.TextureUsage.TRANSIENT_ATTACHMENT
+      : GPUConst.TextureUsage.RENDER_ATTACHMENT;
 
     const texture = t.createTestTexture({ usage });
 
@@ -1125,8 +1125,8 @@ g.test('depth_stencil_attachment,loadOp_storeOp_match_depthReadOnly_stencilReadO
     t.skipIfTextureFormatNotSupported(format);
 
     const usage = transientTexture
-      ? GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TRANSIENT_ATTACHMENT
-      : GPUTextureUsage.RENDER_ATTACHMENT;
+      ? GPUConst.TextureUsage.RENDER_ATTACHMENT | GPUConst.TextureUsage.TRANSIENT_ATTACHMENT
+      : GPUConst.TextureUsage.RENDER_ATTACHMENT;
     const depthAttachment = t.createTextureTracked({
       format,
       size: { width: 1, height: 1, depthOrArrayLayers: 1 },

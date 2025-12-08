@@ -4,7 +4,7 @@ Tests for capabilities added by bgra8unorm-storage flag.
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { assert } from '../../../../common/util/util.js';
-import { kTextureUsages } from '../../../capability_info.js';
+import { kTextureUsages, IsValidTransientAttachmentUsage } from '../../../capability_info.js';
 import { GPUConst } from '../../../constants.js';
 import { UniqueFeaturesOrLimitsGPUTest } from '../../../gpu_test.js';
 import { kAllCanvasTypes, createCanvas } from '../../../util/create_elements.js';
@@ -101,6 +101,12 @@ Test that it is invalid to configure a GPUCanvasContext to 'GPUStorageBinding' u
         }
         return usageSet;
       })
+      .unless(({ usage }) => {
+        return (
+          (usage & GPUConst.TextureUsage.TRANSIENT_ATTACHMENT) !== 0 &&
+          !IsValidTransientAttachmentUsage(usage)
+        );
+      })
   )
   .fn(t => {
     const { canvasType, usage } = t.params;
@@ -143,6 +149,12 @@ with 'bgra8unorm-storage' enabled.
           usageSet.add(usage | GPUConst.TextureUsage.STORAGE_BINDING);
         }
         return usageSet;
+      })
+      .unless(({ usage }) => {
+        return (
+          (usage & GPUConst.TextureUsage.TRANSIENT_ATTACHMENT) !== 0 &&
+          !IsValidTransientAttachmentUsage(usage)
+        );
       })
   )
   .fn(t => {
