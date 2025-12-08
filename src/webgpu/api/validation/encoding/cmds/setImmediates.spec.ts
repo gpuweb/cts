@@ -145,23 +145,34 @@ g.test('out_of_bounds')
         {
           rangeRemainSpace: 4,
           dataByteSize: 32,
-          immediateContentByteSize: 4,
+          dataOffset: 0,
+          size: 4,
           _rangeValid: true,
           _contentValid: true,
         },
-        // offset + contentByteSize larger than maxImmediateSize
+        // rangeOffset + contentByteSize larger than maxImmediateSize
         {
           rangeRemainSpace: 0,
           dataByteSize: 32,
-          immediateContentByteSize: 4,
+          dataOffset: 0,
+          size: 4,
           _rangeValid: false,
           _contentValid: true,
         },
-        // contentSize is larger than data size
+        // size is larger than data size
         {
           rangeRemainSpace: 8,
           dataByteSize: 4,
-          immediateContentByteSize: 8,
+          size: 8,
+          _rangeValid: true,
+          _contentValid: false,
+        },
+        // dataOffset + size is larger than data size
+        {
+          rangeRemainSpace: 8,
+          dataByteSize: 32,
+          dataOffset: 28,
+          size: 8,
           _rangeValid: true,
           _contentValid: false,
         },
@@ -172,7 +183,8 @@ g.test('out_of_bounds')
       encoderType,
       rangeRemainSpace,
       dataByteSize,
-      immediateContentByteSize,
+      dataOffset,
+      size,
       _rangeValid,
       _contentValid,
     } = t.params;
@@ -183,7 +195,7 @@ g.test('out_of_bounds')
     const { encoder, validateFinish } = t.createEncoder(encoderType);
 
     const doSetImmediates = () => {
-      encoder.setImmediates(rangeOffset, data, 0, immediateContentByteSize);
+      encoder.setImmediates(rangeOffset, data, dataOffset, size);
     };
 
     if (_contentValid) {
