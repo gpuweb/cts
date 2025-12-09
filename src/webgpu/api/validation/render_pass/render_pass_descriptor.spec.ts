@@ -741,6 +741,11 @@ g.test('color_attachments,loadOp_storeOp')
     t.skipIfTextureFormatNotSupported(format);
     t.skipIfTextureFormatNotUsableAsRenderAttachment(format);
 
+    // MAINTENANCE_TODO(#4509): Remove this when TRANSIENT_ATTACHMENT is added to the WebGPU spec.
+    if (transientTexture) {
+      t.skipIfTransientAttachmentNotSupported();
+    }
+
     const usage = transientTexture
       ? GPUConst.TextureUsage.RENDER_ATTACHMENT | GPUConst.TextureUsage.TRANSIENT_ATTACHMENT
       : GPUConst.TextureUsage.RENDER_ATTACHMENT;
@@ -1123,6 +1128,11 @@ g.test('depth_stencil_attachment,loadOp_storeOp_match_depthReadOnly_stencilReadO
     } = t.params;
 
     t.skipIfTextureFormatNotSupported(format);
+
+    // MAINTENANCE_TODO(#4509): Remove this when TRANSIENT_ATTACHMENT is added to the WebGPU spec.
+    if (transientTexture) {
+      t.skipIfTransientAttachmentNotSupported();
+    }
 
     const usage = transientTexture
       ? GPUConst.TextureUsage.RENDER_ATTACHMENT | GPUConst.TextureUsage.TRANSIENT_ATTACHMENT
