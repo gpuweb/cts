@@ -12,6 +12,7 @@ const kSlotsToResolve = [
 
 const kSize = 4;
 const kFormat: GPUTextureFormat = 'rgba8unorm';
+const kDepthStencilFormat: GPUTextureFormat = 'depth24plus-stencil8';
 
 export const g = makeTestGroup(AllFeaturesMaxLimitsGPUTest);
 
@@ -40,15 +41,36 @@ Test basic render pass resolve behavior for combinations of:
       .combine('separateResolvePass', [false, true])
       .combine('storeOperation', ['discard', 'store'] as const)
       .beginSubcases()
+      .combine('transientColorAttachment', [false, true])
+      // Exclude if transient AND (separate pass OR storing)
+      .unless(
+        t => t.transientColorAttachment && (t.separateResolvePass || t.storeOperation === 'store')
+      )
       .combine('numColorAttachments', [2, 4] as const)
       .combine('slotsToResolve', kSlotsToResolve)
       .combine('resolveTargetBaseMipLevel', [0, 1] as const)
       .combine('resolveTargetBaseArrayLayer', [0, 1] as const)
+      .combine('transientDepthStencilAttachment', [false, true])
+      .combine('depthStencilAttachment', [false, true])
+      .unless(t => !t.depthStencilAttachment && t.transientDepthStencilAttachment)
   )
   .fn(t => {
+    // MAINTENANCE_TODO(#4509): Remove this when TRANSIENT_ATTACHMENT is added to the WebGPU spec.
+    if (t.params.transientColorAttachment || t.params.transientDepthStencilAttachment) {
+      t.skipIfTransientAttachmentNotSupported();
+    }
+
     const targets: GPUColorTargetState[] = [];
     for (let i = 0; i < t.params.numColorAttachments; i++) {
       targets.push({ format: kFormat });
+    }
+
+    let depthStencil: GPUDepthStencilState | undefined;
+    if (t.params.depthStencilAttachment) {
+      depthStencil = {
+        format: kDepthStencilFormat,
+        depthWriteEnabled: false,
+      };
     }
 
     // These shaders will draw a white triangle into a texture. After draw, the top left
@@ -95,6 +117,7 @@ Test basic render pass resolve behavior for combinations of:
         entryPoint: 'main',
         targets,
       },
+      depthStencil,
       primitive: { topology: 'triangle-list' },
       multisample: { count: 4 },
     });
@@ -114,8 +137,9 @@ Test basic render pass resolve behavior for combinations of:
           size: [kSize, kSize, 1],
           sampleCount: 4,
           mipLevelCount: 1,
-          usage:
-            GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
+          usage: t.params.transientColorAttachment
+            ? GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TRANSIENT_ATTACHMENT
+            : GPUTextureUsage.RENDER_ATTACHMENT,
         })
         .createView();
 
@@ -162,13 +186,39 @@ Test basic render pass resolve behavior for combinations of:
       }
     }
 
+    let depthStencilAttachment: GPURenderPassDepthStencilAttachment | undefined;
+    if (t.params.depthStencilAttachment) {
+      const depthStencilTexture = t.createTextureTracked({
+        format: kDepthStencilFormat,
+        size: [kSize, kSize, 1],
+        sampleCount: 4,
+        usage: t.params.transientDepthStencilAttachment
+          ? GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TRANSIENT_ATTACHMENT
+          : GPUTextureUsage.RENDER_ATTACHMENT,
+      });
+      depthStencilAttachment = {
+        view: depthStencilTexture.createView(),
+        depthClearValue: 1.0,
+        depthLoadOp: 'clear',
+        depthStoreOp: 'discard',
+        stencilLoadOp: 'clear',
+        stencilStoreOp: 'discard',
+      };
+    }
+
     const encoder = t.device.createCommandEncoder();
-    const pass = encoder.beginRenderPass({ colorAttachments: drawPassAttachments });
+    const pass = encoder.beginRenderPass({
+      colorAttachments: drawPassAttachments,
+      depthStencilAttachment,
+    });
     pass.setPipeline(pipeline);
     pass.draw(3);
     pass.end();
     if (t.params.separateResolvePass) {
-      const pass = encoder.beginRenderPass({ colorAttachments: resolvePassAttachments });
+      const pass = encoder.beginRenderPass({
+        colorAttachments: resolvePassAttachments,
+        depthStencilAttachment,
+      });
       pass.end();
     }
     t.device.queue.submit([encoder.finish()]);
