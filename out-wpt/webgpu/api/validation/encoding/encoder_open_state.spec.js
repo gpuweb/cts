@@ -98,7 +98,6 @@ const kRenderPassEncoderCommandInfo =
   setScissorRect: {},
   setBlendConstant: {},
   setStencilReference: {},
-  setImmediates: {},
   beginOcclusionQuery: {},
   endOcclusionQuery: {},
   executeBundles: {},
@@ -123,7 +122,6 @@ const kRenderBundleEncoderCommandInfo =
   setBindGroup: {},
   setIndexBuffer: {},
   setVertexBuffer: {},
-  setImmediates: {},
   pushDebugGroup: {},
   popDebugGroup: {},
   insertDebugMarker: {}
@@ -143,7 +141,6 @@ const kComputePassEncoderCommandInfo =
   setPipeline: {},
   dispatchWorkgroups: {},
   dispatchWorkgroupsIndirect: {},
-  setImmediates: {},
   pushDebugGroup: {},
   popDebugGroup: {},
   insertDebugMarker: {}
@@ -394,12 +391,6 @@ fn((t) => {
           renderPass.setStencilReference(0);
         }
         break;
-      case 'setImmediates':
-        {
-          const data = new Uint32Array(1);
-          renderPass.setImmediates(0, data, 0, 1);
-        }
-        break;
       case 'beginOcclusionQuery':
         {
           renderPass.beginOcclusionQuery(0);
@@ -511,12 +502,6 @@ fn((t) => {
           bundleEncoder.setVertexBuffer(1, buffer);
         }
         break;
-      case 'setImmediates':
-        {
-          const data = new Uint32Array(1);
-          bundleEncoder.setImmediates(0, data, 0, 1);
-        }
-        break;
       case 'pushDebugGroup':
         {
           bundleEncoder.pushDebugGroup('group');
@@ -597,12 +582,6 @@ fn((t) => {
       case 'dispatchWorkgroupsIndirect':
         {
           computePass.dispatchWorkgroupsIndirect(indirectBuffer, 0);
-        }
-        break;
-      case 'setImmediates':
-        {
-          const data = new Uint32Array(1);
-          computePass.setImmediates(0, data, 0, 1);
         }
         break;
       case 'pushDebugGroup':
