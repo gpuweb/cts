@@ -778,14 +778,6 @@ const [kLimitInfoKeys, kLimitInfoDefaults, kLimitInfoData] =
   'maxComputeWorkgroupsPerDimension': [, 65535, 65535]
 }];
 
-// MAINTENANCE_TODO: Remove when the compat spec is merged.
-const kCompatOnlyLimits = [
-'maxStorageTexturesInFragmentStage',
-'maxStorageTexturesInVertexStage',
-'maxStorageBuffersInFragmentStage',
-'maxStorageBuffersInVertexStage'];
-
-
 /**
  * Feature levels corresponding to core WebGPU and WebGPU
  * in compatibility mode. They can be passed to
@@ -823,14 +815,7 @@ export const kLimitClasses = Object.fromEntries(
 );
 
 export function getDefaultLimits(featureLevel) {
-  return Object.fromEntries(
-    Object.entries(kLimitInfos[featureLevel]).filter(([k]) => {
-      // Filter out compat-only limits when in core mode
-      return featureLevel === 'core' ?
-      !kCompatOnlyLimits.includes(k) :
-      true;
-    })
-  );
+  return kLimitInfos[featureLevel];
 }
 
 /**
