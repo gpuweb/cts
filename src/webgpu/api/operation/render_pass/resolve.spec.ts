@@ -55,6 +55,11 @@ Test basic render pass resolve behavior for combinations of:
       .unless(t => !t.depthStencilAttachment && t.transientDepthStencilAttachment)
   )
   .fn(t => {
+    // MAINTENANCE_TODO(#4509): Remove this when TRANSIENT_ATTACHMENT is added to the WebGPU spec.
+    if (t.params.transientColorAttachment || t.params.transientDepthStencilAttachment) {
+      t.skipIfTransientAttachmentNotSupported();
+    }
+
     const targets: GPUColorTargetState[] = [];
     for (let i = 0; i < t.params.numColorAttachments; i++) {
       targets.push({ format: kFormat });
