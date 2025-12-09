@@ -1,209 +1,169 @@
 export const description = `
 setImmediates validation tests.
-
-Test different encoder types (compute pass, render pass, render bundle):
-* Interpretation:
-  - Passing a TypedArray, the data offset and size are given in elements (not bytes).
-* Alignment:
-  - rangeOffset is not a multiple of 4 bytes.
-  - content size, converted to bytes, is not a multiple of 4 bytes.
-* Arithmetic overflow
-  - rangeOffset + contentSize is overflow
-* Bounds:
-  - dataOffset + contentSize (in bytes) exceeds the content data size.
-  - rangeOffset + contentSize (in bytes) exceeds the maxImmediateSize.
 `;
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import {
-  kTypedArrayBufferViewConstructors,
-  TypedArrayBufferViewConstructor,
+  kTypedArrayBufferViews,
+  kTypedArrayBufferViewKeys,
 } from '../../../../../common/util/util.js';
-import { Float16Array } from '../../../../../external/petamoriken/float16/float16.js';
 import { AllFeaturesMaxLimitsGPUTest } from '../../../../gpu_test.js';
 import { kProgrammableEncoderTypes } from '../../../../util/command_buffer_maker.js';
-import { kMaxSafeMultipleOf8 } from '../../../../util/math.js';
 
 export const g = makeTestGroup(AllFeaturesMaxLimitsGPUTest);
 
-g.test('interpretation')
-  .desc('Tests that contentSize is interpreted as element size with TypedArray.')
-  .paramsSubcasesOnly(u =>
-    u //
-      .combine('encoderType', kProgrammableEncoderTypes)
-      .combine('success', [true, false])
-  )
-  .fn(t => {
-    const { encoderType, success } = t.params;
-
-    function runTest(arrayBufferType: TypedArrayBufferViewConstructor) {
-      const kMinAlignmentBytes = 4;
-      const elementSize = arrayBufferType.BYTES_PER_ELEMENT;
-      const maxImmediateSize = t.device.limits.maxImmediateSize; // using this limit for tests
-      const validDataSize = success
-        ? Math.floor((maxImmediateSize - kMinAlignmentBytes) / elementSize)
-        : maxImmediateSize - kMinAlignmentBytes;
-      const validOffset = success
-        ? Math.ceil(kMinAlignmentBytes / elementSize)
-        : kMinAlignmentBytes;
-
-      const { encoder, validateFinish } = t.createEncoder(encoderType);
-      const data = new arrayBufferType(maxImmediateSize);
-
-      encoder.setImmediates(/* rangeOffset */ 0, data, /* dataOffset */ validOffset, validDataSize);
-
-      validateFinish(success || elementSize === 1);
-    }
-
-    for (const arrayType of kTypedArrayBufferViewConstructors) {
-      if (arrayType === Float16Array) {
-        // Skip Float16Array since it is supplied by an external module, so there isn't an overload for it.
-        continue;
-      }
-      runTest(arrayType);
-    }
-  });
-
 g.test('alignment')
   .desc('Tests that rangeOffset and contentSize must align to 4 bytes.')
-  .paramsSubcasesOnly(u =>
+  .params(u =>
     u //
       .combine('encoderType', kProgrammableEncoderTypes)
+      .combine('arrayType', kTypedArrayBufferViewKeys)
+      .filter(p => p.arrayType !== 'Float16Array')
       .combineWithParams([
-        // control case
-        { offset: 4, contentByteSize: 4, _offsetValid: true, _contentValid: true },
-        // offset is not aligned to 4 bytes
-        { offset: 1, contentByteSize: 4, _offsetValid: false, _contentValid: true },
-        // contentSize is not aligned to 4 bytes
-        { offset: 4, contentByteSize: 5, _offsetValid: true, _contentValid: false },
-      ] as const)
+        // control case: rangeOffset 4 is aligned. contentByteSize 8 is aligned.
+        { rangeOffset: 4, contentByteSize: 8 },
+        // rangeOffset 5 is unaligned (5 % 4 !== 0).
+        { rangeOffset: 5, contentByteSize: 8 },
+        // contentByteSize 10 is unaligned (10 % 4 !== 0).
+        // Note: This case will be skipped for types with element size > 2 (e.g. Uint32, Uint64)
+        // because they cannot form a 10-byte array.
+        { rangeOffset: 4, contentByteSize: 10 },
+      ])
+      .filter(({ arrayType, contentByteSize }) => {
+        // Skip if the contentByteSize is not a multiple of the element size.
+        // For example, we can't have 10 bytes if the element size is 4 or 8 bytes.
+        const arrayConstructor = kTypedArrayBufferViews[arrayType];
+        return contentByteSize % arrayConstructor.BYTES_PER_ELEMENT === 0;
+      })
   )
   .fn(t => {
-    const { encoderType, offset, contentByteSize, _offsetValid, _contentValid } = t.params;
-    const data = new Uint8Array(contentByteSize);
+    const { encoderType, arrayType, rangeOffset, contentByteSize } = t.params;
+    const arrayBufferType = kTypedArrayBufferViews[arrayType];
+    const elementSize = arrayBufferType.BYTES_PER_ELEMENT;
+    const elementCount = contentByteSize / elementSize;
+
+    const isRangeOffsetAligned = rangeOffset % 4 === 0;
+    const isContentSizeAligned = contentByteSize % 4 === 0;
 
     const { encoder, validateFinish } = t.createEncoder(encoderType);
+    const data = new arrayBufferType(elementCount);
 
-    const doSetImmediates = () => {
-      encoder.setImmediates(offset, data, 0, contentByteSize);
-    };
+    t.shouldThrow(isContentSizeAligned ? false : 'RangeError', () => {
+      // Cast to any to avoid Float16Array issues
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      encoder.setImmediates(rangeOffset, data as any, 0, elementCount);
+    });
 
-    if (_contentValid) {
-      doSetImmediates();
-    } else {
-      t.shouldThrow('RangeError', doSetImmediates);
-    }
-
-    validateFinish(_offsetValid);
+    validateFinish(isRangeOffsetAligned);
   });
 
 g.test('overflow')
-  .desc('Tests that rangeOffset + contentSize exceeds Number.MAX_SAFE_INTEGER.')
-  .paramsSubcasesOnly(u =>
+  .desc('Tests that rangeOffset + contentSize or dataOffset + size exceeds limits.')
+  .params(u =>
     u //
       .combine('encoderType', kProgrammableEncoderTypes)
+      .combine('arrayType', kTypedArrayBufferViewKeys)
+      .filter(p => p.arrayType !== 'Float16Array')
       .combineWithParams([
         // control case
-        { offset: 4, contentByteSize: 4, _rangeValid: true, _contentValid: true },
+        { rangeOffset: 0, dataOffset: 0, elementCount: 4, _expectedError: null },
         // rangeOffset + contentSize overflows
         {
-          offset: 8,
-          contentByteSize: kMaxSafeMultipleOf8,
-          _rangeValid: true,
-          _contentValid: false,
+          rangeOffset: Math.pow(2, 31) - 8,
+          dataOffset: 0,
+          elementCount: 4,
+          _expectedError: 'validation',
         },
-      ] as const)
+        {
+          rangeOffset: Math.pow(2, 32) - 8,
+          dataOffset: 0,
+          elementCount: 4,
+          _expectedError: 'validation',
+        },
+        // dataOffset + size overflows
+        {
+          rangeOffset: 0,
+          dataOffset: Math.pow(2, 31) - 1,
+          elementCount: 4,
+          _expectedError: 'RangeError',
+        },
+        {
+          rangeOffset: 0,
+          dataOffset: Math.pow(2, 32) - 1,
+          elementCount: 4,
+          _expectedError: 'RangeError',
+        },
+      ])
   )
   .fn(t => {
-    const { encoderType, offset, contentByteSize, _rangeValid, _contentValid } = t.params;
-    const data = new Uint8Array(t.device.limits.maxImmediateSize);
+    const { encoderType, arrayType, rangeOffset, dataOffset, elementCount, _expectedError } =
+      t.params;
+    const arrayBufferType = kTypedArrayBufferViews[arrayType];
 
     const { encoder, validateFinish } = t.createEncoder(encoderType);
+    const data = new arrayBufferType(elementCount);
 
     const doSetImmediates = () => {
-      encoder.setImmediates(offset, data, 0, contentByteSize);
+      // Cast to any to avoid Float16Array issues
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      encoder.setImmediates(rangeOffset, data as any, dataOffset, elementCount);
     };
 
-    if (_contentValid) {
-      doSetImmediates();
-    } else {
+    if (_expectedError === 'RangeError') {
       t.shouldThrow('RangeError', doSetImmediates);
+    } else {
+      doSetImmediates();
+      validateFinish(_expectedError === null);
     }
-
-    validateFinish(_rangeValid);
   });
 
 g.test('out_of_bounds')
   .desc(
-    'Tests that rangeOffset + contentSize is greater than maxImmediateSize and contentSize is larger than data size.'
+    `
+    Tests that rangeOffset + contentSize is greater than maxImmediateSize (Validation Error)
+    and contentSize is larger than data size (RangeError).
+    `
   )
-  .paramsSubcasesOnly(u =>
+  .params(u =>
     u //
       .combine('encoderType', kProgrammableEncoderTypes)
+      .combine('arrayType', kTypedArrayBufferViewKeys)
+      .filter(p => p.arrayType !== 'Float16Array')
       .combineWithParams([
         // control case
-        {
-          rangeRemainSpace: 4,
-          dataByteSize: 32,
-          dataOffset: 0,
-          size: 4,
-          _rangeValid: true,
-          _contentValid: true,
-        },
-        // rangeOffset + contentByteSize larger than maxImmediateSize
-        {
-          rangeRemainSpace: 0,
-          dataByteSize: 32,
-          dataOffset: 0,
-          size: 4,
-          _rangeValid: false,
-          _contentValid: true,
-        },
-        // size is larger than data size
-        {
-          rangeRemainSpace: 8,
-          dataByteSize: 4,
-          dataOffset: 0,
-          size: 8,
-          _rangeValid: true,
-          _contentValid: false,
-        },
-        // dataOffset + size is larger than data size
-        {
-          rangeRemainSpace: 8,
-          dataByteSize: 32,
-          dataOffset: 28,
-          size: 8,
-          _rangeValid: true,
-          _contentValid: false,
-        },
-      ] as const)
+        { rangeOffsetDelta: 0, dataLengthDelta: 0 },
+        // rangeOffset + contentSize > maxImmediateSize
+        { rangeOffsetDelta: 4, dataLengthDelta: 0 },
+        // dataOffset + size > data.length
+        { rangeOffsetDelta: 0, dataLengthDelta: -1 },
+      ])
   )
   .fn(t => {
-    const {
-      encoderType,
-      rangeRemainSpace,
-      dataByteSize,
-      dataOffset,
-      size,
-      _rangeValid,
-      _contentValid,
-    } = t.params;
-    const maxImmediates = t.device.limits.maxImmediateSize;
-    const rangeOffset = maxImmediates - rangeRemainSpace;
-    const data = new Uint8Array(dataByteSize);
+    const { encoderType, arrayType, rangeOffsetDelta, dataLengthDelta } = t.params;
+    const arrayBufferType = kTypedArrayBufferViews[arrayType];
+    const elementSize = arrayBufferType.BYTES_PER_ELEMENT;
+
+    const maxImmediateSize = t.device.limits.maxImmediateSize;
+    // We want contentByteSize to be aligned to 4 bytes to avoid alignment errors.
+    const elementCount = elementSize >= 4 ? 1 : 4 / elementSize;
+    const contentByteSize = elementCount * elementSize;
+
+    const rangeOffset = maxImmediateSize - contentByteSize + rangeOffsetDelta;
+    const dataLength = elementCount + dataLengthDelta;
+
+    const data = new arrayBufferType(dataLength);
 
     const { encoder, validateFinish } = t.createEncoder(encoderType);
 
-    const doSetImmediates = () => {
-      encoder.setImmediates(rangeOffset, data, dataOffset, size);
-    };
+    const rangeOverLimit = rangeOffset + contentByteSize > maxImmediateSize;
+    const dataOverLimit = elementCount > dataLength;
 
-    if (_contentValid) {
-      doSetImmediates();
-    } else {
-      t.shouldThrow('RangeError', doSetImmediates);
+    t.shouldThrow(dataOverLimit ? 'RangeError' : false, () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      encoder.setImmediates(rangeOffset, data as any, 0, elementCount);
+    });
+
+    if (!dataOverLimit) {
+      validateFinish(!rangeOverLimit);
     }
-
-    validateFinish(_rangeValid);
   });
