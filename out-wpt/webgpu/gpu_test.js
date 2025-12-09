@@ -676,6 +676,15 @@ export class GPUTestBase extends Fixture {
     return lf !== undefined && lf.has(langFeature);
   }
 
+  /** Skips this test case if the GPUTextureUsage `TRANSIENT_ATTACHMENT` is *not* supported. */
+  skipIfTransientAttachmentNotSupported() {
+    const isTransientAttachmentSupported = ('TRANSIENT_ATTACHMENT' in GPUTextureUsage);
+    this.skipIf(
+      !isTransientAttachmentSupported,
+      'GPUTextureUsage TRANSIENT_ATTACHMENT is not supported'
+    );
+  }
+
   /**
    * Expect a GPUBuffer's contents to pass the provided check.
    *
