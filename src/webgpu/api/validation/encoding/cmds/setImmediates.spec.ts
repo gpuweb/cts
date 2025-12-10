@@ -16,7 +16,8 @@ class SetImmediatesTest extends AllFeaturesMaxLimitsGPUTest {
     if (
       !('setImmediates' in GPURenderPassEncoder.prototype) ||
       !('setImmediates' in GPUComputePassEncoder.prototype) ||
-      !('setImmediates' in GPURenderBundleEncoder.prototype)
+      !('setImmediates' in GPURenderBundleEncoder.prototype) ||
+      !('maxImmediateSize' in this.device.limits)
     ) {
       this.skip('setImmediates not supported');
     }
