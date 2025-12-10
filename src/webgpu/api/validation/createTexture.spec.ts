@@ -362,6 +362,10 @@ g.test('sampleCount,valid_sampleCount_with_other_parameter_varies')
     if ((usage & GPUConst.TextureUsage.RENDER_ATTACHMENT) !== 0) {
       t.skipIfTextureFormatNotUsableAsRenderAttachment(format);
     }
+    // MAINTENANCE_TODO(#4509): Remove this when TRANSIENT_ATTACHMENT is added to the WebGPU spec.
+    if ((usage & GPUConst.TextureUsage.TRANSIENT_ATTACHMENT) !== 0) {
+      t.skipIfTransientAttachmentNotSupported();
+    }
     const { blockWidth, blockHeight } = getBlockInfoForTextureFormat(format);
 
     const size =
@@ -1051,14 +1055,6 @@ g.test('texture_usage')
       if (appliedDimension === '1d') success = false;
       if (isColorTextureFormat(format) && !isTextureFormatColorRenderable(t.device, format))
         success = false;
-    }
-    if (usage & GPUConst.TextureUsage.TRANSIENT_ATTACHMENT) {
-      if (
-        usage !==
-        (GPUTextureUsage.RENDER_ATTACHMENT | GPUConst.TextureUsage.TRANSIENT_ATTACHMENT)
-      ) {
-        success = false;
-      }
     }
 
     t.expectValidationError(() => {
