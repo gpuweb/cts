@@ -10,7 +10,20 @@ import {
 import { AllFeaturesMaxLimitsGPUTest } from '../../../../gpu_test.js';
 import { kProgrammableEncoderTypes } from '../../../../util/command_buffer_maker.js';
 
-export const g = makeTestGroup(AllFeaturesMaxLimitsGPUTest);
+class SetImmediatesTest extends AllFeaturesMaxLimitsGPUTest {
+  override async init() {
+    await super.init();
+    if (
+      !('setImmediates' in GPURenderPassEncoder.prototype) ||
+      !('setImmediates' in GPUComputePassEncoder.prototype) ||
+      !('setImmediates' in GPURenderBundleEncoder.prototype)
+    ) {
+      this.skip('setImmediates not supported');
+    }
+  }
+}
+
+export const g = makeTestGroup(SetImmediatesTest);
 
 g.test('alignment')
   .desc('Tests that rangeOffset and contentSize must align to 4 bytes.')
