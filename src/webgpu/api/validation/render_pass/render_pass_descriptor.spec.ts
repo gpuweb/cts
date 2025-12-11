@@ -889,7 +889,7 @@ g.test('resolveTarget,usage')
   .paramsSimple([
     { usage: GPUConst.TextureUsage.COPY_SRC | GPUConst.TextureUsage.COPY_DST },
     { usage: GPUConst.TextureUsage.STORAGE_BINDING | GPUConst.TextureUsage.TEXTURE_BINDING },
-    { usage: GPUConst.TextureUsage.STORAGE_BINDING | GPUConst.TextureUsage.STORAGE },
+    { usage: GPUConst.TextureUsage.STORAGE_BINDING | GPUConst.TextureUsage.STORAGE_BINDING },
     { usage: GPUConst.TextureUsage.RENDER_ATTACHMENT | GPUConst.TextureUsage.TEXTURE_BINDING },
   ])
   .fn(t => {
