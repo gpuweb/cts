@@ -677,6 +677,7 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
   }
 
   /** Skips this test case if the GPUTextureUsage `TRANSIENT_ATTACHMENT` is *not* supported. */
+  // MAINTENANCE_TODO(#4509): Remove this when TRANSIENT_ATTACHMENT is added to the WebGPU spec.
   skipIfTransientAttachmentNotSupported() {
     const isTransientAttachmentSupported = 'TRANSIENT_ATTACHMENT' in GPUTextureUsage;
     this.skipIf(
