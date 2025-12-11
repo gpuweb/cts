@@ -87,6 +87,8 @@ g.test('overflow')
       .combineWithParams([
         // control case
         { rangeOffset: 0, dataOffset: 0, elementCount: 4, _expectedError: null },
+        // elementCount 0
+        { rangeOffset: 0, dataOffset: 0, elementCount: 0, _expectedError: null },
         // rangeOffset + contentSize overflows
         {
           rangeOffset: Math.pow(2, 31) - 8,
@@ -170,7 +172,8 @@ g.test('out_of_bounds')
     }
 
     // We want contentByteSize to be aligned to 4 bytes to avoid alignment errors.
-    const elementCount = elementSize >= 4 ? 1 : 4 / elementSize;
+    // We use 8 bytes to cover all types including BigUint64 (8 bytes).
+    const elementCount = elementSize >= 8 ? 1 : 8 / elementSize;
     const contentByteSize = elementCount * elementSize;
 
     const rangeOffset = maxImmediateSize - contentByteSize + rangeOffsetDelta;
