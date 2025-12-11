@@ -6,7 +6,7 @@ import { assert, makeValueTestVariant } from '../../../common/util/util.js';
 import {
   kTextureDimensions,
   kTextureUsages,
-  IsValidTransientAttachmentUsage,
+  IsValidTextureUsageCombination,
 } from '../../capability_info.js';
 import { GPUConst } from '../../constants.js';
 import {
@@ -1021,11 +1021,7 @@ g.test('texture_usage')
         textureFormatAndDimensionPossiblyCompatible(dimension, format)
       )
       .unless(({ usage0, usage1 }) => {
-        const usage = usage0 | usage1;
-        return (
-          (usage & GPUConst.TextureUsage.TRANSIENT_ATTACHMENT) !== 0 &&
-          !IsValidTransientAttachmentUsage(usage)
-        );
+        return !IsValidTextureUsageCombination(usage0 | usage1);
       })
   )
   .fn(t => {
@@ -1042,6 +1038,11 @@ g.test('texture_usage')
       format,
       usage,
     };
+
+    // MAINTENANCE_TODO(#4509): Remove this when TRANSIENT_ATTACHMENT is added to the WebGPU spec.
+    if ((usage & GPUConst.TextureUsage.TRANSIENT_ATTACHMENT) !== 0) {
+      t.skipIfTransientAttachmentNotSupported();
+    }
 
     let success = true;
     const appliedDimension = dimension ?? '2d';

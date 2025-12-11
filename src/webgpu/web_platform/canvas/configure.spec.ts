@@ -11,7 +11,7 @@ import { assert } from '../../../common/util/util.js';
 import {
   kCanvasTextureFormats,
   kTextureUsages,
-  IsValidTransientAttachmentUsage,
+  IsValidTextureUsageCombination,
 } from '../../capability_info.js';
 import { GPUConst } from '../../constants.js';
 import {
@@ -217,10 +217,7 @@ g.test('usage')
         return usageSet;
       })
       .unless(({ usage }) => {
-        return (
-          (usage & GPUConst.TextureUsage.TRANSIENT_ATTACHMENT) !== 0 &&
-          !IsValidTransientAttachmentUsage(usage)
-        );
+        return !IsValidTextureUsageCombination(usage);
       })
   )
   .fn(t => {
