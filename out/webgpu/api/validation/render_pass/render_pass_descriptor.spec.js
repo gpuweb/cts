@@ -741,9 +741,14 @@ fn((t) => {
   t.skipIfTextureFormatNotSupported(format);
   t.skipIfTextureFormatNotUsableAsRenderAttachment(format);
 
+  // MAINTENANCE_TODO(#4509): Remove this when TRANSIENT_ATTACHMENT is added to the WebGPU spec.
+  if (transientTexture) {
+    t.skipIfTransientAttachmentNotSupported();
+  }
+
   const usage = transientTexture ?
-  GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TRANSIENT_ATTACHMENT :
-  GPUTextureUsage.RENDER_ATTACHMENT;
+  GPUConst.TextureUsage.RENDER_ATTACHMENT | GPUConst.TextureUsage.TRANSIENT_ATTACHMENT :
+  GPUConst.TextureUsage.RENDER_ATTACHMENT;
 
   const texture = t.createTestTexture({ usage });
 
@@ -1124,9 +1129,14 @@ fn((t) => {
 
   t.skipIfTextureFormatNotSupported(format);
 
+  // MAINTENANCE_TODO(#4509): Remove this when TRANSIENT_ATTACHMENT is added to the WebGPU spec.
+  if (transientTexture) {
+    t.skipIfTransientAttachmentNotSupported();
+  }
+
   const usage = transientTexture ?
-  GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TRANSIENT_ATTACHMENT :
-  GPUTextureUsage.RENDER_ATTACHMENT;
+  GPUConst.TextureUsage.RENDER_ATTACHMENT | GPUConst.TextureUsage.TRANSIENT_ATTACHMENT :
+  GPUConst.TextureUsage.RENDER_ATTACHMENT;
   const depthAttachment = t.createTextureTracked({
     format,
     size: { width: 1, height: 1, depthOrArrayLayers: 1 },

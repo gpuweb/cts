@@ -6,7 +6,7 @@ import { assert, makeValueTestVariant } from '../../../common/util/util.js';
 import {
   kTextureDimensions,
   kTextureUsages,
-  IsValidTransientAttachmentUsage } from
+  IsValidTextureUsageCombination } from
 '../../capability_info.js';
 import { GPUConst } from '../../constants.js';
 import {
@@ -361,6 +361,10 @@ fn((t) => {
   t.skipIfTextureFormatAndDimensionNotCompatible(format, dimension);
   if ((usage & GPUConst.TextureUsage.RENDER_ATTACHMENT) !== 0) {
     t.skipIfTextureFormatNotUsableAsRenderAttachment(format);
+  }
+  // MAINTENANCE_TODO(#4509): Remove this when TRANSIENT_ATTACHMENT is added to the WebGPU spec.
+  if ((usage & GPUConst.TextureUsage.TRANSIENT_ATTACHMENT) !== 0) {
+    t.skipIfTransientAttachmentNotSupported();
   }
   const { blockWidth, blockHeight } = getBlockInfoForTextureFormat(format);
 
@@ -1017,11 +1021,7 @@ combine('usage1', kTextureUsages)
 textureFormatAndDimensionPossiblyCompatible(dimension, format)
 ).
 unless(({ usage0, usage1 }) => {
-  const usage = usage0 | usage1;
-  return (
-    (usage & GPUConst.TextureUsage.TRANSIENT_ATTACHMENT) !== 0 &&
-    !IsValidTransientAttachmentUsage(usage));
-
+  return !IsValidTextureUsageCombination(usage0 | usage1);
 })
 ).
 fn((t) => {
@@ -1039,6 +1039,11 @@ fn((t) => {
     usage
   };
 
+  // MAINTENANCE_TODO(#4509): Remove this when TRANSIENT_ATTACHMENT is added to the WebGPU spec.
+  if ((usage & GPUConst.TextureUsage.TRANSIENT_ATTACHMENT) !== 0) {
+    t.skipIfTransientAttachmentNotSupported();
+  }
+
   let success = true;
   const appliedDimension = dimension ?? '2d';
   // Note that we unconditionally test copy usages for all formats and
@@ -1051,11 +1056,6 @@ fn((t) => {
     if (appliedDimension === '1d') success = false;
     if (isColorTextureFormat(format) && !isTextureFormatColorRenderable(t.device, format))
     success = false;
-  }
-  if (usage & GPUTextureUsage.TRANSIENT_ATTACHMENT) {
-    if (usage !== (GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TRANSIENT_ATTACHMENT)) {
-      success = false;
-    }
   }
 
   t.expectValidationError(() => {
