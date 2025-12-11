@@ -14,10 +14,12 @@ class SetImmediatesTest extends AllFeaturesMaxLimitsGPUTest {
   override async init() {
     await super.init();
     if (
-      !('setImmediates' in GPURenderPassEncoder.prototype) ||
-      !('setImmediates' in GPUComputePassEncoder.prototype) ||
-      !('setImmediates' in GPURenderBundleEncoder.prototype) ||
-      !('maxImmediateSize' in this.device.limits)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      !('setImmediates' in (GPURenderPassEncoder.prototype as any)) ||
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      !('setImmediates' in (GPUComputePassEncoder.prototype as any)) ||
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      !('setImmediates' in (GPURenderBundleEncoder.prototype as any))
     ) {
       this.skip('setImmediates not supported');
     }
@@ -65,14 +67,18 @@ g.test('alignment')
     t.shouldThrow(isContentSizeAligned ? false : 'RangeError', () => {
       // Cast to any to avoid Float16Array issues
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      encoder.setImmediates(rangeOffset, data as any, 0, elementCount);
+      (encoder as any).setImmediates(rangeOffset, data as any, 0, elementCount);
     });
 
     validateFinish(isRangeOffsetAligned);
   });
 
 g.test('overflow')
-  .desc('Tests that rangeOffset + contentSize or dataOffset + size exceeds limits.')
+  .desc(
+    `
+    Tests that rangeOffset + contentSize or dataOffset + size is handled correctly if it exceeds limits.
+    `
+  )
   .params(u =>
     u //
       .combine('encoderType', kProgrammableEncoderTypes)
@@ -120,7 +126,7 @@ g.test('overflow')
     const doSetImmediates = () => {
       // Cast to any to avoid Float16Array issues
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      encoder.setImmediates(rangeOffset, data as any, dataOffset, elementCount);
+      (encoder as any).setImmediates(rangeOffset, data as any, dataOffset, elementCount);
     };
 
     if (_expectedError === 'RangeError') {
@@ -157,7 +163,12 @@ g.test('out_of_bounds')
     const arrayBufferType = kTypedArrayBufferViews[arrayType];
     const elementSize = arrayBufferType.BYTES_PER_ELEMENT;
 
-    const maxImmediateSize = t.device.limits.maxImmediateSize;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const maxImmediateSize = (t.device.limits as any).maxImmediateSize;
+    if (maxImmediateSize === undefined) {
+      t.skip('maxImmediateSize not found');
+    }
+
     // We want contentByteSize to be aligned to 4 bytes to avoid alignment errors.
     const elementCount = elementSize >= 4 ? 1 : 4 / elementSize;
     const contentByteSize = elementCount * elementSize;
@@ -174,7 +185,7 @@ g.test('out_of_bounds')
 
     t.shouldThrow(dataOverLimit ? 'RangeError' : false, () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      encoder.setImmediates(rangeOffset, data as any, 0, elementCount);
+      (encoder as any).setImmediates(rangeOffset, data as any, 0, elementCount);
     });
 
     if (!dataOverLimit) {
