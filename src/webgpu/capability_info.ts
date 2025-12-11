@@ -215,9 +215,10 @@ export const kTextureUsageInfo: {
 /** List of all GPUTextureUsage values. */
 export const kTextureUsages = numericKeysOf<GPUTextureUsageFlags>(kTextureUsageInfo);
 
-/** Check if `usage` is TRANSIENT_ATTACHMENT | RENDER_ATTACHMENT. */
-export function IsValidTransientAttachmentUsage(usage: GPUTextureUsageFlags): boolean {
+/** Check if `usage` does not contain TRANSIENT_ATTACHMENT or is TRANSIENT_ATTACHMENT | RENDER_ATTACHMENT. */
+export function IsValidTextureUsageCombination(usage: GPUTextureUsageFlags): boolean {
   return (
+    (usage & GPUConst.TextureUsage.TRANSIENT_ATTACHMENT) === 0 ||
     usage === (GPUConst.TextureUsage.TRANSIENT_ATTACHMENT | GPUConst.TextureUsage.RENDER_ATTACHMENT)
   );
 }
