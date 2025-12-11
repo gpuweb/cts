@@ -53,7 +53,7 @@ fn((t) => {
   const descriptor = {
     size: [1, 1, 1],
     format: 'bgra8unorm',
-    usage: GPUConst.TextureUsage.STORAGE
+    usage: GPUConst.TextureUsage.STORAGE_BINDING
   };
   t.createTextureTracked(descriptor);
 });
