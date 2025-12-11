@@ -2466,6 +2466,21 @@ export function isTextureFormatPossiblyMultisampled(format: GPUTextureFormat) {
 }
 
 /**
+ * Returns true if a texture can possibly be resolved.
+ * The texture may require certain features to be enabled.
+ */
+export function isTextureFormatPossiblyResolvable(format: GPUTextureFormat) {
+  if (format === 'rg11b10ufloat') {
+    return true;
+  }
+  if (isTextureFormatTier1EnablesResolve(format)) {
+    return true;
+  }
+  const info = kTextureFormatInfo[format];
+  return !!info.colorRender?.resolve;
+}
+
+/**
  * Returns true if a texture can possibly be used as a storage texture.
  * The texture may require certain features to be enabled.
  */
