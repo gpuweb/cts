@@ -739,7 +739,7 @@ const [kLimitInfoKeys, kLimitInfoDefaults, kLimitInfoData] =
                                                [  'maximum',          ,                ,     kMaxUnsignedLongValue] as const, {
   'maxTextureDimension1D':                     [           ,      8192,            4096,                          ],
   'maxTextureDimension2D':                     [           ,      8192,            4096,                          ],
-  'maxTextureDimension3D':                     [           ,      2048,            1024,                          ],
+  'maxTextureDimension3D':                     [           ,      2048,            2048,                          ],
   'maxTextureArrayLayers':                     [           ,       256,             256,                          ],
 
   'maxBindGroups':                             [           ,         4,               4,                          ],
