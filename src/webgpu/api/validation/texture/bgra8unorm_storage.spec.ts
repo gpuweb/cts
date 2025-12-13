@@ -4,7 +4,11 @@ Tests for capabilities added by bgra8unorm-storage flag.
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { assert } from '../../../../common/util/util.js';
-import { kTextureUsages, IsValidTextureUsageCombination } from '../../../capability_info.js';
+import {
+  kTextureUsages,
+  kValidCombinationsOfOneOrTwoTextureUsages,
+  usageIsTypeErrorForConfigure,
+} from '../../../capability_info.js';
 import { GPUConst } from '../../../constants.js';
 import { UniqueFeaturesOrLimitsGPUTest } from '../../../gpu_test.js';
 import { kAllCanvasTypes, createCanvas } from '../../../util/create_elements.js';
@@ -92,18 +96,12 @@ Test that it is invalid to configure a GPUCanvasContext to 'GPUStorageBinding' u
     u
       .combine('canvasType', kAllCanvasTypes)
       .beginSubcases()
-      .expand('usage', () => {
-        const usageSet = new Set<number>();
-        for (const usage0 of kTextureUsages) {
-          for (const usage1 of kTextureUsages) {
-            usageSet.add(usage0 | usage1);
-          }
-        }
-        return usageSet;
-      })
-      .unless(({ usage }) => {
-        return !IsValidTextureUsageCombination(usage);
-      })
+      .combine(
+        'usage',
+        kValidCombinationsOfOneOrTwoTextureUsages
+          // Don't test disallowed usages here, that's covered by configure() tests.
+          .filter(usage => !usageIsTypeErrorForConfigure(usage))
+      )
   )
   .fn(t => {
     const { canvasType, usage } = t.params;
@@ -146,16 +144,13 @@ with 'bgra8unorm-storage' enabled.
     u
       .combine('canvasType', kAllCanvasTypes)
       .beginSubcases()
-      .expand('usage', () => {
-        const usageSet = new Set<number>();
-        for (const usage of kTextureUsages) {
-          usageSet.add(usage | GPUConst.TextureUsage.STORAGE_BINDING);
-        }
-        return usageSet;
-      })
-      .unless(({ usage }) => {
-        return !IsValidTextureUsageCombination(usage);
-      })
+      .combine(
+        'usage',
+        kTextureUsages
+          // Don't test disallowed usages here, that's covered by configure() tests.
+          .filter(usage => !usageIsTypeErrorForConfigure(usage))
+          .map(usage => usage | GPUConst.TextureUsage.STORAGE_BINDING)
+      )
   )
   .fn(t => {
     const { canvasType, usage } = t.params;
