@@ -111,6 +111,44 @@ function generateCondition(condition) {
     case 'storage_texture_rw':{
         return `textureLoad(rw_storage_texture, vec2()).x == 0`;
       }
+    case 'control_case':{
+        return 'true';
+      }
+    case 'subgroupAdd':
+    case 'subgroupInclusiveAdd':
+    case 'subgroupExclusiveAdd':
+    case 'subgroupMul':
+    case 'subgroupInclusiveMul':
+    case 'subgroupExclusiveMul':
+    case 'subgroupMax':
+    case 'subgroupMin':
+    case 'subgroupAnd':
+    case 'subgroupOr':
+    case 'subgroupXor':
+    case 'subgroupBroadcastFirst':
+    case 'quadSwapX':
+    case 'quadSwapY':
+    case 'quadSwapDiagonal':{
+        return `${condition}(0) == 0`;
+      }
+    case 'subgroupAll':
+    case 'subgroupAny':{
+        return `${condition}(false)`;
+      }
+    case 'subgroupBallot':{
+        return `${condition}(false).x == 0`;
+      }
+    case 'subgroupElect':{
+        return `${condition}()`;
+      }
+    case 'subgroupBroadcast':
+    case 'subgroupShuffle':
+    case 'subgroupShuffleUp':
+    case 'subgroupShuffleDown':
+    case 'subgroupShuffleXor':
+    case 'quadBroadcast':{
+        return `${condition}(0, 0) == 0`;
+      }
     default:{
         unreachable(`Unhandled condition`);
       }
@@ -483,14 +521,9 @@ fn((t) => {
   );
 });
 
-const kSubgroupOps = [
-'control_case',
+const kUniformSubgroupOps = [
 'subgroupAdd',
-'subgroupInclusiveAdd',
-'subgroupExclusiveAdd',
 'subgroupMul',
-'subgroupInclusiveMul',
-'subgroupExclusiveMul',
 'subgroupMax',
 'subgroupMin',
 'subgroupAll',
@@ -499,9 +532,17 @@ const kSubgroupOps = [
 'subgroupOr',
 'subgroupXor',
 'subgroupBallot',
-'subgroupElect',
 'subgroupBroadcast',
-'subgroupBroadcastFirst',
+'subgroupBroadcastFirst'];
+
+
+const kSubgroupOps = [
+'control_case',
+'subgroupInclusiveAdd',
+'subgroupExclusiveAdd',
+'subgroupInclusiveMul',
+'subgroupExclusiveMul',
+'subgroupElect',
 'subgroupShuffle',
 'subgroupShuffleUp',
 'subgroupShuffleDown',
@@ -509,7 +550,8 @@ const kSubgroupOps = [
 'quadBroadcast',
 'quadSwapX',
 'quadSwapY',
-'quadSwapDiagonal'];
+'quadSwapDiagonal',
+...kUniformSubgroupOps];
 
 
 g.test('basics,subgroups').
@@ -573,6 +615,34 @@ fn((t) => {
       requires_uniformity: !t.params.op.startsWith('control_case'),
       condition_is_uniform: t.params.expectation,
       verdict: snippet.verdict
+    }),
+    code
+  );
+});
+
+g.test('uniform_subgroup_ops').
+desc(`Test subgroup operations that are uniform with subgroup uniformity.`).
+params((u) => u.combine('op', kSubgroupOps).combine('scope', ['workgroup', 'subgroup'])).
+fn((t) => {
+  const test_code =
+  t.params.scope === 'workgroup' ? 'workgroupBarrier();' : '_ = subgroupAny(true);';
+  const code = `
+enable subgroups;
+fn foo() {
+  if ${generateCondition(t.params.op)} {
+    ${test_code}
+  }
+}`;
+
+  const is_uniform =
+  kUniformSubgroupOps.includes(t.params.op) &&
+  t.hasLanguageFeature('subgroup_uniformity') &&
+  t.params.scope === 'subgroup';
+  t.expectCompileResult(
+    compileShouldSucceed({
+      requires_uniformity: !t.params.op.startsWith('control_case'),
+      condition_is_uniform: is_uniform,
+      verdict: 'sensitive'
     }),
     code
   );
@@ -715,10 +785,18 @@ const kComputeBuiltinValues = [
 
 g.test('compute_builtin_values').
 desc(`Test uniformity of compute built-in values`).
-params((u) => u.combineWithParams(kComputeBuiltinValues).beginSubcases()).
+params((u) =>
+u.
+combineWithParams(kComputeBuiltinValues).
+beginSubcases().
+combine('scope', ['workgroup', 'subgroup'])
+).
 beforeAllSubcases((t) => {
   if (t.params.builtin === `subgroup_id` || t.params.builtin === `num_subgroups`) {
     t.skipIfLanguageFeatureNotSupported('subgroup_id');
+  }
+  if (t.params.scope === 'subgroup') {
+    t.skipIfLanguageFeatureNotSupported('subgroup_uniformity');
   }
 }).
 fn((t) => {
@@ -744,18 +822,24 @@ fn((t) => {
         unreachable(`Unhandled type`);
       }
   }
-  const enable = t.params.builtin.includes('subgroup') ? 'enable subgroups;' : '';
+  const enable =
+  t.params.builtin.includes('subgroup') || t.params.scope === 'subgroup' ?
+  'enable subgroups;' :
+  '';
+  const op = t.params.scope === 'workgroup' ? 'workgroupBarrier()' : '_ = subgroupAny(true)';
   const code = `
 ${enable}
 @compute @workgroup_size(16,1,1)
 fn main(@builtin(${t.params.builtin}) p : ${t.params.type}) {
   if ${cond} {
-    workgroupBarrier();
+    ${op};
   }
 }
 `;
 
-  t.expectCompileResult(t.params.uniform, code);
+  const expect =
+  t.params.uniform || t.params.builtin === 'subgroup_id' && t.params.scope === 'subgroup';
+  t.expectCompileResult(expect, code);
 });
 
 function generatePointerCheck(check) {

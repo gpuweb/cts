@@ -933,5 +933,6 @@ export const kKnownWGSLLanguageFeatures = [
 'unrestricted_pointer_parameters',
 'pointer_composite_access',
 'uniform_buffer_standard_layout',
-'subgroup_id'];
+'subgroup_id',
+'subgroup_uniformity'];
 //# sourceMappingURL=capability_info.js.map
