@@ -340,7 +340,7 @@ g.test('sampleCount,valid_sampleCount_with_other_parameter_varies')
       .filter(({ dimension, format }) =>
         textureFormatAndDimensionPossiblyCompatible(dimension, format)
       )
-      .unless(({ usage, format, mipLevelCount, dimension }) => {
+      .unless(({ usage, format, arrayLayerCount, mipLevelCount, dimension }) => {
         return (
           ((usage & GPUConst.TextureUsage.RENDER_ATTACHMENT) !== 0 &&
             (!isTextureFormatPossiblyUsableAsColorRenderAttachment(format) ||
@@ -349,9 +349,11 @@ g.test('sampleCount,valid_sampleCount_with_other_parameter_varies')
             !isTextureFormatPossiblyStorageReadable(format)) ||
           (mipLevelCount !== 1 && dimension === '1d') ||
           ((usage & GPUConst.TextureUsage.TRANSIENT_ATTACHMENT) !== 0 &&
-            usage !==
+            (usage !==
               (GPUConst.TextureUsage.RENDER_ATTACHMENT |
-                GPUConst.TextureUsage.TRANSIENT_ATTACHMENT))
+                GPUConst.TextureUsage.TRANSIENT_ATTACHMENT) ||
+              mipLevelCount !== 1 ||
+              arrayLayerCount !== 1))
         );
       })
   )
@@ -1023,17 +1025,23 @@ g.test('texture_usage')
       .unless(({ usage0, usage1 }) => {
         return !IsValidTextureUsageCombination(usage0 | usage1);
       })
+      .combine('depthOrArrayLayers', [1, 2])
+      .unless(({ dimension, depthOrArrayLayers }) => {
+        return dimension === '1d' && depthOrArrayLayers !== 1;
+      })
+      .combine('mipLevelCount', [1, 2])
   )
   .fn(t => {
-    const { dimension, format, usage0, usage1 } = t.params;
+    const { dimension, format, usage0, usage1, depthOrArrayLayers, mipLevelCount } = t.params;
     t.skipIfTextureFormatNotSupported(format);
     t.skipIfTextureFormatAndDimensionNotCompatible(format, dimension);
     const info = getBlockInfoForTextureFormat(format);
 
-    const size = [info.blockWidth, info.blockHeight, 1];
+    const size = [info.blockWidth, info.blockHeight, depthOrArrayLayers];
     const usage = usage0 | usage1;
     const descriptor = {
       size,
+      mipLevelCount,
       dimension,
       format,
       usage,
@@ -1044,7 +1052,7 @@ g.test('texture_usage')
       t.skipIfTransientAttachmentNotSupported();
     }
 
-    let success = true;
+    let success = mipLevelCount <= maxMipLevelCount(descriptor);
     const appliedDimension = dimension ?? '2d';
     // Note that we unconditionally test copy usages for all formats and
     // expect failure if copying from or to is not supported.
@@ -1059,6 +1067,8 @@ g.test('texture_usage')
     }
     if (usage & GPUTextureUsage.TRANSIENT_ATTACHMENT) {
       if (appliedDimension !== '2d') success = false;
+      if (depthOrArrayLayers !== 1) success = false;
+      if (mipLevelCount !== 1) success = false;
     }
 
     t.expectValidationError(() => {
