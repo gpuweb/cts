@@ -357,6 +357,13 @@ g.test('texture_view_usage')
       })
       .beginSubcases()
       .combine('textureViewUsage', [0, ...kTextureUsages])
+      .unless(({ textureUsage, textureViewUsage }) => {
+        // TRANSIENT_ATTACHMENT is only valid when combined with RENDER_ATTACHMENT.
+        return (
+          textureUsage === GPUConst.TextureUsage.TRANSIENT_ATTACHMENT ||
+          textureViewUsage === GPUConst.TextureUsage.TRANSIENT_ATTACHMENT
+        );
+      })
   )
   .fn(t => {
     const { format, textureUsage, textureViewUsage } = t.params;
@@ -394,6 +401,10 @@ g.test('texture_view_usage_with_view_format')
       .combine('usage', kTextureUsages)
       .beginSubcases()
       .combine('viewFormat', kAllTextureFormats)
+      .unless(({ usage }) => {
+        // TRANSIENT_ATTACHMENT is only valid when combined with RENDER_ATTACHMENT.
+        return usage === GPUConst.TextureUsage.TRANSIENT_ATTACHMENT;
+      })
   )
   .fn(t => {
     const { textureFormat, viewFormat, usage } = t.params;

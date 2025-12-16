@@ -3,7 +3,11 @@ export const description = `createTexture validation tests.`;
 import { AllFeaturesMaxLimitsGPUTest } from '../.././gpu_test.js';
 import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { assert, makeValueTestVariant } from '../../../common/util/util.js';
-import { kTextureDimensions, kTextureUsages } from '../../capability_info.js';
+import {
+  kTextureDimensions,
+  kTextureUsages,
+  IsValidTextureUsageCombination,
+} from '../../capability_info.js';
 import { GPUConst } from '../../constants.js';
 import {
   kAllTextureFormats,
@@ -357,6 +361,10 @@ g.test('sampleCount,valid_sampleCount_with_other_parameter_varies')
     t.skipIfTextureFormatAndDimensionNotCompatible(format, dimension);
     if ((usage & GPUConst.TextureUsage.RENDER_ATTACHMENT) !== 0) {
       t.skipIfTextureFormatNotUsableAsRenderAttachment(format);
+    }
+    // MAINTENANCE_TODO(#4509): Remove this when TRANSIENT_ATTACHMENT is added to the WebGPU spec.
+    if ((usage & GPUConst.TextureUsage.TRANSIENT_ATTACHMENT) !== 0) {
+      t.skipIfTransientAttachmentNotSupported();
     }
     const { blockWidth, blockHeight } = getBlockInfoForTextureFormat(format);
 
@@ -1012,6 +1020,9 @@ g.test('texture_usage')
       .filter(({ dimension, format }) =>
         textureFormatAndDimensionPossiblyCompatible(dimension, format)
       )
+      .unless(({ usage0, usage1 }) => {
+        return !IsValidTextureUsageCombination(usage0 | usage1);
+      })
   )
   .fn(t => {
     const { dimension, format, usage0, usage1 } = t.params;
@@ -1028,6 +1039,11 @@ g.test('texture_usage')
       usage,
     };
 
+    // MAINTENANCE_TODO(#4509): Remove this when TRANSIENT_ATTACHMENT is added to the WebGPU spec.
+    if ((usage & GPUConst.TextureUsage.TRANSIENT_ATTACHMENT) !== 0) {
+      t.skipIfTransientAttachmentNotSupported();
+    }
+
     let success = true;
     const appliedDimension = dimension ?? '2d';
     // Note that we unconditionally test copy usages for all formats and
@@ -1042,9 +1058,7 @@ g.test('texture_usage')
         success = false;
     }
     if (usage & GPUTextureUsage.TRANSIENT_ATTACHMENT) {
-      if (usage !== (GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TRANSIENT_ATTACHMENT)) {
-        success = false;
-      }
+      if (appliedDimension !== '2d') success = false;
     }
 
     t.expectValidationError(() => {
