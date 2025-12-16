@@ -974,6 +974,7 @@ export const kKnownWGSLLanguageFeatures = [
   'pointer_composite_access',
   'uniform_buffer_standard_layout',
   'subgroup_id',
+  'subgroup_uniformity',
 ] as const;
 
 export type WGSLLanguageFeature = (typeof kKnownWGSLLanguageFeatures)[number];
