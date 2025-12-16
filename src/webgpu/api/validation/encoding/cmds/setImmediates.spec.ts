@@ -1,8 +1,10 @@
 export const description = `
 setImmediates validation tests.
+TODO(#4297): enable Float16Array
 `;
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
+import { getGPU } from '../../../../../common/util/navigator_gpu.js';
 import {
   kTypedArrayBufferViews,
   kTypedArrayBufferViewKeys,
@@ -14,12 +16,11 @@ class SetImmediatesTest extends AllFeaturesMaxLimitsGPUTest {
   override async init() {
     await super.init();
     if (
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      !('setImmediates' in (GPURenderPassEncoder.prototype as any)) ||
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      !('setImmediates' in (GPUComputePassEncoder.prototype as any)) ||
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      !('setImmediates' in (GPURenderBundleEncoder.prototype as any))
+      !('setImmediates' in GPURenderPassEncoder.prototype) &&
+      !('setImmediates' in GPUComputePassEncoder.prototype) &&
+      !('setImmediates' in GPURenderBundleEncoder.prototype) &&
+      !('maxImmediateSize' in GPUSupportedLimits.prototype) &&
+      !getGPU(this.rec).wgslLanguageFeatures.has('immediate_address_space')
     ) {
       this.skip('setImmediates not supported');
     }
@@ -38,8 +39,8 @@ g.test('alignment')
       .combineWithParams([
         // control case: rangeOffset 4 is aligned. contentByteSize 8 is aligned.
         { rangeOffset: 4, contentByteSize: 8 },
-        // rangeOffset 5 is unaligned (5 % 4 !== 0).
-        { rangeOffset: 5, contentByteSize: 8 },
+        // rangeOffset 6 is unaligned (6 % 4 !== 0).
+        { rangeOffset: 6, contentByteSize: 8 },
         // contentByteSize 10 is unaligned (10 % 4 !== 0).
         // Note: This case will be skipped for types with element size > 2 (e.g. Uint32, Uint64)
         // because they cannot form a 10-byte array.
@@ -66,6 +67,7 @@ g.test('alignment')
 
     t.shouldThrow(isContentSizeAligned ? false : 'RangeError', () => {
       // Cast to any to avoid Float16Array issues
+      // MAINTENANCE_TODO: remove this cast when the types are updated.
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (encoder as any).setImmediates(rangeOffset, data as any, 0, elementCount);
     });
@@ -91,13 +93,13 @@ g.test('overflow')
         { rangeOffset: 0, dataOffset: 0, elementCount: 0, _expectedError: null },
         // rangeOffset + contentSize overflows
         {
-          rangeOffset: Math.pow(2, 31) - 8,
+          rangeOffset: 2 ** 31 - 8,
           dataOffset: 0,
           elementCount: 4,
           _expectedError: 'validation',
         },
         {
-          rangeOffset: Math.pow(2, 32) - 8,
+          rangeOffset: 2 ** 32 - 8,
           dataOffset: 0,
           elementCount: 4,
           _expectedError: 'validation',
@@ -105,13 +107,13 @@ g.test('overflow')
         // dataOffset + size overflows
         {
           rangeOffset: 0,
-          dataOffset: Math.pow(2, 31) - 1,
+          dataOffset: 2 ** 31 - 1,
           elementCount: 4,
           _expectedError: 'RangeError',
         },
         {
           rangeOffset: 0,
-          dataOffset: Math.pow(2, 32) - 1,
+          dataOffset: 2 ** 32 - 1,
           elementCount: 4,
           _expectedError: 'RangeError',
         },
@@ -127,6 +129,7 @@ g.test('overflow')
 
     const doSetImmediates = () => {
       // Cast to any to avoid Float16Array issues
+      // MAINTENANCE_TODO: remove this cast when the types are updated.
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (encoder as any).setImmediates(rangeOffset, data as any, dataOffset, elementCount);
     };
@@ -165,6 +168,7 @@ g.test('out_of_bounds')
     const arrayBufferType = kTypedArrayBufferViews[arrayType];
     const elementSize = arrayBufferType.BYTES_PER_ELEMENT;
 
+    // MAINTENANCE_TODO: remove this cast when the types are updated.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const maxImmediateSize = (t.device.limits as any).maxImmediateSize;
     if (maxImmediateSize === undefined) {
@@ -187,6 +191,7 @@ g.test('out_of_bounds')
     const dataOverLimit = elementCount > dataLength;
 
     t.shouldThrow(dataOverLimit ? 'RangeError' : false, () => {
+      // MAINTENANCE_TODO: remove this cast when the types are updated.
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (encoder as any).setImmediates(rangeOffset, data as any, 0, elementCount);
     });
