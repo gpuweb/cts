@@ -1057,6 +1057,9 @@ fn((t) => {
     if (isColorTextureFormat(format) && !isTextureFormatColorRenderable(t.device, format))
     success = false;
   }
+  if (usage & GPUTextureUsage.TRANSIENT_ATTACHMENT) {
+    if (appliedDimension !== '2d') success = false;
+  }
 
   t.expectValidationError(() => {
     t.createTextureTracked(descriptor);
