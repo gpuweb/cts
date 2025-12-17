@@ -12,7 +12,12 @@ import {
   valueof,
 } from '../common/util/data_tables.js';
 import { assertTypeTrue, TypeEqual } from '../common/util/types.js';
-import { hasFeature, unreachable } from '../common/util/util.js';
+import {
+  assert,
+  combinationsOfOneOrTwoUsages,
+  hasFeature,
+  unreachable,
+} from '../common/util/util.js';
 
 import { GPUConst, kMaxUnsignedLongValue, kMaxUnsignedLongLongValue } from './constants.js';
 
@@ -201,27 +206,62 @@ export const kTextureUsageCopyInfo: {
 /** List of all GPUTextureUsage copy values. */
 export const kTextureUsageCopy = keysOf(kTextureUsageCopyInfo);
 
+type TextureUsageSingleBit = valueof<typeof GPUConst.TextureUsage>;
 /** Per-GPUTextureUsage info. */
-export const kTextureUsageInfo: {
-  readonly [k in valueof<typeof GPUConst.TextureUsage>]: {};
-} = {
-  [GPUConst.TextureUsage.COPY_SRC]: {},
-  [GPUConst.TextureUsage.COPY_DST]: {},
-  [GPUConst.TextureUsage.TEXTURE_BINDING]: {},
-  [GPUConst.TextureUsage.STORAGE_BINDING]: {},
-  [GPUConst.TextureUsage.RENDER_ATTACHMENT]: {},
-  [GPUConst.TextureUsage.TRANSIENT_ATTACHMENT]: {},
+const kTextureUsageInfo: {
+  readonly [k in TextureUsageSingleBit]: {
+    /** If true, the usage should cause configure() to TypeError (not just validation error). */
+    typeErrorForConfigure: boolean;
+  };
+} =
+  /* prettier-ignore */ {
+  [GPUConst.TextureUsage.COPY_SRC]:             { typeErrorForConfigure: false },
+  [GPUConst.TextureUsage.COPY_DST]:             { typeErrorForConfigure: false },
+  [GPUConst.TextureUsage.TEXTURE_BINDING]:      { typeErrorForConfigure: false },
+  [GPUConst.TextureUsage.STORAGE_BINDING]:      { typeErrorForConfigure: false },
+  [GPUConst.TextureUsage.RENDER_ATTACHMENT]:    { typeErrorForConfigure: false },
+  [GPUConst.TextureUsage.TRANSIENT_ATTACHMENT]: { typeErrorForConfigure: true  },
 };
 /** List of all GPUTextureUsage values. */
-export const kTextureUsages = numericKeysOf<GPUTextureUsageFlags>(kTextureUsageInfo);
+export const kTextureUsages = numericKeysOf(kTextureUsageInfo);
+/** Bitmask of all known texture usages. */
+const kAllTextureUsages = kTextureUsages.reduce((acc, usage) => acc | usage, 0);
 
-/** Check if `usage` does not contain TRANSIENT_ATTACHMENT or is TRANSIENT_ATTACHMENT | RENDER_ATTACHMENT. */
-export function IsValidTextureUsageCombination(usage: GPUTextureUsageFlags): boolean {
-  return (
-    (usage & GPUConst.TextureUsage.TRANSIENT_ATTACHMENT) === 0 ||
-    usage === (GPUConst.TextureUsage.TRANSIENT_ATTACHMENT | GPUConst.TextureUsage.RENDER_ATTACHMENT)
-  );
+/** An arbitrary invalid texture usage bit. */
+export const kSomeBogusTextureUsage: GPUTextureUsageFlags = 0x4000_0000;
+assert((kSomeBogusTextureUsage & kAllTextureUsages) === 0);
+
+/**
+ * Check usage is valid for createTexture(): is non-zero, has only defined bits,
+ * and follows rules for TRANSIENT_ATTACHMENT.
+ */
+export function isValidTextureUsageCombination(usage: GPUTextureUsageFlags): boolean {
+  if (usage === 0) return false;
+
+  if (usage & GPUConst.TextureUsage.TRANSIENT_ATTACHMENT) {
+    return (
+      usage ===
+      (GPUConst.TextureUsage.TRANSIENT_ATTACHMENT | GPUConst.TextureUsage.RENDER_ATTACHMENT)
+    );
+  }
+
+  return (usage & ~kAllTextureUsages) === 0;
 }
+
+/** Check if usage contains a bit that is supposed to cause configure() to TypeError. */
+export function usageIsTypeErrorForConfigure(usage: GPUTextureUsageFlags): boolean {
+  for (const bit of kTextureUsages) {
+    if ((usage & bit) !== 0 && kTextureUsageInfo[bit].typeErrorForConfigure) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/** List of all combinations of 1-2 known texture usages, that are valid for createTexture(). */
+export const kValidCombinationsOfOneOrTwoTextureUsages = combinationsOfOneOrTwoUsages(
+  kTextureUsages
+).filter(isValidTextureUsageCombination);
 
 // Texture View
 
