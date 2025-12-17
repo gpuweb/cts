@@ -333,7 +333,7 @@ combine('usage', kValidCombinationsOfOneOrTwoTextureUsages)
 .filter(({ dimension, format }) =>
 textureFormatAndDimensionPossiblyCompatible(dimension, format)
 ).
-unless(({ usage, format, mipLevelCount, dimension }) => {
+unless(({ usage, format, arrayLayerCount, mipLevelCount, dimension }) => {
   return (
     (usage & GPUConst.TextureUsage.RENDER_ATTACHMENT) !== 0 && (
     !isTextureFormatPossiblyUsableAsColorRenderAttachment(format) ||
@@ -341,10 +341,12 @@ unless(({ usage, format, mipLevelCount, dimension }) => {
     (usage & GPUConst.TextureUsage.STORAGE_BINDING) !== 0 &&
     !isTextureFormatPossiblyStorageReadable(format) ||
     mipLevelCount !== 1 && dimension === '1d' ||
-    (usage & GPUConst.TextureUsage.TRANSIENT_ATTACHMENT) !== 0 &&
+    (usage & GPUConst.TextureUsage.TRANSIENT_ATTACHMENT) !== 0 && (
     usage !== (
     GPUConst.TextureUsage.RENDER_ATTACHMENT |
-    GPUConst.TextureUsage.TRANSIENT_ATTACHMENT));
+    GPUConst.TextureUsage.TRANSIENT_ATTACHMENT) ||
+    mipLevelCount !== 1 ||
+    arrayLayerCount !== 1));
 
 })
 ).
@@ -1053,6 +1055,39 @@ fn((t) => {
   if (usage & GPUTextureUsage.TRANSIENT_ATTACHMENT) {
     if (appliedDimension !== '2d') success = false;
   }
+
+  t.expectValidationError(() => {
+    t.createTextureTracked(descriptor);
+  }, !success);
+});
+
+g.test('depthOrArrayLayers_and_mipLevelCount_for_transient_attachments').
+desc(`Test depthOrArrayLayers and mipLevelCount must be 1 for transient attachments`).
+params((u) =>
+u.
+combine('format', ['rgba8unorm', 'depth24plus']).
+beginSubcases().
+combine('depthOrArrayLayers', [1, 2]).
+combine('mipLevelCount', [1, 2])
+).
+fn((t) => {
+  // MAINTENANCE_TODO(#4509): Remove this when TRANSIENT_ATTACHMENT is added to the WebGPU spec.
+  t.skipIfTransientAttachmentNotSupported();
+
+  const { format, depthOrArrayLayers, mipLevelCount } = t.params;
+
+  const info = getBlockInfoForTextureFormat(format);
+  const size = [info.blockWidth, info.blockHeight, depthOrArrayLayers];
+  const descriptor = {
+    size,
+    mipLevelCount,
+    format,
+    usage: GPUConst.TextureUsage.RENDER_ATTACHMENT | GPUConst.TextureUsage.TRANSIENT_ATTACHMENT
+  };
+
+  let success = true;
+  if (depthOrArrayLayers !== 1) success = false;
+  if (mipLevelCount !== 1) success = false;
 
   t.expectValidationError(() => {
     t.createTextureTracked(descriptor);
