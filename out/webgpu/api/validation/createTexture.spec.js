@@ -6,7 +6,8 @@ import { assert, makeValueTestVariant } from '../../../common/util/util.js';
 import {
   kTextureDimensions,
   kTextureUsages,
-  IsValidTextureUsageCombination } from
+  isValidTextureUsageCombination,
+  kValidCombinationsOfOneOrTwoTextureUsages } from
 '../../capability_info.js';
 import { GPUConst } from '../../constants.js';
 import {
@@ -327,15 +328,7 @@ unless(
   arrayLayerCount === 2 && dimension !== '2d' && dimension !== undefined
 ).
 combine('mipLevelCount', [1, 2]).
-expand('usage', () => {
-  const usageSet = new Set();
-  for (const usage0 of kTextureUsages) {
-    for (const usage1 of kTextureUsages) {
-      usageSet.add(usage0 | usage1);
-    }
-  }
-  return usageSet;
-})
+combine('usage', kValidCombinationsOfOneOrTwoTextureUsages)
 // Filter out incompatible dimension type and format combinations.
 .filter(({ dimension, format }) =>
 textureFormatAndDimensionPossiblyCompatible(dimension, format)
@@ -1021,7 +1014,7 @@ combine('usage1', kTextureUsages)
 textureFormatAndDimensionPossiblyCompatible(dimension, format)
 ).
 unless(({ usage0, usage1 }) => {
-  return !IsValidTextureUsageCombination(usage0 | usage1);
+  return !isValidTextureUsageCombination(usage0 | usage1);
 })
 ).
 fn((t) => {

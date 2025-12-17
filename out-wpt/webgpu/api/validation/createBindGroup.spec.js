@@ -23,7 +23,7 @@ import {
   kTextureViewDimensions,
   sampledAndStorageBindingEntries,
   texBindingTypeInfo,
-  IsValidTextureUsageCombination } from
+  isValidTextureUsageCombination } from
 '../../capability_info.js';
 import { GPUConst } from '../../constants.js';
 import { kPossibleStorageTextureFormats, kRegularTextureFormats } from '../../format_info.js';
@@ -795,7 +795,7 @@ u //
 .combine('usage0', kTextureUsages).
 combine('usage1', kTextureUsages).
 unless(({ usage0, usage1 }) => {
-  return !IsValidTextureUsageCombination(usage0 | usage1);
+  return !isValidTextureUsageCombination(usage0 | usage1);
 })
 ).
 fn((t) => {
@@ -1234,7 +1234,7 @@ u //
 .combine('usage0', kTextureUsages).
 combine('usage1', kTextureUsages).
 unless(({ usage0, usage1 }) => {
-  return !IsValidTextureUsageCombination(usage0 | usage1);
+  return !isValidTextureUsageCombination(usage0 | usage1);
 })
 ).
 fn((t) => {
