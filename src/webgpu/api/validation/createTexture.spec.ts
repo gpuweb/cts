@@ -1025,23 +1025,17 @@ g.test('texture_usage')
       .unless(({ usage0, usage1 }) => {
         return !IsValidTextureUsageCombination(usage0 | usage1);
       })
-      .combine('depthOrArrayLayers', [1, 2])
-      .unless(({ dimension, depthOrArrayLayers }) => {
-        return dimension === '1d' && depthOrArrayLayers !== 1;
-      })
-      .combine('mipLevelCount', [1, 2])
   )
   .fn(t => {
-    const { dimension, format, usage0, usage1, depthOrArrayLayers, mipLevelCount } = t.params;
+    const { dimension, format, usage0, usage1 } = t.params;
     t.skipIfTextureFormatNotSupported(format);
     t.skipIfTextureFormatAndDimensionNotCompatible(format, dimension);
     const info = getBlockInfoForTextureFormat(format);
 
-    const size = [info.blockWidth, info.blockHeight, depthOrArrayLayers];
+    const size = [info.blockWidth, info.blockHeight, 1];
     const usage = usage0 | usage1;
     const descriptor = {
       size,
-      mipLevelCount,
       dimension,
       format,
       usage,
@@ -1052,7 +1046,7 @@ g.test('texture_usage')
       t.skipIfTransientAttachmentNotSupported();
     }
 
-    let success = mipLevelCount <= maxMipLevelCount(descriptor);
+    let success = true;
     const appliedDimension = dimension ?? '2d';
     // Note that we unconditionally test copy usages for all formats and
     // expect failure if copying from or to is not supported.
@@ -1067,9 +1061,45 @@ g.test('texture_usage')
     }
     if (usage & GPUTextureUsage.TRANSIENT_ATTACHMENT) {
       if (appliedDimension !== '2d') success = false;
-      if (depthOrArrayLayers !== 1) success = false;
-      if (mipLevelCount !== 1) success = false;
     }
+
+    t.expectValidationError(() => {
+      t.createTextureTracked(descriptor);
+    }, !success);
+  });
+
+g.test('depthOrArrayLayers_and_mipLevelCount_for_transient_attachments')
+  .desc(`Test depthOrArrayLayers and mipLevelCount must be 1 for transient attachments`)
+  .params(u =>
+    u
+      .combine('format', kAllTextureFormats)
+      .beginSubcases()
+      .combine('depthOrArrayLayers', [1, 2])
+      .combine('mipLevelCount', [1, 2])
+  )
+  .fn(t => {
+    // MAINTENANCE_TODO(#4509): Remove this when TRANSIENT_ATTACHMENT is added to the WebGPU spec.
+    t.skipIfTransientAttachmentNotSupported();
+
+    const { format, depthOrArrayLayers, mipLevelCount } = t.params;
+    t.skipIfTextureFormatNotSupported(format);
+
+    const info = getBlockInfoForTextureFormat(format);
+    const size = [info.blockWidth, info.blockHeight, depthOrArrayLayers];
+    const descriptor = {
+      size,
+      mipLevelCount,
+      format,
+      usage: GPUConst.TextureUsage.RENDER_ATTACHMENT | GPUConst.TextureUsage.TRANSIENT_ATTACHMENT,
+    };
+
+    let success = true;
+    if (mipLevelCount > maxMipLevelCount(descriptor)) success = false;
+    if (isColorTextureFormat(format) && !isTextureFormatColorRenderable(t.device, format))
+      success = false;
+
+    if (depthOrArrayLayers !== 1) success = false;
+    if (mipLevelCount !== 1) success = false;
 
     t.expectValidationError(() => {
       t.createTextureTracked(descriptor);
