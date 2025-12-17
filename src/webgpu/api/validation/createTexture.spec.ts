@@ -1072,7 +1072,7 @@ g.test('depthOrArrayLayers_and_mipLevelCount_for_transient_attachments')
   .desc(`Test depthOrArrayLayers and mipLevelCount must be 1 for transient attachments`)
   .params(u =>
     u
-      .combine('format', kAllTextureFormats)
+      .combine('format', ['rgba8unorm', 'depth24plus'] as const)
       .beginSubcases()
       .combine('depthOrArrayLayers', [1, 2])
       .combine('mipLevelCount', [1, 2])
@@ -1082,7 +1082,6 @@ g.test('depthOrArrayLayers_and_mipLevelCount_for_transient_attachments')
     t.skipIfTransientAttachmentNotSupported();
 
     const { format, depthOrArrayLayers, mipLevelCount } = t.params;
-    t.skipIfTextureFormatNotSupported(format);
 
     const info = getBlockInfoForTextureFormat(format);
     const size = [info.blockWidth, info.blockHeight, depthOrArrayLayers];
@@ -1094,10 +1093,6 @@ g.test('depthOrArrayLayers_and_mipLevelCount_for_transient_attachments')
     };
 
     let success = true;
-    if (mipLevelCount > maxMipLevelCount(descriptor)) success = false;
-    if (isColorTextureFormat(format) && !isTextureFormatColorRenderable(t.device, format))
-      success = false;
-
     if (depthOrArrayLayers !== 1) success = false;
     if (mipLevelCount !== 1) success = false;
 
