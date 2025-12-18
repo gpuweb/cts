@@ -817,6 +817,10 @@ const [kLimitInfoKeys, kLimitInfoDefaults, kLimitInfoData] =
   'maxComputeWorkgroupSizeY': [, 256, 128],
   'maxComputeWorkgroupSizeZ': [, 64, 64],
   'maxComputeWorkgroupsPerDimension': [, 65535, 65535]
+  // MAINTENANCE_TODO(4535): Consider allowing optional non-conforming limits. Currently they are not allowed.
+  // Any limit here is immediately required by all implementations.
+  // Also, consider having this table statically check that all limits listed in @webgpu/types exist in
+  // this table.
 }];
 
 /**
