@@ -9,10 +9,20 @@ function getPipelineDescriptor(
   frontFacing: boolean,
   sampleIndex: boolean,
   sampleMaskIn: boolean,
-  sampleMaskOut: boolean
+  sampleMaskOut: boolean,
+  primitiveIndex: boolean,
+  subgroupInvocationId: boolean,
+  subgroupSize: boolean
 ): GPURenderPipelineDescriptor {
   const vertexOutputDeductions = pointList ? 1 : 0;
-  const fragmentInputDeductions = [frontFacing, sampleIndex, sampleMaskIn]
+  const fragmentInputDeductions = [
+    frontFacing,
+    sampleIndex,
+    sampleMaskIn,
+    primitiveIndex,
+    subgroupInvocationId,
+    subgroupSize,
+  ]
     .map(p => (p ? 1 : 0) as number)
     .reduce((acc, p) => acc + p);
 
@@ -101,6 +111,10 @@ g.test('createRenderPipeline,at_over')
       .combine('sampleIndex', [false, true])
       .combine('sampleMaskIn', [false, true])
       .combine('sampleMaskOut', [false, true])
+      .beginSubcases()
+      .combine('primitiveIndex', [false, true])
+      .combine('subgroupInvocationId', [false, true])
+      .combine('subgroupSize', [false, true])
   )
   .beforeAllSubcases(t => {
     if (t.isCompatibility) {
@@ -121,11 +135,25 @@ g.test('createRenderPipeline,at_over')
       sampleIndex,
       sampleMaskIn,
       sampleMaskOut,
+      primitiveIndex,
+      subgroupInvocationId,
+      subgroupSize,
     } = t.params;
+
     await t.testDeviceWithRequestedMaximumLimits(
       limitTest,
       testValueName,
       async ({ device, testValue, shouldError }) => {
+        if (primitiveIndex) {
+          t.skipIfDeviceDoesNotHaveFeature('primitive-index');
+          return;
+        }
+
+        if (subgroupInvocationId || subgroupSize) {
+          t.skipIfDeviceDoesNotHaveFeature('subgroups');
+          return;
+        }
+
         const pipelineDescriptor = getPipelineDescriptor(
           device,
           testValue,
@@ -133,7 +161,10 @@ g.test('createRenderPipeline,at_over')
           frontFacing,
           sampleIndex,
           sampleMaskIn,
-          sampleMaskOut
+          sampleMaskOut,
+          primitiveIndex,
+          subgroupInvocationId,
+          subgroupSize
         );
 
         await t.testCreateRenderPipeline(pipelineDescriptor, async, shouldError);
