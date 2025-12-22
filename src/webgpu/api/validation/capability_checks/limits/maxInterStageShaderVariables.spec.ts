@@ -11,14 +11,19 @@ function getPipelineDescriptor(
   sampleMaskIn: boolean,
   sampleMaskOut: boolean
 ): GPURenderPipelineDescriptor {
-  const vertexOutputVariables = testValue - (pointList ? 1 : 0);
-  const fragmentInputVariables = testValue - (frontFacing || sampleIndex || sampleMaskIn ? 1 : 0);
+  const vertexOutputDeductions = pointList ? 1 : 0;
+  const fragmentInputDeductions = [frontFacing, sampleIndex, sampleMaskIn]
+    .map(p => (p ? 1 : 0) as number)
+    .reduce((acc, p) => acc + p);
+
+  const vertexOutputVariables = testValue - vertexOutputDeductions;
+  const fragmentInputVariables = testValue - fragmentInputDeductions;
   const numInterStageVariables = Math.min(vertexOutputVariables, fragmentInputVariables);
 
-  const maxVertexOutputVariables = device.limits.maxInterStageShaderVariables - (pointList ? 1 : 0);
+  const maxVertexOutputVariables =
+    device.limits.maxInterStageShaderVariables - vertexOutputDeductions;
   const maxFragmentInputVariables =
-    device.limits.maxInterStageShaderVariables -
-    (frontFacing || sampleIndex || sampleMaskIn ? 1 : 0);
+    device.limits.maxInterStageShaderVariables - fragmentInputDeductions;
   const maxInterStageVariables = Math.min(maxVertexOutputVariables, maxFragmentInputVariables);
 
   const varyings = `
