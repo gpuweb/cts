@@ -11,8 +11,10 @@ function getPipelineDescriptor(
   sampleMaskIn: boolean,
   sampleMaskOut: boolean
 ): GPURenderPipelineDescriptor {
-  const vertexOutputDeductions = (pointList ? 1 : 0);
-  const fragmentInputDeductions = (frontFacing ? 1 : 0) + (sampleIndex ? 1 : 0) + (sampleMaskIn ? 1 : 0);
+  const vertexOutputDeductions = pointList ? 1 : 0;
+  const fragmentInputDeductions = [frontFacing, sampleIndex, sampleMaskIn]
+    .map(p => (p ? 1 : 0) as number)
+    .reduce((acc, p) => acc + p);
 
   const vertexOutputVariables = testValue - vertexOutputDeductions;
   const fragmentInputVariables = testValue - fragmentInputDeductions;
