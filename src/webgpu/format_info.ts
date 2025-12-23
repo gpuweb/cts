@@ -2400,6 +2400,22 @@ export function isTextureFormatBlendable(device: GPUDevice, format: GPUTextureFo
 }
 
 /**
+ * Returns true if a texture can be filtered.
+ */
+export function isTextureFormatFilterable(device: GPUDevice, format: GPUTextureFormat): boolean {
+  const type = getTextureFormatType(format);
+  switch (type) {
+    case 'float':
+      return true;
+    case 'unfilterable-float':
+      assert(is32Float(format));
+      return hasFeature(device.features, 'float32-filterable');
+    default:
+      return false;
+  }
+}
+
+/**
  * Returns the texture's type (float, unsigned-float, sint, uint, depth)
  */
 export function getTextureFormatType(format: GPUTextureFormat, aspect: GPUTextureAspect = 'all') {
