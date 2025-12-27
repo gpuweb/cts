@@ -319,19 +319,18 @@ g.test('max_variables_count,input')
       { numVariablesDelta: 1, useExtraBuiltinInputs: false },
       { numVariablesDelta: 0, useExtraBuiltinInputs: true },
       { numVariablesDelta: -1, useExtraBuiltinInputs: true },
+      { numVariablesDelta: -3, useExtraBuiltinInputs: true },
     ] as const)
   )
   .fn(t => {
     const { isAsync, numVariablesDelta, useExtraBuiltinInputs } = t.params;
 
     const numVec4 = t.device.limits.maxInterStageShaderVariables + numVariablesDelta;
-    const numExtraVariables = useExtraBuiltinInputs ? 1 : 0;
-    const numUsedVariables = numVec4 + numExtraVariables;
-    const success = numUsedVariables <= t.device.limits.maxInterStageShaderVariables;
 
     const outputs = range(numVec4, i => `@location(${i}) vout${i}: vec4<f32>`);
     const inputs = range(numVec4, i => `@location(${i}) fin${i}: vec4<f32>`);
 
+    // NOTE: `numVec4` matches `inputs.length` here. We use this property later.
     if (useExtraBuiltinInputs) {
       inputs.push('@builtin(front_facing) front_facing_in: bool');
       if (!t.isCompatibility) {
@@ -341,6 +340,7 @@ g.test('max_variables_count,input')
         );
       }
     }
+    const success = inputs.length <= t.device.limits.maxInterStageShaderVariables;
 
     const descriptor = t.getDescriptorWithStates(
       t.getVertexStateWithOutputs(outputs),
