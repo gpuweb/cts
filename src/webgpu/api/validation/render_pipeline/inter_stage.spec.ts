@@ -319,6 +319,7 @@ g.test('max_variables_count,input')
       { numVariablesDelta: 1, useExtraBuiltinInputs: false },
       { numVariablesDelta: 0, useExtraBuiltinInputs: true },
       { numVariablesDelta: -1, useExtraBuiltinInputs: true },
+      { numVariablesDelta: -3, useExtraBuiltinInputs: true },
     ] as const)
   )
   .fn(t => {
