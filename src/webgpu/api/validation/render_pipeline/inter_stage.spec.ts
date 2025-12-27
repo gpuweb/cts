@@ -325,9 +325,6 @@ g.test('max_variables_count,input')
     const { isAsync, numVariablesDelta, useExtraBuiltinInputs } = t.params;
 
     const numVec4 = t.device.limits.maxInterStageShaderVariables + numVariablesDelta;
-    const numExtraVariables = useExtraBuiltinInputs ? 1 : 0;
-    const numUsedVariables = numVec4 + numExtraVariables;
-    const success = numUsedVariables <= t.device.limits.maxInterStageShaderVariables;
 
     const outputs = range(numVec4, i => `@location(${i}) vout${i}: vec4<f32>`);
     const inputs = range(numVec4, i => `@location(${i}) fin${i}: vec4<f32>`);
@@ -341,6 +338,9 @@ g.test('max_variables_count,input')
         );
       }
     }
+    const numExtraVariables = useExtraBuiltinInputs ? 1 : 0;
+    const numUsedVariables = numVec4 + numExtraVariables;
+    const success = numUsedVariables <= t.device.limits.maxInterStageShaderVariables;
 
     const descriptor = t.getDescriptorWithStates(
       t.getVertexStateWithOutputs(outputs),
