@@ -329,6 +329,7 @@ g.test('max_variables_count,input')
     const outputs = range(numVec4, i => `@location(${i}) vout${i}: vec4<f32>`);
     const inputs = range(numVec4, i => `@location(${i}) fin${i}: vec4<f32>`);
 
+    // NOTE: `numVec4` matches `inputs.length` here. We use this property later.
     if (useExtraBuiltinInputs) {
       inputs.push('@builtin(front_facing) front_facing_in: bool');
       if (!t.isCompatibility) {
@@ -338,9 +339,7 @@ g.test('max_variables_count,input')
         );
       }
     }
-    const numExtraVariables = useExtraBuiltinInputs ? 1 : 0;
-    const numUsedVariables = numVec4 + numExtraVariables;
-    const success = numUsedVariables <= t.device.limits.maxInterStageShaderVariables;
+    const success = inputs.length <= t.device.limits.maxInterStageShaderVariables;
 
     const descriptor = t.getDescriptorWithStates(
       t.getVertexStateWithOutputs(outputs),
