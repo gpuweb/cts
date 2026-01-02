@@ -120,13 +120,7 @@ format)
 {
   t.skipIfTextureFormatNotSupported(format);
   if (filter === 'linear') {
-    t.skipIf(isDepthTextureFormat(format), 'depth texture are unfilterable');
-
-    const type = getTextureFormatType(format);
-    if (type === 'unfilterable-float') {
-      assert(is32Float(format));
-      t.skipIfDeviceDoesNotHaveFeature('float32-filterable');
-    }
+    t.skipIfTextureFormatNotFilterable(format);
   }
 }
 

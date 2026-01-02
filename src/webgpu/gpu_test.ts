@@ -32,8 +32,6 @@ import {
   getRequiredFeatureForTextureFormat,
   isTextureFormatUsableAsRenderAttachment,
   isTextureFormatMultisampled,
-  is32Float,
-  isSintOrUintFormat,
   isTextureFormatResolvable,
   isDepthTextureFormat,
   isStencilTextureFormat,
@@ -41,6 +39,8 @@ import {
   textureDimensionAndFormatCompatibleForDevice,
   isTextureFormatUsableWithStorageAccessMode,
   isTextureFormatUsableWithCopyExternalImageToTexture,
+  isTextureFormatFilterable,
+  isTextureFormatBlendable,
 } from './format_info.js';
 import { checkElementsEqual, checkElementsBetween } from './util/check_contents.js';
 import { CommandBufferMaker, EncoderType } from './util/command_buffer_maker.js';
@@ -604,26 +604,14 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
   skipIfTextureFormatNotBlendable(...formats: (GPUTextureFormat | undefined)[]) {
     for (const format of formats) {
       if (format === undefined) continue;
-      this.skipIf(isSintOrUintFormat(format), 'sint/uint formats are not blendable');
-      if (is32Float(format)) {
-        this.skipIf(
-          !hasFeature(this.device.features, 'float32-blendable'),
-          `texture format '${format}' is not blendable`
-        );
-      }
+      this.skipIf(!isTextureFormatBlendable(this.device, format), `${format} is not blendable`);
     }
   }
 
   skipIfTextureFormatNotFilterable(...formats: (GPUTextureFormat | undefined)[]) {
     for (const format of formats) {
       if (format === undefined) continue;
-      this.skipIf(isSintOrUintFormat(format), 'sint/uint formats are not filterable');
-      if (is32Float(format)) {
-        this.skipIf(
-          !hasFeature(this.device.features, 'float32-filterable'),
-          `texture format '${format}' is not filterable`
-        );
-      }
+      this.skipIf(!isTextureFormatFilterable(this.device, format), `${format} is not filterable`);
     }
   }
 
