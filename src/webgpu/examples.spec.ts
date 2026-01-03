@@ -161,9 +161,9 @@ In this example, the following cases are generated:
   )
   .params(u =>
     u //
-      .combineWithParams([{ x: 1 }, { x: 2 }])
+      .combineWithParams([{ x: 1 }, { x: 2 }, { x: 3 }])
       .beginSubcases()
-      .combineWithParams([{ y: 1 }, { y: 2 }])
+      .combineWithParams([{ y: 1 }, { y: 2 }, { y: 3 }])
   )
   .fn(() => {});
 
