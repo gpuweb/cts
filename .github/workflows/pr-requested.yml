@@ -1,0 +1,33 @@
+name: pr-requested
+
+on:
+  workflow_run:
+    workflows:
+      - pr
+    types:
+      - requested
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Find Comment
+        uses: peter-evans/find-comment@v3
+        id: find-comment
+        with:
+          issue-number: ${{ github.event.workflow_run.pull_requests[0].number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: |
+            <!-- pr-comment -->
+      - name: Update Comment
+        uses: peter-evans/create-or-update-comment@v5
+        with:
+          issue-number: ${{ github.event.workflow_run.pull_requests[0].number }}
+          comment-id: ${{ steps.find-comment.outputs.comment-id }}
+          edit-mode: replace
+          body: |
+            <!-- pr-comment -->
+            Waiting for [build job](https://github.com/${{github.repository}}/actions/runs/${{github.event.workflow_run.id}}) (at ${{ github.event.workflow_run.head_sha }})...

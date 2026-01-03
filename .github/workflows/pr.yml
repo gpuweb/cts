@@ -1,4 +1,4 @@
-name: Pull Request CI
+name: pr
 
 on:
   pull_request:
@@ -12,8 +12,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    permissions:
+      pull-requests: write
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
         with:
           persist-credentials: false
       - uses: actions/setup-node@v3
@@ -32,3 +34,34 @@ jobs:
       - name: test wpt lint
         run: ./wpt lint
         working-directory: ./wpt
+      - name: compute case count after PR
+        run: |
+          tools/validate --print-case-count-report src/webgpu > case-count-report-after.txt
+      - name: checkout before PR
+        run: |
+          git fetch origin ${{ github.event.pull_request.base.ref }}
+          git checkout ${{ github.event.pull_request.base.ref }}
+      - name: compute case count before PR and diff
+        id: case_count_diff
+        run: |
+          set -eu
+
+          tools/validate --print-case-count-report src/webgpu > case-count-report-before.txt
+          # Diff only showing the changed lines and nothing else
+          diff --unified=0 case-count-report-{before,after}.txt | grep '^[+-][^+-]' | tee case-count-report-diff.txt
+          (
+            echo '```diff'
+            if [[ "$(wc -l < case-count-report-diff.txt)" -le 20 ]] ; then
+              cat case-count-report-diff.txt
+            else
+              head -n18 case-count-report-diff.txt
+              echo '[snip - full report in action logs]'
+              tail -n2 case-count-report-diff.txt
+            fi
+            echo '```'
+          ) > pr-comment-body.txt
+      - name: Upload pr-comment-body.txt
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr-comment-body.txt
+          path: pr-comment-body.txt
