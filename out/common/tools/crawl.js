@@ -47,11 +47,18 @@ async function crawlFilesRecursively(dir) {
 
 export async function crawl(
 suiteDir,
-opts = null)
+opts =
+
+
+
+null)
 {
   if (!fs.existsSync(suiteDir)) {
     throw new Error(`Could not find suite: ${suiteDir}`);
   }
+
+  let totalCases = 0;
+  let totalSubcases = 0;
 
   let validateTimingsEntries;
   if (opts?.validate) {
@@ -88,10 +95,34 @@ opts = null)
 
         mod.g.validate(new TestQueryMultiFile(suite, pathSegments));
 
-        for (const { testPath } of mod.g.collectNonEmptyTests()) {
-          const testQuery = new TestQueryMultiCase(suite, pathSegments, testPath, {}).toString();
-          if (validateTimingsEntries) {
-            validateTimingsEntries.testsFoundInFiles.add(testQuery);
+        if (opts?.printCaseCountReport || validateTimingsEntries) {
+          for (const t of mod.g.iterate()) {
+            const testQuery = new TestQueryMultiCase(
+              suite,
+              pathSegments,
+              t.testPath,
+              {}
+            ).toString();
+
+            let cases = 0;
+            let subcases = 0;
+            for (const c of t.iterate(null)) {
+              cases++;
+              if (opts?.printCaseCountReport) {
+                subcases += c.computeSubcaseCount();
+              }
+            }
+
+            if (opts?.printCaseCountReport) {
+              const perCase = (subcases / cases).toFixed(0);
+              console.log(`${testQuery} - ${cases} cases, ${subcases} subcases (~${perCase}/case)`);
+              totalCases += cases;
+              totalSubcases += subcases;
+            }
+
+            if (validateTimingsEntries && cases > 0) {
+              validateTimingsEntries.testsFoundInFiles.add(testQuery);
+            }
           }
         }
       }
@@ -161,6 +192,9 @@ opts = null)
     }
   }
 
+  if (opts?.printCaseCountReport) {
+    console.log(`-----\nTOTAL: ${totalCases} cases, ${totalSubcases} subcases`);
+  }
   return entries;
 }
 
