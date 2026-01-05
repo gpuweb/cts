@@ -42,7 +42,7 @@ jobs:
 
       # If 'requested'
       - if: github.event.action == 'requested'
-        name: Update Comment
+        name: If 'requested' - Update Comment
         uses: peter-evans/create-or-update-comment@v5
         with:
           issue-number: ${{ steps.pr-context.outputs.number }}
@@ -54,7 +54,7 @@ jobs:
 
       # If 'completed'
       - if: github.event.action == 'completed'
-        name: Download pr-comment-body.txt
+        name: If 'completed' - Download pr-comment-body.txt
         uses: actions/download-artifact@v4
         continue-on-error: true
         with:
@@ -63,7 +63,29 @@ jobs:
           run-id: ${{ github.event.workflow_run.id }}
           name: pr-comment-body.txt
       - if: github.event.action == 'completed'
-        name: Update Comment
+        name: If 'completed' - Create pr-comment.txt
+        env:
+          REPO: ${{github.repository}}
+          RUN_ID: ${{github.event.workflow_run.id}}
+          RUN_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -eu
+
+          (
+            cat << EOF
+          <!-- pr-comment -->
+          Results for [build job](https://github.com/${REPO}/actions/runs/${RUN_ID}) (at ${RUN_HEAD_SHA}):
+
+          EOF
+
+            if [ -f pr-comment-body.txt ]; then
+              cat pr-comment-body.txt
+            else
+              echo '(No pr-comment-body.txt artifact found from this job.)'
+            fi
+          ) > pr-comment.txt
+      - if: github.event.action == 'completed'
+        name: If 'completed' - Update Comment
         uses: peter-evans/create-or-update-comment@v5
         with:
           issue-number: ${{ steps.pr-context.outputs.number }}
