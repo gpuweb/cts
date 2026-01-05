@@ -1,0 +1,72 @@
+name: pr-workflow-run
+
+on:
+  # Runs once when the 'pr' workflow is requested, and again when it's completed
+  workflow_run:
+    workflows:
+      - pr
+    types:
+      - requested
+      - completed
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      pull-requests: write
+    steps:
+      - # https://github.com/orgs/community/discussions/25220#discussioncomment-11316244
+        name: 'Get PR context'
+        id: pr-context
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_TARGET_REPO: ${{ github.repository }}
+          PR_BRANCH: |-
+            ${{
+              (github.event.workflow_run.head_repository.owner.login != github.event.workflow_run.repository.owner.login)
+                && format('{0}:{1}', github.event.workflow_run.head_repository.owner.login, github.event.workflow_run.head_branch)
+                || github.event.workflow_run.head_branch
+            }}
+        run: |
+          gh pr view --repo "${PR_TARGET_REPO}" "${PR_BRANCH}" \
+             --json 'number' --jq '"number=\(.number)"' \
+             >> "${GITHUB_OUTPUT}"
+      - name: Find Comment
+        uses: peter-evans/find-comment@v4
+        id: find-comment
+        with:
+          issue-number: ${{ steps.pr-context.outputs.number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: "<!-- pr-comment -->"
+
+      # If 'requested'
+      - if: github.event.action == 'requested'
+        name: Update Comment
+        uses: peter-evans/create-or-update-comment@v5
+        with:
+          issue-number: ${{ steps.pr-context.outputs.number }}
+          comment-id: ${{ steps.find-comment.outputs.comment-id }}
+          edit-mode: replace
+          body: |
+            <!-- pr-comment -->
+            Waiting for [build job](https://github.com/${{github.repository}}/actions/runs/${{github.event.workflow_run.id}}) (at ${{ github.event.workflow_run.head_sha }})...
+
+      # If 'completed'
+      - if: github.event.action == 'completed'
+        name: Download pr-comment-body.txt
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          github-token: ${{ github.token }}
+          repository: ${{ github.event.workflow_run.head_repository.full_name }}
+          run-id: ${{ github.event.workflow_run.id }}
+          name: pr-comment-body.txt
+      - if: github.event.action == 'completed'
+        name: Update Comment
+        uses: peter-evans/create-or-update-comment@v5
+        with:
+          issue-number: ${{ steps.pr-context.outputs.number }}
+          comment-id: ${{ steps.find-comment.outputs.comment-id }}
+          edit-mode: replace
+          body-path: pr-comment.txt

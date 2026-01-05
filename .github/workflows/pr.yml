@@ -38,9 +38,11 @@ jobs:
         run: |
           tools/validate --print-case-count-report src/webgpu > case-count-report-after.txt
       - name: checkout before PR
+        env:
+          PR_REF: ${{ github.event.pull_request.base.ref }}
         run: |
-          git fetch origin ${{ github.event.pull_request.base.ref }}
-          git checkout ${{ github.event.pull_request.base.ref }}
+          git fetch origin "${PR_REF}"
+          git checkout "${PR_REF}"
       - name: compute case count before PR and diff
         id: case_count_diff
         run: |
