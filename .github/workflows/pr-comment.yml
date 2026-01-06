@@ -41,7 +41,7 @@ jobs:
           body-includes: "<!-- pr-comment -->"
 
       # If 'pr' workflow run was 'requested'...
-      - if: github.event.action == 'requested'
+      - if: github.event.action == 'requested' && steps.find-comment.outputs.comment-id != ''
         name: PR workflow started - Update Comment
         uses: peter-evans/create-or-update-comment@v5
         with:
@@ -85,7 +85,7 @@ jobs:
             fi
           ) > pr-comment.txt
       - if: github.event.action == 'completed'
-        name: PR workflow completed - Update Comment
+        name: PR workflow completed - Post or Update Comment
         uses: peter-evans/create-or-update-comment@v5
         with:
           issue-number: ${{ steps.pr-context.outputs.number }}
