@@ -53,11 +53,14 @@ jobs:
           diff --unified=0 case-count-report-{before,after}.txt | grep '^[+-][^+-]' | tee case-count-report-diff.txt
           (
             echo '```diff'
-            if [[ "$(wc -l < case-count-report-diff.txt)" -le 20 ]] ; then
+            line_count=$(wc -l < case-count-report-diff.txt)
+            if [[ "${line_count}" -eq 0 ]] ; then
+              echo ' Test case/subcase counts did not change.'
+            elif [[ "${line_count}" -le 20 ]] ; then
               cat case-count-report-diff.txt
             else
               head -n18 case-count-report-diff.txt
-              echo '[snip - full report in action logs]'
+              echo ' [snip - full report in action logs]'
               tail -n2 case-count-report-diff.txt
             fi
             echo '```'

@@ -41,7 +41,7 @@ jobs:
           body-includes: "<!-- pr-comment -->"
 
       # If 'pr' workflow run was 'requested'...
-      - if: github.event.action == 'requested'
+      - if: github.event.action == 'requested' && steps.find-comment.outputs.comment-id != ''
         name: PR workflow started - Update Comment
         uses: peter-evans/create-or-update-comment@v5
         with:
@@ -52,8 +52,9 @@ jobs:
             <!-- pr-comment -->
             Waiting for [build job](https://github.com/${{github.repository}}/actions/runs/${{github.event.workflow_run.id}}) (at ${{ github.event.workflow_run.head_sha }})...
 
-      # If 'pr' workflow run was 'completed'...
-      - if: github.event.action == 'completed'
+      # If 'pr' workflow run was 'completed' (but not 'cancelled', that usually means a new job is
+      # running, and we don't want to race with it)...
+      - if: github.event.action == 'completed' && github.event.workflow_run.conclusion != 'cancelled'
         name: PR workflow completed - Download pr-comment-body.txt
         uses: actions/download-artifact@v4
         continue-on-error: true
@@ -62,7 +63,7 @@ jobs:
           repository: ${{ github.event.workflow_run.repository.full_name }}
           run-id: ${{ github.event.workflow_run.id }}
           name: pr-comment-body.txt
-      - if: github.event.action == 'completed'
+      - if: github.event.action == 'completed' && github.event.workflow_run.conclusion != 'cancelled'
         name: PR workflow completed - Create pr-comment.txt
         env:
           REPO: ${{github.repository}}
@@ -84,8 +85,8 @@ jobs:
               echo '(No pr-comment-body.txt artifact found from this job.)'
             fi
           ) > pr-comment.txt
-      - if: github.event.action == 'completed'
-        name: PR workflow completed - Update Comment
+      - if: github.event.action == 'completed' && github.event.workflow_run.conclusion != 'cancelled'
+        name: PR workflow completed - Post or Update Comment
         uses: peter-evans/create-or-update-comment@v5
         with:
           issue-number: ${{ steps.pr-context.outputs.number }}
