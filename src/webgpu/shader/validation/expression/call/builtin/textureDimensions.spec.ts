@@ -137,7 +137,7 @@ Validates the return type of ${builtin} is the expected type.
     const textureWGSL = getNonStorageTextureTypeWGSL(textureType, texelArgType);
     const levelWGSL = hasLevelArg ? ', 0' : '';
     const t_let = t.params.let ? `let t_let = t${levelWGSL};` : ``;
-    const param = t.params.let ? t_let : `t${levelWGSL}`;
+    const param = t.params.let ? 't_let' : `t${levelWGSL}`;
 
     const code = `
 @group(0) @binding(0) var t: ${textureWGSL};
