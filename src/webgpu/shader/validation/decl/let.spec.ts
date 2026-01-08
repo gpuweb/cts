@@ -97,7 +97,7 @@ const kTypeCases: Record<string, Case> = {
   texture_storage_1d: {
     code: `let x : texture_storage_1d<write, rgba32float> = tex1d;`,
     valid: 'texture_and_sampler_let',
-    decls: `@group(0) @binding(0) var tex1d : texture_storage_1d<write, rgba32float>;`,
+    decls: `@group(0) @binding(0) var tex1d : texture_storage_1d<rgba32float, write>;`,
   },
   sampler: {
     code: `let s = samp;`,
