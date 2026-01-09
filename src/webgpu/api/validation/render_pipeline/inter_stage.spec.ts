@@ -315,15 +315,15 @@ g.test('max_variables_count,input')
     u.combine('isAsync', [false, true]).combineWithParams([
       // Number of user-defined output variables in test shader =
       //     device.limits.maxInterStageShaderVariables + numVariablesDelta
-      { numVariablesDelta: 0, useExtraBuiltinInputs: false },
-      { numVariablesDelta: 1, useExtraBuiltinInputs: false },
-      { numVariablesDelta: -1, useExtraBuiltinInputs: true },
-      { numVariablesDelta: -2, useExtraBuiltinInputs: true },
-      { numVariablesDelta: -3, useExtraBuiltinInputs: true },
+      { numVariablesDelta: 0, useExtraBuiltinInputs: false, _success: true },
+      { numVariablesDelta: 1, useExtraBuiltinInputs: false, _success: false },
+      { numVariablesDelta: -1, useExtraBuiltinInputs: true, _success: true },
+      { numVariablesDelta: -2, useExtraBuiltinInputs: true, _success: false },
+      { numVariablesDelta: -3, useExtraBuiltinInputs: true, _success: true },
     ] as const)
   )
   .fn(t => {
-    const { isAsync, numVariablesDelta, useExtraBuiltinInputs } = t.params;
+    const { isAsync, numVariablesDelta, useExtraBuiltinInputs, _success: success } = t.params;
 
     const numVec4 = t.device.limits.maxInterStageShaderVariables + numVariablesDelta;
 
@@ -340,7 +340,6 @@ g.test('max_variables_count,input')
         );
       }
     }
-    const success = inputs.length <= t.device.limits.maxInterStageShaderVariables;
 
     const descriptor = t.getDescriptorWithStates(
       t.getVertexStateWithOutputs(outputs),
