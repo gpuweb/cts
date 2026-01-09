@@ -3,7 +3,7 @@ Interface matching between vertex and fragment shader validation for createRende
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { range } from '../../../../common/util/util.js';
+import { range, unreachable } from '../../../../common/util/util.js';
 import { GPUTestSubcaseBatchState } from '../../../gpu_test.js';
 import * as vtu from '../validation_test_utils.js';
 
@@ -312,33 +312,37 @@ g.test('max_variables_count,input')
     variables.`
   )
   .params(u =>
-    u.combine('isAsync', [false, true]).combineWithParams([
-      // Number of user-defined output variables in test shader =
-      //     device.limits.maxInterStageShaderVariables + numVariablesDelta
-      { numVariablesDelta: 0, useExtraBuiltinInputs: false, _success: true },
-      { numVariablesDelta: 1, useExtraBuiltinInputs: false, _success: false },
-      { numVariablesDelta: -1, useExtraBuiltinInputs: true, _success: true },
-      { numVariablesDelta: -2, useExtraBuiltinInputs: true, _success: false },
-      { numVariablesDelta: -3, useExtraBuiltinInputs: true, _success: true },
-    ] as const)
+    u
+      .combine('isAsync', [false, true])
+      .combine('numBuiltinInputs', [0, 1, 3])
+      .beginSubcases()
+      .combine('overLimit', [false, true])
   )
   .fn(t => {
-    const { isAsync, numVariablesDelta, useExtraBuiltinInputs, _success: success } = t.params;
+    const { isAsync, numBuiltinInputs, overLimit } = t.params;
 
-    const numVec4 = t.device.limits.maxInterStageShaderVariables + numVariablesDelta;
+    const numVec4 =
+      t.device.limits.maxInterStageShaderVariables - numBuiltinInputs + (overLimit ? 1 : 0);
 
     const outputs = range(numVec4, i => `@location(${i}) vout${i}: vec4<f32>`);
     const inputs = range(numVec4, i => `@location(${i}) fin${i}: vec4<f32>`);
 
     // NOTE: `numVec4` matches `inputs.length` here. We use this property later.
-    if (useExtraBuiltinInputs) {
-      inputs.push('@builtin(front_facing) front_facing_in: bool');
-      if (!t.isCompatibility) {
+    switch (numBuiltinInputs) {
+      case 3:
+        t.skipIf(t.isCompatibility);
         inputs.push(
           '@builtin(sample_mask) sample_mask_in: u32',
           '@builtin(sample_index) sample_index_in: u32'
         );
-      }
+      // fallthrough
+      case 1:
+        inputs.push('@builtin(front_facing) front_facing_in: bool');
+      // fallthrough
+      case 0:
+        break;
+      default:
+        unreachable();
     }
 
     const descriptor = t.getDescriptorWithStates(
@@ -346,5 +350,6 @@ g.test('max_variables_count,input')
       t.getFragmentStateWithInputs(inputs, true)
     );
 
+    const success = !overLimit;
     vtu.doCreateRenderPipelineTest(t, isAsync, success, descriptor);
   });
