@@ -11,6 +11,9 @@
 *.tmp.txt
 /docs/tsdoc/
 
+# `pnpm` lockfile
+pnpm-lock.yaml
+
 # Cache files
 /standalone/data
 
