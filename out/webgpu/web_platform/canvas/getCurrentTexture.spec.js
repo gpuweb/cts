@@ -433,4 +433,25 @@ fn((t) => {
       break;
   }
 });
+
+g.test('compatibility').
+desc(
+  `
+Test that the texture returned from getCurrentTexture has textureBindingViewDimension
+and that it's undefined in core and '2d' in compatibility mode.
+  `
+).
+params((u) =>
+u //
+.combine('canvasType', kAllCanvasTypes)
+).
+fn((t) => {
+  const { canvasType } = t.params;
+  const ctx = t.initCanvasContext(canvasType);
+  const texture = ctx.getCurrentTexture();
+  t.expect(() => 'textureBindingViewDimension' in texture);
+
+  const expected = t.isCompatibility ? '2d' : undefined;
+  t.expect(texture.textureBindingViewDimension === expected);
+});
 //# sourceMappingURL=getCurrentTexture.spec.js.map
