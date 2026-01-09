@@ -21,6 +21,7 @@ import {
   kTextureUsageCopyInfo,
   kShaderStageKeys,
 } from '../../../../capability_info.js';
+import { GPUConst } from '../../../../constants.js';
 import {
   getBlockInfoForColorTextureFormat,
   kCompressedTextureFormats,
@@ -53,16 +54,15 @@ class DeviceDestroyTests extends AllFeaturesMaxLimitsGPUTest {
    * `fn` after the device is destroyed without any specific expectation. If `awaitLost` is true, we
    * also wait for device.lost to resolve before executing `fn` in the destroy case.
    */
-  async executeAfterDestroy(fn: () => void, awaitLost: boolean): Promise<void> {
+  async executeAfterDestroy(fn: () => void | Promise<void>, awaitLost: boolean): Promise<void> {
     this.expectDeviceLost('destroyed');
 
-    this.expectValidationError(fn, false);
     this.device.destroy();
     if (awaitLost) {
       const lostInfo = await this.device.lost;
       this.expect(lostInfo.reason === 'destroyed');
     }
-    fn();
+    await fn();
   }
 
   /**
@@ -144,6 +144,93 @@ Tests creating buffers on destroyed device. Tests valid combinations of:
         usage: kBufferUsageInfo[usageType] | kBufferUsageCopyInfo[usageCopy],
         mappedAtCreation,
       });
+    }, awaitLost);
+  });
+
+g.test('mapping,mappedAtCreation')
+  .desc(
+    `
+Tests behavior of mappedAtCreation buffers when destroying the device (multiple times).
+- Various usages
+- Wait for .lost or not
+  `
+  )
+  .params(u =>
+    u
+      .combine('usage', [
+        GPUConst.BufferUsage.MAP_READ,
+        GPUConst.BufferUsage.MAP_WRITE,
+        GPUConst.BufferUsage.COPY_SRC,
+      ])
+      .combine('awaitLost', [true, false])
+  )
+  .fn(async t => {
+    const { awaitLost, usage } = t.params;
+
+    const b1 = t.createBufferTracked({ size: 16, usage, mappedAtCreation: true });
+    t.expect(b1.mapState === 'mapped', 'b1 before destroy 1');
+
+    await t.executeAfterDestroy(() => {
+      // Destroy should have unmapped everything.
+      t.expect(b1.mapState === 'unmapped', 'b1 after destroy 1');
+      // But unmap just in case, to reset state before continuing.
+      b1.unmap();
+
+      // mappedAtCreation should still work.
+      const b2 = t.createBufferTracked({ size: 16, usage, mappedAtCreation: true });
+      t.expect(b2.mapState === 'mapped', 'b2 at creation after destroy 1');
+
+      // Destroying again should unmap.
+      t.device.destroy();
+      t.expect(b2.mapState === 'unmapped', 'b2 after destroy 2');
+    }, awaitLost);
+  });
+
+g.test('mapping,mapAsync')
+  .desc(
+    `
+Tests behavior of mapAsync'd buffers when destroying the device.
+- Various usages
+- Wait for .lost or not
+  `
+  )
+  .params(u =>
+    u
+      .combine('usage', [
+        GPUConst.BufferUsage.MAP_READ,
+        GPUConst.BufferUsage.MAP_WRITE,
+        GPUConst.BufferUsage.COPY_SRC,
+      ])
+      .combine('awaitLost', [true, false])
+  )
+  .fn(async t => {
+    const { awaitLost, usage } = t.params;
+
+    const b = t.createBufferTracked({ size: 16, usage });
+    const mode =
+      usage === GPUBufferUsage.MAP_READ
+        ? GPUMapMode.READ
+        : usage === GPUBufferUsage.MAP_WRITE
+        ? GPUMapMode.WRITE
+        : 0;
+    if (mode) {
+      await b.mapAsync(mode);
+      t.expect(b.mapState === 'mapped', 'bAsync before destroy 1');
+    } else {
+      t.expect(b.mapState === 'unmapped', 'bAsync before destroy 1');
+    }
+
+    await t.executeAfterDestroy(async () => {
+      // Destroy should have unmapped everything.
+      t.expect(b.mapState === 'unmapped', 'bAsync after destroy 1');
+      // But unmap just in case, to reset state before continuing.
+      b.unmap();
+
+      // Check that mapping after destroy fails with AbortError.
+      const mapPromise = b.mapAsync(mode);
+      t.shouldReject('AbortError', mapPromise);
+      await mapPromise.catch(() => {});
+      t.expect(b.mapState === 'unmapped', 'bAsync after mapAsync after destroy 1');
     }, awaitLost);
   });
 
