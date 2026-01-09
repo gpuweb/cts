@@ -23,6 +23,7 @@ import {
   kTextureViewDimensions,
   sampledAndStorageBindingEntries,
   texBindingTypeInfo,
+  isValidTextureUsageCombination,
 } from '../../capability_info.js';
 import { GPUConst } from '../../constants.js';
 import { kPossibleStorageTextureFormats, kRegularTextureFormats } from '../../format_info.js';
@@ -199,6 +200,13 @@ g.test('texture_binding_must_have_correct_usage')
       .combine('usage', kTextureUsages)
       .unless(({ entry, usage }) => {
         const info = texBindingTypeInfo(entry);
+        // TRANSIENT_ATTACHMENT is only valid when combined with RENDER_ATTACHMENT, so skip.
+        if (
+          usage === GPUConst.TextureUsage.TRANSIENT_ATTACHMENT &&
+          info.resource !== 'sampledTexMS'
+        ) {
+          return true;
+        }
         // Can't create the texture for this (usage=STORAGE_BINDING and sampleCount=4), so skip.
         return usage === GPUConst.TextureUsage.STORAGE_BINDING && info.resource === 'sampledTexMS';
       })
@@ -211,6 +219,11 @@ g.test('texture_binding_must_have_correct_usage')
       t.isCompatibility && info.resource === 'sampledTexMS',
       "The test requires 'r32float' multisampled support which compat mode doesn't guarantee."
     );
+
+    // MAINTENANCE_TODO(#4509): Remove this when TRANSIENT_ATTACHMENT is added to the WebGPU spec.
+    if ((usage & GPUConst.TextureUsage.TRANSIENT_ATTACHMENT) !== 0) {
+      t.skipIfTransientAttachmentNotSupported();
+    }
 
     const bindGroupLayout = t.device.createBindGroupLayout({
       entries: [{ binding: 0, visibility: GPUShaderStage.COMPUTE, ...entry }],
@@ -781,11 +794,19 @@ g.test('storage_texture,usage')
       // a combined usage.
       .combine('usage0', kTextureUsages)
       .combine('usage1', kTextureUsages)
+      .unless(({ usage0, usage1 }) => {
+        return !isValidTextureUsageCombination(usage0 | usage1);
+      })
   )
   .fn(t => {
     const { usage0, usage1 } = t.params;
 
     const usage = usage0 | usage1;
+
+    // MAINTENANCE_TODO(#4509): Remove this when TRANSIENT_ATTACHMENT is added to the WebGPU spec.
+    if ((usage & GPUConst.TextureUsage.TRANSIENT_ATTACHMENT) !== 0) {
+      t.skipIfTransientAttachmentNotSupported();
+    }
 
     const bindGroupLayout = t.device.createBindGroupLayout({
       entries: [
@@ -1212,11 +1233,19 @@ g.test('external_texture,texture_view,usage')
       // a combined usage.
       .combine('usage0', kTextureUsages)
       .combine('usage1', kTextureUsages)
+      .unless(({ usage0, usage1 }) => {
+        return !isValidTextureUsageCombination(usage0 | usage1);
+      })
   )
   .fn(t => {
     const { usage0, usage1 } = t.params;
 
     const usage = usage0 | usage1;
+
+    // MAINTENANCE_TODO(#4509): Remove this when TRANSIENT_ATTACHMENT is added to the WebGPU spec.
+    if ((usage & GPUConst.TextureUsage.TRANSIENT_ATTACHMENT) !== 0) {
+      t.skipIfTransientAttachmentNotSupported();
+    }
 
     const bindGroupLayout = t.device.createBindGroupLayout({
       entries: [

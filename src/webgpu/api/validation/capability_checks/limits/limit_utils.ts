@@ -404,9 +404,11 @@ export class LimitTestsImpl extends GPUTestBase {
     this._adapter = await gpu.requestAdapter();
     const limit = this.limit;
     // MAINTENANCE_TODO: consider removing this skip if the spec has no optional limits.
+    // Note: The cast below is required because an optional limit has no entry
+    // in capability_info.ts kLimitInfoKeys, kLimitInfoDefaults, kLimitInfoData
     this.skipIf(
       (this._adapter?.limits[limit] === undefined && !!this.limitTestParams.limitOptional) ||
-        getDefaultLimitsForCTS()[limit] === undefined,
+        !(limit in getDefaultLimitsForCTS()),
       `${limit} is missing but optional for now`
     );
     this.defaultLimit = getDefaultLimitForAdapter(this.adapter, limit);
@@ -1204,7 +1206,7 @@ export class LimitTestsImpl extends GPUTestBase {
 
     this.skipIf(
       numRequired > device.limits.maxStorageBuffersPerShaderStage,
-      `maxStorageBuffersPerShaderStage = ${device.limits.maxSamplersPerShaderStage} which is less than ${numRequired}`
+      `maxStorageBuffersPerShaderStage = ${device.limits.maxStorageBuffersPerShaderStage} which is less than ${numRequired}`
     );
 
     this.skipIf(

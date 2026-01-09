@@ -13,6 +13,7 @@ when the feature is not enabled. This includes:
 `;
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
+import { hasFeature } from '../../../../../common/util/util.js';
 import {
   kTextureFormatTier1AllowsRenderAttachmentBlendableMultisample,
   kTextureFormatTier1ThrowsWhenNotEnabled,
@@ -32,7 +33,7 @@ g.test('enables_rg11b10ufloat_renderable')
   )
   .beforeAllSubcases(t => t.selectDeviceOrSkipTestCase('texture-formats-tier1'))
   .fn(t => {
-    t.expect(() => t.device.features.has('rg11b10ufloat-renderable'));
+    t.expect(() => hasFeature(t.device.features, 'rg11b10ufloat-renderable'));
   });
 
 g.test('texture_usage,render_attachment')

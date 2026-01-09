@@ -12,7 +12,12 @@ import {
   valueof,
 } from '../common/util/data_tables.js';
 import { assertTypeTrue, TypeEqual } from '../common/util/types.js';
-import { unreachable } from '../common/util/util.js';
+import {
+  assert,
+  combinationsOfOneOrTwoUsages,
+  hasFeature,
+  unreachable,
+} from '../common/util/util.js';
 
 import { GPUConst, kMaxUnsignedLongValue, kMaxUnsignedLongLongValue } from './constants.js';
 
@@ -201,18 +206,62 @@ export const kTextureUsageCopyInfo: {
 /** List of all GPUTextureUsage copy values. */
 export const kTextureUsageCopy = keysOf(kTextureUsageCopyInfo);
 
+type TextureUsageSingleBit = valueof<typeof GPUConst.TextureUsage>;
 /** Per-GPUTextureUsage info. */
-export const kTextureUsageInfo: {
-  readonly [k in valueof<typeof GPUConst.TextureUsage>]: {};
-} = {
-  [GPUConst.TextureUsage.COPY_SRC]: {},
-  [GPUConst.TextureUsage.COPY_DST]: {},
-  [GPUConst.TextureUsage.TEXTURE_BINDING]: {},
-  [GPUConst.TextureUsage.STORAGE_BINDING]: {},
-  [GPUConst.TextureUsage.RENDER_ATTACHMENT]: {},
+const kTextureUsageInfo: {
+  readonly [k in TextureUsageSingleBit]: {
+    /** If true, the usage should cause configure() to TypeError (not just validation error). */
+    typeErrorForConfigure: boolean;
+  };
+} =
+  /* prettier-ignore */ {
+  [GPUConst.TextureUsage.COPY_SRC]:             { typeErrorForConfigure: false },
+  [GPUConst.TextureUsage.COPY_DST]:             { typeErrorForConfigure: false },
+  [GPUConst.TextureUsage.TEXTURE_BINDING]:      { typeErrorForConfigure: false },
+  [GPUConst.TextureUsage.STORAGE_BINDING]:      { typeErrorForConfigure: false },
+  [GPUConst.TextureUsage.RENDER_ATTACHMENT]:    { typeErrorForConfigure: false },
+  [GPUConst.TextureUsage.TRANSIENT_ATTACHMENT]: { typeErrorForConfigure: true  },
 };
 /** List of all GPUTextureUsage values. */
-export const kTextureUsages = numericKeysOf<GPUTextureUsageFlags>(kTextureUsageInfo);
+export const kTextureUsages = numericKeysOf(kTextureUsageInfo);
+/** Bitmask of all known texture usages. */
+const kAllTextureUsages = kTextureUsages.reduce((acc, usage) => acc | usage, 0);
+
+/** An arbitrary invalid texture usage bit. */
+export const kSomeBogusTextureUsage: GPUTextureUsageFlags = 0x4000_0000;
+assert((kSomeBogusTextureUsage & kAllTextureUsages) === 0);
+
+/**
+ * Check usage is valid for createTexture(): is non-zero, has only defined bits,
+ * and follows rules for TRANSIENT_ATTACHMENT.
+ */
+export function isValidTextureUsageCombination(usage: GPUTextureUsageFlags): boolean {
+  if (usage === 0) return false;
+
+  if (usage & GPUConst.TextureUsage.TRANSIENT_ATTACHMENT) {
+    return (
+      usage ===
+      (GPUConst.TextureUsage.TRANSIENT_ATTACHMENT | GPUConst.TextureUsage.RENDER_ATTACHMENT)
+    );
+  }
+
+  return (usage & ~kAllTextureUsages) === 0;
+}
+
+/** Check if usage contains a bit that is supposed to cause configure() to TypeError. */
+export function usageIsTypeErrorForConfigure(usage: GPUTextureUsageFlags): boolean {
+  for (const bit of kTextureUsages) {
+    if ((usage & bit) !== 0 && kTextureUsageInfo[bit].typeErrorForConfigure) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/** List of all combinations of 1-2 known texture usages, that are valid for createTexture(). */
+export const kValidCombinationsOfOneOrTwoTextureUsages = combinationsOfOneOrTwoUsages(
+  kTextureUsages
+).filter(isValidTextureUsageCombination);
 
 // Texture View
 
@@ -394,12 +443,12 @@ export const kPerStageBindingLimits: {
 } =
   /* prettier-ignore */ {
   'uniformBuf':          { class: 'uniformBuf', maxLimits: { COMPUTE: 'maxUniformBuffersPerShaderStage', FRAGMENT: 'maxUniformBuffersPerShaderStage', VERTEX: 'maxUniformBuffersPerShaderStage' } },
-  'storageBuf':          { class: 'storageBuf', maxLimits: { COMPUTE: 'maxStorageBuffersPerShaderStage', FRAGMENT: 'maxStorageBuffersPerShaderStage', VERTEX: 'maxStorageBuffersPerShaderStage' } },
+  'storageBuf':          { class: 'storageBuf', maxLimits: { COMPUTE: 'maxStorageBuffersPerShaderStage', FRAGMENT: 'maxStorageBuffersInFragmentStage', VERTEX: 'maxStorageBuffersInVertexStage' } },
   'sampler':             { class: 'sampler',    maxLimits: { COMPUTE: 'maxSamplersPerShaderStage', FRAGMENT: 'maxSamplersPerShaderStage', VERTEX: 'maxSamplersPerShaderStage' } },
   'sampledTex':          { class: 'sampledTex', maxLimits: { COMPUTE: 'maxSampledTexturesPerShaderStage', FRAGMENT: 'maxSampledTexturesPerShaderStage', VERTEX: 'maxSampledTexturesPerShaderStage' } },
-  'readonlyStorageTex':  { class: 'readonlyStorageTex', maxLimits: { COMPUTE: 'maxStorageTexturesPerShaderStage', FRAGMENT: 'maxStorageTexturesPerShaderStage', VERTEX: 'maxStorageTexturesPerShaderStage' } },
-  'writeonlyStorageTex': { class: 'writeonlyStorageTex', maxLimits: { COMPUTE: 'maxStorageTexturesPerShaderStage', FRAGMENT: 'maxStorageTexturesPerShaderStage', VERTEX: 'maxStorageTexturesPerShaderStage' } },
-  'readwriteStorageTex': { class: 'readwriteStorageTex', maxLimits: { COMPUTE: 'maxStorageTexturesPerShaderStage', FRAGMENT: 'maxStorageTexturesPerShaderStage', VERTEX: 'maxStorageTexturesPerShaderStage'} },
+  'readonlyStorageTex':  { class: 'readonlyStorageTex', maxLimits: { COMPUTE: 'maxStorageTexturesPerShaderStage', FRAGMENT: 'maxStorageTexturesInFragmentStage', VERTEX: 'maxStorageTexturesInVertexStage' } },
+  'writeonlyStorageTex': { class: 'writeonlyStorageTex', maxLimits: { COMPUTE: 'maxStorageTexturesPerShaderStage', FRAGMENT: 'maxStorageTexturesInFragmentStage', VERTEX: 'maxStorageTexturesInVertexStage' } },
+  'readwriteStorageTex': { class: 'readwriteStorageTex', maxLimits: { COMPUTE: 'maxStorageTexturesPerShaderStage', FRAGMENT: 'maxStorageTexturesInFragmentStage', VERTEX: 'maxStorageTexturesInVertexStage'} },
 };
 
 /**
@@ -730,7 +779,7 @@ const [kLimitInfoKeys, kLimitInfoDefaults, kLimitInfoData] =
                                                [  'maximum',          ,                ,     kMaxUnsignedLongValue] as const, {
   'maxTextureDimension1D':                     [           ,      8192,            4096,                          ],
   'maxTextureDimension2D':                     [           ,      8192,            4096,                          ],
-  'maxTextureDimension3D':                     [           ,      2048,            1024,                          ],
+  'maxTextureDimension3D':                     [           ,      2048,            2048,                          ],
   'maxTextureArrayLayers':                     [           ,       256,             256,                          ],
 
   'maxBindGroups':                             [           ,         4,               4,                          ],
@@ -768,15 +817,11 @@ const [kLimitInfoKeys, kLimitInfoDefaults, kLimitInfoData] =
   'maxComputeWorkgroupSizeY':                  [           ,       256,             128,                          ],
   'maxComputeWorkgroupSizeZ':                  [           ,        64,              64,                          ],
   'maxComputeWorkgroupsPerDimension':          [           ,     65535,           65535,                          ],
+  // MAINTENANCE_TODO(4535): Consider allowing optional non-conforming limits. Currently they are not allowed.
+  // Any limit here is immediately required by all implementations.
+  // Also, consider having this table statically check that all limits listed in @webgpu/types exist in
+  // this table.
 } as const];
-
-// MAINTENANCE_TODO: Remove when the compat spec is merged.
-const kCompatOnlyLimits = [
-  'maxStorageTexturesInFragmentStage',
-  'maxStorageTexturesInVertexStage',
-  'maxStorageBuffersInFragmentStage',
-  'maxStorageBuffersInVertexStage',
-] as const;
 
 /**
  * Feature levels corresponding to core WebGPU and WebGPU
@@ -815,14 +860,7 @@ export const kLimitClasses = Object.fromEntries(
 );
 
 export function getDefaultLimits(featureLevel: FeatureLevel) {
-  return Object.fromEntries(
-    Object.entries(kLimitInfos[featureLevel]).filter(([k]) => {
-      // Filter out compat-only limits when in core mode
-      return featureLevel === 'core'
-        ? !kCompatOnlyLimits.includes(k as (typeof kCompatOnlyLimits)[number])
-        : true;
-    })
-  ) as typeof kLimitInfoCore;
+  return kLimitInfos[featureLevel];
 }
 
 /**
@@ -839,7 +877,9 @@ export function getDefaultLimitsForCTS() {
 }
 
 export function getDefaultLimitsForDevice(device: GPUDevice) {
-  const featureLevel = device.features.has('core-features-and-limits') ? 'core' : 'compatibility';
+  const featureLevel = hasFeature(device.features, 'core-features-and-limits')
+    ? 'core'
+    : 'compatibility';
   return getDefaultLimits(featureLevel);
 }
 
@@ -938,6 +978,8 @@ export const kKnownWGSLLanguageFeatures = [
   'pointer_composite_access',
   'uniform_buffer_standard_layout',
   'texture_and_sampler_let',
+  'subgroup_id',
+  'subgroup_uniformity',
 ] as const;
 
 export type WGSLLanguageFeature = (typeof kKnownWGSLLanguageFeatures)[number];

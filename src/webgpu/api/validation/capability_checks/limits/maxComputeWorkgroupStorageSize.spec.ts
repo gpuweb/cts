@@ -1,5 +1,5 @@
 import { keysOf } from '../../../../../common/util/data_tables.js';
-import { assert } from '../../../../../common/util/util.js';
+import { assert, hasFeature } from '../../../../../common/util/util.js';
 import { align, roundDown } from '../../../../util/math.js';
 
 import {
@@ -152,7 +152,7 @@ g.test('createComputePipeline,at_over')
     const { limitTest, testValueName, async, wgslType } = t.params;
     const { defaultLimit, adapterLimit: maximumLimit } = t;
 
-    const hasF16 = t.adapter.features.has('shader-f16');
+    const hasF16 = hasFeature(t.adapter.features, 'shader-f16');
     if (!hasF16 && wgslType in wgslF16Types) {
       return;
     }

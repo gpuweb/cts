@@ -18,7 +18,8 @@ Example:
 
 Options:
   --help                     Print this message and exit.
-  --print-metadata-warnings  Print non-fatal warnings about listing_meta.json files.
+  --print-metadata-warnings  Print non-fatal warnings about listing_meta.json files to stderr.
+  --print-case-count-report  Print the case/subcase counts of every test to stdout.
 `);
   process.exit(rc);
 }
@@ -32,12 +33,19 @@ if (args.indexOf('--help') !== -1) {
 }
 
 let printMetadataWarnings = false;
+let printCaseCountReport = false;
 const suiteDirs = [];
 for (const arg of args) {
-  if (arg === '--print-metadata-warnings') {
-    printMetadataWarnings = true;
-  } else {
-    suiteDirs.push(arg);
+  switch (arg) {
+    case '--print-metadata-warnings':
+      printMetadataWarnings = true;
+      break;
+    case '--print-case-count-report':
+      printCaseCountReport = true;
+      break;
+    default:
+      suiteDirs.push(arg);
+      break;
   }
 }
 
@@ -49,5 +57,6 @@ for (const suiteDir of suiteDirs) {
   void crawl(suiteDir, {
     validate: true,
     printMetadataWarnings,
+    printCaseCountReport,
   });
 }

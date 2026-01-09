@@ -3,6 +3,18 @@ Operational tests for the 'texture-component-swizzle' feature.
 
 Test that:
 * when the feature is on, swizzling is applied correctly.
+
+Note: for texture_depth_xxx we only get f32
+What happens in the GPU (at least in Metal)
+
+  1. we start with [depthOrCompareResult, depthOrCompareResult, depthOrCompareResult, 1]
+  2. we then swizzle
+  3. we then read the RED channel
+
+Gather will do this 4 times and give us the result of step 3 in each channel.
+
+The WebGPU spec says we should be starting with [depthOrCompare, 0, 0, 1] and the
+implementation should deal with this.
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
@@ -28,6 +40,7 @@ import {
   isBuiltinComparison,
   isBuiltinGather,
   isFillable,
+  swizzleTexel,
   TextureBuiltin,
 } from '../../../shader/execution/expression/call/builtin/texture_utils.js';
 import * as ttu from '../../../texture_test_utils.js';
@@ -36,7 +49,6 @@ import { TexelView } from '../../../util/texture/texel_view.js';
 import {
   kSwizzleTests,
   SwizzleSpec,
-  swizzleTexel,
 } from '../../validation/capability_checks/features/texture_component_swizzle_utils.js';
 
 type TextureInput =
@@ -332,18 +344,17 @@ ${sampledColors.map((c, i) => `${i % 2}, ${(i / 2) | 0}, ${JSON.stringify(c)}`).
 
     const testData = [swizzle, otherSwizzle].map(swizzle => {
       const swizzledColors = readColors.map(readColor => swizzleTexel(readColor, swizzle));
-      const expRGBAColor = isBuiltinGather(func)
+      const expColor = isBuiltinGather(func)
         ? gather(swizzledColors, channel)
+        : isSingleChannelInput(input)
+        ? {
+            R: swizzledColors[0].R,
+            G: swizzledColors[0].R,
+            B: swizzledColors[0].R,
+            A: swizzledColors[0].R,
+          }
         : swizzledColors[0];
-      const expColor =
-        !isBuiltinGather(func) && isSingleChannelInput(input)
-          ? {
-              R: expRGBAColor.R,
-              G: expRGBAColor.R,
-              B: expRGBAColor.R,
-              A: expRGBAColor.R,
-            }
-          : expRGBAColor;
+
       const expTexelView = TexelView.fromTexelsAsColors(expFormat, _coords => expColor);
       const textureView = texture.createView({
         label: `swizzle texture view(${swizzle})`,
@@ -534,6 +545,12 @@ ${testData
     const uniformValues = new ArrayBuffer(uniformBuffer.size);
     const asF32 = new Float32Array(uniformValues);
     asF32.set([tx / texture.width, ty / texture.height]);
+    t.debug(
+      () =>
+        `texcoords: ${[...asF32]}  tx = ${tx}, ty = ${ty}, size: ${texture.width}, ${
+          texture.height
+        }`
+    );
     t.device.queue.writeBuffer(uniformBuffer, 0, new Uint32Array(uniformValues));
 
     const bindGroup0 = t.device.createBindGroup({
