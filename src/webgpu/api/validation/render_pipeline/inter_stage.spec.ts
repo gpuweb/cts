@@ -51,6 +51,8 @@ class InterStageMatchingValidationTest extends CreateRenderPipelineValidationTes
       targets: [{ format: 'rgba8unorm' }],
       module: this.device.createShaderModule({
         code: `
+        ${hasFeature(this.device.features, 'primitive-index') ? 'enable primitive_index;' : ''}
+        ${hasFeature(this.device.features, 'subgroups') ? 'enable subgroups;' : ''}
         struct B {
             ${inputs.map((v, i) => v.replace('__', getVarName(i))).join(',\n')},
             ${hasBuiltinPosition ? '@builtin(position) pos: vec4<f32>' : ''}
