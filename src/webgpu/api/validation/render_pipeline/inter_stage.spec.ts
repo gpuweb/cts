@@ -3,7 +3,7 @@ Interface matching between vertex and fragment shader validation for createRende
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { range, unreachable } from '../../../../common/util/util.js';
+import { hasFeature, range, unreachable } from '../../../../common/util/util.js';
 import { GPUTestSubcaseBatchState } from '../../../gpu_test.js';
 import * as vtu from '../validation_test_utils.js';
 
@@ -309,41 +309,50 @@ g.test('max_variables_count,output')
 g.test('max_variables_count,input')
   .desc(
     `Tests that validation should fail when all user-defined inputs > max vertex shader output
-    variables.`
+    variables (with varying proportions of builtins and user-defined variables).`
   )
   .params(u =>
     u
       .combine('isAsync', [false, true])
-      .combine('numBuiltinInputs', [0, 1, 3])
+      .combine('builtins', ['none', 'compat', 'all'])
       .beginSubcases()
       .combine('overLimit', [false, true])
   )
   .fn(t => {
-    const { isAsync, numBuiltinInputs, overLimit } = t.params;
+    const { isAsync, builtins, overLimit } = t.params;
 
-    const numVec4 =
-      t.device.limits.maxInterStageShaderVariables - numBuiltinInputs + (overLimit ? 1 : 0);
-
-    const outputs = range(numVec4, i => `@location(${i}) vout${i}: vec4<f32>`);
-    const inputs = range(numVec4, i => `@location(${i}) fin${i}: vec4<f32>`);
-
-    // NOTE: `numVec4` matches `inputs.length` here. We use this property later.
-    switch (numBuiltinInputs) {
-      case 3:
+    const inputs: string[] = [];
+    switch (builtins) {
+      case 'all':
         t.skipIf(t.isCompatibility);
         inputs.push(
           '@builtin(sample_mask) sample_mask_in: u32',
           '@builtin(sample_index) sample_index_in: u32'
         );
+        if (hasFeature(t.device.features, 'primitive-index')) {
+          inputs.push('@builtin(primitive_index) primitive_index_in: u32');
+        }
+        if (hasFeature(t.device.features, 'subgroups')) {
+          inputs.push(
+            '@builtin(subgroup_invocation_id) subgroup_invocation_id_in: u32',
+            '@builtin(subgroup_size) subgroup_size_in: u32'
+          );
+        }
       // fallthrough
-      case 1:
+      case 'compat':
         inputs.push('@builtin(front_facing) front_facing_in: bool');
       // fallthrough
-      case 0:
+      case 'none':
         break;
       default:
         unreachable();
     }
+
+    const numVec4 =
+      t.device.limits.maxInterStageShaderVariables - inputs.length + (overLimit ? 1 : 0);
+
+    const outputs = range(numVec4, i => `@location(${i}) vout${i}: vec4<f32>`);
+    inputs.push(...range(numVec4, i => `@location(${i}) fin${i}: vec4<f32>`));
 
     const descriptor = t.getDescriptorWithStates(
       t.getVertexStateWithOutputs(outputs),
