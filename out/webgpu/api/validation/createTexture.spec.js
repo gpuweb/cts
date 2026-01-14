@@ -135,7 +135,7 @@ fn((t) => {
     () => {
       t.createTextureTracked(descriptor);
     },
-    !textureDimensionAndFormatCompatibleForDevice(t.device, dimension, format)
+    !textureDimensionAndFormatCompatibleForDevice(t.device.features, dimension, format)
   );
 });
 
@@ -298,7 +298,8 @@ fn((t) => {
   };
 
   const success =
-  sampleCount === 1 || sampleCount === 4 && isTextureFormatMultisampled(t.device, format);
+  sampleCount === 1 ||
+  sampleCount === 4 && isTextureFormatMultisampled(t.device.features, format);
 
   t.expectValidationError(() => {
     t.createTextureTracked(descriptor);
@@ -380,12 +381,12 @@ fn((t) => {
 
   const satisfyWithStorageUsageRequirement =
   (usage & GPUConst.TextureUsage.STORAGE_BINDING) === 0 ||
-  isTextureFormatUsableWithStorageAccessMode(t.device, format, 'write-only');
+  isTextureFormatUsableWithStorageAccessMode(t.device.features, format, 'write-only');
 
   const success =
   sampleCount === 1 && satisfyWithStorageUsageRequirement ||
   sampleCount === 4 &&
-  isTextureFormatMultisampled(t.device, format) && (
+  isTextureFormatMultisampled(t.device.features, format) && (
   dimension === '2d' || dimension === undefined) &&
   mipLevelCount === 1 &&
   arrayLayerCount === 1 &&
@@ -992,7 +993,7 @@ fn((t) => {
   size[0] <= maxTextureDimension3D &&
   size[1] <= maxTextureDimension3D &&
   size[2] <= maxTextureDimension3D &&
-  textureDimensionAndFormatCompatibleForDevice(t.device, '3d', format);
+  textureDimensionAndFormatCompatibleForDevice(t.device.features, '3d', format);
 
   t.expectValidationError(() => {
     t.createTextureTracked(descriptor);
@@ -1044,12 +1045,15 @@ fn((t) => {
   // Note that we unconditionally test copy usages for all formats and
   // expect failure if copying from or to is not supported.
   if (usage & GPUTextureUsage.STORAGE_BINDING) {
-    if (!isTextureFormatUsableWithStorageAccessMode(t.device, format, 'write-only'))
+    if (!isTextureFormatUsableWithStorageAccessMode(t.device.features, format, 'write-only'))
     success = false;
   }
   if (usage & GPUTextureUsage.RENDER_ATTACHMENT) {
     if (appliedDimension === '1d') success = false;
-    if (isColorTextureFormat(format) && !isTextureFormatColorRenderable(t.device, format))
+    if (
+    isColorTextureFormat(format) &&
+    !isTextureFormatColorRenderable(t.device.features, format))
+
     success = false;
   }
   if (usage & GPUTextureUsage.TRANSIENT_ATTACHMENT) {
@@ -1115,7 +1119,7 @@ fn((t) => {
   t.skipIfTextureFormatNotSupported(format, viewFormat);
 
   const { blockWidth, blockHeight } = getBlockInfoForTextureFormat(format);
-  const compatible = textureFormatsAreViewCompatible(t.device, format, viewFormat);
+  const compatible = textureFormatsAreViewCompatible(t.device.features, format, viewFormat);
 
   // Test the viewFormat in the list.
   t.expectValidationError(() => {

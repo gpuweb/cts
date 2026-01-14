@@ -122,7 +122,7 @@ g.test('targets_format_renderable')
     vtu.doCreateRenderPipelineTest(
       t,
       isAsync,
-      isTextureFormatColorRenderable(t.device, format),
+      isTextureFormatColorRenderable(t.device.features, format),
       descriptor
     );
   });
@@ -194,7 +194,7 @@ g.test('limits,maxColorAttachmentBytesPerSample,aligned')
       }),
     });
     const shouldError =
-      !isTextureFormatColorRenderable(t.device, format) ||
+      !isTextureFormatColorRenderable(t.device.features, format) ||
       getColorRenderByteCost(format) * attachmentCount >
         t.device.limits.maxColorAttachmentBytesPerSample;
 
@@ -272,7 +272,7 @@ g.test('targets_format_filterable')
       ],
     });
 
-    const supportsBlend = isTextureFormatBlendable(t.device, format);
+    const supportsBlend = isTextureFormatBlendable(t.device.features, format);
     vtu.doCreateRenderPipelineTest(t, isAsync, !hasBlend || supportsBlend, descriptor);
   });
 

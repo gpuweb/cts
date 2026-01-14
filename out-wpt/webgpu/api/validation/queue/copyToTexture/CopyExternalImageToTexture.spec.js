@@ -696,7 +696,7 @@ fn(async (t) => {
   });
   void t.device.popErrorScope();
 
-  const success = isTextureFormatUsableWithCopyExternalImageToTexture(t.device, format);
+  const success = isTextureFormatUsableWithCopyExternalImageToTexture(t.device.features, format);
 
   t.runTest({ source: imageBitmap }, { texture: dstTexture }, copySize, success);
 });

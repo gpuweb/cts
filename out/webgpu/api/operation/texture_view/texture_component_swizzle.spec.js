@@ -305,7 +305,7 @@ fn(async (t) => {
     usage:
     GPUTextureUsage.COPY_DST |
     GPUTextureUsage.TEXTURE_BINDING | (
-    isTextureFormatUsableAsRenderAttachment(t.device, format) ?
+    isTextureFormatUsableAsRenderAttachment(t.device.features, format) ?
     GPUTextureUsage.RENDER_ATTACHMENT :
     0),
     sampleCount: isMultisampledInput(input) ? 4 : 1

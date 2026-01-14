@@ -84,14 +84,22 @@ export const globalTestConfig = {
   logToWebSocket: false
 };
 
+// Check if features has 'core-features-and-limits'.
+// Note: The CTS generally, requires that if globalTestConfig.compatibility
+// is true then the device MUST be a compatibility device since the CTS
+// is trying to test that compatibility devices have the correct validation.
+export function isCompatibilityMode(features) {
+  if (globalTestConfig.compatibility) {
+    assert(!hasFeature(features, 'core-features-and-limits'));
+  }
+  return globalTestConfig.compatibility;
+}
+
 // Check if a device is a compatibility device.
 // Note: The CTS generally, requires that if globalTestConfig.compatibility
 // is true then the device MUST be a compatibility device since the CTS
 // is trying to test that compatibility devices have the correct validation.
 export function isCompatibilityDevice(device) {
-  if (globalTestConfig.compatibility) {
-    assert(!hasFeature(device.features, 'core-features-and-limits'));
-  }
-  return globalTestConfig.compatibility;
+  return isCompatibilityMode(device.features);
 }
 //# sourceMappingURL=test_config.js.map

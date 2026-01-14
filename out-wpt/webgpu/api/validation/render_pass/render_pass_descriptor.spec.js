@@ -242,7 +242,7 @@ fn((t) => {
     colorAttachments.push(t.getColorAttachment(colorTexture));
   }
   const shouldError =
-  !isTextureFormatColorRenderable(t.device, format) ||
+  !isTextureFormatColorRenderable(t.device.features, format) ||
   computeBytesPerSampleFromFormats(range(attachmentCount, () => format)) >
   t.device.limits.maxColorAttachmentBytesPerSample;
 
@@ -1252,7 +1252,7 @@ fn((t) => {
   const colorAttachment = t.getColorAttachment(multisampledColorTexture);
   colorAttachment.resolveTarget = resolveTarget.createView();
 
-  t.tryRenderPass(isTextureFormatResolvable(t.device, format), {
+  t.tryRenderPass(isTextureFormatResolvable(t.device.features, format), {
     colorAttachments: [colorAttachment]
   });
 });

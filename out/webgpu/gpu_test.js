@@ -512,7 +512,11 @@ export class GPUTestBase extends Fixture {
   viewDimension)
   {
     this.skipIf(
-      !textureViewDimensionAndFormatCompatibleForDevice(this.device, viewDimension, format),
+      !textureViewDimensionAndFormatCompatibleForDevice(
+        this.device.features,
+        viewDimension,
+        format
+      ),
       `format: ${format} does not support viewDimension: ${viewDimension}`
     );
   }
@@ -522,7 +526,7 @@ export class GPUTestBase extends Fixture {
   dimension)
   {
     this.skipIf(
-      !textureDimensionAndFormatCompatibleForDevice(this.device, dimension, format),
+      !textureDimensionAndFormatCompatibleForDevice(this.device.features, dimension, format),
       `format: ${format} does not support dimension: ${dimension}`
     );
   }
@@ -530,7 +534,7 @@ export class GPUTestBase extends Fixture {
   skipIfTextureFormatNotResolvable(...formats) {
     for (const format of formats) {
       if (format === undefined) continue;
-      if (!isTextureFormatResolvable(this.device, format)) {
+      if (!isTextureFormatResolvable(this.device.features, format)) {
         this.skip(`texture format '${format}' is not resolvable`);
       }
     }
@@ -576,7 +580,7 @@ export class GPUTestBase extends Fixture {
     for (const format of formats) {
       if (!format) continue;
 
-      if (!isTextureFormatUsableWithStorageAccessMode(this.device, format, access)) {
+      if (!isTextureFormatUsableWithStorageAccessMode(this.device.features, format, access)) {
         this.skip(
           `Texture with ${format} is not usable as a storage texture with access ${access}`
         );
@@ -586,7 +590,7 @@ export class GPUTestBase extends Fixture {
 
   skipIfTextureFormatNotUsableAsRenderAttachment(...formats) {
     for (const format of formats) {
-      if (format && !isTextureFormatUsableAsRenderAttachment(this.device, format)) {
+      if (format && !isTextureFormatUsableAsRenderAttachment(this.device.features, format)) {
         this.skip(`Texture with ${format} is not usable as a render attachment`);
       }
     }
@@ -595,7 +599,7 @@ export class GPUTestBase extends Fixture {
   skipIfTextureFormatNotMultisampled(...formats) {
     for (const format of formats) {
       if (format === undefined) continue;
-      if (!isTextureFormatMultisampled(this.device, format)) {
+      if (!isTextureFormatMultisampled(this.device.features, format)) {
         this.skip(`texture format '${format}' does not support multisampling`);
       }
     }
@@ -604,14 +608,20 @@ export class GPUTestBase extends Fixture {
   skipIfTextureFormatNotBlendable(...formats) {
     for (const format of formats) {
       if (format === undefined) continue;
-      this.skipIf(!isTextureFormatBlendable(this.device, format), `${format} is not blendable`);
+      this.skipIf(
+        !isTextureFormatBlendable(this.device.features, format),
+        `${format} is not blendable`
+      );
     }
   }
 
   skipIfTextureFormatNotFilterable(...formats) {
     for (const format of formats) {
       if (format === undefined) continue;
-      this.skipIf(!isTextureFormatFilterable(this.device, format), `${format} is not filterable`);
+      this.skipIf(
+        !isTextureFormatFilterable(this.device.features, format),
+        `${format} is not filterable`
+      );
     }
   }
 
@@ -639,7 +649,7 @@ export class GPUTestBase extends Fixture {
 
   skipIfTextureFormatPossiblyNotUsableWithCopyExternalImageToTexture(format) {
     this.skipIf(
-      !isTextureFormatUsableWithCopyExternalImageToTexture(this.device, format),
+      !isTextureFormatUsableWithCopyExternalImageToTexture(this.device.features, format),
       `can not use copyExternalImageToTexture with ${format}`
     );
   }

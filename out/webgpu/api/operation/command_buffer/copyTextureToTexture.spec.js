@@ -225,7 +225,7 @@ class F extends AllFeaturesMaxLimitsGPUTest {
     align(dstBlocksPerRow * bytesPerBlock, 4);
 
     if (isCompressedTextureFormat(dstTexture.format) && this.isCompatibility) {
-      assert(textureFormatsAreViewCompatible(this.device, srcFormat, dstFormat));
+      assert(textureFormatsAreViewCompatible(this.device.features, srcFormat, dstFormat));
       // compare by rendering. We need the expected texture to match
       // the dstTexture so we'll create a texture where we supply
       // all of the data in JavaScript.

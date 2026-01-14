@@ -532,7 +532,7 @@ fn((t) => {
   const ctx = canvas.getContext('webgpu');
   assert(ctx instanceof GPUCanvasContext, 'Failed to get WebGPU context from canvas');
 
-  const compatible = textureFormatsAreViewCompatible(t.device, format, viewFormat);
+  const compatible = textureFormatsAreViewCompatible(t.device.features, format, viewFormat);
 
   // Test configure() produces an error if the formats aren't compatible.
   t.expectValidationError(() => {
