@@ -62,7 +62,7 @@ g.test('format')
 
     const compatible =
       viewFormat === undefined ||
-      textureFormatsAreViewCompatible(t.device, textureFormat, viewFormat);
+      textureFormatsAreViewCompatible(t.device.features, textureFormat, viewFormat);
 
     const texture = t.createTextureTracked({
       format: textureFormat,
@@ -412,7 +412,7 @@ g.test('texture_view_usage_with_view_format')
     t.skipIfTextureFormatNotSupported(textureFormat, viewFormat);
     t.skipIfTextureFormatDoesNotSupportUsage(usage, textureFormat);
 
-    if (!textureFormatsAreViewCompatible(t.device, textureFormat, viewFormat)) {
+    if (!textureFormatsAreViewCompatible(t.device.features, textureFormat, viewFormat)) {
       t.skip(`"${textureFormat}" and "${viewFormat}" are not view-compatible`);
     }
 
@@ -428,11 +428,14 @@ g.test('texture_view_usage_with_view_format')
 
     // Texture view usage must be a subset of texture usage
     if (usage & GPUTextureUsage.STORAGE_BINDING) {
-      if (!isTextureFormatUsableWithStorageAccessMode(t.device, viewFormat, 'write-only'))
+      if (!isTextureFormatUsableWithStorageAccessMode(t.device.features, viewFormat, 'write-only'))
         success = false;
     }
     if (usage & GPUTextureUsage.RENDER_ATTACHMENT) {
-      if (isColorTextureFormat(viewFormat) && !isTextureFormatColorRenderable(t.device, viewFormat))
+      if (
+        isColorTextureFormat(viewFormat) &&
+        !isTextureFormatColorRenderable(t.device.features, viewFormat)
+      )
         success = false;
     }
 
