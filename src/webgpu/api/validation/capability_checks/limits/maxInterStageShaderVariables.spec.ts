@@ -21,34 +21,35 @@ const kExtraItems = [
   'sample_mask_out', // special - see below
 ] as const;
 
-function getCombinations<T>(arr: readonly T[], sizes: number[]): T[][] {
-  const combos: T[][] = [];
-
-  function backtrack(start: number, path: T[], size: number) {
-    if (path.length === size) {
-      combos.push(path.slice());
-      return;
-    }
-
-    for (let i = start; i < arr.length; i++) {
-      path.push(arr[i]);
-      backtrack(i + 1, path, size);
-      path.pop();
-    }
+/**
+ * Generates every combination of size elements from array
+ * combinations([a, b, c], 2) generates [a, b], [a, c], [b, c]
+ */
+function* combinations<T>(
+  arr: readonly T[],
+  size: number,
+  start = 0,
+  path: T[] = []
+): Generator<T[]> {
+  if (path.length === size) {
+    yield [...path];
+    return;
   }
 
-  sizes.forEach(size => {
-    backtrack(0, [], size);
-  });
-
-  return combos;
+  for (let i = start; i < arr.length; i++) {
+    path.push(arr[i]);
+    yield* combinations(arr, size, i + 1, path);
+    path.pop();
+  }
 }
 
 const kTestItems = [...kItemsThatCountAgainstLimit, ...kExtraItems] as const;
 const kTestItemCombinations = [
   [], // no builtins case
-  ...getCombinations(kTestItems, [1, 2, 3]),
-  kTestItems, // all case
+  ...combinations(kTestItems, 1), // one builtin
+  ...combinations(kTestItems, 2), // 2 builtins
+  ...combinations(kTestItems, 3), // 3 builtins
+  kTestItems, // all builtins case
 ] as const;
 
 const requiresSubgroupsFeature = (items: Set<(typeof kTestItems)[number]>) =>
