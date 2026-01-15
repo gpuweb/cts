@@ -358,6 +358,14 @@ g.test('compute,all_active')
     t.skipIfDeviceDoesNotHaveFeature('subgroups' as GPUFeatureName);
     const wgThreads = t.params.wgSize[0] * t.params.wgSize[1] * t.params.wgSize[2];
 
+    interface SubgroupProperties extends GPUAdapterInfo {
+      subgroupMinSize: number;
+    }
+    const { subgroupMinSize } = t.device.adapterInfo as SubgroupProperties;
+    const mod = wgThreads % subgroupMinSize;
+    t.skipIf(mod > 0 && mod <= t.params.id,
+             "Can't guarantee enough invocations for defined behaviour");
+
     const broadcast =
       t.params.id === 0
         ? `subgroupBroadcastFirst(input[lid])`
@@ -437,6 +445,9 @@ g.test('compute,split')
       subgroupMaxSize: number;
     }
     const { subgroupMinSize, subgroupMaxSize } = t.device.adapterInfo as SubgroupProperties;
+    const mod = wgThreads % subgroupMinSize;
+    t.skipIf(mod > 0 && mod <= t.params.id,
+             "Can't guarantee enough invocations for defined behaviour");
     for (let size = subgroupMinSize; size <= subgroupMaxSize; size *= 2) {
       t.skipIf(!testcase.filter(t.params.id, size), 'Skipping potential undefined behavior');
     }
