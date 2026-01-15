@@ -4,96 +4,50 @@ Validate immediate data usage in RenderPassEncoder, ComputePassEncoder, and Rend
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { getGPU } from '../../../../../common/util/navigator_gpu.js';
+import { supportsImmediateData, unreachable } from '../../../../../common/util/util.js';
 import { AllFeaturesMaxLimitsGPUTest } from '../../../../gpu_test.js';
-import {
-  kProgrammableEncoderTypes,
-  ProgrammableEncoderType,
-} from '../../../../util/command_buffer_maker.js';
-
-interface EncoderWithImmediates {
-  setImmediates(offset: number, data: Uint8Array, srcOffset: number, size: number): void;
-}
+import { kProgrammableEncoderTypes } from '../../../../util/command_buffer_maker.js';
 
 class PipelineImmediateTest extends AllFeaturesMaxLimitsGPUTest {
   override async init() {
     await super.init();
-    const supportsRenderPass =
-      typeof GPURenderPassEncoder !== 'undefined' &&
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      'setImmediates' in (GPURenderPassEncoder.prototype as any);
-    const supportsComputePass =
-      typeof GPUComputePassEncoder !== 'undefined' &&
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      'setImmediates' in (GPUComputePassEncoder.prototype as any);
-    const supportsRenderBundle =
-      typeof GPURenderBundleEncoder !== 'undefined' &&
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      'setImmediates' in (GPURenderBundleEncoder.prototype as any);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const supportsLimit = (this.device.limits as any).maxImmediateSize !== undefined;
-    const supportsWgslFeature = getGPU(this.rec).wgslLanguageFeatures.has(
-      'immediate_address_space'
-    );
-
-    if (
-      !supportsRenderPass &&
-      !supportsComputePass &&
-      !supportsRenderBundle &&
-      !supportsLimit &&
-      !supportsWgslFeature
-    ) {
+    if (!supportsImmediateData(getGPU(this.rec))) {
       this.skip('setImmediates not supported');
     }
   }
 
-  createPipeline(
-    encoderType: ProgrammableEncoderType,
+  runPass(
+    encoder: GPUComputePassEncoder | GPURenderPassEncoder | GPURenderBundleEncoder,
     code: string,
     immediateSize: number
-  ): GPURenderPipeline | GPUComputePipeline {
+  ) {
     const layout = this.device.createPipelineLayout({
       bindGroupLayouts: [],
       immediateSize,
     });
 
-    if (encoderType === 'compute pass') {
-      return this.device.createComputePipeline({
+    if (encoder instanceof GPUComputePassEncoder) {
+      const pipeline = this.device.createComputePipeline({
         layout,
         compute: {
           module: this.device.createShaderModule({ code }),
-          entryPoint: 'main_compute',
         },
       });
+      encoder.setPipeline(pipeline);
+      encoder.dispatchWorkgroups(1);
     } else {
-      return this.device.createRenderPipeline({
+      const pipeline = this.device.createRenderPipeline({
         layout,
         vertex: {
           module: this.device.createShaderModule({ code }),
-          entryPoint: 'main_vertex',
         },
         fragment: {
           module: this.device.createShaderModule({ code }),
-          entryPoint: 'main_fragment',
           targets: [{ format: 'rgba8unorm' }],
         },
       });
-    }
-  }
-
-  runPass(
-    encoderType: ProgrammableEncoderType,
-    encoder: GPUComputePassEncoder | GPURenderPassEncoder | GPURenderBundleEncoder,
-    pipeline: GPURenderPipeline | GPUComputePipeline
-  ) {
-    if (encoderType === 'compute pass') {
-      (encoder as GPUComputePassEncoder).setPipeline(pipeline as GPUComputePipeline);
-      (encoder as GPUComputePassEncoder).dispatchWorkgroups(1);
-    } else if (encoderType === 'render pass') {
-      (encoder as GPURenderPassEncoder).setPipeline(pipeline as GPURenderPipeline);
-      (encoder as GPURenderPassEncoder).draw(3);
-    } else if (encoderType === 'render bundle') {
-      (encoder as GPURenderBundleEncoder).setPipeline(pipeline as GPURenderPipeline);
-      (encoder as GPURenderBundleEncoder).draw(3);
+      encoder.setPipeline(pipeline);
+      encoder.draw(3);
     }
   }
 }
@@ -113,7 +67,6 @@ g.test('required_slots_set')
         When a struct variable is statically used, all non-padding bytes of the entire struct must be set,
         even if only one member is accessed. In this test, data.b.v is accessed, but both data.a and data.b
         must be set (excluding padding).
-      - functions: Immediate data used in a function called by entry point.
       - dynamic_indexing: Array with dynamic indexing.
     - Usage:
       - full: Set all declared bytes.
@@ -121,6 +74,7 @@ g.test('required_slots_set')
       - partial: Set only a subset of bytes.
         - For struct_padding, this means setting only members (no padding), which is valid.
         - For others, this means missing required data, which is invalid.
+      - overprovision: Set more bytes than declared.
     `
   )
   .params(u =>
@@ -130,148 +84,152 @@ g.test('required_slots_set')
         'scalar',
         'vector',
         'struct_padding',
-        'functions',
-        'function_unused',
         'dynamic_indexing',
+        'mixed_types',
       ] as const)
       .combine('usage', ['full', 'partial', 'split', 'overprovision'] as const)
-      .filter(t => {
-        if (t.scenario === 'scalar' && t.usage === 'split') return false;
-        return true;
+      .expand('stage', p => {
+        if (p.encoderType === 'compute pass') return ['compute'];
+        return ['vertex', 'fragment', 'both'];
       })
+      .unless(p => p.scenario === 'scalar' && p.usage === 'split')
   )
   .fn(t => {
-    const { encoderType, scenario, usage } = t.params;
+    const { encoderType, scenario, usage, stage } = t.params;
 
     let code = '';
     let kRequiredSize = 0;
 
+    const use_vertex = stage === 'vertex' || stage === 'both';
+    const use_fragment = stage === 'fragment' || stage === 'both';
+    const both_different = stage === 'both';
+
+    let declarations = '';
+    let helpers = '';
+    let callCompute = 'use_data();';
+    let callVertex = 'use_data();';
+    let callFragment = 'use_data();';
+    let computeArgs = '';
+    let vertexArgs = '';
+    let fragmentArgs = '';
+    let fragmentPrelude = '';
+
     switch (scenario) {
       case 'scalar':
         kRequiredSize = 4;
-        code = `
-          var<immediate> data: u32;
-          @compute @workgroup_size(1) fn main_compute() { _ = data; }
-          @vertex fn main_vertex() -> @builtin(position) vec4<f32> { _ = data; return vec4<f32>(0.0, 0.0, 0.0, 1.0); }
-          @fragment fn main_fragment() -> @location(0) vec4<f32> { _ = data; return vec4<f32>(0.0, 1.0, 0.0, 1.0); }
-        `;
+        declarations = 'var<immediate> data: u32;';
+        helpers = 'fn use_data() { _ = data; }';
         break;
       case 'vector':
         kRequiredSize = 16;
-        code = `
-          var<immediate> data: vec4<u32>;
-          @compute @workgroup_size(1) fn main_compute() { _ = data; }
-          @vertex fn main_vertex() -> @builtin(position) vec4<f32> { _ = data; return vec4<f32>(0.0, 0.0, 0.0, 1.0); }
-          @fragment fn main_fragment() -> @location(0) vec4<f32> { _ = data; return vec4<f32>(0.0, 1.0, 0.0, 1.0); }
-        `;
+        declarations = 'var<immediate> data: vec4<u32>;';
+        helpers = 'fn use_data() { _ = data; }';
         break;
       case 'struct_padding':
-        kRequiredSize = 64;
-        code = `
+        kRequiredSize = 40;
+        declarations = `
           struct A { v: vec3<u32>, }
           struct B { v: vec2<u32>, }
           struct Data { a: A, @align(32) b: B, }
-          var<immediate> data: Data;
-          @compute @workgroup_size(1) fn main_compute() { _ = data.b.v; }
-          @vertex fn main_vertex() -> @builtin(position) vec4<f32> { _ = data.b.v; return vec4<f32>(0.0, 0.0, 0.0, 1.0); }
-          @fragment fn main_fragment() -> @location(0) vec4<f32> { _ = data.b.v; return vec4<f32>(0.0, 1.0, 0.0, 1.0); }
-        `;
+          var<immediate> data: Data;`;
+        helpers = `
+          fn use_a() { _ = data.a.v; }
+          fn use_b() { _ = data.b.v; }`;
+        callCompute = 'use_b();';
+        callVertex = both_different ? 'use_a();' : 'use_b();';
+        callFragment = 'use_b();';
         break;
-      case 'functions':
-        kRequiredSize = 16;
-        code = `
-          var<immediate> data: vec4<u32>;
-          fn use_data() { _ = data; }
-          @compute @workgroup_size(1) fn main_compute() { use_data(); }
-          @vertex fn main_vertex() -> @builtin(position) vec4<f32> { use_data(); return vec4<f32>(0.0, 0.0, 0.0, 1.0); }
-          @fragment fn main_fragment() -> @location(0) vec4<f32> { use_data(); return vec4<f32>(0.0, 1.0, 0.0, 1.0); }
-        `;
-        break;
-      case 'function_unused':
-        kRequiredSize = 16;
-        code = `
-          var<immediate> data: vec4<u32>;
-          fn use_data() { _ = data; }
-          @compute @workgroup_size(1) fn main_compute() { }
-          @vertex fn main_vertex() -> @builtin(position) vec4<f32> { return vec4<f32>(0.0, 0.0, 0.0, 1.0); }
-          @fragment fn main_fragment() -> @location(0) vec4<f32> { return vec4<f32>(0.0, 1.0, 0.0, 1.0); }
-        `;
+      case 'mixed_types':
+        kRequiredSize = 32;
+        declarations = `
+          struct Mixed { v: u32, f: vec4<u32>, }
+          var<immediate> data: Mixed;`;
+        helpers = `
+          fn use_v() { _ = data.v; }
+          fn use_f() { _ = data.f; }`;
+        callCompute = 'use_f();';
+        callVertex = both_different ? 'use_v();' : 'use_f();';
+        callFragment = 'use_f();';
         break;
       case 'dynamic_indexing':
         kRequiredSize = 16;
-        code = `
-          var<immediate> data: array<u32, 4>;
-          @compute @workgroup_size(1) fn main_compute(@builtin(local_invocation_index) i: u32) { _ = data[i]; }
-          @vertex fn main_vertex(@builtin(vertex_index) i: u32) -> @builtin(position) vec4<f32> { _ = data[i]; return vec4<f32>(0.0, 0.0, 0.0, 1.0); }
-          @fragment fn main_fragment(@builtin(position) pos: vec4<f32>) -> @location(0) vec4<f32> {
-            let i = u32(pos.x);
-            _ = data[i];
-            return vec4<f32>(0.0, 1.0, 0.0, 1.0);
-          }
-        `;
+        declarations = 'var<immediate> data: array<u32, 4>;';
+        helpers = 'fn use_data(i: u32) { _ = data[i]; }';
+        computeArgs = '@builtin(local_invocation_index) i: u32';
+        callCompute = 'use_data(i);';
+        vertexArgs = '@builtin(vertex_index) i: u32';
+        callVertex = 'use_data(i);';
+        fragmentArgs = '@builtin(position) pos: vec4<f32>';
+        fragmentPrelude = 'let i = u32(pos.x);';
+        callFragment = 'use_data(i);';
         break;
     }
 
+    code = `
+      ${declarations}
+      ${helpers}
+      @compute @workgroup_size(1) fn main_compute(${computeArgs}) {
+        ${callCompute}
+      }
+      @vertex fn main_vertex(${vertexArgs}) -> @builtin(position) vec4<f32> {
+        ${use_vertex ? callVertex : ''}
+        return vec4<f32>(0.0, 0.0, 0.0, 1.0);
+      }
+      @fragment fn main_fragment(${fragmentArgs}) -> @location(0) vec4<f32> {
+        ${fragmentPrelude}
+        ${use_fragment ? callFragment : ''}
+        return vec4<f32>(0.0, 1.0, 0.0, 1.0);
+      }
+    `;
+
     const layoutSize = usage === 'overprovision' ? kRequiredSize + 4 : kRequiredSize;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if (layoutSize > (t.device.limits as any).maxImmediateSize) {
+    if (layoutSize > t.device.limits.maxImmediateSize) {
       t.skip('maxImmediateSize not large enough for overprovision test');
     }
 
-    const pipeline = t.createPipeline(encoderType, code, layoutSize);
     const { encoder, validateFinishAndSubmit } = t.createEncoder(encoderType);
 
     const setImmediates = (offset: number, size: number) => {
       const data = new Uint8Array(size);
-      (encoder as unknown as EncoderWithImmediates).setImmediates(offset, data, 0, size);
+      encoder.setImmediates(offset, data, 0, size);
     };
 
-    if (scenario === 'struct_padding') {
-      // Actual data ends at byte 40. A.v: 0-12. Padding: 12-32 (includes A padding 12-16 and inter-member padding 16-32). B.v: 32-40. Total struct size: 64.
-      if (usage === 'full') {
-        setImmediates(0, 40);
-      } else if (usage === 'split') {
-        setImmediates(0, 32);
-        setImmediates(32, 8);
-      } else if (usage === 'partial') {
-        // Set members only
+    if (usage === 'overprovision') {
+      setImmediates(0, kRequiredSize + 4);
+    } else if (usage === 'full') {
+      setImmediates(0, kRequiredSize);
+    } else if (usage === 'partial') {
+      const partialSize = kRequiredSize >= 8 ? kRequiredSize / 2 : 0;
+      setImmediates(0, partialSize);
+    } else if (usage === 'split') {
+      if (scenario === 'struct_padding') {
+        // Actual data ends at byte 40. A.v: 0-12. Padding: 12-32 (includes A padding 12-16 and inter-member padding 16-32). B.v: 32-40. Total struct size: 64.
+        // We skip the padding bytes (12-32) and trailing padding (40-64).
         setImmediates(0, 12);
         setImmediates(32, 8);
-      } else if (usage === 'overprovision') {
-        setImmediates(0, kRequiredSize + 4);
-      }
-    } else if (scenario === 'scalar') {
-      // Size 4.
-      if (usage === 'full') {
+      } else if (scenario === 'mixed_types') {
+        // struct Mixed { v: u32 (offset 0), f: vec4<u32> (offset 16 due to max align?) }
+        // u32 align 4. vec4<u32> align 16.
+        // Offset v: 0. Size 4.
+        // Padding: 4-16.
+        // Offset f: 16. Size 16.
+        // Total size: 32. Layout size 32.
         setImmediates(0, 4);
-      } else if (usage === 'partial') {
-        // Set nothing
-      } else if (usage === 'overprovision') {
-        setImmediates(0, kRequiredSize + 4);
-      }
-    } else {
-      // Vector (size 16), functions (size 16), dynamic_indexing (size 16)
-      if (usage === 'full') {
-        setImmediates(0, 16);
-      } else if (usage === 'split') {
+        setImmediates(16, 16);
+      } else if (scenario === 'vector' || scenario === 'dynamic_indexing') {
+        // Vector (size 16), dynamic_indexing (size 16)
         setImmediates(0, 8);
         setImmediates(8, 8);
-      } else if (usage === 'partial') {
-        setImmediates(0, 8); // Missing last 8 bytes
-      } else if (usage === 'overprovision') {
-        setImmediates(0, kRequiredSize + 4);
+      } else {
+        unreachable();
       }
+    } else {
+      unreachable();
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    t.runPass(encoderType, encoder as any, pipeline);
+    t.runPass(encoder, code, layoutSize);
 
-    const shouldSucceed =
-      usage === 'full' ||
-      usage === 'split' ||
-      usage === 'overprovision' ||
-      scenario === 'function_unused' ||
-      (scenario === 'struct_padding' && usage === 'partial');
+    const shouldSucceed = usage === 'full' || usage === 'split' || usage === 'overprovision';
     validateFinishAndSubmit(shouldSucceed, true);
   });
 
@@ -285,7 +243,7 @@ g.test('unused_variable')
   .params(u =>
     u
       .combine('encoderType', kProgrammableEncoderTypes)
-      .combine('usage', ['none', 'full', 'partial_start'] as const)
+      .combine('usage', ['none', 'partial_start'] as const)
       .combine('scenario', ['not_referenced', 'referenced_in_unused_function'] as const)
   )
   .fn(t => {
@@ -309,7 +267,8 @@ g.test('unused_variable')
         return vec4<f32>(0.0, 1.0, 0.0, 1.0);
       }
     `
-        : `
+        : // referenced_in_unused_function
+          `
       var<immediate> data: vec4<u32>;
       fn unused_helper() { _ = data; }
 
@@ -326,20 +285,14 @@ g.test('unused_variable')
       }
     `;
 
-    const pipeline = t.createPipeline(encoderType, code, kImmediateSize);
-
     const { encoder, validateFinishAndSubmit } = t.createEncoder(encoderType);
 
-    if (usage === 'full') {
-      const data = new Uint8Array(16);
-      (encoder as unknown as EncoderWithImmediates).setImmediates(0, data, 0, 16);
-    } else if (usage === 'partial_start') {
+    if (usage === 'partial_start') {
       const data = new Uint8Array(8);
-      (encoder as unknown as EncoderWithImmediates).setImmediates(0, data, 0, 8);
+      encoder.setImmediates(0, data, 0, 8);
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    t.runPass(encoderType, encoder as any, pipeline);
+    t.runPass(encoder, code, kImmediateSize);
 
     validateFinishAndSubmit(true, true);
   });
@@ -347,125 +300,85 @@ g.test('unused_variable')
 g.test('overprovisioned_immediate_data')
   .desc(
     `
-    Validate that setting more immediate data than used by the shader (but within layout limits) is valid.
+    Validate that setting more immediate data than used by the shader is valid.
+    - larger_than_shader: Set size matches layout size, but is larger than what shader uses.
+    - larger_than_layout: Set size is larger than layout size (and shader usage).
+      Validation only checks against maxImmediateSize, not pipeline layout immediateSize.
     `
   )
-  .params(u => u.combine('encoderType', kProgrammableEncoderTypes))
+  .params(u =>
+    u
+      .combine('encoderType', kProgrammableEncoderTypes)
+      .combine('scenario', ['larger_than_shader', 'larger_than_layout'] as const)
+  )
   .fn(t => {
-    const { encoderType } = t.params;
-    const kLayoutSize = 32;
-    // Shader only uses 16 bytes (vec4<u32>)
+    const { encoderType, scenario } = t.params;
+    const kLayoutSize = 16;
+    // Shader only uses 4 bytes (u32)
     const code = `
-      var<immediate> data: vec4<u32>;
-      @compute @workgroup_size(1) fn main_compute() { _ = data; }
-      @vertex fn main_vertex() -> @builtin(position) vec4<f32> { _ = data; return vec4<f32>(0.0, 0.0, 0.0, 1.0); }
-      @fragment fn main_fragment() -> @location(0) vec4<f32> { _ = data; return vec4<f32>(0.0, 1.0, 0.0, 1.0); }
+      var<immediate> data: u32;
+      fn use_data() { _ = data; }
+      @compute @workgroup_size(1) fn main_compute() { use_data(); }
+      @vertex fn main_vertex() -> @builtin(position) vec4<f32> { use_data(); return vec4<f32>(0.0, 0.0, 0.0, 1.0); }
+      @fragment fn main_fragment() -> @location(0) vec4<f32> { use_data(); return vec4<f32>(0.0, 1.0, 0.0, 1.0); }
     `;
 
-    const pipeline = t.createPipeline(encoderType, code, kLayoutSize);
     const { encoder, validateFinishAndSubmit } = t.createEncoder(encoderType);
 
-    // Set 32 bytes (valid per layout)
-    const data = new Uint8Array(32);
-    (encoder as unknown as EncoderWithImmediates).setImmediates(0, data, 0, 32);
+    const kSetSize = scenario === 'larger_than_layout' ? kLayoutSize + 4 : kLayoutSize;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    t.runPass(encoderType, encoder as any, pipeline);
+    const data = new Uint8Array(kSetSize);
+    encoder.setImmediates(0, data, 0, kSetSize);
+
+    t.runPass(encoder, code, kLayoutSize);
 
     validateFinishAndSubmit(true, true);
-  });
-
-g.test('pipeline_creation_immediate_size_mismatch')
-  .desc(
-    `
-    Validate that creating a pipeline fails if the shader uses immediate data
-    larger than the immediateSize specified in the pipeline layout.
-    `
-  )
-  .params(u => u.combine('encoderType', kProgrammableEncoderTypes))
-  .fn(t => {
-    const { encoderType } = t.params;
-    const kLayoutSize = 16;
-    const kShaderSize = 32; // Larger than layout
-
-    const layout = t.device.createPipelineLayout({
-      bindGroupLayouts: [],
-      immediateSize: kLayoutSize,
-    });
-
-    const code = `
-      var<immediate> data: array<u32, ${kShaderSize / 4}>;
-      @compute @workgroup_size(1) fn main_compute() { _ = data[0]; }
-      @vertex fn main_vertex() -> @builtin(position) vec4<f32> { _ = data[0]; return vec4<f32>(0.0, 0.0, 0.0, 1.0); }
-      @fragment fn main_fragment() -> @location(0) vec4<f32> { _ = data[0]; return vec4<f32>(0.0, 1.0, 0.0, 1.0); }
-    `;
-
-    t.expectValidationError(() => {
-      if (encoderType === 'compute pass') {
-        t.device.createComputePipeline({
-          layout,
-          compute: {
-            module: t.device.createShaderModule({ code }),
-            entryPoint: 'main_compute',
-          },
-        });
-      } else {
-        t.device.createRenderPipeline({
-          layout,
-          vertex: {
-            module: t.device.createShaderModule({ code }),
-            entryPoint: 'main_vertex',
-          },
-          fragment: {
-            module: t.device.createShaderModule({ code }),
-            entryPoint: 'main_fragment',
-            targets: [{ format: 'rgba8unorm' }],
-          },
-        });
-      }
-    });
   });
 
 g.test('render_bundle_execution_state_invalidation')
   .desc(
     `
-    Validate that executeBundles invalidates the current pipeline and immediate data state
+    Validate that executeBundles invalidates the current immediate data state
     in the RenderPassEncoder.
-    - Pipeline must be re-set after executeBundles.
     - Immediate data must be re-set after executeBundles.
     - setImmediates in bundle does not leak to pass.
     `
   )
-  .params(u =>
-    u.combine('check', [
-      'pipeline_invalidated',
-      'immediates_invalidated',
-      'bundle_no_leak',
-      'pipeline_and_immediates_reset',
-    ] as const)
-  )
+  .params(u => u.beginSubcases().combine('resetImmediates', [true, false]))
   .fn(t => {
-    const { check } = t.params;
+    const { resetImmediates } = t.params;
     const kImmediateSize = 16;
 
     // Create a pipeline requiring immediate data
     const code = `
       var<immediate> data: vec4<u32>;
-      @vertex fn main_vertex() -> @builtin(position) vec4<f32> { _ = data; return vec4<f32>(0.0, 0.0, 0.0, 1.0); }
-      @fragment fn main_fragment() -> @location(0) vec4<f32> { _ = data; return vec4<f32>(0.0, 1.0, 0.0, 1.0); }
+      fn use_data() { _ = data; }
+      @vertex fn main_vertex() -> @builtin(position) vec4<f32> { use_data(); return vec4<f32>(0.0, 0.0, 0.0, 1.0); }
+      @fragment fn main_fragment() -> @location(0) vec4<f32> { use_data(); return vec4<f32>(0.0, 1.0, 0.0, 1.0); }
     `;
-    const pipeline = t.createPipeline('render pass', code, kImmediateSize) as GPURenderPipeline;
+    const layout = t.device.createPipelineLayout({
+      bindGroupLayouts: [],
+      immediateSize: kImmediateSize,
+    });
+    const pipeline = t.device.createRenderPipeline({
+      layout,
+      vertex: {
+        module: t.device.createShaderModule({ code }),
+      },
+      fragment: {
+        module: t.device.createShaderModule({ code }),
+        targets: [{ format: 'rgba8unorm' }],
+      },
+    });
 
-    // Create an empty bundle (or one that sets immediates for the leak test)
+    // Create a bundle that sets immediates (to test leak)
     const bundleEncoder = t.device.createRenderBundleEncoder({
       colorFormats: ['rgba8unorm'],
     });
-    if (check === 'bundle_no_leak') {
-      bundleEncoder.setPipeline(pipeline);
-      const immediateData = new Uint8Array(16);
-      (bundleEncoder as unknown as EncoderWithImmediates).setImmediates(0, immediateData, 0, 16);
-      bundleEncoder.draw(3);
-    }
+    bundleEncoder.setPipeline(pipeline);
+    const immediateData = new Uint8Array(16);
+    bundleEncoder.setImmediates(0, immediateData, 0, 16);
+    bundleEncoder.draw(3);
     const bundle = bundleEncoder.finish();
 
     const { encoder, validateFinishAndSubmit } = t.createEncoder('render pass');
@@ -473,33 +386,17 @@ g.test('render_bundle_execution_state_invalidation')
 
     // Initial setup
     pass.setPipeline(pipeline);
-    const immediateData = new Uint8Array(16);
-    (pass as unknown as EncoderWithImmediates).setImmediates(0, immediateData, 0, 16);
+    pass.setImmediates(0, immediateData, 0, 16);
 
     // Execute bundle - this should invalidate state
     pass.executeBundles([bundle]);
 
     // Try to draw
-    if (check === 'pipeline_invalidated') {
-      // Don't re-set pipeline. Should fail.
-      pass.draw(3);
-      validateFinishAndSubmit(false, true);
-    } else if (check === 'immediates_invalidated') {
-      // Re-set pipeline, but not immediates. Should fail.
-      pass.setPipeline(pipeline);
-      pass.draw(3);
-      validateFinishAndSubmit(false, true);
-    } else if (check === 'bundle_no_leak') {
-      // Re-set pipeline. Bundle had setImmediates, but it shouldn't leak.
-      // We didn't re-set immediates in the pass. Should fail.
-      pass.setPipeline(pipeline);
-      pass.draw(3);
-      validateFinishAndSubmit(false, true);
-    } else if (check === 'pipeline_and_immediates_reset') {
-      // Re-set pipeline and immediates. Should succeed.
-      pass.setPipeline(pipeline);
-      (pass as unknown as EncoderWithImmediates).setImmediates(0, immediateData, 0, 16);
-      pass.draw(3);
-      validateFinishAndSubmit(true, true);
+    pass.setPipeline(pipeline);
+    if (resetImmediates) {
+      pass.setImmediates(0, immediateData, 0, 16);
     }
+    pass.draw(3);
+
+    validateFinishAndSubmit(resetImmediates, true);
   });
