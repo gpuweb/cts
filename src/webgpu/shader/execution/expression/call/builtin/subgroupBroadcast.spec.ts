@@ -363,8 +363,10 @@ g.test('compute,all_active')
     }
     const { subgroupMinSize } = t.device.adapterInfo as SubgroupProperties;
     const mod = wgThreads % subgroupMinSize;
-    t.skipIf(mod > 0 && mod <= t.params.id,
-             "Can't guarantee enough invocations for defined behaviour");
+    t.skipIf(
+      mod > 0 && mod <= t.params.id,
+      "Can't guarantee enough invocations for defined behaviour"
+    );
 
     const broadcast =
       t.params.id === 0
@@ -446,8 +448,10 @@ g.test('compute,split')
     }
     const { subgroupMinSize, subgroupMaxSize } = t.device.adapterInfo as SubgroupProperties;
     const mod = wgThreads % subgroupMinSize;
-    t.skipIf(mod > 0 && mod <= t.params.id,
-             "Can't guarantee enough invocations for defined behaviour");
+    t.skipIf(
+      mod > 0 && mod <= t.params.id,
+      "Can't guarantee enough invocations for defined behaviour"
+    );
     for (let size = subgroupMinSize; size <= subgroupMaxSize; size *= 2) {
       t.skipIf(!testcase.filter(t.params.id, size), 'Skipping potential undefined behavior');
     }
