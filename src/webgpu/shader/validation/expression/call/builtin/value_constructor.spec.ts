@@ -483,6 +483,7 @@ g.test('array_zero_value')
   .fn(t => {
     const testcase = kArrayCases[t.params.case];
     const decl = `array<${testcase.element}, ${testcase.size}>`;
+    const decltype = testcase.valid ? 'const' : 'let';
     const code = `override o : i32 = 1;
     struct valid_S {
       x : u32
@@ -490,7 +491,9 @@ g.test('array_zero_value')
     struct invalid_S {
       x : array<u32>
     }
-    const x : ${decl} = ${decl}();`;
+    fn main() {
+      ${decltype} x : ${decl} = ${decl}();
+    }`;
     t.expectCompileResult(testcase.valid, code);
   });
 
@@ -500,6 +503,7 @@ g.test('array_value')
   .fn(t => {
     const testcase = kArrayCases[t.params.case];
     const decl = `array<${testcase.element}, ${testcase.size}>`;
+    const decltype = testcase.valid ? 'const' : 'let';
     const code = `override o : i32 = 1;
     struct valid_S {
       x : u32
@@ -507,7 +511,9 @@ g.test('array_value')
     struct invalid_S {
       x : array<u32>
     }
-    const x : ${decl} = ${decl}(${testcase.values});`;
+    fn main() {
+      ${decltype} x : ${decl} = ${decl}(${testcase.values});
+    }`;
     t.expectCompileResult(testcase.valid, code);
   });
 
@@ -577,9 +583,12 @@ g.test('struct_zero_value')
   .params(u => u.combine('case', keysOf(kStructCases)))
   .fn(t => {
     const testcase = kStructCases[t.params.case];
+    const decltype = testcase.valid ? 'const' : 'let';
     const code = `
     ${testcase.decls}
-    const x : ${testcase.name} = ${testcase.name}();`;
+    fn main() {
+      ${decltype} x : ${testcase.name} = ${testcase.name}();
+    }`;
     t.expectCompileResult(testcase.valid, code);
   });
 
@@ -588,9 +597,12 @@ g.test('struct_value')
   .params(u => u.combine('case', keysOf(kStructCases)))
   .fn(t => {
     const testcase = kStructCases[t.params.case];
+    const decltype = testcase.valid ? 'const' : 'let';
     const code = `
     ${testcase.decls}
-    const x : ${testcase.name} = ${testcase.name}(${testcase.values});`;
+    fn main() {
+      ${decltype} x : ${testcase.name} = ${testcase.name}(${testcase.values});
+    }`;
     t.expectCompileResult(testcase.valid, code);
   });
 
