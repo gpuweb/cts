@@ -557,7 +557,7 @@ export class LimitTestsImpl extends GPUTestBase {
       `requestedLimit(${requestedLimit}) for ${this.limit} is < 0`
     );
     this.skipIf(
-      limitValueTest !== 'atDefault' && requestedLimit == defaultLimit,
+      limitValueTest !== 'atDefault' && requestedLimit === defaultLimit,
       'The limit value for this case is the same as the default.'
     );
     return this._getDeviceWithSpecificLimit(requestedLimit, extraLimits, features);
