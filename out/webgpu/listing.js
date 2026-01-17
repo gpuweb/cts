@@ -749,7 +749,7 @@ export const listing = [
       "capability_checks",
       "limits"
     ],
-    "readme": "Test everything that shouldn't be valid without a higher-than-specified limit.\n\n- x= that limit {default, max supported (if different), lower than default (TODO: if allowed)}\n\nOne file for each limit name.\n\nTODO: implement\nTODO: Also test that \"alignment\" limits require a power of 2."
+    "readme": "Test everything that shouldn't be valid without a higher-than-specified limit.\n\nOne file for each limit name.\n\nTODO: Test that \"alignment\" limits require a power of 2."
   },
   {
     "file": [
