@@ -40,6 +40,11 @@ and prevent pages from running.
 
     t.skipIfDeviceDoesNotHaveFeature('timestamp-query');
 
+    if (numQuerySets === 65536) {
+      // Allow extra time for massive timestamp query allocation/cleanup churn.
+      t.setEndTestScopeTimeout(10000);
+    }
+
     const view = t
       .createTextureTracked({
         size: [1, 1, 1],

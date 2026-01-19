@@ -1460,6 +1460,12 @@ export class GPUTest extends GPUTestBase {
     assert(this.provider !== undefined, 'internal error: GPUDevice missing?');
     this.provider.expectDeviceLost(reason);
   }
+
+  /** Adjust timeout used when releasing the device after a test finishes. */
+  setEndTestScopeTimeout(timeoutMs: number): void {
+    assert(this.provider !== undefined, 'internal error: GPUDevice missing?');
+    this.provider.setEndTestScopeTimeout(timeoutMs);
+  }
 }
 
 /**
