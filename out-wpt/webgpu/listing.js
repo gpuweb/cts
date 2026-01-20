@@ -4225,6 +4225,14 @@ export const listing = [
       "shader",
       "validation",
       "decl",
+      "assignment_statement"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "decl",
       "compound_statement"
     ]
   },
