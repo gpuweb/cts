@@ -86,6 +86,7 @@ g.test('required_slots_set')
         'struct_padding',
         'dynamic_indexing',
         'mixed_types',
+        'multiple_variables',
       ] as const)
       .combine('usage', ['full', 'partial', 'split', 'overprovision'] as const)
       .expand('stage', p => {
@@ -163,6 +164,19 @@ g.test('required_slots_set')
         fragmentPrelude = 'let i = u32(pos.x);';
         callFragment = 'use_data(i);';
         break;
+      case 'multiple_variables':
+        kRequiredSize = 16;
+        declarations = `
+          struct S { a: u32, }
+          var<immediate> v1: S;
+          var<immediate> v2: vec2<u32>;`;
+        helpers = `
+          fn use_v1() { _ = v1.a; }
+          fn use_v2() { _ = v2; }`;
+        callCompute = 'use_v2();';
+        callVertex = both_different ? 'use_v1();' : 'use_v2();';
+        callFragment = 'use_v2();';
+        break;
     }
 
     code = `
@@ -216,6 +230,13 @@ g.test('required_slots_set')
         // Total size: 32. Layout size 32.
         setImmediates(0, 4);
         setImmediates(16, 16);
+      } else if (scenario === 'multiple_variables') {
+        // v1: struct S {u32} (size 4, align 4) -> offset 0
+        // v2: vec2<u32> (size 8, align 8) -> offset 8
+        // Padding: 4-8
+        // Total 16.
+        setImmediates(0, 4);
+        setImmediates(8, 8);
       } else if (scenario === 'vector' || scenario === 'dynamic_indexing') {
         // Vector (size 16), dynamic_indexing (size 16)
         setImmediates(0, 8);
