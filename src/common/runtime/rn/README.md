@@ -301,7 +301,7 @@ interface TestRunSummary {
 
 ## Integration Example
 
-See the [react-native-webgpu](https://github.com/nicebuild-org/nicebuild/react-native-webgpu) example app for a complete integration including:
+See the [[react-native-webgpu](https://github.com/wcandillon/react-native-webgpu)](https://github.com/wcandillon/react-native-webgpu/pull/306) example app for a complete integration including:
 
 - Sync script to copy CTS files for Metro bundler
 - UI component for running tests
