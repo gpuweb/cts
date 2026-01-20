@@ -14,6 +14,7 @@ Wait on another fence, then call expectContents to verify the dst buffer value.
 `;
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
+import { checkElementsEqual } from '../../../../util/check_contents.js';
 import {
   kOperationBoundaries,
   kBoundaryInfo,
@@ -278,4 +279,73 @@ g.test('two_dispatches_in_the_same_compute_pass')
     pass.end();
     t.device.queue.submit([encoder.finish()]);
     t.verifyData(buffer, 2);
+  });
+
+g.test('multiple_dispatches_in_the_same_compute_pass')
+  .desc(
+    `Test multiple write-after-write operations with same compute pass. The first write will write
+    index * 2 into a storage buffer. The second write will write value + 2 into the same buffer in
+    the same pass. The third will write value / 2 into the same buffer in the same pass. The last
+    will write value - 1 into the same buffer in the same pass. Expected data in buffer is index.`
+  )
+  .fn(async t => {
+    const kBufferElementCount = 512;
+    const kWorkgroupSize = 64;
+
+    const buffer = t.trackForCleanup(
+      t.device.createBuffer({
+        size: Uint32Array.BYTES_PER_ELEMENT * kBufferElementCount,
+        usage:
+          GPUBufferUsage.COPY_SRC |
+          GPUBufferUsage.COPY_DST |
+          GPUBufferUsage.STORAGE,
+      })
+    );
+
+    const createBufferOperationComputePipeline = (operation: string) => {
+      const module = t.device.createShaderModule({
+        code: `
+          @group(0) @binding(0) var<storage, read_write> data : array<u32>;
+          @compute @workgroup_size(${kWorkgroupSize})
+          fn main(@builtin(global_invocation_id) globalIndex: vec3u) {
+            let i = globalIndex.x;
+            data[i] = ${operation};
+          }
+        `
+      });
+      return t.device.createComputePipeline({
+        layout: 'auto',
+        compute: {
+          module,
+          entryPoint: 'main',
+        },
+      });
+    }
+
+    
+    const pipelines = [];
+    pipelines.push(createBufferOperationComputePipeline('i * 2'));
+    pipelines.push(createBufferOperationComputePipeline('data[i] + 2'));
+    pipelines.push(createBufferOperationComputePipeline('data[i] / 2'));
+    pipelines.push(createBufferOperationComputePipeline('data[i] - 1'));
+  
+    const encoder = t.device.createCommandEncoder();
+    const pass = encoder.beginComputePass();
+
+    for (const pipeline of pipelines) {
+      const bindGroup = t.createBindGroup(pipeline, buffer);
+      pass.setPipeline(pipeline);
+      pass.setBindGroup(0, bindGroup);
+      pass.dispatchWorkgroups(kBufferElementCount / kWorkgroupSize);
+    }
+
+    pass.end();
+    t.device.queue.submit([encoder.finish()]);
+
+    const expected = new Uint32Array(kBufferElementCount);
+    for (let i = 0; i < kBufferElementCount; ++i) {
+      expected[i] = i;
+    }
+
+    t.expectGPUBufferValuesEqual(buffer, expected);
   });
