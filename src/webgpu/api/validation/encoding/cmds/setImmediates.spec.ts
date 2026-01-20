@@ -61,7 +61,7 @@ g.test('alignment')
     const data = new arrayBufferType(elementCount);
 
     t.shouldThrow(isContentSizeAligned ? false : 'RangeError', () => {
-      encoder.setImmediates(rangeOffset, data, 0, elementCount);
+      encoder.setImmediates!(rangeOffset, data, 0, elementCount);
     });
 
     validateFinish(isRangeOffsetAligned);
@@ -120,7 +120,7 @@ g.test('overflow')
     const data = new arrayBufferType(elementCount);
 
     const doSetImmediates = () => {
-      encoder.setImmediates(rangeOffset, data, dataOffset, elementCount);
+      encoder.setImmediates!(rangeOffset, data, dataOffset, elementCount);
     };
 
     if (_expectedError === 'RangeError') {
@@ -157,7 +157,7 @@ g.test('out_of_bounds')
     const arrayBufferType = kTypedArrayBufferViews[arrayType];
     const elementSize = arrayBufferType.BYTES_PER_ELEMENT;
 
-    const maxImmediateSize = t.device.limits.maxImmediateSize;
+    const maxImmediateSize = t.device.limits.maxImmediateSize!;
     if (maxImmediateSize === undefined) {
       t.skip('maxImmediateSize not found');
     }
@@ -178,7 +178,7 @@ g.test('out_of_bounds')
     const dataOverLimit = elementCount > dataLength;
 
     t.shouldThrow(dataOverLimit ? 'RangeError' : false, () => {
-      encoder.setImmediates(rangeOffset, data, 0, elementCount);
+      encoder.setImmediates!(rangeOffset, data, 0, elementCount);
     });
 
     if (!dataOverLimit) {

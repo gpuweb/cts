@@ -183,7 +183,7 @@ g.test('required_slots_set')
     `;
 
     const layoutSize = usage === 'overprovision' ? kRequiredSize + 4 : kRequiredSize;
-    if (layoutSize > t.device.limits.maxImmediateSize) {
+    if (layoutSize > t.device.limits.maxImmediateSize!) {
       t.skip('maxImmediateSize not large enough for overprovision test');
     }
 
@@ -191,7 +191,7 @@ g.test('required_slots_set')
 
     const setImmediates = (offset: number, size: number) => {
       const data = new Uint8Array(size);
-      encoder.setImmediates(offset, data, 0, size);
+      encoder.setImmediates!(offset, data, 0, size);
     };
 
     if (usage === 'overprovision') {
@@ -289,7 +289,7 @@ g.test('unused_variable')
 
     if (usage === 'partial_start') {
       const data = new Uint8Array(8);
-      encoder.setImmediates(0, data, 0, 8);
+      encoder.setImmediates!(0, data, 0, 8);
     }
 
     t.runPass(encoder, code, kImmediateSize);
@@ -328,7 +328,7 @@ g.test('overprovisioned_immediate_data')
     const kSetSize = scenario === 'larger_than_layout' ? kLayoutSize + 4 : kLayoutSize;
 
     const data = new Uint8Array(kSetSize);
-    encoder.setImmediates(0, data, 0, kSetSize);
+    encoder.setImmediates!(0, data, 0, kSetSize);
 
     t.runPass(encoder, code, kLayoutSize);
 
@@ -377,7 +377,7 @@ g.test('render_bundle_execution_state_invalidation')
     });
     bundleEncoder.setPipeline(pipeline);
     const immediateData = new Uint8Array(16);
-    bundleEncoder.setImmediates(0, immediateData, 0, 16);
+    bundleEncoder.setImmediates!(0, immediateData, 0, 16);
     bundleEncoder.draw(3);
     const bundle = bundleEncoder.finish();
 
@@ -386,7 +386,7 @@ g.test('render_bundle_execution_state_invalidation')
 
     // Initial setup
     pass.setPipeline(pipeline);
-    pass.setImmediates(0, immediateData, 0, 16);
+    pass.setImmediates!(0, immediateData, 0, 16);
 
     // Execute bundle - this should invalidate state
     pass.executeBundles([bundle]);
@@ -394,7 +394,7 @@ g.test('render_bundle_execution_state_invalidation')
     // Try to draw
     pass.setPipeline(pipeline);
     if (resetImmediates) {
-      pass.setImmediates(0, immediateData, 0, 16);
+      pass.setImmediates!(0, immediateData, 0, 16);
     }
     pass.draw(3);
 
