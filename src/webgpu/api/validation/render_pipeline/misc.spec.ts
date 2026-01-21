@@ -3,6 +3,8 @@ misc createRenderPipeline and createRenderPipelineAsync validation tests.
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
+import { getGPU } from '../../../../common/util/navigator_gpu.js';
+import { assert, supportsImmediateData } from '../../../../common/util/util.js';
 import {
   isTextureFormatUsableWithStorageAccessMode,
   kPossibleStorageTextureFormats,
@@ -119,8 +121,10 @@ g.test('pipeline_layout,device_mismatch')
   });
 
 g.test('external_texture')
-  .desc('Tests createRenderPipeline() with an external_texture')
+  .desc('Tests createRenderPipeline(Async) with an external_texture')
+  .params(u => u.combine('isAsync', [false, true]))
   .fn(t => {
+    const { isAsync } = t.params;
     const shader = t.device.createShaderModule({
       code: `
         @vertex
@@ -149,7 +153,7 @@ g.test('external_texture')
       },
     };
 
-    vtu.doCreateRenderPipelineTest(t, false, true, descriptor);
+    vtu.doCreateRenderPipelineTest(t, isAsync, true, descriptor);
   });
 
 g.test('storage_texture,format')
@@ -191,4 +195,123 @@ generates a validation error at createComputePipeline(Async)
       fragment: { module, targets: [{ format: 'rgba8unorm' }] },
     };
     vtu.doCreateRenderPipelineTest(t, isAsync, success, descriptor);
+  });
+
+g.test('pipeline_creation_immediate_size_mismatch')
+  .desc(
+    `
+    Validate that creating a pipeline fails if the shader uses immediate data
+    larger than the immediateSize specified in the pipeline layout, or larger than
+    maxImmediateSize if layout is 'auto'.
+    Also validates that using less or equal size is allowed.
+    `
+  )
+  .params(u => {
+    const kNumericCases = [
+      { vertexSize: 16, fragmentSize: 16, layoutSize: 16 }, // Equal
+      { vertexSize: 12, fragmentSize: 12, layoutSize: 16 }, // Shader smaller
+      { vertexSize: 20, fragmentSize: 20, layoutSize: 16 }, // Shader larger (small diff)
+      { vertexSize: 32, fragmentSize: 32, layoutSize: 16 }, // Shader larger
+    ] as const;
+    const kMaxLimitsCases = [
+      { vertexSize: 'max', fragmentSize: 0, layoutSize: 'auto' }, // Vertex = Limit (Control)
+      { vertexSize: 0, fragmentSize: 'max', layoutSize: 'auto' }, // Fragment = Limit (Control)
+      { vertexSize: 'max', fragmentSize: 'max', layoutSize: 'auto' }, // Both at Limit (Control)
+      { vertexSize: 'exceedLimits', fragmentSize: 0, layoutSize: 'auto' }, // Vertex > Limit
+      { vertexSize: 0, fragmentSize: 'exceedLimits', layoutSize: 'auto' }, // Fragment > Limit
+    ] as const;
+    return u
+      .combine('isAsync', [true, false])
+      .combineWithParams([...kNumericCases, ...kMaxLimitsCases] as const);
+  })
+  .fn(t => {
+    t.skipIf(!supportsImmediateData(getGPU(t.rec)), 'Immediate data not supported');
+
+    const { isAsync, vertexSize, fragmentSize, layoutSize } = t.params;
+
+    assert(t.device.limits.maxImmediateSize !== undefined);
+    const maxImmediateSize = t.device.limits.maxImmediateSize;
+
+    const resolveSize = (sizeDescriptor: number | string) => {
+      if (typeof sizeDescriptor === 'number') return sizeDescriptor;
+      if (sizeDescriptor === 'max') return maxImmediateSize;
+      if (sizeDescriptor === 'exceedLimits') return maxImmediateSize + 4;
+      return 0;
+    };
+
+    const resolvedVertexImmediateSize = resolveSize(vertexSize);
+    const resolvedFragmentImmediateSize = resolveSize(fragmentSize);
+
+    // Helper to generate a stage-specific shader module with the given immediate data size.
+    const makeShaderCode = (size: number, stage: 'vertex' | 'fragment') => {
+      if (size === 0) {
+        if (stage === 'vertex') {
+          return `@vertex fn main_vertex() -> @builtin(position) vec4<f32> { return vec4<f32>(0.0, 0.0, 0.0, 1.0); }`;
+        }
+        return `@fragment fn main_fragment() -> @location(0) vec4<f32> { return vec4<f32>(0.0, 1.0, 0.0, 1.0); }`;
+      }
+      const numFields = size / 4;
+      const fields = Array.from({ length: numFields }, (_, i) => `m${i}: u32`).join(', ');
+      if (stage === 'vertex') {
+        return `
+          struct Immediates { ${fields} }
+          var<immediate> data: Immediates;
+          @vertex fn main_vertex() -> @builtin(position) vec4<f32> { _ = data.m0; return vec4<f32>(0.0, 0.0, 0.0, 1.0); }
+        `;
+      }
+      return `
+        struct Immediates { ${fields} }
+        var<immediate> data: Immediates;
+        @fragment fn main_fragment() -> @location(0) vec4<f32> { _ = data.m0; return vec4<f32>(0.0, 1.0, 0.0, 1.0); }
+      `;
+    };
+
+    let layout: GPUPipelineLayout | 'auto';
+    let validSize: number;
+
+    if (layoutSize === 'auto') {
+      layout = 'auto';
+      validSize = maxImmediateSize;
+    } else {
+      layout = t.device.createPipelineLayout({
+        bindGroupLayouts: [],
+        immediateSize: layoutSize as number,
+      });
+      validSize = layoutSize as number;
+    }
+
+    const vertexExceedsLimit = resolvedVertexImmediateSize > validSize;
+    const fragmentExceedsLimit = resolvedFragmentImmediateSize > validSize;
+    const shouldError = vertexExceedsLimit || fragmentExceedsLimit;
+
+    // When the shader exceeds the device's maxImmediateSize, the error occurs
+    // at shader module creation time, not pipeline creation time.
+    // Create each shader module separately so the correct one gets the error.
+    const vertexCode = makeShaderCode(resolvedVertexImmediateSize, 'vertex');
+    const fragmentCode = makeShaderCode(resolvedFragmentImmediateSize, 'fragment');
+
+    if (layoutSize === 'auto' && vertexExceedsLimit) {
+      t.expectValidationError(() => {
+        t.device.createShaderModule({ code: vertexCode });
+      });
+    }
+    if (layoutSize === 'auto' && fragmentExceedsLimit) {
+      t.expectValidationError(() => {
+        t.device.createShaderModule({ code: fragmentCode });
+      });
+    }
+    if (layoutSize === 'auto' && shouldError) {
+      return;
+    }
+
+    vtu.doCreateRenderPipelineTest(t, isAsync, !shouldError, {
+      layout,
+      vertex: {
+        module: t.device.createShaderModule({ code: vertexCode }),
+      },
+      fragment: {
+        module: t.device.createShaderModule({ code: fragmentCode }),
+        targets: [{ format: 'rgba8unorm' }],
+      },
+    });
   });
