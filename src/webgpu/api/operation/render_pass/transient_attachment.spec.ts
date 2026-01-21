@@ -1,7 +1,6 @@
 export const description = `API Operation Tests for transient attachment in render passes.`;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { range } from '../../../../common/util/util.js';
 import { AllFeaturesMaxLimitsGPUTest } from '../../../gpu_test.js';
 
 const kSize = 4;
@@ -64,14 +63,14 @@ g.test('overlapping_transient_attachments')
 
     const encoder = t.device.createCommandEncoder();
 
-    // Create 3 transient textures
-    const [t1, t2, t3] = range(3, () =>
-      t.createTextureTracked({
-        size: [kSize, kSize, 1],
-        format: 'rgba8unorm',
-        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TRANSIENT_ATTACHMENT,
-      })
-    );
+    const desc = {
+      size: [kSize, kSize, 1],
+      format: 'rgba8unorm',
+      usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TRANSIENT_ATTACHMENT,
+    } as const;
+    const t1 = t.createTextureTracked(desc);
+    const t2 = t.createTextureTracked(desc);
+    const t3 = t.createTextureTracked(desc);
 
     const passes = [
       [t1, t2], // Pass 1
