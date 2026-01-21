@@ -129,8 +129,8 @@ g.test('required_slots_set')
       case 'struct_padding':
         kRequiredSize = 40;
         declarations = `
-          struct A { v: vec3<u32>, }
-          struct B { v: vec2<u32>, }
+          struct A { v: vec3<u32> }
+          struct B { v: vec2<u32> }
           struct Data { a: A, @align(32) b: B, }
           var<immediate> data: Data;`;
         helpers = `
@@ -143,7 +143,7 @@ g.test('required_slots_set')
       case 'mixed_types':
         kRequiredSize = 32;
         declarations = `
-          struct Mixed { v: u32, f: vec4<u32>, }
+          struct Mixed { v: u32, f: vec4<u32> }
           var<immediate> data: Mixed;`;
         helpers = `
           fn use_v() { _ = data.v; }
@@ -165,14 +165,15 @@ g.test('required_slots_set')
         callFragment = 'use_data(i);';
         break;
       case 'multiple_variables':
-        kRequiredSize = 16;
+        kRequiredSize = 32;
         declarations = `
-          struct S { a: u32, }
-          var<immediate> v1: S;
-          var<immediate> v2: vec2<u32>;`;
+          struct S1 { a: u32, x: u32 }
+          struct S2 { a: u32, y: vec4<u32> }
+          var<immediate> v1: S1;
+          var<immediate> v2: S2;`;
         helpers = `
           fn use_v1() { _ = v1.a; }
-          fn use_v2() { _ = v2; }`;
+          fn use_v2() { _ = v2.a; }`;
         callCompute = 'use_v2();';
         callVertex = both_different ? 'use_v1();' : 'use_v2();';
         callFragment = 'use_v2();';
@@ -213,30 +214,33 @@ g.test('required_slots_set')
     } else if (usage === 'full') {
       setImmediates(0, kRequiredSize);
     } else if (usage === 'partial') {
-      const partialSize = kRequiredSize >= 8 ? kRequiredSize / 2 : 0;
-      setImmediates(0, partialSize);
+      if (scenario === 'multiple_variables') {
+        // Test missing required bytes in vertex but padding bytes in fragment.
+        // struct S1 { a: u32, x: u32 }       // slots used: 1100 0000
+        // struct S2 { a: u32, y: vec4<u32> } // slots used: 1000 1111
+        // total slots used:                                 1100 1111
+        // Do upload slots:                                  1000 1111
+        setImmediates(0, 4);
+        setImmediates(16, 16);
+      } else {
+        const partialSize = kRequiredSize >= 8 ? kRequiredSize / 2 : 0;
+        setImmediates(0, partialSize);
+      }
     } else if (usage === 'split') {
       if (scenario === 'struct_padding') {
-        // Actual data ends at byte 40. A.v: 0-12. Padding: 12-32 (includes A padding 12-16 and inter-member padding 16-32). B.v: 32-40. Total struct size: 64.
-        // We skip the padding bytes (12-32) and trailing padding (40-64).
+        // struct Data { a: A, @align(32) b: B, } slots used : // 1110 1111
         setImmediates(0, 12);
         setImmediates(32, 8);
       } else if (scenario === 'mixed_types') {
-        // struct Mixed { v: u32 (offset 0), f: vec4<u32> (offset 16 due to max align?) }
-        // u32 align 4. vec4<u32> align 16.
-        // Offset v: 0. Size 4.
-        // Padding: 4-16.
-        // Offset f: 16. Size 16.
-        // Total size: 32. Layout size 32.
+        // struct Mixed { v: u32, f: vec4<u32> } slots used : // 1000 1111
         setImmediates(0, 4);
         setImmediates(16, 16);
       } else if (scenario === 'multiple_variables') {
-        // v1: struct S {u32} (size 4, align 4) -> offset 0
-        // v2: vec2<u32> (size 8, align 8) -> offset 8
-        // Padding: 4-8
-        // Total 16.
-        setImmediates(0, 4);
-        setImmediates(8, 8);
+        // struct S1 { a: u32, x: u32 }       // slots used: 1100 0000
+        // struct S2 { a: u32, y: vec4<u32> } // slots used: 1000 1111
+        // total slots used:                                 1100 1111
+        setImmediates(0, 8);
+        setImmediates(16, 16);
       } else if (scenario === 'vector' || scenario === 'dynamic_indexing') {
         // Vector (size 16), dynamic_indexing (size 16)
         setImmediates(0, 8);
