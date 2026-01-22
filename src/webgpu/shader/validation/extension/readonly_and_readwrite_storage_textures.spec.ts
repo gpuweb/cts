@@ -15,7 +15,11 @@ const kFeatureName = 'readonly_and_readwrite_storage_textures';
 
 g.test('var_decl')
   .desc(
-    `Checks that the read and read_write access modes are only allowed with the language feature present`
+    `Checks that the read and read_write access modes are only allowed with the language feature present
+
+    TODO(https://github.com/gpuweb/gpuweb/issues/5524): Fix this to check wgslLanguageFeatures
+    of the device features.
+    `
   )
   .paramsSubcasesOnly(u =>
     u
