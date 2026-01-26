@@ -35,15 +35,12 @@ and prevent pages from running.
       .combine('numQuerySets', [8, 16, 32, 64, 256, 65536] as const)
       .combine('stage', ['compute', 'render'] as const)
   )
-  .fn(t => {
+  .fn(async t => {
     const { stage, numQuerySets } = t.params;
 
     t.skipIfDeviceDoesNotHaveFeature('timestamp-query');
 
-    if (numQuerySets === 65536) {
-      // Allow extra time for massive timestamp query allocation/cleanup churn.
-      t.setEndTestScopeTimeout(10000);
-    }
+    t.device.pushErrorScope('validation');
 
     const view = t
       .createTextureTracked({
@@ -88,7 +85,12 @@ and prevent pages from running.
     }
 
     const shouldError = false; // just expect no error
-    t.expectValidationError(() => t.device.queue.submit([encoder.finish()]), shouldError);
+    try {
+      t.expectValidationError(() => t.device.queue.submit([encoder.finish()]), shouldError);
+    } finally {
+      const error = await t.device.popErrorScope();
+      t.expect(!error, error?.message);
+    }
   });
 
 g.test('many_slots')

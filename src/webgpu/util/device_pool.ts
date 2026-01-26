@@ -14,14 +14,11 @@ import { getDefaultLimits, kPossibleLimits } from '../capability_info.js';
 // MUST_NOT_BE_IMPORTED_BY_DATA_CACHE
 // This file should not be transitively imported by .cache.ts files
 
-const kDefaultEndTestScopeTimeoutMs = 5000;
-
 export interface DeviceProvider {
   /** Adapter the device was created from. Cannot be reused; just for adapter info. */
   readonly adapter: GPUAdapter;
   readonly device: GPUDevice;
   expectDeviceLost(reason: GPUDeviceLostReason): void;
-  setEndTestScopeTimeout(timeoutMs: number): void;
 }
 
 class TestFailedButDeviceReusable extends Error {}
@@ -354,7 +351,6 @@ class DeviceHolder implements DeviceProvider {
   expectedLostReason?: GPUDeviceLostReason;
   /** Number of test cases the device has been used for. */
   testCaseUseCounter = 0;
-  private endTestScopeTimeoutMs = kDefaultEndTestScopeTimeoutMs;
 
   // Gets a device and creates a DeviceHolder.
   // If the device is lost, DeviceHolder.lost gets set.
@@ -399,7 +395,6 @@ class DeviceHolder implements DeviceProvider {
     this.device.pushErrorScope('validation');
     this.device.pushErrorScope('internal');
     this.device.pushErrorScope('out-of-memory');
-    this.endTestScopeTimeoutMs = kDefaultEndTestScopeTimeoutMs;
   }
 
   /** Mark the DeviceHolder as expecting a device loss when the test scope ends. */
@@ -408,29 +403,21 @@ class DeviceHolder implements DeviceProvider {
     this.expectedLostReason = reason;
   }
 
-  setEndTestScopeTimeout(timeoutMs: number): void {
-    assert(this.state === 'acquired');
-    assert(timeoutMs >= 0, 'timeout must be non-negative');
-    this.endTestScopeTimeoutMs = timeoutMs;
-  }
-
   /**
    * Attempt to end test scopes: Check that there are no extra error scopes, and that no
    * otherwise-uncaptured errors occurred during the test. Time out if it takes too long.
    */
   endTestScope(): Promise<void> {
     assert(this.state === 'acquired');
+    const kTimeout = 5000;
+
     // Time out if attemptEndTestScope (popErrorScope or onSubmittedWorkDone) never completes. If
     // this rejects, the device won't be reused, so it's OK that popErrorScope calls may not have
     // finished.
     //
     // This could happen due to a browser bug - e.g.,
     // as of this writing, on Chrome GPU process crash, popErrorScope just hangs.
-    return raceWithRejectOnTimeout(
-      this.attemptEndTestScope(),
-      this.endTestScopeTimeoutMs,
-      'endTestScope timed out'
-    );
+    return raceWithRejectOnTimeout(this.attemptEndTestScope(), kTimeout, 'endTestScope timed out');
   }
 
   private async attemptEndTestScope(): Promise<void> {
