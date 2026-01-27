@@ -8,6 +8,7 @@ import { getGPU } from '../../../../../common/util/navigator_gpu.js';
 import {
   kTypedArrayBufferViews,
   kTypedArrayBufferViewKeys,
+  supportsImmediateData,
 } from '../../../../../common/util/util.js';
 import { AllFeaturesMaxLimitsGPUTest } from '../../../../gpu_test.js';
 import { kProgrammableEncoderTypes } from '../../../../util/command_buffer_maker.js';
@@ -15,13 +16,7 @@ import { kProgrammableEncoderTypes } from '../../../../util/command_buffer_maker
 class SetImmediatesTest extends AllFeaturesMaxLimitsGPUTest {
   override async init() {
     await super.init();
-    if (
-      !('setImmediates' in GPURenderPassEncoder.prototype) &&
-      !('setImmediates' in GPUComputePassEncoder.prototype) &&
-      !('setImmediates' in GPURenderBundleEncoder.prototype) &&
-      !('maxImmediateSize' in GPUSupportedLimits.prototype) &&
-      !getGPU(this.rec).wgslLanguageFeatures.has('immediate_address_space')
-    ) {
+    if (!supportsImmediateData(getGPU(this.rec))) {
       this.skip('setImmediates not supported');
     }
   }
@@ -66,10 +61,7 @@ g.test('alignment')
     const data = new arrayBufferType(elementCount);
 
     t.shouldThrow(isContentSizeAligned ? false : 'RangeError', () => {
-      // Cast to any to avoid Float16Array issues
-      // MAINTENANCE_TODO: remove this cast when the types are updated.
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (encoder as any).setImmediates(rangeOffset, data as any, 0, elementCount);
+      encoder.setImmediates!(rangeOffset, data, 0, elementCount);
     });
 
     validateFinish(isRangeOffsetAligned);
@@ -128,10 +120,7 @@ g.test('overflow')
     const data = new arrayBufferType(elementCount);
 
     const doSetImmediates = () => {
-      // Cast to any to avoid Float16Array issues
-      // MAINTENANCE_TODO: remove this cast when the types are updated.
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (encoder as any).setImmediates(rangeOffset, data as any, dataOffset, elementCount);
+      encoder.setImmediates!(rangeOffset, data, dataOffset, elementCount);
     };
 
     if (_expectedError === 'RangeError') {
@@ -168,9 +157,7 @@ g.test('out_of_bounds')
     const arrayBufferType = kTypedArrayBufferViews[arrayType];
     const elementSize = arrayBufferType.BYTES_PER_ELEMENT;
 
-    // MAINTENANCE_TODO: remove this cast when the types are updated.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const maxImmediateSize = (t.device.limits as any).maxImmediateSize;
+    const maxImmediateSize = t.device.limits.maxImmediateSize!;
     if (maxImmediateSize === undefined) {
       t.skip('maxImmediateSize not found');
     }
@@ -191,9 +178,7 @@ g.test('out_of_bounds')
     const dataOverLimit = elementCount > dataLength;
 
     t.shouldThrow(dataOverLimit ? 'RangeError' : false, () => {
-      // MAINTENANCE_TODO: remove this cast when the types are updated.
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (encoder as any).setImmediates(rangeOffset, data as any, 0, elementCount);
+      encoder.setImmediates!(rangeOffset, data, 0, elementCount);
     });
 
     if (!dataOverLimit) {
