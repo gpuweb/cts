@@ -74,7 +74,7 @@ g.test('required_slots_set')
       - partial: Set only a subset of bytes.
         - For struct_padding, this means setting only members (no padding), which is valid.
         - For others, this means missing required data, which is invalid.
-      - overprovision: Set more bytes than declared.
+      - overprovision: Set more bytes than declared, but in range of layout immediateSize.
     `
   )
   .params(u =>
@@ -215,13 +215,27 @@ g.test('required_slots_set')
       setImmediates(0, kRequiredSize);
     } else if (usage === 'partial') {
       if (scenario === 'multiple_variables') {
-        // Test missing required bytes in vertex but padding bytes in fragment.
-        // struct S1 { a: u32, x: u32 }       // slots used: 1100 0000
-        // struct S2 { a: u32, y: vec4<u32> } // slots used: 1000 1111
-        // total slots used:                                 1100 1111
-        // Do upload slots:                                  1000 1111
-        setImmediates(0, 4);
-        setImmediates(16, 16);
+        if (stage === 'both') {
+          // Test missing required bytes in vertex but padding bytes in fragment.
+          // struct S1 { a: u32, x: u32 }       // slots used: 1100 0000
+          // struct S2 { a: u32, y: vec4<u32> } // slots used: 1000 1111
+          // total slots used:                                 1100 1111
+          // Do upload slots:                                  1000 1111
+          setImmediates(0, 4);
+          setImmediates(16, 16);
+        } else if (stage === 'vertex') {
+          // Missing required bytes in vertex.
+          // struct S1 { a: u32, x: u32 }       // slots used: 1100 0000
+          // Do upload slots:                   //             1000 0000
+          setImmediates(0, 4);
+        } else if (stage === 'fragment' || stage === 'compute') {
+          // Missing required bytes in fragment and compute
+          // struct S2 { a: u32, y: vec4<u32> } // slots used: 1000 1111
+          // Do upload slots:                   //             0000 1111
+          setImmediates(16, 16);
+        } else {
+          unreachable();
+        }
       } else {
         const partialSize = kRequiredSize >= 8 ? kRequiredSize / 2 : 0;
         setImmediates(0, partialSize);
