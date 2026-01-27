@@ -518,4 +518,24 @@ export function combinationsOfOneOrTwoUsages(usages) {
   }
   return combinations;
 }
+
+/**
+ * Checks if the browser supports immediate data (experimental).
+ *
+ * Checks for:
+ * - `setImmediates` method on `GPURenderPassEncoder`, `GPUComputePassEncoder`, or `GPURenderBundleEncoder` prototypes.
+ * - `maxImmediateSize` property on `GPUSupportedLimits` prototype.
+ * - `immediate_address_space` feature in `gpu.wgslLanguageFeatures`.
+ *
+ * This helper is used to skip tests when the environment does not support immediate data functionality.
+ */
+export function supportsImmediateData(gpu) {
+  return (
+    'setImmediates' in GPURenderPassEncoder.prototype ||
+    'setImmediates' in GPUComputePassEncoder.prototype ||
+    'setImmediates' in GPURenderBundleEncoder.prototype ||
+    'maxImmediateSize' in GPUSupportedLimits.prototype ||
+    gpu.wgslLanguageFeatures.has('immediate_address_space'));
+
+}
 //# sourceMappingURL=util.js.map

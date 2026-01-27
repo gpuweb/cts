@@ -1345,6 +1345,15 @@ export const listing = [
       "api",
       "validation",
       "encoding",
+      "programmable",
+      "pipeline_immediate"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
+      "encoding",
       "queries",
       "begin_end"
     ]
