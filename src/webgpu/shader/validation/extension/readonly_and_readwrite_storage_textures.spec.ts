@@ -3,16 +3,24 @@ Validation tests for the readonly_and_readwrite_storage_textures language featur
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { kPossibleStorageTextureFormats } from '../../../format_info.js';
+import {
+  kPossibleStorageTextureFormats,
+  //kTextureFormatsTier1EnablesStorageReadOnlyWriteOnly,
+} from '../../../format_info.js';
 import { ShaderValidationTest } from '../shader_validation_test.js';
 
 export const g = makeTestGroup(ShaderValidationTest);
 
-const kFeatureName = 'readonly_and_readwrite_storage_textures';
+const kAccessModeFeatureName = 'readonly_and_readwrite_storage_textures';
+//const kTier1FeatureName = 'texture_formats_tier1';
 
 g.test('var_decl')
   .desc(
-    `Checks that the read and read_write access modes are only allowed with the language feature present`
+    `Checks that the read and read_write access modes are only allowed with the language feature present
+
+    TODO(https://github.com/gpuweb/cts/issues/TBD): Enable the check for
+    the tier1 language feature.
+    `
   )
   .paramsSubcasesOnly(u =>
     u
@@ -28,9 +36,22 @@ g.test('var_decl')
   .fn(t => {
     const { type, format, access } = t.params;
 
+    let valid = true;
+    if (access !== 'write') {
+      valid &&= t.hasLanguageFeature(kAccessModeFeatureName);
+    }
+    // Enable this once reporting of the language feature is implemented.
+    /*
+    if (kTextureFormatsTier1EnablesStorageReadOnlyWriteOnly.indexOf(format) >= 0) {
+        // Even though some of these formats do not support read-write access
+        // without the tier2 adapter feature, their validity in WGSL depends
+        // only on the language feature for tier1.
+        valid &&= t.hasLanguageFeature(kTier1FeatureName);
+    }
+    */
+
     const source = `@group(0) @binding(0) var t : ${type}<${format}, ${access}>;`;
-    const requiresFeature = access !== 'write';
-    t.expectCompileResult(t.hasLanguageFeature(kFeatureName) || !requiresFeature, source);
+    t.expectCompileResult(valid, source);
   });
 
 g.test('textureBarrier')
@@ -39,7 +60,7 @@ g.test('textureBarrier')
   )
   .fn(t => {
     t.expectCompileResult(
-      t.hasLanguageFeature(kFeatureName),
+      t.hasLanguageFeature(kAccessModeFeatureName),
       `
         @workgroup_size(1) @compute fn main() {
             textureBarrier();
