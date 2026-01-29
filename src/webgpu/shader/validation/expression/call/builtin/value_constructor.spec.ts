@@ -18,6 +18,7 @@ import { ShaderValidationTest } from '../../../shader_validation_test.js';
 
 export const g = makeTestGroup(ShaderValidationTest);
 
+const kDeclTypes = ['const', 'let', 'var'];
 const kScalarTypes = ['bool', 'i32', 'u32', 'f32', 'f16'];
 
 g.test('scalar_zero_value')
@@ -479,7 +480,11 @@ const kArrayCases: Record<string, ArrayCase> = {
 
 g.test('array_zero_value')
   .desc('Tests zero value array constructors')
-  .params(u => u.combine('case', keysOf(kArrayCases)))
+  .params(u =>
+    u
+      .combine('case', keysOf(kArrayCases)) //
+      .combine('decltype', kDeclTypes)
+  )
   .fn(t => {
     const testcase = kArrayCases[t.params.case];
     const decl = `array<${testcase.element}, ${testcase.size}>`;
@@ -490,13 +495,19 @@ g.test('array_zero_value')
     struct invalid_S {
       x : array<u32>
     }
-    const x : ${decl} = ${decl}();`;
+    fn main() {
+      ${t.params.decltype} x : ${decl} = ${decl}();
+    }`;
     t.expectCompileResult(testcase.valid, code);
   });
 
 g.test('array_value')
   .desc('Tests array value constructor')
-  .params(u => u.combine('case', keysOf(kArrayCases)))
+  .params(u =>
+    u
+      .combine('case', keysOf(kArrayCases)) //
+      .combine('decltype', kDeclTypes)
+  )
   .fn(t => {
     const testcase = kArrayCases[t.params.case];
     const decl = `array<${testcase.element}, ${testcase.size}>`;
@@ -507,7 +518,9 @@ g.test('array_value')
     struct invalid_S {
       x : array<u32>
     }
-    const x : ${decl} = ${decl}(${testcase.values});`;
+    fn main() {
+      ${t.params.decltype} x : ${decl} = ${decl}(${testcase.values});
+    }`;
     t.expectCompileResult(testcase.valid, code);
   });
 
@@ -574,23 +587,35 @@ const kStructCases = {
 
 g.test('struct_zero_value')
   .desc('Tests zero value struct constructors')
-  .params(u => u.combine('case', keysOf(kStructCases)))
+  .params(u =>
+    u
+      .combine('case', keysOf(kStructCases)) //
+      .combine('decltype', kDeclTypes)
+  )
   .fn(t => {
     const testcase = kStructCases[t.params.case];
     const code = `
     ${testcase.decls}
-    const x : ${testcase.name} = ${testcase.name}();`;
+    fn main() {
+      ${t.params.decltype} x : ${testcase.name} = ${testcase.name}();
+    }`;
     t.expectCompileResult(testcase.valid, code);
   });
 
 g.test('struct_value')
   .desc('Tests struct value constructors')
-  .params(u => u.combine('case', keysOf(kStructCases)))
+  .params(u =>
+    u
+      .combine('case', keysOf(kStructCases)) //
+      .combine('decltype', kDeclTypes)
+  )
   .fn(t => {
     const testcase = kStructCases[t.params.case];
     const code = `
     ${testcase.decls}
-    const x : ${testcase.name} = ${testcase.name}(${testcase.values});`;
+    fn main() {
+      ${t.params.decltype} x : ${testcase.name} = ${testcase.name}(${testcase.values});
+    }`;
     t.expectCompileResult(testcase.valid, code);
   });
 
