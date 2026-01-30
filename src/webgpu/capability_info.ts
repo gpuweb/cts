@@ -980,6 +980,7 @@ export const kKnownWGSLLanguageFeatures = [
   'texture_and_sampler_let',
   'subgroup_id',
   'subgroup_uniformity',
+  'swizzle_assignment',
 ] as const;
 
 export type WGSLLanguageFeature = (typeof kKnownWGSLLanguageFeatures)[number];
