@@ -3,6 +3,8 @@ misc createRenderPipeline and createRenderPipelineAsync validation tests.
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
+import { getGPU } from '../../../../common/util/navigator_gpu.js';
+import { supportsImmediateData } from '../../../../common/util/util.js';
 import {
   isTextureFormatUsableWithStorageAccessMode,
   kPossibleStorageTextureFormats,
@@ -191,4 +193,81 @@ generates a validation error at createComputePipeline(Async)
       fragment: { module, targets: [{ format: 'rgba8unorm' }] },
     };
     vtu.doCreateRenderPipelineTest(t, isAsync, success, descriptor);
+  });
+
+g.test('pipeline_creation_immediate_size_mismatch')
+  .desc(
+    `
+    Validate that creating a pipeline fails if the shader uses immediate data
+    larger than the immediateSize specified in the pipeline layout, or larger than
+    maxImmediateSize if layout is 'auto'.
+    Also validates that using less or equal size is allowed.
+    `
+  )
+  .params(u =>
+    u.combine('isAsync', [true, false]).combineWithParams([
+      { vertexSize: 16, fragmentSize: 16, layoutSize: 16 }, // Equal
+      { vertexSize: 12, fragmentSize: 12, layoutSize: 16 }, // Shader smaller
+      { vertexSize: 20, fragmentSize: 20, layoutSize: 16 }, // Shader larger (small diff)
+      { vertexSize: 32, fragmentSize: 32, layoutSize: 16 }, // Shader larger
+      { vertexSize: 'max+4', fragmentSize: 0, layoutSize: 'auto' }, // Vertex > Limit
+      { vertexSize: 0, fragmentSize: 'max+4', layoutSize: 'auto' }, // Fragment > Limit
+      { vertexSize: 'max', fragmentSize: 0, layoutSize: 'auto' }, // Vertex = Limit (Control)
+      { vertexSize: 0, fragmentSize: 'max', layoutSize: 'auto' }, // Fragment = Limit (Control)
+      { vertexSize: 'max', fragmentSize: 'max', layoutSize: 'auto' }, // Both at Limit (Control)
+    ] as const)
+  )
+  .fn(t => {
+    if (!supportsImmediateData(getGPU(t.rec))) {
+      t.skip('Immediate data not supported');
+    }
+    const { isAsync, vertexSize, fragmentSize, layoutSize } = t.params;
+
+    const maxImmediateSize = t.device.limits.maxImmediateSize!;
+
+    const resolveSize = (sizeDescriptor: number | string) => {
+      if (typeof sizeDescriptor === 'number') return sizeDescriptor;
+      if (sizeDescriptor === 'max') return maxImmediateSize;
+      if (sizeDescriptor === 'max+4') return maxImmediateSize + 4;
+      return 0;
+    };
+
+    const resolvedVertexImmediateSize = resolveSize(vertexSize);
+    const resolvedFragmentImmediateSize = resolveSize(fragmentSize);
+    const varSize = Math.max(resolvedVertexImmediateSize, resolvedFragmentImmediateSize);
+
+    const code = `
+      var<immediate> data: array<u32, ${varSize / 4}>;
+      fn use_v() { ${resolvedVertexImmediateSize > 0 ? '_ = data[0];' : ''} }
+      fn use_f() { ${resolvedFragmentImmediateSize > 0 ? '_ = data[0];' : ''} }
+      @vertex fn main_vertex() -> @builtin(position) vec4<f32> { use_v(); return vec4<f32>(0.0, 0.0, 0.0, 1.0); }
+      @fragment fn main_fragment() -> @location(0) vec4<f32> { use_f(); return vec4<f32>(0.0, 1.0, 0.0, 1.0); }
+    `;
+
+    let layout: GPUPipelineLayout | 'auto';
+    let validSize: number;
+
+    if (layoutSize === 'auto') {
+      layout = 'auto';
+      validSize = maxImmediateSize;
+    } else {
+      layout = t.device.createPipelineLayout({
+        bindGroupLayouts: [],
+        immediateSize: layoutSize as number,
+      });
+      validSize = layoutSize as number;
+    }
+
+    const shouldError = varSize > validSize;
+
+    vtu.doCreateRenderPipelineTest(t, isAsync, !shouldError, {
+      layout,
+      vertex: {
+        module: t.device.createShaderModule({ code }),
+      },
+      fragment: {
+        module: t.device.createShaderModule({ code }),
+        targets: [{ format: 'rgba8unorm' }],
+      },
+    });
   });
