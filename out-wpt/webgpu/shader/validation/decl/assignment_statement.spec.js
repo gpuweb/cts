@@ -80,3 +80,17 @@ fn((t) => {
       }`;
   t.expectCompileResult(kSwizzleTests[t.params.case].pass, wgsl);
 });
+
+g.test('compound_assignment_with_swizzle').
+desc('Test compound assignment of a vector with a swizzle on the rhs.').
+fn((t) => {
+  const code = `
+      @fragment
+      fn main() {
+        var v: vec3<i32> = vec3(1, 2, 3);
+        var w: vec4<i32> = vec4(10);
+        v *= w.xyz;
+      }
+    `;
+  t.expectCompileResult(true, code);
+});
