@@ -4205,6 +4205,14 @@ export const listing = [
     "file": [
       "shader",
       "execution",
+      "statement",
+      "swizzle_assignment"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
       "value_init"
     ]
   },
