@@ -7,6 +7,8 @@ Note: entry point matching tests are in shader_module/entry_point.spec.ts
 import { AllFeaturesMaxLimitsGPUTest } from '../.././gpu_test.js';
 import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { keysOf } from '../../../common/util/data_tables.js';
+import { getGPU } from '../../../common/util/navigator_gpu.js';
+import { supportsImmediateData } from '../../../common/util/util.js';
 import {
   isTextureFormatUsableWithStorageAccessMode,
   kPossibleStorageTextureFormats,
@@ -810,4 +812,72 @@ generates a validation error at createComputePipeline(Async)
       compute: { module },
     };
     vtu.doCreateComputePipelineTest(t, isAsync, success, descriptor);
+  });
+
+g.test('pipeline_creation_immediate_size_mismatch')
+  .desc(
+    `
+    Validate that creating a pipeline fails if the shader uses immediate data
+    larger than the immediateSize specified in the pipeline layout, or larger than
+    maxImmediateSize if layout is 'auto'.
+    Also validates that using less or equal size is allowed.
+    `
+  )
+  .params(u =>
+    u.combine('isAsync', [true, false]).combineWithParams([
+      { shaderSize: 16, layoutSize: 16 }, // Equal
+      { shaderSize: 12, layoutSize: 16 }, // Shader smaller
+      { shaderSize: 20, layoutSize: 16 }, // Shader larger (small diff)
+      { shaderSize: 32, layoutSize: 16 }, // Shader larger
+      { shaderSize: 'max', layoutSize: 'auto' }, // Shader equal to limit (auto layout)
+      { shaderSize: 'max+4', layoutSize: 'auto' }, // Shader larger than limit (auto layout)
+    ] as const)
+  )
+  .fn(t => {
+    if (!supportsImmediateData(getGPU(t.rec))) {
+      t.skip('Immediate data not supported');
+    }
+
+    const { isAsync, shaderSize, layoutSize } = t.params;
+
+    const maxImmediateSize = t.device.limits.maxImmediateSize!;
+
+    let actualLayout: GPUPipelineLayout | 'auto';
+    let validSize: number;
+
+    if (layoutSize === 'auto') {
+      actualLayout = 'auto';
+      // checked above
+      validSize = maxImmediateSize!;
+    } else {
+      actualLayout = t.device.createPipelineLayout({
+        bindGroupLayouts: [],
+        immediateSize: layoutSize as number,
+      });
+      validSize = layoutSize as number;
+    }
+
+    let actualShaderSize: number;
+    if (shaderSize === 'max') {
+      actualShaderSize = validSize;
+    } else if (shaderSize === 'max+4') {
+      actualShaderSize = validSize + 4;
+    } else {
+      actualShaderSize = shaderSize as number;
+    }
+
+    const code = `
+      var<immediate> data: array<u32, ${actualShaderSize / 4}>;
+      fn use() { _ = data[0]; }
+      @compute @workgroup_size(1) fn main_compute() { use(); }
+    `;
+
+    const shouldError = actualShaderSize > validSize;
+
+    vtu.doCreateComputePipelineTest(t, isAsync, !shouldError, {
+      layout: actualLayout,
+      compute: {
+        module: t.device.createShaderModule({ code }),
+      },
+    });
   });
