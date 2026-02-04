@@ -406,9 +406,7 @@ fn(async (t) => {
     // quadrant. In this test we crop the video to each quadrant and check that desired color
     // is sampled from each corner of the cropped image.
     // visible rect clip applies on raw decoded frame, which defines based on video frame visible size.
-    const visibleRect = source.visibleRect ?? new DOMRectReadOnly();
-    const srcVideoHeight = visibleRect.height;
-    const srcVideoWidth = visibleRect.width;
+    const visibleRect = source.visibleRect;
 
     const srcColorSpace = kVideoInfo[videoName].colorSpace;
     const presentColors = kVideoExpectedColors[srcColorSpace][dstColorSpace];
@@ -423,18 +421,18 @@ fn(async (t) => {
       subRect: {
         x: visibleRect.x,
         y: visibleRect.y,
-        width: srcVideoWidth / 2,
-        height: srcVideoHeight / 2
+        width: visibleRect.width / 2,
+        height: visibleRect.height / 2
       },
       color: convertToUnorm8(presentColors[expect.topLeftColor])
     },
     // Top right
     {
       subRect: {
-        x: visibleRect.x + srcVideoWidth / 2,
+        x: visibleRect.x + visibleRect.width / 2,
         y: visibleRect.y,
-        width: srcVideoWidth / 2,
-        height: srcVideoHeight / 2
+        width: visibleRect.width / 2,
+        height: visibleRect.height / 2
       },
       color: convertToUnorm8(presentColors[expect.topRightColor])
     },
@@ -442,19 +440,19 @@ fn(async (t) => {
     {
       subRect: {
         x: visibleRect.x,
-        y: visibleRect.y + srcVideoHeight / 2,
-        width: srcVideoWidth / 2,
-        height: srcVideoHeight / 2
+        y: visibleRect.y + visibleRect.height / 2,
+        width: visibleRect.width / 2,
+        height: visibleRect.height / 2
       },
       color: convertToUnorm8(presentColors[expect.bottomLeftColor])
     },
     // Bottom right
     {
       subRect: {
-        x: visibleRect.x + srcVideoWidth / 2,
-        y: visibleRect.y + srcVideoHeight / 2,
-        width: srcVideoWidth / 2,
-        height: srcVideoHeight / 2
+        x: visibleRect.x + visibleRect.width / 2,
+        y: visibleRect.y + visibleRect.height / 2,
+        width: visibleRect.width / 2,
+        height: visibleRect.height / 2
       },
       color: convertToUnorm8(presentColors[expect.bottomRightColor])
     }];
