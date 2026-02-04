@@ -359,7 +359,7 @@ export class Fixture<S extends SubcaseBatchState = SubcaseBatchState> {
    * t.expect(size >= maxSize);      // prints Expect OK:
    * t.expect(() => size >= maxSize) // prints Expect OK: () => size >= maxSize
    */
-  expect(cond: boolean | (() => boolean), msg?: string): boolean {
+  expect(cond: boolean | (() => boolean), msg?: string | (() => string)): boolean {
     if (typeof cond === 'function') {
       if (msg === undefined) {
         msg = cond.toString();
@@ -367,10 +367,12 @@ export class Fixture<S extends SubcaseBatchState = SubcaseBatchState> {
       cond = cond();
     }
     if (cond) {
-      const m = msg ? ': ' + msg : '';
-      this.rec.debug(new Error('expect OK' + m));
+      if (this.rec.debugging) {
+        const m = msg ? ': ' + (typeof msg === 'function' ? msg() : msg) : '';
+        this.rec.debug(new Error('expect OK' + m));
+      }
     } else {
-      this.rec.expectationFailed(new Error(msg));
+      this.rec.expectationFailed(new Error(typeof msg === 'function' ? msg() : msg));
     }
     return cond;
   }
