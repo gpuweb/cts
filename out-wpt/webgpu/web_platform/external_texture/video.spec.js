@@ -405,9 +405,10 @@ fn(async (t) => {
     // All tested videos are derived from an image showing yellow, red, blue or green in each
     // quadrant. In this test we crop the video to each quadrant and check that desired color
     // is sampled from each corner of the cropped image.
-    // visible rect clip applies on raw decoded frame, which defines based on video frame coded size.
-    const srcVideoHeight = source.codedHeight;
-    const srcVideoWidth = source.codedWidth;
+    // visible rect clip applies on raw decoded frame, which defines based on video frame visible size.
+    const visibleRect = source.visibleRect ?? new DOMRectReadOnly();
+    const srcVideoHeight = visibleRect.height;
+    const srcVideoWidth = visibleRect.width;
 
     const srcColorSpace = kVideoInfo[videoName].colorSpace;
     const presentColors = kVideoExpectedColors[srcColorSpace][dstColorSpace];
@@ -419,14 +420,19 @@ fn(async (t) => {
     const cropParams = [
     // Top left
     {
-      subRect: { x: 0, y: 0, width: srcVideoWidth / 2, height: srcVideoHeight / 2 },
+      subRect: {
+        x: visibleRect.x,
+        y: visibleRect.y,
+        width: srcVideoWidth / 2,
+        height: srcVideoHeight / 2
+      },
       color: convertToUnorm8(presentColors[expect.topLeftColor])
     },
     // Top right
     {
       subRect: {
-        x: srcVideoWidth / 2,
-        y: 0,
+        x: visibleRect.x + srcVideoWidth / 2,
+        y: visibleRect.y,
         width: srcVideoWidth / 2,
         height: srcVideoHeight / 2
       },
@@ -435,8 +441,8 @@ fn(async (t) => {
     // Bottom left
     {
       subRect: {
-        x: 0,
-        y: srcVideoHeight / 2,
+        x: visibleRect.x,
+        y: visibleRect.y + srcVideoHeight / 2,
         width: srcVideoWidth / 2,
         height: srcVideoHeight / 2
       },
@@ -445,8 +451,8 @@ fn(async (t) => {
     // Bottom right
     {
       subRect: {
-        x: srcVideoWidth / 2,
-        y: srcVideoHeight / 2,
+        x: visibleRect.x + srcVideoWidth / 2,
+        y: visibleRect.y + srcVideoHeight / 2,
         width: srcVideoWidth / 2,
         height: srcVideoHeight / 2
       },
@@ -492,10 +498,10 @@ fn(async (t) => {
       // For validation, we sample a few pixels away from the edges to avoid compression
       // artifacts.
       ttu.expectSinglePixelComparisonsAreOkInTexture(t, { texture: colorAttachment }, [
-      { coord: { x: kWidth * 0.1, y: kHeight * 0.1 }, exp: cropParam.color },
-      { coord: { x: kWidth * 0.9, y: kHeight * 0.1 }, exp: cropParam.color },
-      { coord: { x: kWidth * 0.1, y: kHeight * 0.9 }, exp: cropParam.color },
-      { coord: { x: kWidth * 0.9, y: kHeight * 0.9 }, exp: cropParam.color }]
+      { coord: { x: kWidth * 0.2, y: kHeight * 0.2 }, exp: cropParam.color },
+      { coord: { x: kWidth * 0.8, y: kHeight * 0.2 }, exp: cropParam.color },
+      { coord: { x: kWidth * 0.2, y: kHeight * 0.8 }, exp: cropParam.color },
+      { coord: { x: kWidth * 0.8, y: kHeight * 0.8 }, exp: cropParam.color }]
       );
 
       subRect.close();
