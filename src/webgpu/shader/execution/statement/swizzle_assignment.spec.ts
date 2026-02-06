@@ -218,95 +218,70 @@ const kSwizzleAssignmentCases: Record<string, SwizzleAssignmentCase> = {
   },
 };
 
-g.test('swizzle_assignment_local_var')
-  .desc('Tests the value of a vector after swizzle assignment on a local function variable.')
-  .params(u => u.combine('case', keysOf(kSwizzleAssignmentCases)))
+g.test('swizzle_assignment_vars')
+  .desc(
+    'Tests the value of a vector after swizzle assignment on different variable types, address spaces, and on pointer and reference memory views.'
+  )
+  .params(u =>
+    u
+      .combine('case', keysOf(kSwizzleAssignmentCases))
+      .combine('address_space', ['function', 'private', 'workgroup', 'storage'])
+      .combine('memory_view', ['ref', 'ptr'])
+  )
   .fn(t => {
     const { elemType, vecSize, initial, swizzle, rhs, expected } =
       kSwizzleAssignmentCases[t.params.case];
+
+    t.skipIf(t.params.address_space === 'storage' && elemType === 'bool');
+
     const vecType = `vec${vecSize}<${elemType}>`;
     const initialValues =
       elemType === 'bool'
         ? initial.map(v => (v === 0 ? 'false' : 'true')).join(', ')
         : initial.join(', ');
     const outputElemType = elemType === 'bool' ? 'u32' : elemType;
+
+    const var_ref = t.params.address_space === 'storage' ? 'outputs.v' : 'v';
+    const lhs =
+      t.params.memory_view === 'ptr'
+        ? `let ptr = &${var_ref}; ptr.${swizzle}`
+        : `${var_ref}.${swizzle}`;
+    const new_rhs = rhs.replaceAll(/\bv\b/g, `${var_ref}`);
+
     const wgsl = `
 requires swizzle_assignment;
 ${elemType === 'f16' ? 'enable f16;' : ''}
 
 struct Outputs {
+  ${t.params.address_space === 'storage' ? `v : ${vecType},` : ''}
   data : array<${outputElemType}>,
 };
 
 @group(0) @binding(1) var<storage, read_write> outputs : Outputs;
 
+${
+  t.params.address_space === 'private' || t.params.address_space === 'workgroup'
+    ? `var<${t.params.address_space}> v : ${vecType};`
+    : ''
+}
+
 @compute @workgroup_size(1)
 fn main() {
-  var v = ${vecType}(${initialValues});
-  v.${swizzle} = ${rhs};
+
+  ${t.params.address_space === 'function' ? `var v : ${vecType};` : ''}
+  ${var_ref} = ${vecType}(${initialValues});
+  ${lhs} = ${new_rhs};
 
   // Store result to Output
   for (var i = 0; i < ${vecSize}; i++) {
-    ${elemType === 'bool' ? 'outputs.data[i] = u32(v[i]);' : 'outputs.data[i] = v[i];'}
+    ${
+      elemType === 'bool'
+        ? `outputs.data[i] = u32(${var_ref}[i]);`
+        : `outputs.data[i] = ${var_ref}[i];`
+    }
   }
 }`;
     runSwizzleAssignmentTest(t, elemType, expected, wgsl);
-  });
-
-g.test('swizzle_assignment_other_vars')
-  .desc('Tests the value of a vector after swizzle assignment on other address spaces.')
-  .params(u => u.combine('address_space', ['private', 'workgroup']))
-  .fn(t => {
-    const wgsl = `
-      requires swizzle_assignment;
-
-      struct Outputs {
-        data : array<f32, 4>,
-      };
-      var<${t.params.address_space}> v: vec4f;
-
-      @group(0) @binding(1) var<storage, read_write> outputs : Outputs;
-
-      @compute @workgroup_size(1)
-      fn main() {
-        v = vec4f(1.0, 2.0, 3.0, 4.0);
-        v.xz = vec2f(-1.0, -3.0);
-
-        // Store result to Output
-        for (var i = 0; i < 4; i++) {
-          outputs.data[i] = v[i];
-        }
-      }`;
-    const expected = [-1, 2, -3, 4];
-    runSwizzleAssignmentTest(t, 'f32', expected, wgsl);
-  });
-
-g.test('swizzle_assignment_pointer')
-  .desc('Tests the value of a vector after swizzle assignment on a pointer to output storage.')
-  .fn(t => {
-    const wgsl = `
-      requires swizzle_assignment;
-
-      struct Outputs {
-        v : vec4u,
-        data : array<u32, 4>,
-      };
-
-      @group(0) @binding(1) var<storage, read_write> outputs : Outputs;
-
-      @compute @workgroup_size(1)
-      fn main() {
-        let v = &outputs.v;
-        *v = vec4u(1, 2, 3, 100);
-        v.rgb = vec3u(7, 8, 9);
-
-        // Store result to Output
-        for (var i = 0; i < 4; i++) {
-          outputs.data[i] = v[i];
-        }
-      }`;
-    const expected = [7, 8, 9, 100];
-    runSwizzleAssignmentTest(t, 'u32', expected, wgsl);
   });
 
 g.test('swizzle_assignment_chained')
