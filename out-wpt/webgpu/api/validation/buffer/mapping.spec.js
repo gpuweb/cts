@@ -413,7 +413,7 @@ fn(async (t) => {
   const { mapMode, unmapBeforeResolve } = t.params;
   const bufferSize = 8;
   const buffer = t.createBufferTracked({
-    usage: 0,
+    usage: GPUBufferUsage.STORAGE,
     size: bufferSize
   });
 
