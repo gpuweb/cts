@@ -225,6 +225,7 @@ g.test('swizzle_assignment_vars')
   .params(u =>
     u
       .combine('case', keysOf(kSwizzleAssignmentCases))
+      .beginSubcases()
       .combine('address_space', ['function', 'private', 'workgroup', 'storage'])
       .combine('memory_view', ['ref', 'ptr'])
   )
