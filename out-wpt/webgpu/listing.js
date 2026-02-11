@@ -6035,6 +6035,14 @@ export const listing = [
       "shader",
       "validation",
       "statement",
+      "swizzle_assignment"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "statement",
       "while"
     ]
   },
