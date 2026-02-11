@@ -869,6 +869,14 @@ g.test('pipeline_creation_immediate_size_mismatch')
       actualShaderSize = shaderSize as number;
     }
 
+    // Ensure the test's fixed sizes fit within the device limit.
+    if (shaderSize !== 'exceedLimits') {
+      assert(
+        actualShaderSize <= maxImmediateSize,
+        `shaderSize (${actualShaderSize}) must be <= maxImmediateSize (${maxImmediateSize})`
+      );
+    }
+
     const numFields = actualShaderSize / 4;
     const fields = Array.from({ length: numFields }, (_, i) => `m${i}: u32`).join(', ');
     const code = `

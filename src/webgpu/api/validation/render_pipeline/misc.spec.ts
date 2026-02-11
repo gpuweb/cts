@@ -242,6 +242,20 @@ g.test('pipeline_creation_immediate_size_mismatch')
     const resolvedVertexImmediateSize = resolveSize(vertexSize);
     const resolvedFragmentImmediateSize = resolveSize(fragmentSize);
 
+    // Ensure the test's fixed sizes fit within the device limit.
+    if (vertexSize !== 'exceedLimits') {
+      assert(
+        resolvedVertexImmediateSize <= maxImmediateSize,
+        `vertexSize (${resolvedVertexImmediateSize}) must be <= maxImmediateSize (${maxImmediateSize})`
+      );
+    }
+    if (fragmentSize !== 'exceedLimits') {
+      assert(
+        resolvedFragmentImmediateSize <= maxImmediateSize,
+        `fragmentSize (${resolvedFragmentImmediateSize}) must be <= maxImmediateSize (${maxImmediateSize})`
+      );
+    }
+
     // Helper to generate a stage-specific shader module with the given immediate data size.
     const makeShaderCode = (size: number, stage: 'vertex' | 'fragment') => {
       if (size === 0) {
