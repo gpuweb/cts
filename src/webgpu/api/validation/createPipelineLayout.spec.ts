@@ -533,10 +533,7 @@ g.test('immediate_data_size')
     ] as const);
   })
   .fn(t => {
-    if (!supportsImmediateData(getGPU(t.rec))) {
-      t.skip('Immediate data not supported');
-      return;
-    }
+    t.skipIf(!supportsImmediateData(getGPU(t.rec)), 'Immediate data not supported');
 
     const maxImmediateSize = t.device.limits.maxImmediateSize!;
 
