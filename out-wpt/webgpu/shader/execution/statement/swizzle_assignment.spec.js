@@ -3,6 +3,7 @@
 **/export const description = `
 Swizzle assignment execution.
 `;import { makeTestGroup } from '../../../../common/framework/test_group.js';
+import { keysOf } from '../../../../common/util/data_tables.js';
 
 import { Float16Array } from '../../../../external/petamoriken/float16/float16.js';
 import { AllFeaturesMaxLimitsGPUTest } from '../../../gpu_test.js';
@@ -119,144 +120,145 @@ fn main() {
 
 
 
-const kSwizzleAssignmentCases = [
-// v = vec4u(1, 2, 3, 4)
-// v.w = 5;
-{
-  elemType: 'u32',
-  vecSize: 4,
-  initial: [1, 2, 3, 4],
-  swizzle: 'w',
-  rhs: '5',
-  expected: [1, 2, 3, 5]
-},
-// v = vec4u(1, 2, 3, 5)
-// v.xy = vec2u(6, 7);
-{
-  elemType: 'u32',
-  vecSize: 4,
-  initial: [1, 2, 3, 5],
-  swizzle: 'xy',
-  rhs: 'vec2u(6, 7)',
-  expected: [6, 7, 3, 5]
-},
-// v = vec4u(6, 7, 3, 5)
-// v.zx = vec2u(8, 9);
-{
-  elemType: 'u32',
-  vecSize: 4,
-  initial: [6, 7, 3, 5],
-  swizzle: 'zx',
-  rhs: 'vec2u(8, 9)',
-  expected: [9, 7, 8, 5]
-},
-// v = vec4u(1, 1, 1, 1)
-// v.xyzw = vec4u(10, 11, 12, 13);
-{
-  elemType: 'u32',
-  vecSize: 4,
-  initial: [1, 1, 1, 1],
-  swizzle: 'xyzw',
-  rhs: 'vec4u(10, 11, 12, 13)',
-  expected: [10, 11, 12, 13]
-},
-// v = vec4u(10, 11, 12, 13)
-// v.xy = vec2(v.y, v.x);
-{
-  elemType: 'u32',
-  vecSize: 4,
-  initial: [10, 11, 12, 13],
-  swizzle: 'xy',
-  rhs: 'vec2(v.y, v.x)',
-  expected: [11, 10, 12, 13]
-},
-// v = vec3i(-10, -20, -30)
-// v.y = 50;
-{
-  elemType: 'i32',
-  vecSize: 3,
-  initial: [-10, -20, -30],
-  swizzle: 'y',
-  rhs: '-50',
-  expected: [-10, -50, -30]
-},
-// v = vec3i(10, 20, 30)
-// v.zx = vec2i(40, 60);
-{
-  elemType: 'i32',
-  vecSize: 3,
-  initial: [10, 20, 30],
-  swizzle: 'zx',
-  rhs: 'vec2i(40, 60)',
-  expected: [60, 20, 40]
-},
-// v = vec3f(1.0, 2.0, 3.0)
-// v.xy = vec2f(4.0, 5.0);
-{
-  elemType: 'f32',
-  vecSize: 3,
-  initial: [1.0, 2.0, 3.0],
-  swizzle: 'xy',
-  rhs: 'vec2f(4.0, 5.0)',
-  expected: [4.0, 5.0, 3.0]
-},
-// v = vec2f(1.0, 2.0)
-// v.xy = v + v;
-{
-  elemType: 'f32',
-  vecSize: 2,
-  initial: [1.0, 2.0],
-  swizzle: 'yx',
-  rhs: 'v + v',
-  expected: [4.0, 2.0]
-},
-// v = vec4f(10.0, 20.0, 30.0, 100.0)
-// v.rgb = vec3f(v.r, v.g, v.b) / 10;
-{
-  elemType: 'f32',
-  vecSize: 4,
-  initial: [10.0, 20.0, 30.0, 100.0],
-  swizzle: 'rgb',
-  rhs: 'vec3f(v.r, v.g, v.b) / 10',
-  expected: [1.0, 2.0, 3.0, 100.0]
-},
-// v = vec2h(1.0, 2.0)
-// v.yx = vec2h(4.0, 5.0);
-{
-  elemType: 'f16',
-  vecSize: 2,
-  initial: [1.0, 2.0],
-  swizzle: 'yx',
-  rhs: 'vec2h(4.0, 5.0)',
-  expected: [5.0, 4.0]
-},
-// v = vec2<bool>(true, false)
-// v.y = true;
-{
-  elemType: 'bool',
-  vecSize: 2,
-  initial: [1, 0],
-  swizzle: 'y',
-  rhs: 'true',
-  expected: [1, 1]
-},
-// v = vec3<bool>(true, true, true)
-// v.xz = vec2<bool>(false, false);
-{
-  elemType: 'bool',
-  vecSize: 3,
-  initial: [1, 1, 1],
-  swizzle: 'xz',
-  rhs: 'vec2<bool>(false, false)',
-  expected: [0, 1, 0]
-}];
-
+const kSwizzleAssignmentCases = {
+  // v = vec4u(1, 2, 3, 4)
+  // v.w = 5;
+  vec4u_w_literal: {
+    elemType: 'u32',
+    vecSize: 4,
+    initial: [1, 2, 3, 4],
+    swizzle: 'w',
+    rhs: '5',
+    expected: [1, 2, 3, 5]
+  },
+  // v = vec4u(1, 2, 3, 5)
+  // v.xy = vec2u(6, 7);
+  vec4u_xy_vec2u: {
+    elemType: 'u32',
+    vecSize: 4,
+    initial: [1, 2, 3, 5],
+    swizzle: 'xy',
+    rhs: 'vec2u(6, 7)',
+    expected: [6, 7, 3, 5]
+  },
+  // v = vec4u(6, 7, 3, 5)
+  // v.zx = vec2u(8, 9);
+  vec4u_zx_vec2u: {
+    elemType: 'u32',
+    vecSize: 4,
+    initial: [6, 7, 3, 5],
+    swizzle: 'zx',
+    rhs: 'vec2u(8, 9)',
+    expected: [9, 7, 8, 5]
+  },
+  // v = vec4u(1, 1, 1, 1)
+  // v.xyzw = vec4u(10, 11, 12, 13);
+  vec4u_xyzw_vec4u: {
+    elemType: 'u32',
+    vecSize: 4,
+    initial: [1, 1, 1, 1],
+    swizzle: 'xyzw',
+    rhs: 'vec4u(10, 11, 12, 13)',
+    expected: [10, 11, 12, 13]
+  },
+  // v = vec4u(10, 11, 12, 13)
+  // v.xy = vec2(v.y, v.x);
+  vec4u_xy_vec2_yx: {
+    elemType: 'u32',
+    vecSize: 4,
+    initial: [10, 11, 12, 13],
+    swizzle: 'xy',
+    rhs: 'vec2(v.y, v.x)',
+    expected: [11, 10, 12, 13]
+  },
+  // v = vec3i(-10, -20, -30)
+  // v.y = 50;
+  vec3i_y_literal: {
+    elemType: 'i32',
+    vecSize: 3,
+    initial: [-10, -20, -30],
+    swizzle: 'y',
+    rhs: '-50',
+    expected: [-10, -50, -30]
+  },
+  // v = vec3i(10, 20, 30)
+  // v.zx = vec2i(40, 60);
+  vec3i_zx_vec2i: {
+    elemType: 'i32',
+    vecSize: 3,
+    initial: [10, 20, 30],
+    swizzle: 'zx',
+    rhs: 'vec2i(40, 60)',
+    expected: [60, 20, 40]
+  },
+  // v = vec3f(1.0, 2.0, 3.0)
+  // v.xy = vec2f(4.0, 5.0);
+  vec3f_xy_vec2f: {
+    elemType: 'f32',
+    vecSize: 3,
+    initial: [1.0, 2.0, 3.0],
+    swizzle: 'xy',
+    rhs: 'vec2f(4.0, 5.0)',
+    expected: [4.0, 5.0, 3.0]
+  },
+  // v = vec2f(1.0, 2.0)
+  // v.xy = v + v;
+  vec2f_yx_v_plus_v: {
+    elemType: 'f32',
+    vecSize: 2,
+    initial: [1.0, 2.0],
+    swizzle: 'yx',
+    rhs: 'v + v',
+    expected: [4.0, 2.0]
+  },
+  // v = vec4f(10.0, 20.0, 30.0, 100.0)
+  // v.rgb = vec3f(v.r, v.g, v.b) / 10;
+  vec4f_rgb_vec3f_div_10: {
+    elemType: 'f32',
+    vecSize: 4,
+    initial: [10.0, 20.0, 30.0, 100.0],
+    swizzle: 'rgb',
+    rhs: 'vec3f(v.r, v.g, v.b) / 10',
+    expected: [1.0, 2.0, 3.0, 100.0]
+  },
+  // v = vec2h(1.0, 2.0)
+  // v.yx = vec2h(4.0, 5.0);
+  vec2h_yx_vec2h: {
+    elemType: 'f16',
+    vecSize: 2,
+    initial: [1.0, 2.0],
+    swizzle: 'yx',
+    rhs: 'vec2h(4.0, 5.0)',
+    expected: [5.0, 4.0]
+  },
+  // v = vec2<bool>(true, false)
+  // v.y = true;
+  vec2_bool_y_true: {
+    elemType: 'bool',
+    vecSize: 2,
+    initial: [1, 0],
+    swizzle: 'y',
+    rhs: 'true',
+    expected: [1, 1]
+  },
+  // v = vec3<bool>(true, true, true)
+  // v.xz = vec2<bool>(false, false);
+  vec3_bool_xz_vec2bool: {
+    elemType: 'bool',
+    vecSize: 3,
+    initial: [1, 1, 1],
+    swizzle: 'xz',
+    rhs: 'vec2<bool>(false, false)',
+    expected: [0, 1, 0]
+  }
+};
 
 g.test('swizzle_assignment_local_var').
 desc('Tests the value of a vector after swizzle assignment on a local function variable.').
-params((u) => u.combine('case', kSwizzleAssignmentCases)).
+params((u) => u.combine('case', keysOf(kSwizzleAssignmentCases))).
 fn((t) => {
-  const { elemType, vecSize, initial, swizzle, rhs, expected } = t.params.case;
+  const { elemType, vecSize, initial, swizzle, rhs, expected } =
+  kSwizzleAssignmentCases[t.params.case];
   runSwizzleAssignmentTest(t, elemType, vecSize, initial, swizzle, rhs, expected);
 });
 
