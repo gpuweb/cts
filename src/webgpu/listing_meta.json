@@ -1979,6 +1979,7 @@
   "webgpu:shader,validation,const_assert,const_assert:constant_expression_logical_or_no_assert:*": { "subcaseMS": 1.373 },
   "webgpu:shader,validation,const_assert,const_assert:constant_expression_no_assert:*": { "subcaseMS": 1.655 },
   "webgpu:shader,validation,const_assert,const_assert:evaluation_stage:*": { "subcaseMS": 3.367 },
+  "webgpu:shader,validation,decl,assignment_statement:vector_swizzle_assignment:*": { "subcaseMS": 84.344 },
   "webgpu:shader,validation,decl,compound_statement:decl_conflict:*": { "subcaseMS": 5.225 },
   "webgpu:shader,validation,decl,compound_statement:decl_use:*": { "subcaseMS": 0.625 },
   "webgpu:shader,validation,decl,const:assert:*": { "subcaseMS": 0.378 },

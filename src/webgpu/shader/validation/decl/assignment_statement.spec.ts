@@ -56,15 +56,15 @@ g.test('vector_indexed_assignment')
 const kSwizzleTests = {
   single: {
     src: 'v.x = 1.0',
-    pass: true,
+    pass: (t: ShaderValidationTest) => true,
   },
   multi: {
     src: 'v.xy = vec2(1.0, 2.0)',
-    pass: false,
+    pass: (t: ShaderValidationTest) => false || t.hasLanguageFeature('swizzle_assignment'),
   },
   swizzleswizzle: {
     src: 'v.xy.x = 1.0',
-    pass: false,
+    pass: (t: ShaderValidationTest) => false || t.hasLanguageFeature('swizzle_assignment'),
   },
 };
 
@@ -78,7 +78,7 @@ g.test('vector_swizzle_assignment')
         var v: vec4<f32> = vec4(0.0, 0.0, 0.0, 0.0);
         ${kSwizzleTests[t.params.case].src};
       }`;
-    t.expectCompileResult(kSwizzleTests[t.params.case].pass, wgsl);
+    t.expectCompileResult(kSwizzleTests[t.params.case].pass(t), wgsl);
   });
 
 g.test('compound_assignment_with_swizzle')
