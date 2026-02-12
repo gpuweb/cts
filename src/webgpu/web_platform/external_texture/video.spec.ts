@@ -381,6 +381,142 @@ Tests that we can import an VideoFrame with non-YUV pixel format into a GPUExter
     ]);
   });
 
+g.test('importExternalTexture,video_frame_display_size_diff_with_coded_size')
+  .desc(
+    `
+Tests that we can import a VideoFrame with display size different with its coded size, and
+sampling works without validation errors.
+`
+  )
+  .params(u =>
+    u //
+      .combine('displayScale', ['smaller', 'same', 'larger'] as const)
+  )
+  .fn(t => {
+    if (typeof VideoFrame === 'undefined') {
+      t.skip('WebCodec is not supported');
+    }
+
+    const canvas = createCanvas(t, 'onscreen', kWidth, kHeight);
+    const canvasContext = canvas.getContext('2d');
+
+    if (canvasContext === null) {
+      t.skip(' onscreen canvas 2d context not available');
+    }
+
+    const ctx = canvasContext as CanvasRenderingContext2D;
+
+    const rectWidth = Math.floor(kWidth / 2);
+    const rectHeight = Math.floor(kHeight / 2);
+
+    // Red
+    ctx.fillStyle = `rgba(255, 0, 0, 1.0)`;
+    ctx.fillRect(0, 0, rectWidth, rectHeight);
+    // Lime
+    ctx.fillStyle = `rgba(0, 255, 0, 1.0)`;
+    ctx.fillRect(rectWidth, 0, kWidth - rectWidth, rectHeight);
+    // Blue
+    ctx.fillStyle = `rgba(0, 0, 255, 1.0)`;
+    ctx.fillRect(0, rectHeight, rectWidth, kHeight - rectHeight);
+    // Fuchsia
+    ctx.fillStyle = `rgba(255, 0, 255, 1.0)`;
+    ctx.fillRect(rectWidth, rectHeight, kWidth - rectWidth, kHeight - rectHeight);
+
+    const imageData = ctx.getImageData(0, 0, kWidth, kHeight);
+
+    let displayWidth = kWidth;
+    let displayHeight = kHeight;
+    switch (t.params.displayScale) {
+      case 'smaller':
+        displayWidth = Math.floor(kWidth / 2);
+        displayHeight = Math.floor(kHeight / 2);
+        break;
+      case 'same':
+        displayWidth = kWidth;
+        displayHeight = kHeight;
+        break;
+      case 'larger':
+        displayWidth = kWidth * 2;
+        displayHeight = kHeight * 2;
+        break;
+      default:
+        unreachable();
+    }
+
+    const frameInit: VideoFrameBufferInit = {
+      format: 'RGBA',
+      codedWidth: kWidth,
+      codedHeight: kHeight,
+      displayWidth,
+      displayHeight,
+      timestamp: 0,
+    };
+
+    const frame = new VideoFrame(imageData.data.buffer, frameInit);
+
+    const colorAttachment = t.createTextureTracked({
+      format: kFormat,
+      size: { width: kWidth, height: kHeight, depthOrArrayLayers: 1 },
+      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
+    });
+
+    const pipeline = createExternalTextureSamplingTestPipeline(t, kFormat);
+    const bindGroup = createExternalTextureSamplingTestBindGroup(
+      t,
+      undefined /* checkNonStandardIsZeroCopy */,
+      frame,
+      pipeline,
+      'srgb'
+    );
+
+    const commandEncoder = t.device.createCommandEncoder();
+    const passEncoder = commandEncoder.beginRenderPass({
+      colorAttachments: [
+        {
+          view: colorAttachment.createView(),
+          clearValue: { r: 0.0, g: 0.0, b: 0.0, a: 1.0 },
+          loadOp: 'clear',
+          storeOp: 'store',
+        },
+      ],
+    });
+    passEncoder.setPipeline(pipeline);
+    passEncoder.setBindGroup(0, bindGroup);
+    passEncoder.draw(6);
+    passEncoder.end();
+    t.device.queue.submit([commandEncoder.finish()]);
+
+    const expected = {
+      topLeft: new Uint8Array([255, 0, 0, 255]),
+      topRight: new Uint8Array([0, 255, 0, 255]),
+      bottomLeft: new Uint8Array([0, 0, 255, 255]),
+      bottomRight: new Uint8Array([255, 0, 255, 255]),
+    };
+
+    ttu.expectSinglePixelComparisonsAreOkInTexture(t, { texture: colorAttachment }, [
+      // Top-left.
+      {
+        coord: { x: kWidth * 0.25, y: kHeight * 0.25 },
+        exp: expected.topLeft,
+      },
+      // Top-right.
+      {
+        coord: { x: kWidth * 0.75, y: kHeight * 0.25 },
+        exp: expected.topRight,
+      },
+      // Bottom-left.
+      {
+        coord: { x: kWidth * 0.25, y: kHeight * 0.75 },
+        exp: expected.bottomLeft,
+      },
+      // Bottom-right.
+      {
+        coord: { x: kWidth * 0.75, y: kHeight * 0.75 },
+        exp: expected.bottomRight,
+      },
+    ]);
+  });
+
 g.test('importExternalTexture,sampleWithVideoFrameWithVisibleRectParam')
   .desc(
     `
