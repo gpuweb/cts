@@ -509,6 +509,8 @@
   "webgpu:api,validation,createView:texture_view_usage_with_view_format:*": { "subcaseMS": 2406.440 },
   "webgpu:api,validation,debugMarker:push_pop_call_count_unbalance,command_encoder:*": { "subcaseMS": 1.522 },
   "webgpu:api,validation,debugMarker:push_pop_call_count_unbalance,render_compute_pass:*": { "subcaseMS": 0.601 },
+  "webgpu:api,validation,dispatch:dispatch,linear_indexing_range:*": { "subcaseMS": 359.656 },
+  "webgpu:api,validation,dispatch:dispatchIndirect,linear_indexing_range:*": { "subcaseMS": 320.426 },
   "webgpu:api,validation,encoding,beginComputePass:timestampWrites,invalid_query_set:*": { "subcaseMS": 0.201 },
   "webgpu:api,validation,encoding,beginComputePass:timestampWrites,query_index:*": { "subcaseMS": 0.201 },
   "webgpu:api,validation,encoding,beginComputePass:timestampWrites,query_set_type:*": { "subcaseMS": 0.401 },
