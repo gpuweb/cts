@@ -290,7 +290,7 @@ const kRegularTextureFormatInfo = formatTableWithDefaults({
 
     r16unorm: {
       color: {
-        type: 'float',
+        type: 'unfilterable-float',
         copySrc: true,
         copyDst: true,
         storage: true,
@@ -304,7 +304,7 @@ const kRegularTextureFormatInfo = formatTableWithDefaults({
     },
     r16snorm: {
       color: {
-        type: 'float',
+        type: 'unfilterable-float',
         copySrc: true,
         copyDst: true,
         storage: true,
@@ -358,7 +358,7 @@ const kRegularTextureFormatInfo = formatTableWithDefaults({
 
     rg16unorm: {
       color: {
-        type: 'float',
+        type: 'unfilterable-float',
         copySrc: true,
         copyDst: true,
         storage: true,
@@ -372,7 +372,7 @@ const kRegularTextureFormatInfo = formatTableWithDefaults({
     },
     rg16snorm: {
       color: {
-        type: 'float',
+        type: 'unfilterable-float',
         copySrc: true,
         copyDst: true,
         storage: true,
@@ -426,7 +426,7 @@ const kRegularTextureFormatInfo = formatTableWithDefaults({
 
     rgba16unorm: {
       color: {
-        type: 'float',
+        type: 'unfilterable-float',
         copySrc: true,
         copyDst: true,
         storage: true,
@@ -440,7 +440,7 @@ const kRegularTextureFormatInfo = formatTableWithDefaults({
     },
     rgba16snorm: {
       color: {
-        type: 'float',
+        type: 'unfilterable-float',
         copySrc: true,
         copyDst: true,
         storage: true,
@@ -2412,8 +2412,11 @@ format)
     case 'float':
       return true;
     case 'unfilterable-float':
-      assert(is32Float(format));
-      return hasFeature(features, 'float32-filterable');
+      if (is32Float(format)) {
+        return hasFeature(features, 'float32-filterable');
+      } else {
+        return false;
+      }
     default:
       return false;
   }
