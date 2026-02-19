@@ -62,18 +62,22 @@ export class ShaderValidationTest extends AllFeaturesMaxLimitsGPUTest {
     if (options?.autoSkipIfFeatureNotAvailable !== false) {
       skipIfCodeNeedsFeatureAndDeviceDoesNotHaveFeature(this, code);
     }
-    let shaderModule: GPUShaderModule;
-    this.expectGPUError(
-      'validation',
-      () => {
-        shaderModule = this.device.createShaderModule({ code });
-      },
-      expectedResult !== true
-    );
 
-    const error = new Error();
-    this.eventualAsyncExpectation(async () => {
-      const compilationInfo = await shaderModule!.getCompilationInfo();
+    this.eventualAsyncExpectation(async (niceStack: Error) => {
+      if (expectedResult !== true) {
+        this.device.pushErrorScope('validation');
+      }
+      const shaderModule = this.device.createShaderModule({ code });
+
+      if (expectedResult !== true) {
+        const gpuError = await this.device.popErrorScope();
+        if (!(gpuError instanceof GPUValidationError)) {
+          niceStack.message = `Expected validation error`;
+          this.rec.expectationFailed(niceStack);
+        }
+      }
+
+      const compilationInfo = await shaderModule.getCompilationInfo();
 
       // MAINTENANCE_TODO: Pretty-print error messages with source context.
       const messagesLog =
@@ -83,6 +87,7 @@ export class ShaderValidationTest extends AllFeaturesMaxLimitsGPUTest {
         '\n\n---- shader ----\n' +
         code;
 
+      const error = new Error();
       if (compilationInfo.messages.some(m => m.type === 'error')) {
         if (expectedResult) {
           error.message = `Unexpected compilationInfo 'error' message.\n` + messagesLog;
@@ -124,7 +129,7 @@ export class ShaderValidationTest extends AllFeaturesMaxLimitsGPUTest {
 
     const error = new Error();
     this.eventualAsyncExpectation(async () => {
-      const compilationInfo = await shaderModule!.getCompilationInfo();
+      const compilationInfo = await shaderModule.getCompilationInfo();
 
       // MAINTENANCE_TODO: Pretty-print error messages with source context.
       const messagesLog = compilationInfo.messages
@@ -255,18 +260,21 @@ export class UniqueFeaturesAndLimitsShaderValidationTest extends UniqueFeaturesO
    * ```
    */
   expectCompileResult(expectedResult: boolean, code: string) {
-    let shaderModule: GPUShaderModule;
-    this.expectGPUError(
-      'validation',
-      () => {
-        shaderModule = this.device.createShaderModule({ code });
-      },
-      expectedResult !== true
-    );
+    this.eventualAsyncExpectation(async (niceStack: Error) => {
+      if (expectedResult !== true) {
+        this.device.pushErrorScope('validation');
+      }
+      const shaderModule = this.device.createShaderModule({ code });
 
-    const error = new Error();
-    this.eventualAsyncExpectation(async () => {
-      const compilationInfo = await shaderModule!.getCompilationInfo();
+      if (expectedResult !== true) {
+        const gpuError = await this.device.popErrorScope();
+        if (!(gpuError instanceof GPUValidationError)) {
+          niceStack.message = `Expected validation error`;
+          this.rec.expectationFailed(niceStack);
+        }
+      }
+
+      const compilationInfo = await shaderModule.getCompilationInfo();
 
       // MAINTENANCE_TODO: Pretty-print error messages with source context.
       const messagesLog =
@@ -276,6 +284,7 @@ export class UniqueFeaturesAndLimitsShaderValidationTest extends UniqueFeaturesO
         '\n\n---- shader ----\n' +
         code;
 
+      const error = new Error();
       if (compilationInfo.messages.some(m => m.type === 'error')) {
         if (expectedResult) {
           error.message = `Unexpected compilationInfo 'error' message.\n` + messagesLog;
@@ -317,7 +326,7 @@ export class UniqueFeaturesAndLimitsShaderValidationTest extends UniqueFeaturesO
 
     const error = new Error();
     this.eventualAsyncExpectation(async () => {
-      const compilationInfo = await shaderModule!.getCompilationInfo();
+      const compilationInfo = await shaderModule.getCompilationInfo();
 
       // MAINTENANCE_TODO: Pretty-print error messages with source context.
       const messagesLog = compilationInfo.messages
