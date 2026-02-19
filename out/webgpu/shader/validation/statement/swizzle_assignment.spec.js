@@ -103,4 +103,45 @@ fn main() {
 `;
   t.expectCompileResult(false, code);
 });
+
+g.test('invalid_mixed_letter_schemes').
+desc('Invalid swizzle assignment with mixed letter schemes (xyzw vs. rgba)').
+fn((t) => {
+  t.skipIfLanguageFeatureNotSupported('swizzle_assignment');
+  const code = `
+@fragment
+fn main() {
+  var v = vec4f();
+  v.xr = vec2i();
+}
+`;
+  t.expectCompileResult(false, code);
+});
+
+g.test('invalid_address_of_swizzle_view').
+desc('Invalid to take the address of a swizzle view').
+fn((t) => {
+  t.skipIfLanguageFeatureNotSupported('swizzle_assignment');
+  const code = `
+@fragment
+fn main() {
+  var v = vec4f();
+  let p = &v.xy;
+}
+`;
+  t.expectCompileResult(false, code);
+});
+
+g.test('invalid_index_into_swizzle_view').
+desc('Invalid to index into a swizzle view on the lhs').
+fn((t) => {
+  t.skipIfLanguageFeatureNotSupported('swizzle_assignment');
+  const code = `
+@fragment
+fn main() {
+  var v = vec2u();
+  v.xy[0] = 1;
+`;
+  t.expectCompileResult(false, code);
+});
 //# sourceMappingURL=swizzle_assignment.spec.js.map
