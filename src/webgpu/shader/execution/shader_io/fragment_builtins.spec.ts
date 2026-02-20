@@ -326,6 +326,7 @@ function generateFragmentInputs({
   frontFace,
   clipSpacePoints,
   interpolateFn,
+  isSampleShading,
 }: {
   width: number;
   height: number;
@@ -334,6 +335,7 @@ function generateFragmentInputs({
   frontFace?: GPUFrontFace;
   clipSpacePoints: readonly number[][];
   interpolateFn: (fragData: FragData) => number[];
+  isSampleShading: boolean;
 }) {
   const expected = new Float32Array(width * height * sampleCount * 4);
 
@@ -382,6 +384,11 @@ function generateFragmentInputs({
 
           const inside = isInsideTriangle(sampleBarycentricCoords);
           if (inside) {
+            // When Sample Shading (ie MSAA super sampling) we should only get the one sample for this fragment.
+            // See webgpu wgls issue 5457
+            const fragmentLocalSampleMask = isSampleShading
+              ? sampleMask & (1 << sampleIndex)
+              : sampleMask;
             const output = interpolateFn({
               baseVertexIndex: vertexIndex,
               fragmentPoint,
@@ -391,7 +398,7 @@ function generateFragmentInputs({
               ndcPoints,
               windowPoints,
               sampleIndex,
-              sampleMask,
+              sampleMask: fragmentLocalSampleMask,
               frontFacing,
             });
 
@@ -818,6 +825,7 @@ g.test('inputs,position')
       sampleCount,
       clipSpacePoints,
       interpolateFn: computeFragmentPosition,
+      isSampleShading: t.params.interpolation.sampling === 'sample',
     });
 
     // Since @builtin(position) is always a fragment position, never a sample position, check
@@ -907,6 +915,7 @@ g.test('inputs,interStage')
       sampleCount,
       clipSpacePoints,
       interpolateFn: await createInterStageInterpolationFn(t, interStagePoints, type, sampling),
+      isSampleShading: t.params.interpolation.sampling === 'sample',
     });
 
     t.expectOK(
@@ -1046,6 +1055,7 @@ g.test('inputs,interStage,centroid')
         type,
         sampling
       ),
+      isSampleShading: false,
     });
 
     t.expectOK(
@@ -1125,6 +1135,7 @@ g.test('inputs,sample_index')
       sampleCount,
       clipSpacePoints,
       interpolateFn: computeFragmentSampleIndex,
+      isSampleShading: t.params.interpolation.sampling === 'sample',
     });
 
     t.expectOK(
@@ -1240,6 +1251,7 @@ g.test('inputs,front_facing')
       clipSpacePoints,
       frontFace,
       interpolateFn: computeFragmentFrontFacing,
+      isSampleShading: t.params.interpolation.sampling === 'sample',
     });
 
     assert(expected.indexOf(0) >= 0, 'expect some values to be 0');
@@ -1414,6 +1426,7 @@ g.test('inputs,sample_mask')
       sampleCount,
       clipSpacePoints,
       interpolateFn: computeSampleMask,
+      isSampleShading: t.params.interpolation.sampling === 'sample',
     });
 
     t.expectOK(
