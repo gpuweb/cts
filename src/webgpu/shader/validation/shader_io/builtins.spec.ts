@@ -119,6 +119,20 @@ export const kBuiltins: readonly Builtin[] = [
     enable: 'subgroups',
     requires: 'subgroup_id',
   },
+  {
+    name: 'workgroup_index',
+    stage: 'compute',
+    io: 'in',
+    type: 'u32',
+    requires: 'linear_indexing',
+  },
+  {
+    name: 'global_invocation_index',
+    stage: 'compute',
+    io: 'in',
+    type: 'u32',
+    requires: 'linear_indexing',
+  },
 ] as const;
 
 // List of types to test against.
