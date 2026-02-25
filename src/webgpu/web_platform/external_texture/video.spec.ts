@@ -559,11 +559,6 @@ Tests that textureDimensions() for texture_external matches VideoFrame display s
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
     });
 
-    const readBuffer = t.createBufferTracked({
-      size: 8,
-      usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
-    });
-
     const pipeline = t.device.createComputePipeline({
       layout: 'auto',
       compute: {
@@ -597,17 +592,9 @@ Tests that textureDimensions() for texture_external matches VideoFrame display s
     pass.setBindGroup(0, bindGroup);
     pass.dispatchWorkgroups(1);
     pass.end();
-    encoder.copyBufferToBuffer(storageBuffer, 0, readBuffer, 0, 8);
     t.device.queue.submit([encoder.finish()]);
 
-    await readBuffer.mapAsync(GPUMapMode.READ);
-    const data = new Uint32Array(readBuffer.getMappedRange().slice(0));
-    readBuffer.unmap();
-
-    t.expect(
-      data[0] === displayWidth && data[1] === displayHeight,
-      `expected textureDimensions to return (${displayWidth}, ${displayHeight}), but got (${data[0]}, ${data[1]})`
-    );
+    t.expectGPUBufferValuesEqual(storageBuffer, new Uint32Array([displayWidth, displayHeight]));
 
     frame.close();
   });
