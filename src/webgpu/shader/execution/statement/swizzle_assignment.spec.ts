@@ -3,6 +3,7 @@ Swizzle assignment execution.
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
+import { keysOf } from '../../../../common/util/data_tables.js';
 import { TypedArrayBufferView } from '../../../../common/util/util.js';
 import { Float16Array } from '../../../../external/petamoriken/float16/float16.js';
 import { AllFeaturesMaxLimitsGPUTest, GPUTest } from '../../../gpu_test.js';
@@ -14,53 +15,18 @@ export const g = makeTestGroup(AllFeaturesMaxLimitsGPUTest);
  *
  * @param t The test object
  * @param elemType The type of the vector elements
- * @param vecSize The size of the vector
- * @param initial The initial values of the vector
- * @param swizzle The swizzle string for the assignment
- * @param rhs The WGSL string for the right-hand side of the assignment
  * @param expectedValues The expected final values of the vector after the assignment
  */
 export function runSwizzleAssignmentTest(
   t: GPUTest,
   elemType: SwizzleAssignmentCase['elemType'],
-  vecSize: SwizzleAssignmentCase['vecSize'],
-  initial: readonly number[],
-  swizzle: string,
-  rhs: string,
-  expectedValues: readonly number[]
+  expectedValues: readonly number[],
+  wgsl: string
 ) {
   t.skipIfLanguageFeatureNotSupported('swizzle_assignment');
   if (elemType === 'f16') {
     t.skipIfDeviceDoesNotHaveFeature('shader-f16');
   }
-
-  const vecType = `vec${vecSize}<${elemType}>`;
-  const initialValues =
-    elemType === 'bool'
-      ? initial.map(v => (v === 0 ? 'false' : 'true')).join(', ')
-      : initial.join(', ');
-  const outputElemType = elemType === 'bool' ? 'u32' : elemType;
-  const wgsl = `
-requires swizzle_assignment;
-${elemType === 'f16' ? 'enable f16;' : ''}
-
-struct Outputs {
-  data : array<${outputElemType}>,
-};
-
-@group(0) @binding(1) var<storage, read_write> outputs : Outputs;
-
-@compute @workgroup_size(1)
-fn main() {
-  var v = ${vecType}(${initialValues});
-  v.${swizzle} = ${rhs};
-
-  // Store result to Output
-  for (var i = 0; i < ${vecSize}; i++) {
-    ${elemType === 'bool' ? 'outputs.data[i] = u32(v[i]);' : 'outputs.data[i] = v[i];'}
-  }
-}
-`;
 
   const pipeline = t.device.createComputePipeline({
     layout: 'auto',
@@ -119,10 +85,10 @@ interface SwizzleAssignmentCase {
   expected: readonly number[];
 }
 
-const kSwizzleAssignmentCases: SwizzleAssignmentCase[] = [
+const kSwizzleAssignmentCases: Record<string, SwizzleAssignmentCase> = {
   // v = vec4u(1, 2, 3, 4)
   // v.w = 5;
-  {
+  vec4u_w_literal: {
     elemType: 'u32',
     vecSize: 4,
     initial: [1, 2, 3, 4],
@@ -132,7 +98,7 @@ const kSwizzleAssignmentCases: SwizzleAssignmentCase[] = [
   },
   // v = vec4u(1, 2, 3, 5)
   // v.xy = vec2u(6, 7);
-  {
+  vec4u_xy_vec2u: {
     elemType: 'u32',
     vecSize: 4,
     initial: [1, 2, 3, 5],
@@ -142,7 +108,7 @@ const kSwizzleAssignmentCases: SwizzleAssignmentCase[] = [
   },
   // v = vec4u(6, 7, 3, 5)
   // v.zx = vec2u(8, 9);
-  {
+  vec4u_zx_vec2u: {
     elemType: 'u32',
     vecSize: 4,
     initial: [6, 7, 3, 5],
@@ -152,7 +118,7 @@ const kSwizzleAssignmentCases: SwizzleAssignmentCase[] = [
   },
   // v = vec4u(1, 1, 1, 1)
   // v.xyzw = vec4u(10, 11, 12, 13);
-  {
+  vec4u_xyzw_vec4u: {
     elemType: 'u32',
     vecSize: 4,
     initial: [1, 1, 1, 1],
@@ -162,7 +128,7 @@ const kSwizzleAssignmentCases: SwizzleAssignmentCase[] = [
   },
   // v = vec4u(10, 11, 12, 13)
   // v.xy = vec2(v.y, v.x);
-  {
+  vec4u_xy_vec2_yx: {
     elemType: 'u32',
     vecSize: 4,
     initial: [10, 11, 12, 13],
@@ -172,7 +138,7 @@ const kSwizzleAssignmentCases: SwizzleAssignmentCase[] = [
   },
   // v = vec3i(-10, -20, -30)
   // v.y = 50;
-  {
+  vec3i_y_literal: {
     elemType: 'i32',
     vecSize: 3,
     initial: [-10, -20, -30],
@@ -182,7 +148,7 @@ const kSwizzleAssignmentCases: SwizzleAssignmentCase[] = [
   },
   // v = vec3i(10, 20, 30)
   // v.zx = vec2i(40, 60);
-  {
+  vec3i_zx_vec2i: {
     elemType: 'i32',
     vecSize: 3,
     initial: [10, 20, 30],
@@ -192,7 +158,7 @@ const kSwizzleAssignmentCases: SwizzleAssignmentCase[] = [
   },
   // v = vec3f(1.0, 2.0, 3.0)
   // v.xy = vec2f(4.0, 5.0);
-  {
+  vec3f_xy_vec2f: {
     elemType: 'f32',
     vecSize: 3,
     initial: [1.0, 2.0, 3.0],
@@ -202,7 +168,7 @@ const kSwizzleAssignmentCases: SwizzleAssignmentCase[] = [
   },
   // v = vec2f(1.0, 2.0)
   // v.xy = v + v;
-  {
+  vec2f_yx_v_plus_v: {
     elemType: 'f32',
     vecSize: 2,
     initial: [1.0, 2.0],
@@ -212,17 +178,17 @@ const kSwizzleAssignmentCases: SwizzleAssignmentCase[] = [
   },
   // v = vec4f(10.0, 20.0, 30.0, 100.0)
   // v.rgb = vec3f(v.r, v.g, v.b) / 10;
-  {
+  vec4f_rgb_vec3f_div_10: {
     elemType: 'f32',
     vecSize: 4,
     initial: [10.0, 20.0, 30.0, 100.0],
     swizzle: 'rgb',
-    rhs: 'vec3f(v.r, v.g, v.b) / 10',
+    rhs: 'vec3f(v.r, v.g, v.b) / 10.0',
     expected: [1.0, 2.0, 3.0, 100.0],
   },
   // v = vec2h(1.0, 2.0)
   // v.yx = vec2h(4.0, 5.0);
-  {
+  vec2h_yx_vec2h: {
     elemType: 'f16',
     vecSize: 2,
     initial: [1.0, 2.0],
@@ -232,7 +198,7 @@ const kSwizzleAssignmentCases: SwizzleAssignmentCase[] = [
   },
   // v = vec2<bool>(true, false)
   // v.y = true;
-  {
+  vec2_bool_y_true: {
     elemType: 'bool',
     vecSize: 2,
     initial: [1, 0],
@@ -242,7 +208,7 @@ const kSwizzleAssignmentCases: SwizzleAssignmentCase[] = [
   },
   // v = vec3<bool>(true, true, true)
   // v.xz = vec2<bool>(false, false);
-  {
+  vec3_bool_xz_vec2bool: {
     elemType: 'bool',
     vecSize: 3,
     initial: [1, 1, 1],
@@ -250,28 +216,207 @@ const kSwizzleAssignmentCases: SwizzleAssignmentCase[] = [
     rhs: 'vec2<bool>(false, false)',
     expected: [0, 1, 0],
   },
-];
+  // v = vec4u(1, 2, 3, 4)
+  // v.xy.x = 5;
+  vec4u_xy_x_literal: {
+    elemType: 'u32',
+    vecSize: 4,
+    initial: [1, 2, 3, 4],
+    swizzle: 'xy.x',
+    rhs: '5',
+    expected: [5, 2, 3, 4],
+  },
+  // v = vec3f(1.0, 2.0, 3.0)
+  // v.zyx.yz = vec2f(5.0, 6.0);
+  vec3f_zyx_yz_vec2f: {
+    elemType: 'f32',
+    vecSize: 3,
+    initial: [1.0, 2.0, 3.0],
+    swizzle: 'zyx.yz',
+    rhs: 'vec2f(5.0, 6.0)',
+    expected: [6.0, 5.0, 3.0],
+  },
+  // v = vec3i(-1, 0, -1)
+  // v.xz.yx = vec2i(2);
+  vec2i_xz_yx_vec2i: {
+    elemType: 'i32',
+    vecSize: 3,
+    initial: [-1, 0, -1],
+    swizzle: 'xz.yx',
+    rhs: 'vec2i(2,3)',
+    expected: [3, 0, 2],
+  },
+};
 
-g.test('swizzle_assignment_local_var')
-  .desc('Tests the value of a vector after swizzle assignment on a local function variable.')
-  .params(u => u.combine('case', kSwizzleAssignmentCases))
+g.test('swizzle_assignment_vars')
+  .desc(
+    'Tests the value of a vector after swizzle assignment on different variable types, address spaces, and on pointer and reference memory views.'
+  )
+  .params(u =>
+    u
+      .combine('case', keysOf(kSwizzleAssignmentCases))
+      .beginSubcases()
+      .combine('address_space', ['function', 'private', 'workgroup', 'storage'])
+      .combine('memory_view', ['ref', 'ptr'])
+  )
   .fn(t => {
-    const { elemType, vecSize, initial, swizzle, rhs, expected } = t.params.case;
-    runSwizzleAssignmentTest(t, elemType, vecSize, initial, swizzle, rhs, expected);
+    const { elemType, vecSize, initial, swizzle, rhs, expected } =
+      kSwizzleAssignmentCases[t.params.case];
+
+    t.skipIf(t.params.address_space === 'storage' && elemType === 'bool');
+
+    const vecType = `vec${vecSize}<${elemType}>`;
+    const initialValues =
+      elemType === 'bool'
+        ? initial.map(v => (v === 0 ? 'false' : 'true')).join(', ')
+        : initial.join(', ');
+    const outputElemType = elemType === 'bool' ? 'u32' : elemType;
+
+    const var_ref = t.params.address_space === 'storage' ? 'outputs.v' : 'v';
+    const lhs =
+      t.params.memory_view === 'ptr'
+        ? `let ptr = &${var_ref}; ptr.${swizzle}`
+        : `${var_ref}.${swizzle}`;
+    const new_rhs = rhs.replaceAll(/\bv\b/g, `${var_ref}`);
+
+    const wgsl = `
+requires swizzle_assignment;
+${elemType === 'f16' ? 'enable f16;' : ''}
+
+struct Outputs {
+  ${t.params.address_space === 'storage' ? `v : ${vecType},` : ''}
+  data : array<${outputElemType}>,
+};
+
+@group(0) @binding(1) var<storage, read_write> outputs : Outputs;
+
+${
+  t.params.address_space === 'private' || t.params.address_space === 'workgroup'
+    ? `var<${t.params.address_space}> v : ${vecType};`
+    : ''
+}
+
+@compute @workgroup_size(1)
+fn main() {
+
+  ${t.params.address_space === 'function' ? `var v : ${vecType};` : ''}
+  ${var_ref} = ${vecType}(${initialValues});
+  ${lhs} = ${new_rhs};
+
+  // Store result to Output
+  for (var i = 0; i < ${vecSize}; i++) {
+    ${
+      elemType === 'bool'
+        ? `outputs.data[i] = u32(${var_ref}[i]);`
+        : `outputs.data[i] = ${var_ref}[i];`
+    }
+  }
+}`;
+    runSwizzleAssignmentTest(t, elemType, expected, wgsl);
   });
 
-g.test('swizzle_assignment_other_vars')
-  .desc('Tests the value of a vector after swizzle assignment with other address spaces.')
-  .unimplemented();
+interface SwizzleCompoundAssignmentCase extends SwizzleAssignmentCase {
+  op: string;
+}
 
-g.test('swizzle_assignment_chained')
-  .desc('Tests the value of a vector after swizzle assignment on a chained swizzle.')
-  .unimplemented();
-
-g.test('swizzle_assignment_pointer')
-  .desc('Tests the value of a vector after swizzle assignment on pointer to a swizzle.')
-  .unimplemented();
+const kSwizzleCompoundAssignmentCases: Record<string, SwizzleCompoundAssignmentCase> = {
+  // v = vec4u(1, 2, 3, 4)
+  // v.w += 5;
+  vec4u_w_add_5: {
+    elemType: 'u32',
+    vecSize: 4,
+    initial: [1, 2, 3, 4],
+    swizzle: 'w',
+    op: '+=',
+    rhs: '5',
+    expected: [1, 2, 3, 9],
+  },
+  // v = vec4u(1, 2, 3, 4)
+  // v.xy *= vec2u(6, 7);
+  vec4u_xy_mul_vec2u: {
+    elemType: 'u32',
+    vecSize: 4,
+    initial: [1, 2, 3, 4],
+    swizzle: 'xy',
+    op: '*=',
+    rhs: 'vec2u(6, 7)',
+    expected: [6, 14, 3, 4],
+  },
+  // v = vec3i(10, 20, 30)
+  // v.zx += vec2i(100);
+  vec3i_zx_add_vec2i: {
+    elemType: 'i32',
+    vecSize: 3,
+    initial: [10, 20, 30],
+    swizzle: 'zx',
+    op: '+=',
+    rhs: 'vec2i(100)',
+    expected: [110, 20, 130],
+  },
+  // v = vec3f(1.0, 2.0, 3.0)
+  // v.xy *= vec2f(0.5, 2.0);
+  vec3f_xy_mul_vec2f: {
+    elemType: 'f32',
+    vecSize: 3,
+    initial: [1.0, 2.0, 3.0],
+    swizzle: 'xy',
+    op: '*=',
+    rhs: 'vec2f(0.5, 2.0)',
+    expected: [0.5, 4.0, 3.0],
+  },
+};
 
 g.test('swizzle_compound_assignment')
   .desc('Tests the value of a vector after compound swizzle assignment.')
-  .unimplemented();
+  .params(u =>
+    u
+      .combine('case', keysOf(kSwizzleCompoundAssignmentCases))
+      .beginSubcases()
+      .combine('address_space', ['function', 'private', 'workgroup', 'storage'])
+      .combine('memory_view', ['ref', 'ptr'])
+  )
+  .fn(t => {
+    const { elemType, vecSize, initial, swizzle, op, rhs, expected } =
+      kSwizzleCompoundAssignmentCases[t.params.case];
+
+    const vecType = `vec${vecSize}<${elemType}>`;
+    const initialValues = initial.join(', ');
+
+    const var_ref = t.params.address_space === 'storage' ? 'outputs.v' : 'v';
+    const lhs =
+      t.params.memory_view === 'ptr'
+        ? `let ptr = &${var_ref}; ptr.${swizzle}`
+        : `${var_ref}.${swizzle}`;
+    const new_rhs = rhs.replaceAll(/\bv\b/g, `${var_ref}`);
+
+    const wgsl = `
+requires swizzle_assignment;
+${elemType === 'f16' ? 'enable f16;' : ''}
+
+struct Outputs {
+  ${t.params.address_space === 'storage' ? `v : ${vecType},` : ''}
+  data : array<${elemType}>,
+};
+
+@group(0) @binding(1) var<storage, read_write> outputs : Outputs;
+
+${
+  t.params.address_space === 'private' || t.params.address_space === 'workgroup'
+    ? `var<${t.params.address_space}> v : ${vecType};`
+    : ''
+}
+
+@compute @workgroup_size(1)
+fn main() {
+
+  ${t.params.address_space === 'function' ? `var v : ${vecType};` : ''}
+  ${var_ref} = ${vecType}(${initialValues});
+  ${lhs} ${op} ${new_rhs};
+
+  // Store result to Output
+  for (var i = 0; i < ${vecSize}; i++) {
+    outputs.data[i] = ${var_ref}[i];
+  }
+}`;
+    runSwizzleAssignmentTest(t, elemType, expected, wgsl);
+  });

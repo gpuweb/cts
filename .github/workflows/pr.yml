@@ -15,10 +15,14 @@ jobs:
     permissions:
       pull-requests: write
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           persist-credentials: false
-      - uses: actions/setup-node@v3
+          # When running a pull_request job, GitHub generates a merge commit that merges the PR
+          # with the latest commit on the target branch. By default, actions/checkout shallowly
+          # checks out only the merge commit. We want to fetch the two parent commits as well.
+          fetch-depth: 2
+      - uses: actions/setup-node@v6
         with:
           node-version: '16.x'
       - run: npm ci
@@ -28,7 +32,7 @@ jobs:
       - name: copy out-wpt to wpt tree
         run: |
           git clone --depth 2 https://github.com/web-platform-tests/wpt.git
-          rsync -av  out-wpt/ wpt/webgpu
+          rsync -av out-wpt/ wpt/webgpu
       - name: adding wpt lint ignore rule for *.bin
         run: 'echo "TRAILING WHITESPACE, INDENT TABS, CR AT EOL: *.bin" >> wpt/lint.ignore'
       - name: test wpt lint
@@ -38,11 +42,12 @@ jobs:
         run: |
           tools/validate --print-case-count-report src/webgpu > case-count-report-after.txt
       - name: checkout before PR
-        env:
-          PR_BASE_REF: ${{ github.event.pull_request.base.ref }}
         run: |
-          git fetch origin "${PR_BASE_REF}"
-          git checkout "${PR_BASE_REF}"
+          # HEAD will always be a merge commit with 2 parents. HEAD^1 will be the target branch.
+          # HEAD^2 will be the PR branch. (Log all three, to make it easy to see what's being
+          # checked out, and also to validate the assumption that there are actually two parents.)
+          git log --oneline --graph HEAD 'HEAD^1' 'HEAD^2'
+          git checkout 'HEAD^1'
       - name: compute case count before PR and diff
         id: case_count_diff
         run: |
