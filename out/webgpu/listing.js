@@ -1463,6 +1463,14 @@ export const listing = [
     "file": [
       "api",
       "validation",
+      "pipeline",
+      "immediates"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
       "query_set",
       "create"
     ]

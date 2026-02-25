@@ -119,8 +119,10 @@ fn((t) => {
 });
 
 g.test('external_texture').
-desc('Tests createRenderPipeline() with an external_texture').
+desc('Tests createRenderPipeline(Async) with an external_texture').
+params((u) => u.combine('isAsync', [false, true])).
 fn((t) => {
+  const { isAsync } = t.params;
   const shader = t.device.createShaderModule({
     code: `
         @vertex
@@ -149,7 +151,7 @@ fn((t) => {
     }
   };
 
-  vtu.doCreateRenderPipelineTest(t, false, true, descriptor);
+  vtu.doCreateRenderPipelineTest(t, isAsync, true, descriptor);
 });
 
 g.test('storage_texture,format').
