@@ -539,7 +539,7 @@ Tests that textureDimensions() for texture_external matches VideoFrame display s
     u //
       .combine('displayScale', ['smaller', 'same', 'larger'] as const)
   )
-  .fn(async t => {
+  .fn(t => {
     if (typeof VideoFrame === 'undefined') {
       t.skip('WebCodec is not supported');
     }
