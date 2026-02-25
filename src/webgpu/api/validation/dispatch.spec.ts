@@ -53,7 +53,7 @@ fn main(@builtin(${t.params.builtin}) input : u32) {
     computePassEncoder.end();
 
     t.expectValidationError(() => {
-      t.queue.submit([commandEncoder.finish()]);
+      commandEncoder.finish();
     }, t.params.size === 'max');
   });
 
