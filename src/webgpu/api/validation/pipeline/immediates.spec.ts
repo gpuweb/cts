@@ -59,28 +59,20 @@ g.test('pipeline_creation_immediate_size_mismatch')
     u
       .combine('pipelineType', ['compute', 'render'] as const)
       .combine('isAsync', [true, false])
-      .combineWithParams([
-        { stageASize: 16, stageBSize: 16, layoutSize: 16 }, // Equal
-        { stageASize: 12, stageBSize: 12, layoutSize: 16 }, // Shader smaller
-        { stageASize: 20, stageBSize: 20, layoutSize: 16 }, // Shader larger (small diff)
-        { stageASize: 32, stageBSize: 32, layoutSize: 16 }, // Shader larger
-        { stageASize: 'max', stageBSize: 0, layoutSize: 'auto' }, // StageA at limit
-        { stageASize: 0, stageBSize: 'max', layoutSize: 'auto' }, // StageB at limit
-        { stageASize: 'max', stageBSize: 'max', layoutSize: 'auto' }, // Both at limit
-        { stageASize: 'exceedLimits', stageBSize: 0, layoutSize: 'auto' }, // StageA exceeds
-        { stageASize: 0, stageBSize: 'exceedLimits', layoutSize: 'auto' }, // StageB exceeds
-      ] as const)
-      .filter(p => {
-        // Compute has a single stage.
-        // For numeric cases (stageBSize === stageASize), keep them — stageBSize is ignored.
-        // For max-limit cases, keep only those where stageBSize is 0.
-        if (p.pipelineType === 'compute') {
-          if (typeof p.stageASize === 'string' || typeof p.stageBSize === 'string') {
-            return p.stageBSize === 0;
-          }
-          return p.stageBSize === p.stageASize;
+      .beginSubcases()
+      .expandWithParams(function* (p) {
+        yield { stageASize: 16, stageBSize: 16, layoutSize: 16 }; // Equal
+        yield { stageASize: 12, stageBSize: 12, layoutSize: 16 }; // Shader smaller
+        yield { stageASize: 20, stageBSize: 20, layoutSize: 16 }; // Shader larger (small diff)
+        yield { stageASize: 32, stageBSize: 32, layoutSize: 16 }; // Shader larger
+        yield { stageASize: 'max', stageBSize: 0, layoutSize: 'auto' }; // StageA at limit
+        yield { stageASize: 'exceedLimits', stageBSize: 0, layoutSize: 'auto' }; // StageA exceeds
+
+        if (p.pipelineType === 'render') {
+          yield { stageASize: 0, stageBSize: 'max', layoutSize: 'auto' }; // StageB at limit
+          yield { stageASize: 'max', stageBSize: 'max', layoutSize: 'auto' }; // Both at limit
+          yield { stageASize: 0, stageBSize: 'exceedLimits', layoutSize: 'auto' }; // StageB exceeds
         }
-        return true;
       })
   )
   .fn(t => {
