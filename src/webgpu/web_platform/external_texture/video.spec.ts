@@ -7,7 +7,8 @@ Tests for external textures from HTMLVideoElement (and other video-type sources?
 TODO: consider whether external_texture and copyToTexture video tests should be in the same file
 TODO(#3193): Test video in BT.2020 color space
 TODO(#4364): Test camera capture with copyExternalImageToTexture (not necessarily in this file)
-TODO(#4605): Test importExternalTexture with video frame display size different with coded size from a video file
+TODO(#4605): Test importExternalTexture with video frame display size different with coded size from
+  a video file
 `;
 
 import { makeTestGroup } from '../../../common/framework/test_group.js';
@@ -174,7 +175,7 @@ function createVideoFrameWithDisplayScale(
     t.skip(' onscreen canvas 2d context not available');
   }
 
-  const ctx = canvasContext as CanvasRenderingContext2D;
+  const ctx = canvasContext;
 
   const rectWidth = Math.floor(kWidth / 2);
   const rectHeight = Math.floor(kHeight / 2);
