@@ -8,7 +8,7 @@ import { Type } from '../../../../util/conversion.js';
 import { onlyConstInputSource, run } from '../expression.js';
 
 import { d } from './af_matrix_scalar_multiplication.cache.js';
-import { abstractFloatBinary } from './binary.js';
+import { abstractFloatBinary, kAbstractFloatMatrixBinaryOpBatchSize } from './binary.js';
 
 export const g = makeTestGroup(AllFeaturesMaxLimitsGPUTest);
 
@@ -36,7 +36,8 @@ Accuracy: Correctly rounded
       [Type.mat(cols, rows, Type.abstractFloat), Type.abstractFloat],
       Type.mat(cols, rows, Type.abstractFloat),
       t.params,
-      cases
+      cases,
+      kAbstractFloatMatrixBinaryOpBatchSize
     );
   });
 
@@ -64,6 +65,7 @@ Accuracy: Correctly rounded
       [Type.abstractFloat, Type.mat(cols, rows, Type.abstractFloat)],
       Type.mat(cols, rows, Type.abstractFloat),
       t.params,
-      cases
+      cases,
+      kAbstractFloatMatrixBinaryOpBatchSize
     );
   });
