@@ -2131,7 +2131,24 @@ function derivativeForCall<T extends Dimensionality>(
   return dd.map((v, i) => v * (call.derivativeMult?.[i] ?? 1)) as T;
 }
 
-function softwareTextureRead<T extends Dimensionality>(
+/**
+ * Implements a software texture reader. The software version of
+ * textureSample, textureGather, textureLoad, etc...
+ *
+ * T is one of vec1, vec2, vec3, vec4 and defines the coords type of the sampler.
+ *
+ * @param stage is which stage the shader is being used in. This is because
+ *   on some GPUs, different stages have different inter-mip level blending.
+ * @param call is the specific call (textureLoad, textureSample) and all of its parameters.
+ * @param softwareTexture is the collection of TexelViews, one per mip level, as well
+ *    as GPUTextureDescriptor, GPUTextureViewDescriptor so we can figure out how to read the
+ *    texture.
+ * @param sampler is an optional GPUSamplerDescriptor for how to sample the texture
+ *    used for those texture builtins that require a sampler.
+ *
+ * @returns an RGBA PerTexelComponent<number> texel. It's RGBA even for texture_depth_???
+ */
+export function softwareTextureRead<T extends Dimensionality>(
   t: GPUTest,
   stage: ShaderStage,
   call: TextureCall<T>,
