@@ -1,9 +1,12 @@
 export const description = `
 Interface matching between vertex and fragment shader validation for createRenderPipeline.
+
+See also tests in webgpu:api,validation,capability_checks,limits,maxInterStageShaderVariables:*
+which test setting the limit to different values (but don't test all the cases here).
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { hasFeature, range, unreachable } from '../../../../common/util/util.js';
+import { assert, hasFeature, range, unreachable } from '../../../../common/util/util.js';
 import { GPUTestSubcaseBatchState } from '../../../gpu_test.js';
 import * as vtu from '../validation_test_utils.js';
 
@@ -260,17 +263,28 @@ g.test('max_shader_variable_location')
   .params(u =>
     u
       .combine('isAsync', [false, true])
-      // User defined variable location = maxInterStageShaderVariables + locationDelta
-      .combine('locationDelta', [0, -1, -2])
+      .beginSubcases()
+      .combine('useInFragment', [false, true])
+      .combine('overLimit', [false, true])
   )
   .fn(t => {
-    const { isAsync, locationDelta } = t.params;
+    const { isAsync, useInFragment, overLimit } = t.params;
     const maxInterStageShaderVariables = t.device.limits.maxInterStageShaderVariables;
-    const location = maxInterStageShaderVariables + locationDelta;
+    const location = maxInterStageShaderVariables - 1 + (overLimit ? 1 : 0);
+
+    // Extra varying so fragment always has at least one thing in its input struct.
+    assert(location > 0);
+    const varying0 = `@location(${location - 1}) varying0: f32`;
 
     const descriptor = t.getDescriptorWithStates(
-      t.getVertexStateWithOutputs([`@location(${location}) vout0: f32`]),
-      t.getFragmentStateWithInputs([`@location(${location}) fin0: f32`])
+      t.getVertexStateWithOutputs([
+        varying0, //
+        `@location(${location}) varying1: f32`,
+      ]),
+      t.getFragmentStateWithInputs([
+        varying0,
+        ...(useInFragment ? [`@location(${location}) varying1: f32`] : []),
+      ])
     );
 
     vtu.doCreateRenderPipelineTest(t, isAsync, location < maxInterStageShaderVariables, descriptor);
@@ -282,30 +296,30 @@ g.test('max_variables_count,output')
     variables.`
   )
   .params(u =>
-    u.combine('isAsync', [false, true]).combineWithParams([
-      // Number of user-defined output variables in test shader =
-      //     device.limits.maxInterStageShaderVariables + numVariablesDelta
-      { numVariablesDelta: 0, topology: 'triangle-list', _success: true },
-      { numVariablesDelta: 1, topology: 'triangle-list', _success: false },
-      { numVariablesDelta: 0, topology: 'point-list', _success: false },
-      { numVariablesDelta: -1, topology: 'point-list', _success: true },
-    ] as const)
+    u
+      .combine('isAsync', [false, true])
+      .combine('topology', ['triangle-list', 'line-list', 'point-list'] as const)
+      .beginSubcases()
+      .combine('useAllInFragment', [false, true])
+      .combine('overLimit', [false, true])
   )
   .fn(t => {
-    const { isAsync, numVariablesDelta, topology, _success } = t.params;
+    const { isAsync, topology, useAllInFragment, overLimit } = t.params;
 
-    const numVec4 = t.device.limits.maxInterStageShaderVariables + numVariablesDelta;
+    const maxUserDefinedOutputs =
+      t.device.limits.maxInterStageShaderVariables + (topology === 'point-list' ? -1 : 0);
+    const numVec4 = maxUserDefinedOutputs + (overLimit ? 1 : 0);
 
-    const outputs = range(numVec4, i => `@location(${i}) vout${i}: vec4<f32>`);
-    const inputs = range(numVec4, i => `@location(${i}) fin${i}: vec4<f32>`);
+    const varyings = range(numVec4, i => `@location(${i}) varying${i}: vec4<f32>`);
 
     const descriptor = t.getDescriptorWithStates(
-      t.getVertexStateWithOutputs(outputs),
-      t.getFragmentStateWithInputs(inputs)
+      t.getVertexStateWithOutputs(varyings),
+      t.getFragmentStateWithInputs(useAllInFragment ? varyings : [varyings[0]])
     );
     descriptor.primitive = { topology };
 
-    vtu.doCreateRenderPipelineTest(t, isAsync, _success, descriptor);
+    const success = !overLimit;
+    vtu.doCreateRenderPipelineTest(t, isAsync, success, descriptor);
   });
 
 g.test('max_variables_count,input')
@@ -350,14 +364,14 @@ g.test('max_variables_count,input')
         unreachable();
     }
 
-    const numVec4 =
-      t.device.limits.maxInterStageShaderVariables - inputs.length + (overLimit ? 1 : 0);
+    const maxUserDefinedInputs = t.device.limits.maxInterStageShaderVariables - inputs.length;
+    const numVec4 = maxUserDefinedInputs + (overLimit ? 1 : 0);
 
-    const outputs = range(numVec4, i => `@location(${i}) vout${i}: vec4<f32>`);
+    const varyings = range(numVec4, i => `@location(${i}) varying${i}: vec4<f32>`);
     inputs.push(...range(numVec4, i => `@location(${i}) fin${i}: vec4<f32>`));
 
     const descriptor = t.getDescriptorWithStates(
-      t.getVertexStateWithOutputs(outputs),
+      t.getVertexStateWithOutputs(varyings),
       t.getFragmentStateWithInputs(inputs, true)
     );
 
