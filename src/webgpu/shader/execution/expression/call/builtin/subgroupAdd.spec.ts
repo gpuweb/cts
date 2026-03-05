@@ -23,6 +23,7 @@ import {
 import { FP } from '../../../../../util/floating_point.js';
 
 import {
+  idFromQuadId,
   kDataSentinel,
   kNumCases,
   kStride,
@@ -362,14 +363,19 @@ fn main(
 // Max subgroup size is 128.
 const kMaxSize = 128;
 
+interface Coord {
+  row: number;
+  col: number;
+}
+
 /**
  * Checks subgroup addition results in fragment shaders
  *
- * Avoid subgroups with invocations in the last row or column to avoid helper invocations.
  * @param data The framebuffer results
  *             * Component 0 is the addition result
  *             * Component 1 is the subgroup_invocation_id
  *             * Component 2 is a unique generated subgroup_id
+ *             * Component 3 is the quad invocation id
  * @param op The type of subgroup addition
  * @param format The framebuffer format
  * @param width The framebuffer width
@@ -384,90 +390,126 @@ function checkFragment(
 ): Error | undefined {
   const { uintsPerRow, uintsPerTexel } = getUintsPerFramebuffer(format, width, height);
 
-  // Determine if the subgroup should be included in the checks.
-  const inBounds = new Map<number, boolean>();
+  // First collect each subgroups pixels.
+  const subgroupMapping = new Map<number, Array<Coord>>();
   for (let row = 0; row < height; row++) {
     for (let col = 0; col < width; col++) {
       const offset = uintsPerRow * row + col * uintsPerTexel;
       const subgroup_id = data[offset + 2];
       if (subgroup_id === 0) {
-        return new Error(`Internal error: helper invocation at (${col}, ${row})`);
+        return new Error(`Internal error: no subgroup id at (${col}, ${row})`);
       }
 
-      let ok = inBounds.get(subgroup_id) ?? true;
-      ok = ok && row !== height - 1 && col !== width - 1;
-      inBounds.set(subgroup_id, ok);
+      const subgroup = subgroupMapping.get(subgroup_id) ?? new Array<Coord>();
+      subgroup.push({ row, col });
+      subgroupMapping.set(subgroup_id, subgroup);
     }
   }
 
-  let anyInBounds = false;
-  for (const [_, value] of inBounds) {
-    const ok = Boolean(value);
-    anyInBounds = anyInBounds || ok;
-  }
-  if (!anyInBounds) {
-    // This variant would not reliably test behavior.
-    return undefined;
-  }
+  // We need to calculate with and without helpers until we can determine
+  // whether or not the implementation includes helper invocations in subgroup
+  // operations.
+  let includeHelpers: boolean | undefined = undefined;
+  for (const [_, coords] of subgroupMapping) {
+    const noHelpersExpected = new Uint32Array([...iterRange(kMaxSize, x => kIdentity)]);
+    const helpersExpected = new Uint32Array([...iterRange(kMaxSize, x => kIdentity)]);
 
-  // Iteration skips subgroups in the last row or column to avoid helper
-  // invocations because it is not guaranteed whether or not they participate
-  // in the subgroup operation.
-  const expected = new Map<number, Uint32Array>();
-  for (let row = 0; row < height; row++) {
-    for (let col = 0; col < width; col++) {
-      const offset = uintsPerRow * row + col * uintsPerTexel;
-      const subgroup_id = data[offset + 2];
+    // Initialize a grid to track used coordinates. It will be updated with
+    // helper invocations as needed.
+    const grid = new Uint32Array([...iterRange((width + 1) * (height + 1), x => 0)]);
+    for (const coord of coords) {
+      // Note: the grid has a different linearity.
+      grid[coord.row * (width + 1) + coord.col] = 1;
+    }
 
-      if (subgroup_id === 0) {
-        return new Error(`Internal error: helper invocation at (${col}, ${row})`);
-      }
-
-      const subgroupInBounds = inBounds.get(subgroup_id) ?? true;
-      if (!subgroupInBounds) {
-        continue;
-      }
-
+    let hasHelpers: boolean = false;
+    for (const coord of coords) {
+      const offset = uintsPerRow * coord.row + coord.col * uintsPerTexel;
       const id = data[offset + 1];
-      const v =
-        expected.get(subgroup_id) ?? new Uint32Array([...iterRange(kMaxSize, x => kIdentity)]);
-      v[id] = row * width + col;
-      expected.set(subgroup_id, v);
+      const quad_id = data[offset + 3];
+      const linear = coord.row * width + coord.col;
+
+      // Record this pixel value
+      noHelpersExpected[id] = linear;
+      helpersExpected[id] = linear;
+
+      // Determine if the other members of the quad are helpers.
+      // If helpers are part of the quad mark them as found in the grid and
+      // update expectation arrays with appropriate values.
+      // This assumes quads are laid out in 4 consecutive subgroup ids starting from s.
+      // Quad ids      Subgroup ids
+      //  0 | 1         s   | s+1
+      //  -----   ===>  -------
+      //  2 | 3         s+2 | s+3
+      // Note: the grid has a different linearity than in the shader.
+      const rowSwap = (quad_id & 2) === 0 ? 1 : -1;
+      const colSwap = (quad_id & 1) === 0 ? 1 : -1;
+      const gridSwapRow = (coord.row + rowSwap) * (width + 1) + coord.col;
+      const gridSwapCol = coord.row * (width + 1) + coord.col + colSwap;
+      const gridSwapDiag = (coord.row + rowSwap) * (width + 1) + coord.col + colSwap;
+      if (grid[gridSwapRow] === 0) {
+        grid[gridSwapRow] = 1;
+        hasHelpers = true;
+        const r = coord.row + rowSwap;
+        const c = coord.col;
+        helpersExpected[idFromQuadId(id, quad_id, 'row')] = r * width + c;
+      }
+      if (grid[gridSwapCol] === 0) {
+        grid[gridSwapCol] = 1;
+        hasHelpers = true;
+        const r = coord.row;
+        const c = coord.col + colSwap;
+        helpersExpected[idFromQuadId(id, quad_id, 'col')] = r * width + c;
+      }
+      if (grid[gridSwapDiag] === 0) {
+        grid[gridSwapDiag] = 1;
+        hasHelpers = true;
+        const r = coord.row + rowSwap;
+        const c = coord.col + colSwap;
+        helpersExpected[idFromQuadId(id, quad_id, 'diag')] = r * width + c;
+      }
     }
-  }
 
-  for (let row = 0; row < height; row++) {
-    for (let col = 0; col < width; col++) {
-      const offset = uintsPerRow * row + col * uintsPerTexel;
-      const subgroup_id = data[offset + 2];
-
-      if (subgroup_id === 0) {
-        return new Error(`Internal error: helper invocation at (${col}, ${row})`);
-      }
-
-      const subgroupInBounds = inBounds.get(subgroup_id) ?? true;
-      if (!subgroupInBounds) {
-        continue;
-      }
-
+    // Now we can check the expected results.
+    // We start from an indeterminate state for whether helpers are included in
+    // subgroup ops, but once we find a definitive answer all future subgroups
+    // must make the same decision to pass.
+    for (const coord of coords) {
+      const offset = uintsPerRow * coord.row + coord.col * uintsPerTexel;
       const res = data[offset];
       const id = data[offset + 1];
-      const v =
-        expected.get(subgroup_id) ?? new Uint32Array([...iterRange(kMaxSize, x => kIdentity)]);
       const bound = op === 'subgroupAdd' ? kMaxSize : op === 'subgroupInclusiveAdd' ? id + 1 : id;
-      let expect = kIdentity;
+      let noHelpers = kIdentity;
+      let helpers = kIdentity;
       for (let i = 0; i < bound; i++) {
-        expect += v[i];
+        noHelpers += noHelpersExpected[i];
+        helpers += helpersExpected[i];
       }
 
-      if (res !== expect) {
-        return new Error(`Row ${row}, col ${col}: incorrect results
-- expected: ${expect}
+      if (includeHelpers === undefined) {
+        if (res !== noHelpers && res !== helpers) {
+          return new Error(`Row ${coord.row}, col ${coord.col}: invalid result
+- expected: ${noHelpers} (without helpers) or ${helpers} (with helpers)
+-      got: ${res}`);
+        }
+
+        // Crystalize the lattice if possible.
+        if (hasHelpers) {
+          includeHelpers = res === helpers;
+        } else if (helpers !== noHelpers) {
+          includeHelpers = res === helpers;
+        }
+      } else if (includeHelpers === true && res !== helpers) {
+        return new Error(`Row ${coord.row}, col ${coord.col}: invalid result (helpers)
+- expected: ${helpers}
+-      got: ${res}`);
+      } else if (includeHelpers === false && res !== noHelpers) {
+        return new Error(`Row ${coord.row}, col ${coord.col}: invalid result (no helpers)
+- expected: ${helpers}
 -      got: ${res}`);
       }
     }
   }
-
   return undefined;
 }
 
@@ -482,12 +524,6 @@ g.test('fragment')
   )
   .fn(async t => {
     t.skipIfDeviceDoesNotHaveFeature('subgroups' as GPUFeatureName);
-    interface SubgroupProperties extends GPUAdapterInfo {
-      subgroupMinSize: number;
-    }
-    const { subgroupMinSize } = t.device.adapterInfo as SubgroupProperties;
-    const innerTexels = (t.params.size[0] - 1) * (t.params.size[1] - 1);
-    t.skipIf(innerTexels < subgroupMinSize, 'Too few texels to be reliable');
 
     const fsShader = `
 enable subgroups;
@@ -506,13 +542,15 @@ fn main(
   let linear = u32(pos.x) + u32(pos.y) * ${t.params.size[0]};
   let subgroup_id = subgroupBroadcastFirst(linear + 1);
 
-  // Filter out possible helper invocations.
-  let x_in_range = u32(pos.x) < (${t.params.size[0]} - 1);
-  let y_in_range = u32(pos.y) < (${t.params.size[1]} - 1);
-  let in_range = x_in_range && y_in_range;
+  // Which pixel in the quad am I?
+  let swap_x = quadSwapX(pos.x);
+  let swap_y = quadSwapY(pos.y);
+  let left = select(1u, 0u, pos.x < swap_x);
+  let top = select(1u, 0u, pos.y < swap_y);
+  let quad_id = left | (top << 1);
 
-  let value = select(${kIdentity}, linear, in_range);
-  return vec4u(${t.params.op}(value), id, subgroup_id, 0);
+  let value = linear;
+  return vec4u(${t.params.op}(value), id, subgroup_id, quad_id);
 };`;
 
     await runFragmentTest(
