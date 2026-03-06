@@ -2040,6 +2040,7 @@
   "webgpu:shader,execution,stage:basic_compute:*": { "subcaseMS": 1.000 },
   "webgpu:shader,execution,stage:basic_render:*": { "subcaseMS": 1.000 },
   "webgpu:shader,execution,statement,compound:decl:*": { "subcaseMS": 29.767 },
+  "webgpu:shader,execution,statement,compound:eval_order:*": { "subcaseMS": 54.311 },
   "webgpu:shader,execution,statement,discard:all:*": { "subcaseMS": 36.094 },
   "webgpu:shader,execution,statement,discard:continuing:*": { "subcaseMS": 276.268 },
   "webgpu:shader,execution,statement,discard:derivatives:*": { "subcaseMS": 15.287 },
