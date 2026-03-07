@@ -425,7 +425,6 @@ export async function runComputeTest(
   t.expectOK(checkFunction(metadata, output));
 }
 
-// Minimum size is [3, 3].
 export const kFramebufferSizes = [
   [15, 15],
   [16, 16],
@@ -438,8 +437,25 @@ export const kFramebufferSizes = [
   [3, 35],
   [53, 13],
   [13, 53],
-  [3, 3],
 ] as const;
+
+/**
+ * Returns the quad invocation id for a particular swap
+ *
+ * @param id The subgroup invocation id
+ * @param quad_id The quad invocatoin id
+ * @param dir The swap direction
+ */
+export function idFromQuadId(id: number, quad_id: number, dir: 'row' | 'col' | 'diag'): number {
+  const base_id = id - quad_id;
+  if (dir === 'col') {
+    return base_id + (quad_id ^ 1);
+  } else if (dir === 'row') {
+    return base_id + (quad_id ^ 2);
+  } else {
+    return base_id + (quad_id ^ 3);
+  }
+}
 
 /**
  * Returns the number of uints per row and per texel in the framebuffer
@@ -496,8 +512,6 @@ fn vsMain(@builtin(vertex_index) index : u32) -> @builtin(position) vec4f {
   return vec4f(vec2f(vertices[index]), 0, 1);
 }`;
 
-  assert(width >= 3, 'Minimum width is 3');
-  assert(height >= 3, 'Minimum height is 3');
   const pipeline = t.device.createRenderPipeline({
     layout: 'auto',
     vertex: {
