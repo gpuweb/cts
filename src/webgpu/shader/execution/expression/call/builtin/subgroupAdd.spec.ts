@@ -368,6 +368,10 @@ interface Coord {
   col: number;
 }
 
+function inBounds(width: number, height: number, row: number, col: number): boolean {
+  return row < height && col < width;
+}
+
 /**
  * Checks subgroup addition results in fragment shaders
  *
@@ -416,10 +420,12 @@ function checkFragment(
 
     // Initialize a grid to track used coordinates. It will be updated with
     // helper invocations as needed.
-    const grid = new Uint32Array([...iterRange((width + 1) * (height + 1), x => 0)]);
+    const grid = new Array(height);
+    for (let i = 0; i < height; i++) {
+      grid[i] = new Uint32Array([...iterRange(width, x => 0)]);
+    }
     for (const coord of coords) {
-      // Note: the grid has a different linearity.
-      grid[coord.row * (width + 1) + coord.col] = 1;
+      grid[coord.row][coord.col] = 1;
     }
 
     let hasHelpers: boolean = false;
@@ -441,32 +447,26 @@ function checkFragment(
       //  0 | 1         s   | s+1
       //  -----   ===>  -------
       //  2 | 3         s+2 | s+3
-      // Note: the grid has a different linearity than in the shader.
       const rowSwap = (quad_id & 2) === 0 ? 1 : -1;
       const colSwap = (quad_id & 1) === 0 ? 1 : -1;
-      const gridSwapRow = (coord.row + rowSwap) * (width + 1) + coord.col;
-      const gridSwapCol = coord.row * (width + 1) + coord.col + colSwap;
-      const gridSwapDiag = (coord.row + rowSwap) * (width + 1) + coord.col + colSwap;
-      if (grid[gridSwapRow] === 0) {
-        grid[gridSwapRow] = 1;
+      const r = coord.row;
+      const c = coord.col;
+      const rs = coord.row + rowSwap;
+      const cs = coord.col + colSwap;
+      if (inBounds(width, height, rs, c) && grid[rs][c] === 0) {
+        grid[rs][c] = 1;
         hasHelpers = true;
-        const r = coord.row + rowSwap;
-        const c = coord.col;
-        helpersExpected[idFromQuadId(id, quad_id, 'row')] = r * width + c;
+        helpersExpected[idFromQuadId(id, quad_id, 'row')] = rs * width + c;
       }
-      if (grid[gridSwapCol] === 0) {
-        grid[gridSwapCol] = 1;
+      if (inBounds(width, height, r, cs) && grid[r][cs] === 0) {
+        grid[r][cs] = 1;
         hasHelpers = true;
-        const r = coord.row;
-        const c = coord.col + colSwap;
-        helpersExpected[idFromQuadId(id, quad_id, 'col')] = r * width + c;
+        helpersExpected[idFromQuadId(id, quad_id, 'col')] = r * width + cs;
       }
-      if (grid[gridSwapDiag] === 0) {
-        grid[gridSwapDiag] = 1;
+      if (inBounds(width, height, rs, cs) && grid[rs][cs] === 0) {
+        grid[rs][cs] = 1;
         hasHelpers = true;
-        const r = coord.row + rowSwap;
-        const c = coord.col + colSwap;
-        helpersExpected[idFromQuadId(id, quad_id, 'diag')] = r * width + c;
+        helpersExpected[idFromQuadId(id, quad_id, 'diag')] = rs * width + cs;
       }
     }
 
@@ -549,7 +549,12 @@ fn main(
   let top = select(1u, 0u, pos.y < swap_y);
   let quad_id = left | (top << 1);
 
-  let value = linear;
+  // Filter out values outside the framebuffer
+  let x_in_range = select(false, true, u32(pos.x) < ${t.params.size[0]});
+  let y_in_range = select(false, true, u32(pos.y) < ${t.params.size[1]});
+  let in_range = x_in_range && y_in_range;
+
+  let value = select(0u, linear, in_range);
   return vec4u(${t.params.op}(value), id, subgroup_id, quad_id);
 };`;
 
