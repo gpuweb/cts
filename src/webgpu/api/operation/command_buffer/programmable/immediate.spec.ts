@@ -46,7 +46,7 @@ function createPipeline(
   t: AllFeaturesMaxLimitsGPUTest,
   encoderType: ProgrammableEncoderType,
   wgslDecl: string,
-  wgslUsage: string,
+  copyCode: string,
   immediateSize: number
 ) {
   const layout = t.device.createPipelineLayout({
@@ -74,7 +74,13 @@ function createPipeline(
     @group(0) @binding(0) var<storage, read_write> output: array<u32>;
     @group(0) @binding(1) var<uniform> outIndex: u32;
 
-    ${wgslUsage}
+    @compute @workgroup_size(1) fn cs_main() {
+      ${copyCode}
+    }
+    @fragment fn fs_main() -> @location(0) vec4u {
+      ${copyCode}
+      return vec4u(0);
+    }
   `;
 
   if (encoderType === 'compute pass') {
@@ -82,7 +88,6 @@ function createPipeline(
       layout,
       compute: {
         module: t.device.createShaderModule({ code: fullCode }),
-        entryPoint: 'cs_main',
       },
     });
   } else {
@@ -92,20 +97,16 @@ function createPipeline(
         module: t.device.createShaderModule({
           code: `
             @vertex fn vs_main(@builtin(vertex_index) vIdx: u32) -> @builtin(position) vec4f {
-              // Map vIdx 0..3 to pixel centers.
-              // Uses a 4x1 texture.
-              // vIdx 0 -> pixel 0 -> x in [-1, -0.5]
-              // vIdx 1 -> pixel 1 -> x in [-0.5, 0]
+              // Map vIdx 0..3 to pixel centers in a 4x1 render target.
+              // firstVertex selects which pixel to render to.
               let x = (f32(vIdx) + 0.5) / 2.0 - 1.0;
               return vec4f(x, 0.0, 0.0, 1.0);
             }
           `,
         }),
-        entryPoint: 'vs_main',
       },
       fragment: {
         module: t.device.createShaderModule({ code: fullCode }),
-        entryPoint: 'fs_main',
         targets: [{ format: 'r32uint' }],
       },
       primitive: {
@@ -115,7 +116,35 @@ function createPipeline(
   }
 }
 
-function executePass(
+/** Dispatch or draw based on encoder type. firstVertex selects the output pixel for render passes. */
+function dispatchOrDraw(
+  encoderType: ProgrammableEncoderType,
+  encoder: GPUComputePassEncoder | GPURenderPassEncoder | GPURenderBundleEncoder,
+  firstVertex: number = 0
+) {
+  if (encoderType === 'compute pass') {
+    (encoder as GPUComputePassEncoder).dispatchWorkgroups(1);
+  } else {
+    (encoder as GPURenderPassEncoder | GPURenderBundleEncoder).draw(1, 1, firstVertex, 0);
+  }
+}
+
+/** Create a uniform buffer with output indices at 256-byte aligned offsets for dynamic binding. */
+function createOutputIndexBuffer(t: AllFeaturesMaxLimitsGPUTest, count: number): GPUBuffer {
+  const buffer = t.createBufferTracked({
+    size: 256 * count,
+    usage: GPUBufferUsage.UNIFORM,
+    mappedAtCreation: true,
+  });
+  const data = new Uint32Array(buffer.getMappedRange());
+  for (let i = 0; i < count; i++) {
+    data[(i * 256) / 4] = i;
+  }
+  buffer.unmap();
+  return buffer;
+}
+
+function encodeForPassType(
   t: AllFeaturesMaxLimitsGPUTest,
   encoderType: ProgrammableEncoderType,
   commandEncoder: GPUCommandEncoder,
@@ -179,21 +208,11 @@ function runAndCheck(
   expectedValues: number[]
 ) {
   const outputBuffer = t.createBufferTracked({
-    size: 4 * 4, // 4 u32s
+    size: expectedValues.length * 4,
     usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
   });
-  const indexUniformBuffer = t.createBufferTracked({
-    size: 256 * 4, // Enough for dynamic offsets
-    usage: GPUBufferUsage.UNIFORM,
-    mappedAtCreation: true,
-  });
-  // Initialize indices 0, 1, 2, 3 at offsets 0, 256, 512, 768
-  const indexData = new Uint32Array(indexUniformBuffer.getMappedRange());
-  indexData[0] = 0;
-  indexData[256 / 4] = 1;
-  indexData[512 / 4] = 2;
-  indexData[768 / 4] = 3;
-  indexUniformBuffer.unmap();
+  // Simple uniform for outIndex = 0. Dynamic offset is always [0].
+  const indexUniformBuffer = t.makeBufferWithContents(new Uint32Array([0]), GPUBufferUsage.UNIFORM);
 
   const bindGroup = t.device.createBindGroup({
     layout: pipeline.getBindGroupLayout(0),
@@ -204,28 +223,17 @@ function runAndCheck(
   });
 
   const commandEncoder = t.device.createCommandEncoder();
-  executePass(t, encoderType, commandEncoder, encoder => {
+  encodeForPassType(t, encoderType, commandEncoder, encoder => {
     if (encoderType === 'compute pass') {
-      const pass = encoder as GPUComputePassEncoder;
-      pass.setPipeline(pipeline as GPUComputePipeline);
-      pass.setBindGroup(0, bindGroup, [0]); // Index 0
-      setImmediatesFn(pass);
-      pass.dispatchWorkgroups(1);
-    } else if (encoderType === 'render pass') {
-      const pass = encoder as GPURenderPassEncoder;
-      pass.setPipeline(pipeline as GPURenderPipeline);
-      pass.setBindGroup(0, bindGroup, [0]);
-      setImmediatesFn(pass);
-      pass.draw(1, 1, 0, 0); // Vertex 0 -> Pixel 0
-    } else if (encoderType === 'render bundle') {
-      const bundleEncoder = encoder as GPURenderBundleEncoder;
-      bundleEncoder.setPipeline(pipeline as GPURenderPipeline);
-      bundleEncoder.setBindGroup(0, bindGroup, [0]);
-      setImmediatesFn(bundleEncoder);
-      bundleEncoder.draw(1, 1, 0, 0);
+      (encoder as GPUComputePassEncoder).setPipeline(pipeline as GPUComputePipeline);
     } else {
-      unreachable();
+      (encoder as GPURenderPassEncoder | GPURenderBundleEncoder).setPipeline(
+        pipeline as GPURenderPipeline
+      );
     }
+    encoder.setBindGroup(0, bindGroup, [0]);
+    setImmediatesFn(encoder);
+    dispatchOrDraw(encoderType, encoder);
   });
 
   t.device.queue.submit([commandEncoder.finish()]);
@@ -260,7 +268,7 @@ g.test('basic_execution')
     t.skipIfStorageBuffersInFragmentStageNotAvailable(encoderType);
 
     let wgslDecl = '';
-    let wgslUsage = '';
+    let copyCode = '';
     let immediateSize = 0;
     let expected: number[] = [];
     let inputData: Uint32Array;
@@ -271,15 +279,7 @@ g.test('basic_execution')
         struct S { a: u32, b: u32 }
         var<immediate> data: S;
       `;
-      wgslUsage = `
-        @compute @workgroup_size(1) fn cs_main() {
-          output[0] = data.a; output[1] = data.b;
-        }
-        @fragment fn fs_main() -> @location(0) vec4u {
-          output[0] = data.a; output[1] = data.b;
-          return vec4u(0);
-        }
-      `;
+      copyCode = 'output[0] = data.a; output[1] = data.b;';
       inputData = new Uint32Array([0xdeadbeef, 0xcafebabe]);
       expected = [0xdeadbeef, 0xcafebabe];
     } else {
@@ -290,24 +290,13 @@ g.test('basic_execution')
       immediateSize = vSize * 4;
       wgslDecl = `var<immediate> data: ${dataType};`;
 
+      // bitcast<u32> is identity for u32, so we can use it unconditionally.
       let readCode = '';
       for (let i = 0; i < vSize; i++) {
-        let valExpr = vSize === 1 ? 'data' : `data[${i}]`;
-        if (sType === 'i32' || sType === 'f32') {
-          valExpr = `bitcast<u32>(${valExpr})`;
-        }
-        readCode += `output[${i}] = ${valExpr};`;
+        const valExpr = vSize === 1 ? 'data' : `data[${i}]`;
+        readCode += `output[${i}] = bitcast<u32>(${valExpr});\n`;
       }
-
-      wgslUsage = `
-        @compute @workgroup_size(1) fn cs_main() {
-          ${readCode}
-        }
-        @fragment fn fs_main() -> @location(0) vec4u {
-          ${readCode}
-          return vec4u(0);
-        }
-      `;
+      copyCode = readCode;
 
       inputData = new Uint32Array(vSize);
       for (let i = 0; i < vSize; i++) {
@@ -329,14 +318,14 @@ g.test('basic_execution')
       }
     }
 
-    const pipeline = createPipeline(t, encoderType, wgslDecl, wgslUsage, immediateSize);
+    const pipeline = createPipeline(t, encoderType, wgslDecl, copyCode, immediateSize);
 
     runAndCheck(
       t,
       encoderType,
       pipeline,
       encoder => {
-        encoder.setImmediates!(0, inputData.buffer, 0, inputData.buffer.byteLength);
+        encoder.setImmediates!(0, inputData, 0, inputData.length);
       },
       expected
     );
@@ -350,41 +339,22 @@ g.test('update_data')
     t.skipIfStorageBuffersInFragmentStageNotAvailable(encoderType);
     const immediateSize = 16;
     const wgslDecl = 'var<immediate> data: vec4<u32>;';
-    const wgslUsage = `
-      @compute @workgroup_size(1) fn cs_main() {
-        let base = outIndex * 4;
-        output[base + 0] = data[0];
-        output[base + 1] = data[1];
-        output[base + 2] = data[2];
-        output[base + 3] = data[3];
-      }
-      @fragment fn fs_main() -> @location(0) vec4u {
-        let base = outIndex * 4;
-        output[base + 0] = data[0];
-        output[base + 1] = data[1];
-        output[base + 2] = data[2];
-        output[base + 3] = data[3];
-        return vec4u(0);
-      }
+    const copyCode = `
+      let base = outIndex * 4;
+      output[base + 0] = data[0];
+      output[base + 1] = data[1];
+      output[base + 2] = data[2];
+      output[base + 3] = data[3];
     `;
 
-    const pipeline = createPipeline(t, encoderType, wgslDecl, wgslUsage, immediateSize);
+    const pipeline = createPipeline(t, encoderType, wgslDecl, copyCode, immediateSize);
 
     const outputBuffer = t.createBufferTracked({
       size: 4 * 4 * 3, // 3 steps, 4 u32s each
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
     });
 
-    const indexUniformBuffer = t.createBufferTracked({
-      size: 256 * 3,
-      usage: GPUBufferUsage.UNIFORM,
-      mappedAtCreation: true,
-    });
-    const indexData = new Uint32Array(indexUniformBuffer.getMappedRange());
-    indexData[0] = 0;
-    indexData[256 / 4] = 1;
-    indexData[512 / 4] = 2;
-    indexUniformBuffer.unmap();
+    const indexUniformBuffer = createOutputIndexBuffer(t, 3);
 
     const bindGroup = t.device.createBindGroup({
       layout: pipeline.getBindGroupLayout(0),
@@ -396,6 +366,7 @@ g.test('update_data')
 
     const commandEncoder = t.device.createCommandEncoder();
 
+    /** Set bind group with dynamic offset for output index, set immediates, and dispatch/draw. */
     const runStep = (
       pass: GPURenderPassEncoder | GPUComputePassEncoder | GPURenderBundleEncoder,
       stepIndex: number,
@@ -404,23 +375,16 @@ g.test('update_data')
     ) => {
       pass.setBindGroup(0, bindGroup, [stepIndex * 256]);
       pass.setImmediates!(dstOffset, data, 0, data.length);
-
-      if (encoderType === 'compute pass') {
-        (pass as GPUComputePassEncoder).dispatchWorkgroups(1);
-      } else if (encoderType === 'render pass') {
-        (pass as GPURenderPassEncoder).draw(1, 1, 0, 0);
-      } else {
-        (pass as GPURenderBundleEncoder).draw(1, 1, 0, 0);
-      }
+      dispatchOrDraw(encoderType, pass);
     };
 
-    executePass(t, encoderType, commandEncoder, enc => {
+    encodeForPassType(t, encoderType, commandEncoder, enc => {
       if (encoderType === 'compute pass') {
         (enc as GPUComputePassEncoder).setPipeline(pipeline as GPUComputePipeline);
-      } else if (encoderType === 'render pass') {
-        (enc as GPURenderPassEncoder).setPipeline(pipeline as GPURenderPipeline);
       } else {
-        (enc as GPURenderBundleEncoder).setPipeline(pipeline as GPURenderPipeline);
+        (enc as GPURenderPassEncoder | GPURenderBundleEncoder).setPipeline(
+          pipeline as GPURenderPipeline
+        );
       }
 
       // Step 1: Full set [1, 2, 3, 4]
@@ -442,166 +406,100 @@ g.test('update_data')
 g.test('pipeline_switch')
   .desc(
     `Verify immediate data is correctly set after switching pipelines.
-    - compatible: Both pipelines use the same immediateSize (same layout).
-    - incompatible: Pipelines use different immediateSize values (different layouts).
-    In both cases, immediates must be reset correctly between draws/dispatches.`
+    - sameImmediateSize=true: Both pipelines use the same immediateSize.
+    - sameImmediateSize=false: Pipelines use different immediateSize values.
+    In both cases, immediates must be set correctly between draws/dispatches.`
   )
   .params(u =>
     u
       .combine('encoderType', ['render pass', 'compute pass'] as const)
-      .combine('compatibility', ['compatible', 'incompatible'] as const)
+      .combine('sameImmediateSize', [true, false] as const)
   )
   .fn(t => {
-    const { encoderType, compatibility } = t.params;
+    const { encoderType, sameImmediateSize } = t.params;
     t.skipIfStorageBuffersInFragmentStageNotAvailable(encoderType);
 
     // Pipeline A always uses vec4<u32> (16 bytes).
     const wgslDeclA = 'var<immediate> data: vec4<u32>;';
-    const wgslUsageA = `
-      @compute @workgroup_size(1) fn cs_main() {
-        let base = outIndex * 4;
-        output[base] = data.x; output[base+1] = data.y; output[base+2] = data.z; output[base+3] = data.w;
-      }
-      @fragment fn fs_main() -> @location(0) vec4u {
-        let base = outIndex * 4;
-        output[base] = data.x; output[base+1] = data.y; output[base+2] = data.z; output[base+3] = data.w;
-        return vec4u(0);
-      }
-      `;
+    const copyCodeA = `
+      let base = outIndex * 4;
+      output[base] = data.x; output[base+1] = data.y; output[base+2] = data.z; output[base+3] = data.w;
+    `;
 
     let wgslDeclB: string;
-    let wgslUsageB: string;
+    let copyCodeB: string;
     let immediateSizeB: number;
 
-    if (compatibility === 'compatible') {
+    if (sameImmediateSize) {
       // Pipeline B has the same immediate layout as A (vec4<u32>, 16 bytes).
       wgslDeclB = wgslDeclA;
-      wgslUsageB = wgslUsageA;
+      copyCodeB = copyCodeA;
       immediateSizeB = 16;
     } else {
       // Pipeline B uses vec2<u32> (8 bytes) — different/incompatible layout.
       wgslDeclB = 'var<immediate> data: vec2<u32>;';
-      wgslUsageB = `
-        @compute @workgroup_size(1) fn cs_main() {
-          let base = outIndex * 4;
-          output[base] = data.x; output[base+1] = data.y; output[base+2] = 0u; output[base+3] = 0u;
-        }
-        @fragment fn fs_main() -> @location(0) vec4u {
-          let base = outIndex * 4;
-          output[base] = data.x; output[base+1] = data.y; output[base+2] = 0u; output[base+3] = 0u;
-          return vec4u(0);
-        }
-        `;
+      copyCodeB = `
+        let base = outIndex * 4;
+        output[base] = data.x; output[base+1] = data.y; output[base+2] = 0u; output[base+3] = 0u;
+      `;
       immediateSizeB = 8;
     }
 
-    const pipelineA = createPipeline(t, encoderType, wgslDeclA, wgslUsageA, 16);
-    const pipelineB = createPipeline(t, encoderType, wgslDeclB, wgslUsageB, immediateSizeB);
+    const pipelineA = createPipeline(t, encoderType, wgslDeclA, copyCodeA, 16);
+    const pipelineB = createPipeline(t, encoderType, wgslDeclB, copyCodeB, immediateSizeB);
 
     const outputBuffer = t.createBufferTracked({
       size: 32,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
     });
-    const indexUniformBuffer = t.createBufferTracked({
-      size: 512,
-      usage: GPUBufferUsage.UNIFORM,
-      mappedAtCreation: true,
-    });
-    const indexData = new Uint32Array(indexUniformBuffer.getMappedRange());
-    indexData[0] = 0;
-    indexData[256 / 4] = 1;
-    indexUniformBuffer.unmap();
+    const indexUniformBuffer = createOutputIndexBuffer(t, 2);
 
-    const bindGroupA = t.device.createBindGroup({
+    // Use a single bind group. Both pipelines have the same bind group layout,
+    // so the same bind group is compatible with both. This verifies that
+    // previously bound descriptor sets remain valid after a pipeline switch
+    // (important for Vulkan correctness).
+    const bindGroup = t.device.createBindGroup({
       layout: pipelineA.getBindGroupLayout(0),
       entries: [
         { binding: 0, resource: { buffer: outputBuffer } },
         { binding: 1, resource: { buffer: indexUniformBuffer, size: 4 } },
       ],
     });
-    const bindGroupB = t.device.createBindGroup({
-      layout: pipelineB.getBindGroupLayout(0),
-      entries: [
-        { binding: 0, resource: { buffer: outputBuffer } },
-        { binding: 1, resource: { buffer: indexUniformBuffer, size: 4 } },
-      ],
-    });
+
+    const immA = new Uint32Array([1, 2, 3, 4]);
+    const immB = sameImmediateSize ? new Uint32Array([1, 2, 3, 4]) : new Uint32Array([1, 2]);
 
     const commandEncoder = t.device.createCommandEncoder();
+    encodeForPassType(t, encoderType, commandEncoder, enc => {
+      // Pipeline A: set immediates [1, 2, 3, 4], dispatch/draw at outIndex 0.
+      if (encoderType === 'compute pass') {
+        (enc as GPUComputePassEncoder).setPipeline(pipelineA as GPUComputePipeline);
+      } else {
+        (enc as GPURenderPassEncoder).setPipeline(pipelineA as GPURenderPipeline);
+      }
+      enc.setBindGroup(0, bindGroup, [0]);
+      enc.setImmediates!(0, immA, 0, immA.length);
+      dispatchOrDraw(encoderType, enc, 0);
 
-    if (compatibility === 'compatible') {
-      executePass(t, encoderType, commandEncoder, enc => {
-        if (encoderType === 'compute pass') {
-          const pass = enc as GPUComputePassEncoder;
-          // 1. Set Pipeline A, set immediates [1, 2, 3, 4], dispatch
-          pass.setPipeline(pipelineA as GPUComputePipeline);
-          pass.setBindGroup(0, bindGroupA, [0]);
-          pass.setImmediates!(0, new Uint32Array([1, 2, 3, 4]), 0, 4);
-          pass.dispatchWorkgroups(1);
+      // Pipeline B: switch pipeline, update dynamic offset for outIndex 1.
+      if (encoderType === 'compute pass') {
+        (enc as GPUComputePassEncoder).setPipeline(pipelineB as GPUComputePipeline);
+      } else {
+        (enc as GPURenderPassEncoder).setPipeline(pipelineB as GPURenderPipeline);
+      }
+      enc.setBindGroup(0, bindGroup, [256]);
+      enc.setImmediates!(0, immB, 0, immB.length);
+      dispatchOrDraw(encoderType, enc, 1);
+    });
 
-          // 2. Switch to Pipeline B (compatible), set new immediates [5, 6, 7, 8], dispatch
-          pass.setPipeline(pipelineB as GPUComputePipeline);
-          pass.setBindGroup(0, bindGroupB, [256]);
-          pass.setImmediates!(0, new Uint32Array([5, 6, 7, 8]), 0, 4);
-          pass.dispatchWorkgroups(1);
-        } else {
-          const pass = enc as GPURenderPassEncoder;
-          // 1. Set Pipeline A, set immediates [1, 2, 3, 4], draw
-          pass.setPipeline(pipelineA as GPURenderPipeline);
-          pass.setBindGroup(0, bindGroupA, [0]);
-          pass.setImmediates!(0, new Uint32Array([1, 2, 3, 4]), 0, 4);
-          pass.draw(1, 1, 0, 0);
+    t.device.queue.submit([commandEncoder.finish()]);
 
-          // 2. Switch to Pipeline B (compatible), set new immediates [5, 6, 7, 8], draw
-          pass.setPipeline(pipelineB as GPURenderPipeline);
-          pass.setBindGroup(0, bindGroupB, [256]);
-          pass.setImmediates!(0, new Uint32Array([5, 6, 7, 8]), 0, 4);
-          pass.draw(1, 1, 1, 0);
-        }
-      });
-
-      t.device.queue.submit([commandEncoder.finish()]);
-
-      const expected = new Uint32Array([1, 2, 3, 4, 5, 6, 7, 8]);
-      t.expectGPUBufferValuesEqual(outputBuffer, expected);
-    } else {
-      // Incompatible: Pipeline A uses 16 bytes, Pipeline B uses 8 bytes.
-      executePass(t, encoderType, commandEncoder, enc => {
-        if (encoderType === 'compute pass') {
-          const pass = enc as GPUComputePassEncoder;
-          // 1. Set Pipeline A (16 bytes), set immediates [1, 2, 3, 4], dispatch
-          pass.setPipeline(pipelineA as GPUComputePipeline);
-          pass.setBindGroup(0, bindGroupA, [0]);
-          pass.setImmediates!(0, new Uint32Array([1, 2, 3, 4]), 0, 4);
-          pass.dispatchWorkgroups(1);
-
-          // 2. Switch to Pipeline B (8 bytes), set new immediates [5, 6], dispatch
-          pass.setPipeline(pipelineB as GPUComputePipeline);
-          pass.setBindGroup(0, bindGroupB, [256]);
-          pass.setImmediates!(0, new Uint32Array([5, 6]), 0, 2);
-          pass.dispatchWorkgroups(1);
-        } else {
-          const pass = enc as GPURenderPassEncoder;
-          // 1. Set Pipeline A (16 bytes), set immediates [1, 2, 3, 4], draw
-          pass.setPipeline(pipelineA as GPURenderPipeline);
-          pass.setBindGroup(0, bindGroupA, [0]);
-          pass.setImmediates!(0, new Uint32Array([1, 2, 3, 4]), 0, 4);
-          pass.draw(1, 1, 0, 0);
-
-          // 2. Switch to Pipeline B (8 bytes), set new immediates [5, 6], draw
-          pass.setPipeline(pipelineB as GPURenderPipeline);
-          pass.setBindGroup(0, bindGroupB, [256]);
-          pass.setImmediates!(0, new Uint32Array([5, 6]), 0, 2);
-          pass.draw(1, 1, 1, 0);
-        }
-      });
-
-      t.device.queue.submit([commandEncoder.finish()]);
-
-      // Pipeline A wrote [1, 2, 3, 4]; Pipeline B wrote [5, 6, 0, 0] (only 2 fields, rest zeroed).
-      const expected = new Uint32Array([1, 2, 3, 4, 5, 6, 0, 0]);
-      t.expectGPUBufferValuesEqual(outputBuffer, expected);
-    }
+    // Pipeline A wrote [1, 2, 3, 4] at outIndex 0.
+    // Pipeline B wrote [1, 2, 3, 4] (same size) or [1, 2, 0, 0] (different size) at outIndex 1.
+    const expected = sameImmediateSize
+      ? new Uint32Array([1, 2, 3, 4, 1, 2, 3, 4])
+      : new Uint32Array([1, 2, 3, 4, 1, 2, 0, 0]);
+    t.expectGPUBufferValuesEqual(outputBuffer, expected);
   });
 
 g.test('use_max_immediate_size')
@@ -619,19 +517,12 @@ g.test('use_max_immediate_size')
       members.push(`m${i}: u32`);
     }
     const wgslDecl = `struct Large { ${members.join(', ')} } var<immediate> data: Large;`;
-    const wgslUsage = `
-      @compute @workgroup_size(1) fn cs_main() {
-        output[0] = data.m0;
-        output[1] = data.m${count - 1};
-      }
-      @fragment fn fs_main() -> @location(0) vec4u {
-        output[0] = data.m0;
-        output[1] = data.m${count - 1};
-        return vec4u(0);
-      }
+    const copyCode = `
+      output[0] = data.m0;
+      output[1] = data.m${count - 1};
     `;
 
-    const pipeline = createPipeline(t, encoderType, wgslDecl, wgslUsage, maxImmediateSize);
+    const pipeline = createPipeline(t, encoderType, wgslDecl, copyCode, maxImmediateSize);
 
     const outputBuffer = t.createBufferTracked({
       size: 8,
@@ -651,24 +542,21 @@ g.test('use_max_immediate_size')
     });
 
     const commandEncoder = t.device.createCommandEncoder();
-    executePass(t, encoderType, commandEncoder, enc => {
+    encodeForPassType(t, encoderType, commandEncoder, enc => {
       const data = new Uint32Array(count);
       data[0] = 0xdeadbeef;
       data[count - 1] = 0xcafebabe;
 
       if (encoderType === 'compute pass') {
-        const pass = enc as GPUComputePassEncoder;
-        pass.setPipeline(pipeline as GPUComputePipeline);
-        pass.setBindGroup(0, bindGroup, [0]);
-        pass.setImmediates!(0, data, 0, count);
-        pass.dispatchWorkgroups(1);
+        (enc as GPUComputePassEncoder).setPipeline(pipeline as GPUComputePipeline);
       } else {
-        const pass = enc as GPURenderPassEncoder | GPURenderBundleEncoder;
-        pass.setPipeline(pipeline as GPURenderPipeline);
-        pass.setBindGroup(0, bindGroup, [0]);
-        pass.setImmediates!(0, data, 0, count);
-        pass.draw(1, 1, 0, 0);
+        (enc as GPURenderPassEncoder | GPURenderBundleEncoder).setPipeline(
+          pipeline as GPURenderPipeline
+        );
       }
+      enc.setBindGroup(0, bindGroup, [0]);
+      enc.setImmediates!(0, data, 0, count);
+      dispatchOrDraw(encoderType, enc);
     });
 
     t.device.queue.submit([commandEncoder.finish()]);
@@ -723,19 +611,12 @@ g.test('typed_array_arguments')
 
     // Shader: read 2 u32s (8 bytes).
     const wgslDecl = 'var<immediate> data: array<u32, 2>;';
-    const wgslUsage = `
-      @compute @workgroup_size(1) fn cs_main() {
-        output[0] = data[0];
-        output[1] = data[1];
-      }
-      @fragment fn fs_main() -> @location(0) vec4u {
-        output[0] = data[0];
-        output[1] = data[1];
-        return vec4u(0);
-      }
+    const copyCode = `
+      output[0] = data[0];
+      output[1] = data[1];
     `;
 
-    const pipeline = createPipeline(t, encoderType, wgslDecl, wgslUsage, 8);
+    const pipeline = createPipeline(t, encoderType, wgslDecl, copyCode, 8);
 
     const outputBuffer = t.createBufferTracked({
       size: 8,
@@ -755,20 +636,17 @@ g.test('typed_array_arguments')
     });
 
     const commandEncoder = t.device.createCommandEncoder();
-    executePass(t, encoderType, commandEncoder, enc => {
+    encodeForPassType(t, encoderType, commandEncoder, enc => {
       if (encoderType === 'compute pass') {
-        const pass = enc as GPUComputePassEncoder;
-        pass.setPipeline(pipeline as GPUComputePipeline);
-        pass.setBindGroup(0, bindGroup, [0]);
-        pass.setImmediates!(0, arr, offset, elementCount);
-        pass.dispatchWorkgroups(1);
+        (enc as GPUComputePassEncoder).setPipeline(pipeline as GPUComputePipeline);
       } else {
-        const pass = enc as GPURenderPassEncoder | GPURenderBundleEncoder;
-        pass.setPipeline(pipeline as GPURenderPipeline);
-        pass.setBindGroup(0, bindGroup, [0]);
-        pass.setImmediates!(0, arr, offset, elementCount);
-        pass.draw(1, 1, 0, 0);
+        (enc as GPURenderPassEncoder | GPURenderBundleEncoder).setPipeline(
+          pipeline as GPURenderPipeline
+        );
       }
+      enc.setBindGroup(0, bindGroup, [0]);
+      enc.setImmediates!(0, arr, offset, elementCount);
+      dispatchOrDraw(encoderType, enc);
     });
 
     t.device.queue.submit([commandEncoder.finish()]);
@@ -788,16 +666,9 @@ g.test('multiple_updates_before_draw_or_dispatch')
     t.skipIfStorageBuffersInFragmentStageNotAvailable(encoderType);
     // Use vec4<u32> to allow partial updates.
     const wgslDecl = 'var<immediate> data: vec4<u32>;';
-    const wgslUsage = `
-      @compute @workgroup_size(1) fn cs_main() {
-        output[0] = data.x; output[1] = data.y; output[2] = data.z; output[3] = data.w;
-      }
-      @fragment fn fs_main() -> @location(0) vec4u {
-        output[0] = data.x; output[1] = data.y; output[2] = data.z; output[3] = data.w;
-        return vec4u(0);
-      }
-    `;
-    const pipeline = createPipeline(t, encoderType, wgslDecl, wgslUsage, 16);
+    const copyCode =
+      'output[0] = data.x; output[1] = data.y; output[2] = data.z; output[3] = data.w;';
+    const pipeline = createPipeline(t, encoderType, wgslDecl, copyCode, 16);
 
     runAndCheck(
       t,
@@ -820,31 +691,20 @@ g.test('render_pass_and_bundle_mix')
   .fn(t => {
     t.skipIfStorageBuffersInFragmentStageNotAvailable('render pass');
     const wgslDecl = 'var<immediate> data: vec2<u32>;';
-    const wgslUsage = `
-      @fragment fn fs_main() -> @location(0) vec4u {
-        let base = outIndex * 2;
-        output[base] = data.x;
-        output[base + 1] = data.y;
-        return vec4u(0);
-      }
+    const copyCode = `
+      let base = outIndex * 2;
+      output[base] = data.x;
+      output[base + 1] = data.y;
     `;
     // Use 'render pass' type to create the pipeline, but it works for bundle too.
     // Immediate size: vec2<u32> = 2 * 4 bytes = 8 bytes.
-    const pipeline = createPipeline(t, 'render pass', wgslDecl, wgslUsage, 8) as GPURenderPipeline;
+    const pipeline = createPipeline(t, 'render pass', wgslDecl, copyCode, 8) as GPURenderPipeline;
 
     const outputBuffer = t.createBufferTracked({
       size: 16,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
     });
-    const indexUniformBuffer = t.createBufferTracked({
-      size: 512,
-      usage: GPUBufferUsage.UNIFORM,
-      mappedAtCreation: true,
-    });
-    const idxData = new Uint32Array(indexUniformBuffer.getMappedRange());
-    idxData[0] = 0;
-    idxData[256 / 4] = 1;
-    indexUniformBuffer.unmap();
+    const indexUniformBuffer = createOutputIndexBuffer(t, 2);
 
     const bindGroup = t.device.createBindGroup({
       layout: pipeline.getBindGroupLayout(0),
@@ -899,29 +759,18 @@ g.test('render_bundle_isolation')
   .fn(t => {
     t.skipIfStorageBuffersInFragmentStageNotAvailable('render bundle');
     const wgslDecl = 'var<immediate> data: vec2<u32>;';
-    const wgslUsage = `
-      @fragment fn fs_main() -> @location(0) vec4u {
-        let base = outIndex * 2;
-        output[base] = data.x;
-        output[base + 1] = data.y;
-        return vec4u(0);
-      }
+    const copyCode = `
+      let base = outIndex * 2;
+      output[base] = data.x;
+      output[base + 1] = data.y;
     `;
-    const pipeline = createPipeline(t, 'render pass', wgslDecl, wgslUsage, 8) as GPURenderPipeline;
+    const pipeline = createPipeline(t, 'render pass', wgslDecl, copyCode, 8) as GPURenderPipeline;
 
     const outputBuffer = t.createBufferTracked({
       size: 16, // 2 draws * 2 u32s * 4 bytes
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
     });
-    const indexUniformBuffer = t.createBufferTracked({
-      size: 512,
-      usage: GPUBufferUsage.UNIFORM,
-      mappedAtCreation: true,
-    });
-    const idxData = new Uint32Array(indexUniformBuffer.getMappedRange());
-    idxData[0] = 0;
-    idxData[256 / 4] = 1;
-    indexUniformBuffer.unmap();
+    const indexUniformBuffer = createOutputIndexBuffer(t, 2);
 
     const bindGroup = t.device.createBindGroup({
       layout: pipeline.getBindGroupLayout(0),
