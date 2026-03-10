@@ -980,4 +980,5 @@ export const kKnownWGSLLanguageFeatures = [
 'texture_and_sampler_let',
 'subgroup_id',
 'subgroup_uniformity',
-'swizzle_assignment'];
+'swizzle_assignment',
+'linear_indexing'];

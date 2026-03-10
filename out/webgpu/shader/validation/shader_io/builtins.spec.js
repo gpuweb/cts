@@ -118,6 +118,20 @@ export const kBuiltins = [
   type: 'u32',
   enable: 'subgroups',
   requires: 'subgroup_id'
+},
+{
+  name: 'workgroup_index',
+  stage: 'compute',
+  io: 'in',
+  type: 'u32',
+  requires: 'linear_indexing'
+},
+{
+  name: 'global_invocation_index',
+  stage: 'compute',
+  io: 'in',
+  type: 'u32',
+  requires: 'linear_indexing'
 }];
 
 
