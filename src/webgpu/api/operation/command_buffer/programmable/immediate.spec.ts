@@ -5,8 +5,10 @@ Operation tests for immediate data usage in RenderPassEncoder, ComputePassEncode
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { getGPU } from '../../../../../common/util/navigator_gpu.js';
 import {
+  assert,
   kTypedArrayBufferViews,
   kTypedArrayBufferViewKeys,
+  memcpy,
   supportsImmediateData,
   unreachable,
 } from '../../../../../common/util/util.js';
@@ -135,8 +137,9 @@ function dispatchOrDraw(
 
 /**
  * Create a uniform buffer with output indices at 256-byte aligned offsets for dynamic binding.
- * This is used instead of other mechanisms to provide an output index (like firstVertex or immediates)
- * because it works across all shader stages without consuming the immediate data capability that we are actively testing.
+ * A uniform buffer with dynamic offsets is used to provide the output index because:
+ *  1. It works uniformly across all shader stages (compute, vertex, fragment).
+ *  2. It doesn't consume the immediate data capability that these tests are actively exercising.
  */
 function createOutputIndexBuffer(t: AllFeaturesMaxLimitsGPUTest, count: number): GPUBuffer {
   const buffer = t.createBufferTracked({
@@ -229,11 +232,18 @@ function runAndCheck(
   ) => void,
   expectedValues: number[]
 ) {
+  assert(expectedValues.length > 0, 'expectedValues must not be empty');
   const outputBuffer = t.createBufferTracked({
     size: expectedValues.length * 4,
     usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
   });
-  // Simple uniform for outIndex = 0. Dynamic offset is always [0].
+  // A dynamic-offset uniform buffer supplies outIndex = 0 here.
+  // We use a uniform buffer (rather than e.g. firstVertex via @builtin(vertex_index)) because:
+  //  - It works across all shader stages (compute, vertex, fragment).
+  //  - firstVertex is emulated via root constants on D3D12, which is the same mechanism
+  //    backing var<immediate>, so using it could mask bugs in the path under test.
+  // The pipeline layout declares hasDynamicOffset, so we must always pass a dynamic offset
+  // array — even though this simple helper only ever uses offset [0].
   const indexUniformBuffer = t.makeBufferWithContents(new Uint32Array([0]), GPUBufferUsage.UNIFORM);
 
   const bindGroup = t.device.createBindGroup({
@@ -339,7 +349,7 @@ g.test('basic_execution')
       encoderType,
       pipeline,
       encoder => {
-        encoder.setImmediates!(0, inputData, 0, inputData.length);
+        encoder.setImmediates!(0, inputData);
       },
       expected
     );
@@ -368,6 +378,8 @@ g.test('update_data')
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
     });
 
+    // Uniform buffer with output indices [0, 1, 2] at 256-byte aligned offsets,
+    // used to direct each dispatch/draw step to a separate region of the output buffer.
     const indexUniformBuffer = createOutputIndexBuffer(t, 3);
 
     const bindGroup = t.device.createBindGroup({
@@ -388,7 +400,7 @@ g.test('update_data')
       dstOffset: number = 0
     ) => {
       pass.setBindGroup(0, bindGroup, [stepIndex * 256]);
-      pass.setImmediates!(dstOffset, data, 0, data.length);
+      pass.setImmediates!(dstOffset, data);
       dispatchOrDraw(encoderType, pass);
     };
 
@@ -453,6 +465,11 @@ g.test('pipeline_switch')
       immediateSizeB = 8;
     }
 
+    // Same source data for both cases; dataSize controls how many elements are written.
+    const immDataB = new Uint32Array([5, 6, 7, 8]);
+    const immDataSizeB = sameImmediateSize ? undefined : immediateSizeB / 4;
+    const expectedB = sameImmediateSize ? [5, 6, 7, 8] : [5, 6, 0, 0];
+
     const bindGroupLayout = t.device.createBindGroupLayout({
       entries: [
         {
@@ -481,15 +498,11 @@ g.test('pipeline_switch')
     const pipelineB = createPipeline(t, encoderType, wgslDeclB, copyCodeB, immediateSizeB, layoutB);
 
     const outputBuffer = t.createBufferTracked({
-      size: 32,
+      size: 16, // 4 u32s at outIndex 0
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
     });
-    const indexUniformBuffer = createOutputIndexBuffer(t, 2);
+    const indexUniformBuffer = createOutputIndexBuffer(t, 1);
 
-    // Use a single bind group. Both pipelines have the same bind group layout,
-    // so the same bind group is compatible with both. This verifies that
-    // previously bound descriptor sets remain valid after a pipeline switch
-    // (important for Vulkan correctness).
     const bindGroup = t.device.createBindGroup({
       layout: bindGroupLayout,
       entries: [
@@ -498,32 +511,26 @@ g.test('pipeline_switch')
       ],
     });
 
-    const immData = new Uint32Array([1, 2, 3, 4]);
-
     const commandEncoder = t.device.createCommandEncoder();
     encodeForPassType(t, encoderType, commandEncoder, enc => {
-      // Pipeline A: set immediates [1, 2, 3, 4], dispatch/draw at outIndex 0.
+      // Only set bind group once between bind group compatible pipelines.
       setPipeline(encoderType, enc, pipelineA);
       enc.setBindGroup(0, bindGroup, [0]);
-      enc.setImmediates!(0, immData, 0, immData.length);
-      dispatchOrDraw(encoderType, enc);
+      enc.setImmediates!(0, new Uint32Array([1, 2, 3, 4]));
 
-      // Pipeline B: switch pipeline, update dynamic offset for outIndex 1.
+      // Switch to Pipeline B without re-setting the bind group.
+      // The bind group set under Pipeline A must remain valid.
       setPipeline(encoderType, enc, pipelineB);
-      enc.setBindGroup(0, bindGroup, [256]);
-      // We purposefully don't call setImmediates here to verify that the
-      // immediates set prior to the pipeline switch are preserved.
+      // Same source data; dataSize controls how many elements are written.
+      // Passing undefined for srcOffset/srcSize relies on WebIDL defaults (0 / array.length).
+      enc.setImmediates!(0, immDataB, undefined, immDataSizeB);
       dispatchOrDraw(encoderType, enc);
     });
 
     t.device.queue.submit([commandEncoder.finish()]);
 
-    // Pipeline A wrote [1, 2, 3, 4] at outIndex 0.
-    // Pipeline B wrote [1, 2, 3, 4] (same size) or [1, 2, 0, 0] (different size) at outIndex 1.
-    const expected = sameImmediateSize
-      ? new Uint32Array([1, 2, 3, 4, 1, 2, 3, 4])
-      : new Uint32Array([1, 2, 3, 4, 1, 2, 0, 0]);
-    t.expectGPUBufferValuesEqual(outputBuffer, expected);
+    // Pipeline B's draw used the bind group set under Pipeline A.
+    t.expectGPUBufferValuesEqual(outputBuffer, new Uint32Array(expectedB));
   });
 
 g.test('use_max_immediate_size')
@@ -575,7 +582,7 @@ g.test('use_max_immediate_size')
 
       setPipeline(encoderType, enc, pipeline);
       enc.setBindGroup(0, bindGroup, [0]);
-      enc.setImmediates!(0, data, 0, count);
+      enc.setImmediates!(0, data);
       dispatchOrDraw(encoderType, enc);
     });
 
@@ -590,19 +597,16 @@ g.test('typed_array_arguments')
       .combine('typedArray', kTypedArrayBufferViewKeys)
       .combine('encoderType', kProgrammableEncoderTypes)
       .beginSubcases()
-      .combine('dataOffset', [undefined, 0, 2])
-      .combine('dataSize', [undefined, 2])
-      .filter(t => {
-        // WebGPU requires the byte size of the provided data to `setImmediates` to be a multiple of 4.
-        const elementSize = kTypedArrayBufferViews[t.typedArray].BYTES_PER_ELEMENT;
-        const actualDataOffset = t.dataOffset ?? 0;
-
-        // Let's test a larger size to accommodate BigUint64Array/BigInt64Array matrices more easily
-        const maxElementsIn64Bytes = 64 / elementSize;
-        const actualDataSize = t.dataSize ?? maxElementsIn64Bytes - actualDataOffset;
-        const byteSize = actualDataSize * elementSize;
-
-        return byteSize <= 64 && byteSize % 4 === 0;
+      .expandWithParams(function* (p) {
+        const elementSize = kTypedArrayBufferViews[p.typedArray].BYTES_PER_ELEMENT;
+        // Smallest element count that produces a 4-byte-aligned byte size.
+        const smallCount = Math.max(1, Math.ceil(4 / elementSize));
+        yield { dataOffset: undefined, dataSize: undefined };
+        yield { dataOffset: 0, dataSize: undefined };
+        yield { dataOffset: smallCount, dataSize: undefined };
+        yield { dataOffset: undefined, dataSize: smallCount };
+        yield { dataOffset: 0, dataSize: smallCount };
+        yield { dataOffset: smallCount, dataSize: smallCount };
       })
   )
   .fn(t => {
@@ -612,8 +616,9 @@ g.test('typed_array_arguments')
     const Ctor = kTypedArrayBufferViews[typedArray];
     const elementSize = Ctor.BYTES_PER_ELEMENT;
 
-    // Use a baseline of 16 u32s (64 bytes).
-    const immediateSize = 64;
+    // 64 bytes of immediate data (4 x vec4<u32>). This size must match the WGSL struct below.
+    const kImmediateByteSize = 64;
+    const kImmediateU32Count = kImmediateByteSize / 4;
     const wgslDecl = `
       struct ImmediateData {
         m0: vec4<u32>,
@@ -641,31 +646,39 @@ g.test('typed_array_arguments')
       output[14] = data.m3.z;
       output[15] = data.m3.w;
     `;
-    const pipeline = createPipeline(t, encoderType, wgslDecl, copyCode, immediateSize);
+    const pipeline = createPipeline(t, encoderType, wgslDecl, copyCode, kImmediateByteSize);
 
     const actualDataOffset = dataOffset ?? 0;
-    // We want to write `dataSize` elements. If dataSize is undefined, it defaults to:
-    // array.length - dataOffset
-    const maxElementsIn64Bytes = 64 / elementSize;
-    const actualDataSize = dataSize ?? maxElementsIn64Bytes - actualDataOffset;
+    const maxElements = kImmediateByteSize / elementSize;
+    const actualDataSize = dataSize ?? maxElements - actualDataOffset;
 
-    // Create a typed array buffer. If dataSize is undefined, we shouldn't add padding
-    // because setImmediates uses the rest of the array, which would exceed our intended size or break the % 4 rule.
-    const paddingElements = dataSize === undefined ? 0 : 4;
+    // Validate that the byte size is 4-byte aligned and fits in the immediate block.
+    const byteSize = actualDataSize * elementSize;
+    assert(
+      byteSize <= kImmediateByteSize && byteSize % 4 === 0,
+      `byteSize ${byteSize} must be <= ${kImmediateByteSize} and a multiple of 4`
+    );
+
+    // When dataSize is explicit, add padding elements to verify setImmediates
+    // respects the dataSize boundary and doesn't read beyond it.
+    // When dataSize is undefined, no padding since setImmediates reads to the end of the array.
+    const paddingElements = dataSize !== undefined ? 4 : 0;
     const arr = new Ctor(actualDataOffset + actualDataSize + paddingElements);
     const view = new DataView(arr.buffer);
 
+    // Fill the data region with a recognizable byte pattern.
     for (let i = 0; i < actualDataSize; i++) {
-      // Just fill some bytes. E.g., repeating byte pattern.
       for (let b = 0; b < elementSize; b++) {
         view.setUint8((actualDataOffset + i) * elementSize + b, 0x10 + b + i);
       }
     }
 
-    const commandEncoder = t.device.createCommandEncoder();
+    // Baseline clear pattern for the full immediate block.
+    const clearData = new Uint32Array(kImmediateU32Count);
+    for (let i = 0; i < kImmediateU32Count; i++) clearData[i] = 0xaaaaaaaa + i * 0x11111111;
 
     const outputBuffer = t.createBufferTracked({
-      size: 64,
+      size: kImmediateByteSize,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
     });
     const indexUniformBuffer = createOutputIndexBuffer(t, 1);
@@ -677,38 +690,32 @@ g.test('typed_array_arguments')
       ],
     });
 
+    const commandEncoder = t.device.createCommandEncoder();
     encodeForPassType(t, encoderType, commandEncoder, enc => {
       setPipeline(encoderType, enc, pipeline);
       enc.setBindGroup(0, bindGroup, [0]);
 
-      // Initialize pipeline storage to a clear pattern mapping to up to 64 bytes
-      const clearData = new Uint32Array(16);
-      for (let i = 0; i < 16; i++) clearData[i] = 0xaaaaaaaa + i * 0x11111111;
+      // Initialize immediates to the baseline clear pattern.
       enc.setImmediates!(0, clearData);
 
-      if (dataSize === undefined) {
-        if (dataOffset === undefined) {
-          enc.setImmediates!(0, arr);
-        } else {
-          enc.setImmediates!(0, arr, dataOffset);
-        }
-      } else {
-        enc.setImmediates!(0, arr, dataOffset, dataSize);
-      }
+      // Overwrite with typed array data using the parametrized offset/size.
+      // Passing undefined for dataOffset/dataSize uses the WebIDL default (0 / array.length).
+      enc.setImmediates!(0, arr, dataOffset, dataSize);
 
       dispatchOrDraw(encoderType, enc);
     });
     t.device.queue.submit([commandEncoder.finish()]);
 
-    const expected = new Uint32Array(16);
-    for (let i = 0; i < 16; i++) expected[i] = 0xaaaaaaaa + i * 0x11111111;
-    const expectedView = new Uint8Array(expected.buffer);
-
-    for (let i = 0; i < actualDataSize; i++) {
-      for (let b = 0; b < elementSize; b++) {
-        expectedView[i * elementSize + b] = 0x10 + b + i;
-      }
-    }
+    // Build expected: baseline pattern with the written typed-array bytes overlaid at offset 0.
+    const expected = new Uint32Array(clearData);
+    memcpy(
+      {
+        src: arr.buffer,
+        start: actualDataOffset * elementSize,
+        length: actualDataSize * elementSize,
+      },
+      { dst: expected.buffer, start: 0 }
+    );
 
     t.expectGPUBufferValuesEqual(outputBuffer, expected);
   });
@@ -733,11 +740,11 @@ g.test('multiple_updates_before_draw_or_dispatch')
       pipeline,
       encoder => {
         // 1. Set all to [1, 2, 3, 4]
-        encoder.setImmediates!(0, new Uint32Array([1, 2, 3, 4]), 0, 4);
+        encoder.setImmediates!(0, new Uint32Array([1, 2, 3, 4]));
         // 2. Update middle two to [5, 6] -> [1, 5, 6, 4]
-        encoder.setImmediates!(4, new Uint32Array([5, 6]), 0, 2);
+        encoder.setImmediates!(4, new Uint32Array([5, 6]));
         // 3. Update last to [7] -> [1, 5, 6, 7]
-        encoder.setImmediates!(12, new Uint32Array([7]), 0, 1);
+        encoder.setImmediates!(12, new Uint32Array([7]));
       },
       [1, 5, 6, 7]
     );
@@ -775,8 +782,8 @@ g.test('render_pass_and_bundle_mix')
     const bundleEncoder = t.device.createRenderBundleEncoder({ colorFormats: ['r32uint'] });
     bundleEncoder.setPipeline(pipeline);
     bundleEncoder.setBindGroup(0, bindGroup, [0]);
-    bundleEncoder.setImmediates!(0, new Uint32Array([1, 10]), 0, 2);
-    bundleEncoder.draw(1, 1, 0, 0);
+    bundleEncoder.setImmediates!(0, new Uint32Array([1, 10]));
+    bundleEncoder.draw(1);
     const bundle = bundleEncoder.finish();
 
     const renderTargetTexture = t.createTextureTracked({
@@ -802,8 +809,8 @@ g.test('render_pass_and_bundle_mix')
     // Pass: Set [2, 20], Draw (Index 1)
     pass.setPipeline(pipeline);
     pass.setBindGroup(0, bindGroup, [256]);
-    pass.setImmediates!(0, new Uint32Array([2, 20]), 0, 2);
-    pass.draw(1, 1, 1, 0);
+    pass.setImmediates!(0, new Uint32Array([2, 20]));
+    pass.draw(1);
 
     pass.end();
     t.device.queue.submit([commandEncoder.finish()]);
@@ -841,16 +848,16 @@ g.test('render_bundle_isolation')
     const bundleEncoderA = t.device.createRenderBundleEncoder({ colorFormats: ['r32uint'] });
     bundleEncoderA.setPipeline(pipeline);
     bundleEncoderA.setBindGroup(0, bindGroup, [0]);
-    bundleEncoderA.setImmediates!(0, new Uint32Array([1, 2]), 0, 2);
-    bundleEncoderA.draw(1, 1, 0, 0);
+    bundleEncoderA.setImmediates!(0, new Uint32Array([1, 2]));
+    bundleEncoderA.draw(1);
     const bundleA = bundleEncoderA.finish();
 
     // Bundle B: Set [3, 4], Draw (Index 1)
     const bundleEncoderB = t.device.createRenderBundleEncoder({ colorFormats: ['r32uint'] });
     bundleEncoderB.setPipeline(pipeline);
     bundleEncoderB.setBindGroup(0, bindGroup, [256]);
-    bundleEncoderB.setImmediates!(0, new Uint32Array([3, 4]), 0, 2);
-    bundleEncoderB.draw(1, 1, 1, 0);
+    bundleEncoderB.setImmediates!(0, new Uint32Array([3, 4]));
+    bundleEncoderB.draw(1);
     const bundleB = bundleEncoderB.finish();
 
     const renderTargetTexture = t.createTextureTracked({
