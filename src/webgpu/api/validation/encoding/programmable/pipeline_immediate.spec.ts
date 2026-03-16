@@ -127,7 +127,7 @@ g.test('required_slots_set')
         helpers = 'fn use_data() { _ = data; }';
         break;
       case 'struct_padding':
-        kRequiredSize = 40;
+        kRequiredSize = 64;
         declarations = `
           struct A { v: vec3<u32> }
           struct B { v: vec2<u32> }
