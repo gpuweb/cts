@@ -7,6 +7,7 @@ import { keysOf } from '../../../../common/util/data_tables.js';
 import { TypedArrayBufferView } from '../../../../common/util/util.js';
 import { Float16Array } from '../../../../external/petamoriken/float16/float16.js';
 import { AllFeaturesMaxLimitsGPUTest, GPUTest } from '../../../gpu_test.js';
+import { runFlowControlTest } from '../flow_control/harness.js';
 
 export const g = makeTestGroup(AllFeaturesMaxLimitsGPUTest);
 
@@ -419,4 +420,77 @@ fn main() {
   }
 }`;
     runSwizzleAssignmentTest(t, elemType, expected, wgsl);
+  });
+
+g.test('eval_order')
+  .desc(
+    'Tests that the vec pointer on the lhs of a swizzle assignment is evaluated before the rhs, and the load of the lhs vec happens after rhs.'
+  )
+  .fn(t => {
+    t.skipIfLanguageFeatureNotSupported('swizzle_assignment');
+    runFlowControlTest(t, f => ({
+      entrypoint: `
+  arr[0] = vec4u(1, 1, 1, 1);
+  ${f.expect_order(0)}
+  arr[foo()].xy = bar();
+  ${f.expect_order(3)}
+  if (all(arr[0] == vec4u(4, 5, 3, 8))) {
+    ${f.expect_order(4)}
+  } else {
+    ${f.expect_not_reached()}
+  }
+`,
+      extra: `
+var<private> arr : array<vec4u, 1>;
+fn foo() -> u32 {
+  ${f.expect_order(1)}
+  arr[0].x = 6;       // overwritten by swizzle
+  arr[0].z = 7;       // overwritten by bar()
+  arr[0].w = 8;       // persists
+  return 0;
+}
+fn bar() -> vec2u {
+  ${f.expect_order(2)}
+  arr[0].z = 3;       // persists
+  return vec2u(4, 5); // will set x,y
+}
+`,
+    }));
+  });
+
+g.test('compound_eval_order')
+  .desc(
+    'Tests that the lhs of a swizzle compound assignment is evaluated before the rhs, and another load of the lhs vec happens after rhs evaluation, without re-evaluating the pointer to the lhs vec.'
+  )
+  .fn(t => {
+    t.skipIfLanguageFeatureNotSupported('swizzle_assignment');
+    runFlowControlTest(t, f => ({
+      entrypoint: `
+  arr[0] = vec4u(1, 1, 1, 1);
+  ${f.expect_order(0)}
+  arr[foo()].xy += bar();
+  ${f.expect_order(3)}
+  if (all(arr[0] == vec4u(10, 6, 3, 8))) {
+    ${f.expect_order(4)}
+  } else {
+    ${f.expect_not_reached()}
+  }
+`,
+      extra: `
+var<private> arr : array<vec4u, 1>;
+fn foo() -> u32 {
+  ${f.expect_order(1)}
+  arr[0].x = 6;       // modifies x before add
+  arr[0].z = 7;       // overwritten by bar()
+  arr[0].w = 8;       // persists
+  return 0;
+}
+fn bar() -> vec2u {
+  ${f.expect_order(2)}
+  arr[0].x = 2;       // no visible effect
+  arr[0].z = 3;       // persists
+  return vec2u(4, 5); // will add to x,y
+}
+`,
+    }));
   });
