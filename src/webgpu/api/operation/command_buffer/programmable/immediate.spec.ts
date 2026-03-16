@@ -442,8 +442,7 @@ g.test('pipeline_switch')
     // Pipeline A always uses vec4<u32> (16 bytes).
     const wgslDeclA = 'var<immediate> data: vec4<u32>;';
     const copyCodeA = `
-      let base = outIndex * 4;
-      output[base] = data.x; output[base+1] = data.y; output[base+2] = data.z; output[base+3] = data.w;
+      output[0] = data.x; output[1] = data.y; output[2] = data.z; output[3] = data.w;
     `;
 
     let wgslDeclB: string;
@@ -459,8 +458,7 @@ g.test('pipeline_switch')
       // Pipeline B uses vec2<u32> (8 bytes) — different/incompatible layout.
       wgslDeclB = 'var<immediate> data: vec2<u32>;';
       copyCodeB = `
-        let base = outIndex * 4;
-        output[base] = data.x; output[base+1] = data.y; output[base+2] = 0u; output[base+3] = 0u;
+        output[0] = data.x; output[1] = data.y; output[2] = 0u; output[3] = 0u;
       `;
       immediateSizeB = 8;
     }
@@ -667,10 +665,10 @@ g.test('typed_array_arguments')
     const view = new DataView(arr.buffer);
 
     // Fill the data region with a recognizable byte pattern.
-    for (let i = 0; i < actualDataSize; i++) {
-      for (let b = 0; b < elementSize; b++) {
-        view.setUint8((actualDataOffset + i) * elementSize + b, 0x10 + b + i);
-      }
+    const dataByteOffset = actualDataOffset * elementSize;
+    const dataByteSize = actualDataSize * elementSize;
+    for (let byte = 0; byte < dataByteSize; byte++) {
+      view.setUint8(dataByteOffset + byte, 0x10 + byte);
     }
 
     // Baseline clear pattern for the full immediate block.
