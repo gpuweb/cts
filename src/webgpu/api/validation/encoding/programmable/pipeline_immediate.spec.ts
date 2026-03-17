@@ -200,7 +200,13 @@ g.test('required_slots_set')
     `;
 
     const kRequiredSize = layoutImmediateSize - trailingPaddingBytes;
-    const layoutSize = usage === 'overprovision' ? layoutImmediateSize + 4 : layoutImmediateSize;
+    // When overprovisioning: if the struct already has trailing padding, the layout
+    // size is already larger than what the shader uses, so no extra bytes are needed.
+    // Only when there's no trailing padding do we need to increase the layout size.
+    const layoutSize =
+      usage === 'overprovision' && trailingPaddingBytes === 0
+        ? layoutImmediateSize + 4
+        : layoutImmediateSize;
     if (layoutSize > t.device.limits.maxImmediateSize!) {
       t.skip('maxImmediateSize not large enough for overprovision test');
     }
@@ -213,7 +219,10 @@ g.test('required_slots_set')
     };
 
     if (usage === 'overprovision') {
-      setImmediates(0, kRequiredSize + 4);
+      // When trailingPaddingBytes > 0, the layout already overprovisions beyond
+      // shader usage, so set the full layoutImmediateSize. When trailingPaddingBytes
+      // is 0, we added +4 to the layout, so set kRequiredSize + 4.
+      setImmediates(0, trailingPaddingBytes > 0 ? layoutImmediateSize : kRequiredSize + 4);
     } else if (usage === 'full') {
       setImmediates(0, kRequiredSize);
     } else if (usage === 'partial') {
