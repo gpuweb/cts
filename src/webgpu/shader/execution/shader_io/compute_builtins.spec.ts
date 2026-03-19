@@ -279,13 +279,13 @@ g.test('inputs')
                     ) ||
                     (linear_indexing &&
                       expectEqual(
-                        "global_index",
+                        'global_index',
                         globalLinearIndex,
                         output[globalOffset + kGlobalIndexOffset]
                       )) ||
                     (linear_indexing &&
                       expectEqual(
-                        "group_index",
+                        'group_index',
                         groupLinearIndex,
                         output[globalOffset + kGroupIndexOffset]
                       ));
