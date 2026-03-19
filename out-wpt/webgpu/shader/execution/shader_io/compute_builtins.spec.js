@@ -277,11 +277,13 @@ fn((t) => {
                   localIndex,
                   output[globalOffset + kLocalIndexOffset]
                 ) ||
+                linear_indexing &&
                 expectEqual(
                   'global_index',
                   globalLinearIndex,
                   output[globalOffset + kGlobalIndexOffset]
                 ) ||
+                linear_indexing &&
                 expectEqual(
                   'group_index',
                   groupLinearIndex,

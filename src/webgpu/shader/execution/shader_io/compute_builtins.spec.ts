@@ -277,16 +277,18 @@ g.test('inputs')
                       localIndex,
                       output[globalOffset + kLocalIndexOffset]
                     ) ||
-                    expectEqual(
-                      'global_index',
-                      globalLinearIndex,
-                      output[globalOffset + kGlobalIndexOffset]
-                    ) ||
-                    expectEqual(
-                      'group_index',
-                      groupLinearIndex,
-                      output[globalOffset + kGroupIndexOffset]
-                    );
+                    (linear_indexing &&
+                      expectEqual(
+                        'global_index',
+                        globalLinearIndex,
+                        output[globalOffset + kGlobalIndexOffset]
+                      )) ||
+                    (linear_indexing &&
+                      expectEqual(
+                        'group_index',
+                        groupLinearIndex,
+                        output[globalOffset + kGroupIndexOffset]
+                      ));
                   if (error) {
                     return error;
                   }
