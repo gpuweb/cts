@@ -1,0 +1,21 @@
+# Metadata file for Chromium. Normally this would be stored in Chromium, but
+# for historical reasons it's much easier to just put it here. Apologies :)
+# https://chromium.googlesource.com/chromium/src/+/HEAD/docs/adding_to_third_party.md#readme_chromium
+
+Name: WebGPU Conformance Test Suite
+Short Name: webgpu-cts
+URL: https://github.com/gpuweb/cts
+Version: N/A
+License: BSD-3-Clause
+License File: LICENSE.txt
+Shipped: no
+Security Critical: no
+
+# https://luci-scheduler.appspot.com/jobs/dawn/cts-roller
+Update Mechanism: Autoroll
+
+Description:
+Conformance tests for the WebGPU API and WGSL (WebGPU Shading Language).
+
+Local Modifications:
+None
