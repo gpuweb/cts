@@ -981,5 +981,6 @@ export const kKnownWGSLLanguageFeatures = [
 'subgroup_id',
 'subgroup_uniformity',
 'swizzle_assignment',
-'linear_indexing'];
+'linear_indexing',
+'texture_formats_tier1'];
 //# sourceMappingURL=capability_info.js.map
