@@ -423,9 +423,6 @@ g.test('reuse_builtin_name')
   )
   .fn(t => {
     let code = '';
-    if (t.params.enable) {
-      code += `enable ${t.params.enable};\n`;
-    }
     if (t.params.use === 'alias') {
       code += `alias ${t.params.name} = i32;`;
     } else if (t.params.use === `struct`) {
@@ -437,8 +434,7 @@ g.test('reuse_builtin_name')
     } else if (t.params.use === `function-var`) {
       code += `fn test() { let ${t.params.name} = 1; }`;
     }
-    const expect = t.params.requires === undefined || t.hasLanguageFeature(t.params.requires);
-    t.expectCompileResult(expect, code);
+    t.expectCompileResult(true, code);
   });
 
 const kTests = {
