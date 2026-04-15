@@ -1780,6 +1780,7 @@
   "webgpu:shader,execution,expression,call,builtin,trunc:abstract_float:*": { "subcaseMS": 12197.517 },
   "webgpu:shader,execution,expression,call,builtin,trunc:f16:*": { "subcaseMS": 120.204 },
   "webgpu:shader,execution,expression,call,builtin,trunc:f32:*": { "subcaseMS": 48.544 },
+  "webgpu:shader,execution,expression,call,builtin,trunc:subnormal_division:*": { "subcaseMS": 103.258 },
   "webgpu:shader,execution,expression,call,builtin,unpack2x16float:unpack:*": { "subcaseMS": 11.651 },
   "webgpu:shader,execution,expression,call,builtin,unpack2x16snorm:unpack:*": { "subcaseMS": 9.275 },
   "webgpu:shader,execution,expression,call,builtin,unpack2x16unorm:unpack:*": { "subcaseMS": 8.701 },
