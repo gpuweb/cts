@@ -172,8 +172,7 @@ So, test we can use 4k slots across a few QuerySets
     const kNumQuerySets = 4;
 
     const { encoder } = encoderQueryUsage(t, stage, kNumQuerySets, kNumSlots);
-    const shouldError = false; // just expect no error
-    t.expectValidationError(() => t.device.queue.submit([encoder.finish()]), shouldError);
+    t.device.queue.submit([encoder.finish()]);
   });
 
 g.test('resolve_unused_slots')
