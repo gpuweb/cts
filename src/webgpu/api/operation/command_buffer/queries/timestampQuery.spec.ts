@@ -8,10 +8,12 @@ there is not much we can test except that there are no errors.
   - compute pass
   - render pass
   - 64k query objects
+  - resolving unused slots
 `;
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
-import { AllFeaturesMaxLimitsGPUTest } from '../../../../gpu_test.js';
+import { range } from '../../../../../common/util/util.js';
+import { AllFeaturesMaxLimitsGPUTest, GPUTest } from '../../../../gpu_test.js';
 
 export const g = makeTestGroup(AllFeaturesMaxLimitsGPUTest);
 
@@ -95,6 +97,63 @@ and prevent pages from running.
     }
   });
 
+function encoderQueryUsage(
+  t: GPUTest,
+  stage: 'compute' | 'render',
+  numQuerySets: number,
+  numSlots: number
+) {
+  const encoder = t.device.createCommandEncoder();
+
+  const view = t
+    .createTextureTracked({
+      size: [1, 1, 1],
+      format: 'rgba8unorm',
+      usage: GPUTextureUsage.RENDER_ATTACHMENT,
+    })
+    .createView();
+
+  const querySets = range(numQuerySets, _ => {
+    const querySet = t.createQuerySetTracked({
+      type: 'timestamp',
+      count: numSlots,
+    });
+
+    switch (stage) {
+      case 'compute': {
+        for (let slot = 0; slot < numSlots; slot += 2) {
+          const pass = encoder.beginComputePass({
+            timestampWrites: {
+              querySet,
+              beginningOfPassWriteIndex: slot,
+              endOfPassWriteIndex: slot + 1,
+            },
+          });
+          pass.end();
+        }
+        break;
+      }
+      case 'render': {
+        for (let slot = 0; slot < numSlots; slot += 2) {
+          const pass = encoder.beginRenderPass({
+            colorAttachments: [{ view, loadOp: 'load', storeOp: 'store' }],
+            timestampWrites: {
+              querySet,
+              beginningOfPassWriteIndex: slot,
+              endOfPassWriteIndex: slot + 1,
+            },
+          });
+          pass.end();
+        }
+        break;
+      }
+    }
+
+    return querySet;
+  });
+  return { encoder, querySets };
+}
+
 g.test('many_slots')
   .desc(
     `
@@ -112,52 +171,49 @@ So, test we can use 4k slots across a few QuerySets
     const kNumSlots = 4096;
     const kNumQuerySets = 4;
 
-    const view = t
-      .createTextureTracked({
-        size: [1, 1, 1],
-        format: 'rgba8unorm',
-        usage: GPUTextureUsage.RENDER_ATTACHMENT,
-      })
-      .createView();
+    const { encoder } = encoderQueryUsage(t, stage, kNumQuerySets, kNumSlots);
+    t.device.queue.submit([encoder.finish()]);
+  });
+
+g.test('resolve_unused_slots')
+  .desc(
+    `
+Test resolving query sets with unused slots.
+
+We create a command buffer that uses the slots but don't actually submit it
+to make sure the implementation doesn't mistakenly mark them as used.
+    `
+  )
+  .params(u => u.combine('stage', ['compute', 'render'] as const))
+  .fn(t => {
+    const { stage } = t.params;
+
+    t.skipIfDeviceDoesNotHaveFeature('timestamp-query');
+
+    const kNumSlots = 4096;
+    const kNumQuerySets = 2;
+
+    // Create a encoder and encode usage of every query and slot but do not submit it.
+    const querySets = (() => {
+      const { encoder, querySets } = encoderQueryUsage(t, stage, kNumQuerySets, kNumSlots);
+      encoder.finish();
+      return querySets;
+    })();
+
+    // Read the slots, they should all be zero.
     const encoder = t.device.createCommandEncoder();
-
-    for (let i = 0; i < kNumQuerySets; ++i) {
-      const querySet = t.createQuerySetTracked({
-        type: 'timestamp',
-        count: kNumSlots,
+    const buffers = querySets.map((querySet, i) => {
+      const resolveBuffer = t.createBufferTracked({
+        size: kNumSlots * 8,
+        usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.QUERY_RESOLVE,
       });
+      encoder.resolveQuerySet(querySet, 0, kNumSlots, resolveBuffer, 0);
+      return resolveBuffer;
+    });
+    t.device.queue.submit([encoder.finish()]);
 
-      switch (stage) {
-        case 'compute': {
-          for (let slot = 0; slot < kNumSlots; slot += 2) {
-            const pass = encoder.beginComputePass({
-              timestampWrites: {
-                querySet,
-                beginningOfPassWriteIndex: slot,
-                endOfPassWriteIndex: slot + 1,
-              },
-            });
-            pass.end();
-          }
-          break;
-        }
-        case 'render': {
-          for (let slot = 0; slot < kNumSlots; slot += 2) {
-            const pass = encoder.beginRenderPass({
-              colorAttachments: [{ view, loadOp: 'load', storeOp: 'store' }],
-              timestampWrites: {
-                querySet,
-                beginningOfPassWriteIndex: slot,
-                endOfPassWriteIndex: slot + 1,
-              },
-            });
-            pass.end();
-          }
-          break;
-        }
-      }
+    for (const buffer of buffers) {
+      const expected = new Uint8Array(buffer.size);
+      t.expectGPUBufferValuesEqual(buffer, expected);
     }
-
-    const shouldError = false; // just expect no error
-    t.expectValidationError(() => t.device.queue.submit([encoder.finish()]), shouldError);
   });

@@ -520,6 +520,49 @@ fn(async (t) => {
   );
 });
 
+g.test('occlusion_query,unsubmitted_render_pass').
+desc(
+  `
+Test getting contents of QuerySet without any queries with an unsubmitted render pass that uses them.
+This is a regression test for a bug in Dawn where encoding the pass marked the slots as ok to read
+when they should not have been marked as okay to read until the command buffer was submitted.
+`
+).
+fn(async (t) => {
+  const kNumQueries = kMaxQueryCount;
+  const resources = t.setup({ numQueries: kNumQueries });
+
+  // Encode a render pass that uses the QuerySet but don't submit it.
+  {
+    const encoder = t.device.createCommandEncoder();
+    const pass = encoder.beginRenderPass({
+      colorAttachments: [
+      {
+        view: resources.renderTargetTexture.createView(),
+        loadOp: 'clear',
+        storeOp: 'store'
+      }],
+
+      occlusionQuerySet: resources.occlusionQuerySet
+    });
+    for (let i = 0; i < resources.occlusionQuerySet.count; i += 2) {
+      pass.beginOcclusionQuery(i);
+      pass.endOcclusionQuery();
+    }
+    pass.end();
+    encoder.finish();
+  }
+
+  await t.runQueryTest(
+    resources,
+    null,
+    () => {},
+    (passed) => {
+      t.expect(!passed);
+    }
+  );
+});
+
 g.test('occlusion_query,basic').
 desc('Test all queries pass').
 params(kQueryTestBaseParams).
