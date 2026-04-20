@@ -3290,10 +3290,8 @@ export async function readTextureToTexelViews(
   device.queue.submit([encoder.finish()]);
 
   const texelViews: TexelView[] = [];
-
   for (const { readBuffer, size } of readBuffers) {
     await readBuffer.mapAsync(GPUMapMode.READ);
-
     // need a copy of the data since unmapping will nullify the typedarray view.
     const Ctor =
       componentType === 'i32' ? Int32Array : componentType === 'u32' ? Uint32Array : Float32Array;
@@ -5656,10 +5654,10 @@ export function compareTexelViewsMipLevel(
   {
     actualTexelViews,
     expectedTexelViews,
-    mipLevel,
+    mipLevel = 0,
     origin,
     size,
-    sampleCount,
+    sampleCount = 1,
   }: {
     actualTexelViews: TexelView[];
     expectedTexelViews: TexelView[];
@@ -5691,8 +5689,8 @@ export function compareTexelViews(
     actualTexelViews,
     expectedTexelViews,
     size,
-    dimension,
-    sampleCount,
+    dimension = '2d',
+    sampleCount = 1,
   }: {
     actualTexelViews: TexelView[];
     expectedTexelViews: TexelView[];
@@ -5708,7 +5706,7 @@ export function compareTexelViews(
       ...compareTexelViewsMipLevel(device, {
         actualTexelViews,
         expectedTexelViews,
-        size: virtualMipSize(dimension ?? '2d', size, mipLevel),
+        size: virtualMipSize(dimension, size, mipLevel),
         mipLevel,
         sampleCount,
       })

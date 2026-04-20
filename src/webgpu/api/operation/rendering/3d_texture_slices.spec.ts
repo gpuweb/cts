@@ -66,15 +66,11 @@ async function checkTextureContent(
       (coords: Required<GPUOrigin3DDict>): Readonly<PerTexelComponent<number>> => {
         // If it's not a slice of a mip we rendered to expect 0
         const sliceToLocationMap = mipLevelToSliceToLocationMap.get(level);
-        if (!sliceToLocationMap || !sliceToLocationMap.has(coords.z)) {
-          return zeroTexel;
-        }
-
-        // If it's not a slice we rendered to expect 0
-        const location = sliceToLocationMap.get(coords.z);
+        const location = sliceToLocationMap?.get(coords.z);
         if (location === undefined) {
           return zeroTexel;
         }
+
         // Return the same value the shader would
         const renderTexel = colorNumbersToPerTexelComponent(
           format,
@@ -118,9 +114,9 @@ function colorNumbersToPerTexelComponent(
 }
 
 // generates:
-//    11, 22, 33, 44 for output 0
-//    21, 32, 43, 54 for output 1
-//    31, 42, 53, 64 for output 2
+//    11, 22, 33, 44 for location 0, ch 0, 1, 2, 3
+//    21, 32, 43, 54 for location 1, ch 0, 1, 2, 3
+//    31, 42, 53, 64 for location 2, ch 0, 1, 2, 3
 const outputForLocationByChannel = (location: number, ch: number) =>
   (ch + location + 1) * 10 + 1 + location;
 
