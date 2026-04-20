@@ -44,7 +44,8 @@ g.test('size')
 
 g.test('limit')
   .desc('Test buffer size is validated against maxBufferSize.')
-  .params(u => u.beginSubcases().combine('sizeAddition', [-1, 0, +1]))
+  // Note: Avoid using subcases here so we don't allocate the buffers for multiple subcases at once.
+  .params(u => u.combine('sizeAddition', [-1, 0, +1]))
   .fn(t => {
     const { sizeAddition } = t.params;
     const size = t.makeLimitVariant('maxBufferSize', { mult: 1, add: sizeAddition });
