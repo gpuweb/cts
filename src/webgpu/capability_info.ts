@@ -225,7 +225,7 @@ const kTextureUsageInfo: {
 /** List of all GPUTextureUsage values. */
 export const kTextureUsages = numericKeysOf(kTextureUsageInfo);
 /** Bitmask of all known texture usages. */
-const kAllTextureUsages = kTextureUsages.reduce((acc, usage) => acc | usage, 0);
+export const kAllTextureUsages = kTextureUsages.reduce((acc, usage) => acc | usage, 0);
 
 /** An arbitrary invalid texture usage bit. */
 export const kSomeBogusTextureUsage: GPUTextureUsageFlags = 0x4000_0000;
