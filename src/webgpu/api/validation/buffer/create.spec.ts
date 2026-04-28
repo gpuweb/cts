@@ -8,6 +8,7 @@ import {
   kAllBufferUsageBits,
   kBufferSizeAlignment,
   kBufferUsages,
+  kSomeBogusBufferUsage,
 } from '../../../capability_info.js';
 import { GPUConst } from '../../../constants.js';
 import { AllFeaturesMaxLimitsGPUTest } from '../../../gpu_test.js';
@@ -44,7 +45,8 @@ g.test('size')
 
 g.test('limit')
   .desc('Test buffer size is validated against maxBufferSize.')
-  .params(u => u.beginSubcases().combine('sizeAddition', [-1, 0, +1]))
+  // Note: Avoid using subcases here so we don't allocate the buffers for multiple subcases at once.
+  .params(u => u.combine('sizeAddition', [-1, 0, +1]))
   .fn(t => {
     const { sizeAddition } = t.params;
     const size = t.makeLimitVariant('maxBufferSize', { mult: 1, add: sizeAddition });
@@ -53,14 +55,12 @@ g.test('limit')
     t.expectGPUError('validation', () => t.createBufferTracked({ size, usage }), !isValid);
   });
 
-const kInvalidUsage = 0x8000;
-assert((kInvalidUsage & kAllBufferUsageBits) === 0);
 g.test('usage')
   .desc('Test combinations of zero to two usage flags are validated to be valid.')
   .params(u =>
     u
-      .combine('usage1', [0, ...kBufferUsages, kInvalidUsage])
-      .combine('usage2', [0, ...kBufferUsages, kInvalidUsage])
+      .combine('usage1', [0, ...kBufferUsages, kSomeBogusBufferUsage])
+      .combine('usage2', [0, ...kBufferUsages, kSomeBogusBufferUsage])
       .filter(p => p.usage1 <= p.usage2)
       .beginSubcases()
       .combine('mappedAtCreation', [false, true])
