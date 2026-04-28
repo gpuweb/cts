@@ -77,6 +77,10 @@ export const kAllBufferUsageBits = kBufferUsages.reduce(
   0
 );
 
+/** An arbitrary invalid buffer usage bit. */
+export const kSomeBogusBufferUsage: GPUBufferUsageFlags = 0x4000_0000;
+assert((kSomeBogusBufferUsage & kAllBufferUsageBits) === 0);
+
 // Errors
 
 /** Per-GPUErrorFilter info. */
