@@ -220,7 +220,7 @@ g.test('texture_binding_must_have_correct_usage')
       "The test requires 'r32float' multisampled support which compat mode doesn't guarantee."
     );
 
-    // MAINTENANCE_TODO(#4509): Remove this when TRANSIENT_ATTACHMENT is added to the WebGPU spec.
+    // MAINTENANCE_TODO(#4509): Remove this after all implementations have TRANSIENT_ATTACHMENT.
     if ((usage & GPUConst.TextureUsage.TRANSIENT_ATTACHMENT) !== 0) {
       t.skipIfTransientAttachmentNotSupported();
     }
@@ -803,7 +803,7 @@ g.test('storage_texture,usage')
 
     const usage = usage0 | usage1;
 
-    // MAINTENANCE_TODO(#4509): Remove this when TRANSIENT_ATTACHMENT is added to the WebGPU spec.
+    // MAINTENANCE_TODO(#4509): Remove this after all implementations have TRANSIENT_ATTACHMENT.
     if ((usage & GPUConst.TextureUsage.TRANSIENT_ATTACHMENT) !== 0) {
       t.skipIfTransientAttachmentNotSupported();
     }
@@ -1242,7 +1242,7 @@ g.test('external_texture,texture_view,usage')
 
     const usage = usage0 | usage1;
 
-    // MAINTENANCE_TODO(#4509): Remove this when TRANSIENT_ATTACHMENT is added to the WebGPU spec.
+    // MAINTENANCE_TODO(#4509): Remove this after all implementations have TRANSIENT_ATTACHMENT.
     if ((usage & GPUConst.TextureUsage.TRANSIENT_ATTACHMENT) !== 0) {
       t.skipIfTransientAttachmentNotSupported();
     }

@@ -3,6 +3,7 @@ export const description = `Validation tests for uniformity analysis`;
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { keysOf } from '../../../../common/util/data_tables.js';
 import { unreachable } from '../../../../common/util/util.js';
+import { WGSLLanguageFeature } from '../../../capability_info.js';
 import { ShaderValidationTest } from '../shader_validation_test.js';
 
 import { Snippet, LoopCase, compileShouldSucceed } from './snippet.js';
@@ -1333,7 +1334,16 @@ function expectedUniformity(uniform: string, init: string): boolean {
   return false;
 }
 
-const kFuncVarCases = {
+interface FuncVarCase {
+  typename: string;
+  typedecl: string;
+  assignment: string;
+  cond: string;
+  uniform: string;
+  requires?: WGSLLanguageFeature;
+}
+
+const kFuncVarCases: Record<string, FuncVarCase> = {
   no_assign: {
     typename: `u32`,
     typedecl: ``,
@@ -2146,6 +2156,124 @@ const kFuncVarCases = {
     cond: `x.x > 0`,
     uniform: `never`,
   },
+  full_assignment_vec_uniform: {
+    typename: `vec3u`,
+    typedecl: ``,
+    assignment: `x = uniform_value[0];`,
+    cond: `x.x > 0`,
+    uniform: `always`,
+  },
+  full_assignment_vec_nonuniform: {
+    typename: `vec3u`,
+    typedecl: ``,
+    assignment: `x = nonuniform_value[0];`,
+    cond: `x.x > 0`,
+    uniform: `never`,
+  },
+  partial_assignment_vec_uniform: {
+    typename: `vec3u`,
+    typedecl: ``,
+    assignment: `x.x = uniform_value[0].x;`,
+    cond: `x.x > 0`,
+    uniform: `init`,
+  },
+  partial_assignment_vec_nonuniform: {
+    typename: `vec3u`,
+    typedecl: ``,
+    assignment: `x.x = nonuniform_value[0].x;`,
+    cond: `x.x > 0`,
+    uniform: `never`,
+  },
+  partial_assignment_vec_all_components_uniform: {
+    typename: `vec3u`,
+    typedecl: ``,
+    assignment: `x.x = uniform_value[0].x;
+    x.y = uniform_value[0].y;
+    x.z = uniform_value[0].z;`,
+    cond: `x.x > 0`,
+    uniform: `init`,
+  },
+  partial_assignment_vec_all_components_nonuniform: {
+    typename: `vec3u`,
+    typedecl: ``,
+    assignment: `x.x = nonuniform_value[0].x;
+    x.y = uniform_value[0].y;
+    x.z = uniform_value[0].z;`,
+    cond: `x.x > 0`,
+    uniform: `never`,
+  },
+  full_swizzle_assignment_uniform: {
+    requires: 'swizzle_assignment',
+    typename: `vec3u`,
+    typedecl: ``,
+    assignment: `x.xyz = uniform_value[0].xyz;`,
+    cond: `x.x > 0`,
+    uniform: `always`,
+  },
+  full_swizzle_assignment_nonuniform: {
+    typename: `vec3u`,
+    typedecl: ``,
+    assignment: `x.xyz = nonuniform_value[0].xyz;`,
+    cond: `x.x > 0`,
+    uniform: `never`,
+    requires: 'swizzle_assignment',
+  },
+  full_swizzle_assignment_permutation_uniform: {
+    requires: 'swizzle_assignment',
+    typename: `vec3u`,
+    typedecl: ``,
+    assignment: `x.zyx = uniform_value[0].xyz;`,
+    cond: `x.x > 0`,
+    uniform: `always`,
+  },
+  full_swizzle_assignment_permutation_nonuniform: {
+    requires: 'swizzle_assignment',
+    typename: `vec3u`,
+    typedecl: ``,
+    assignment: `x.zyx = nonuniform_value[0].xyz;`,
+    cond: `x.x > 0`,
+    uniform: `never`,
+  },
+  partial_swizzle_assignment_uniform: {
+    requires: 'swizzle_assignment',
+    typename: `vec3u`,
+    typedecl: ``,
+    assignment: `x.xy = uniform_value[0].xy;`,
+    cond: `x.x > 0`,
+    uniform: `init`,
+  },
+  partial_swizzle_assignment_nonuniform: {
+    requires: 'swizzle_assignment',
+    typename: `vec3u`,
+    typedecl: ``,
+    assignment: `x.xy = nonuniform_value[0].xy;`,
+    cond: `x.x > 0`,
+    uniform: `never`,
+  },
+  chained_full_swizzle_assignment_uniform: {
+    requires: 'swizzle_assignment',
+    typename: `vec3u`,
+    typedecl: ``,
+    assignment: `x.xyz.zyx = uniform_value[0].xyz;`,
+    cond: `x.x > 0`,
+    uniform: `always`,
+  },
+  chained_partial_swizzle_assignment_uniform: {
+    requires: 'swizzle_assignment',
+    typename: `vec3u`,
+    typedecl: ``,
+    assignment: `x.xyz.xy = uniform_value[0].xy;`,
+    cond: `x.x > 0`,
+    uniform: `init`,
+  },
+  chained_full_swizzle_assignment_nonuniform: {
+    requires: 'swizzle_assignment',
+    typename: `vec3u`,
+    typedecl: ``,
+    assignment: `x.xyz.zyx = nonuniform_value[0].xyz;`,
+    cond: `x.x > 0`,
+    uniform: `never`,
+  },
 };
 
 const kVarInit = {
@@ -2159,6 +2287,9 @@ g.test('function_variables')
   .params(u => u.combine('case', keysOf(kFuncVarCases)).combine('init', keysOf(kVarInit)))
   .fn(t => {
     const func_case = kFuncVarCases[t.params.case];
+    if (func_case.requires) {
+      t.skipIfLanguageFeatureNotSupported(func_case.requires);
+    }
     const code = `
 ${func_case.typedecl}
 
