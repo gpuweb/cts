@@ -7,7 +7,8 @@ import { assert } from '../../../../common/util/util.js';
 import {
   kAllBufferUsageBits,
   kBufferSizeAlignment,
-  kBufferUsages } from
+  kBufferUsages,
+  kSomeBogusBufferUsage } from
 '../../../capability_info.js';
 import { GPUConst } from '../../../constants.js';
 import { AllFeaturesMaxLimitsGPUTest } from '../../../gpu_test.js';
@@ -54,14 +55,12 @@ fn((t) => {
   t.expectGPUError('validation', () => t.createBufferTracked({ size, usage }), !isValid);
 });
 
-const kInvalidUsage = 0x8000;
-assert((kInvalidUsage & kAllBufferUsageBits) === 0);
 g.test('usage').
 desc('Test combinations of zero to two usage flags are validated to be valid.').
 params((u) =>
 u.
-combine('usage1', [0, ...kBufferUsages, kInvalidUsage]).
-combine('usage2', [0, ...kBufferUsages, kInvalidUsage]).
+combine('usage1', [0, ...kBufferUsages, kSomeBogusBufferUsage]).
+combine('usage2', [0, ...kBufferUsages, kSomeBogusBufferUsage]).
 beginSubcases().
 combine('mappedAtCreation', [false, true])
 ).
