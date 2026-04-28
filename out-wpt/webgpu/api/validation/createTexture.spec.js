@@ -358,7 +358,7 @@ fn((t) => {
   if ((usage & GPUConst.TextureUsage.RENDER_ATTACHMENT) !== 0) {
     t.skipIfTextureFormatNotUsableAsRenderAttachment(format);
   }
-  // MAINTENANCE_TODO(#4509): Remove this when TRANSIENT_ATTACHMENT is added to the WebGPU spec.
+  // MAINTENANCE_TODO(#4509): Remove this after all implementations have TRANSIENT_ATTACHMENT.
   if ((usage & GPUConst.TextureUsage.TRANSIENT_ATTACHMENT) !== 0) {
     t.skipIfTransientAttachmentNotSupported();
   }
@@ -1035,7 +1035,7 @@ fn((t) => {
     usage
   };
 
-  // MAINTENANCE_TODO(#4509): Remove this when TRANSIENT_ATTACHMENT is added to the WebGPU spec.
+  // MAINTENANCE_TODO(#4509): Remove this after all implementations have TRANSIENT_ATTACHMENT.
   if ((usage & GPUConst.TextureUsage.TRANSIENT_ATTACHMENT) !== 0) {
     t.skipIfTransientAttachmentNotSupported();
   }
@@ -1075,7 +1075,7 @@ combine('depthOrArrayLayers', [1, 2]).
 combine('mipLevelCount', [1, 2])
 ).
 fn((t) => {
-  // MAINTENANCE_TODO(#4509): Remove this when TRANSIENT_ATTACHMENT is added to the WebGPU spec.
+  // MAINTENANCE_TODO(#4509): Remove this after all implementations have TRANSIENT_ATTACHMENT.
   t.skipIfTransientAttachmentNotSupported();
 
   const { format, depthOrArrayLayers, mipLevelCount } = t.params;
