@@ -1132,6 +1132,35 @@ g.test('usage')
     );
   });
 
+g.test('new_usages')
+  .desc(`Valid usages not present in GPUTextureUsage shouldn't be accepted by createTexture().`)
+  .params(u =>
+    u
+      .combine('usage', [
+        ...kTextureUsages,
+        GPUConst.TextureUsage.RENDER_ATTACHMENT | GPUConst.TextureUsage.TRANSIENT_ATTACHMENT,
+      ])
+      .filter(p => isValidTextureUsageCombination(p.usage))
+  )
+  .fn(t => {
+    const { usage } = t.params;
+
+    let exposedUsages = 0;
+    for (const v of Object.values(GPUTextureUsage)) {
+      exposedUsages |= v;
+    }
+
+    const success = (usage & exposedUsages) === usage;
+
+    t.expectGPUError(
+      'validation',
+      () => {
+        t.createTextureTracked({ format: 'rgba8unorm', size: [1, 1], usage });
+      },
+      !success
+    );
+  });
+
 g.test('viewFormats')
   .desc(
     `Test creating a texture with viewFormats list for all {texture format}x{view format}. Only compatible view formats should be valid.`
