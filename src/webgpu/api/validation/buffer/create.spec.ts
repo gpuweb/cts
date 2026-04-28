@@ -85,7 +85,7 @@ g.test('usage')
   });
 
 g.test('new_usages')
-  .desc(`Valid sages not present in GPUBufferUsage shouldn't be accepted by createBuffer().`)
+  .desc(`Valid usages not present in GPUBufferUsage shouldn't be accepted by createBuffer().`)
   .params(u =>
     u //
       .beginSubcases()

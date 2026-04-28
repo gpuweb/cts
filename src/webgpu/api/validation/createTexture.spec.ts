@@ -1099,7 +1099,7 @@ g.test('depthOrArrayLayers_and_mipLevelCount_for_transient_attachments')
   });
 
 g.test('new_usages')
-  .desc(`Valid sages not present in GPUTextureUsage shouldn't be accepted by createTexture().`)
+  .desc(`Valid usages not present in GPUTextureUsage shouldn't be accepted by createTexture().`)
   .params(u =>
     u
       .combine('usage', [
