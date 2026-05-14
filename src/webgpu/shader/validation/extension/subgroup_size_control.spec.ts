@@ -33,8 +33,7 @@ export function getValidSubgroupSizeForSubgroupSizeAttribute(adapterInfo: GPUAda
 g.test('enable_subgroup_size_control_requires_subgroups')
   .desc(
     `Checks that enabling the WGSL extension subgroup_size_control without also enabling the
-     subgroups extension is a compilation error. The test is skipped if the adapter does not
-     support the subgroup-size-control WebGPU extension.`
+     subgroups extension is a compilation error.`
   )
   .params(u => u.combine('enableSubgroups', [false, true] as const))
   .beforeAllSubcases(t => {
@@ -60,8 +59,7 @@ g.test('use_subgroup_size_attribute_requires_subgroup_size_control_extension_ena
   .desc(
     `Checks that the @subgroup_size attribute is only allowed with the WGSL extension
      subgroup_size_control enabled in the shader and the WebGPU extension subgroup-size-control
-     supported on the device. The test is skipped if the adapter does not support the
-     subgroup-size-control WebGPU extension.`
+     supported on the device.`
   )
   .params(u => u.combine('enableExtension', [false, true] as const))
   .beforeAllSubcases(t => {
@@ -111,9 +109,7 @@ const kStageShaders = {
 g.test('subgroup_size_attribute_only_valid_in_compute_stage')
   .desc(
     `Checks that the @subgroup_size attribute is only valid on a compute shader entry point.
-     Applying it to a vertex or fragment entry point must be a compilation error.
-     The test is skipped if the adapter does not support the subgroup-size-control WebGPU
-     extension.`
+     Applying it to a vertex or fragment entry point must be a compilation error.`
   )
   .params(u => u.combine('stage', ['compute', 'vertex', 'fragment'] as const))
   .beforeAllSubcases(t => {
