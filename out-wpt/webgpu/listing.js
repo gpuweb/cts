@@ -5714,6 +5714,14 @@ export const listing = [
     "file": [
       "shader",
       "validation",
+      "extension",
+      "subgroup_size_control"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
       "functions",
       "alias_analysis"
     ]
