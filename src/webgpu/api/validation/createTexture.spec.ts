@@ -1214,3 +1214,45 @@ g.test('viewFormats')
       });
     }, !compatible);
   });
+
+g.test('transient_viewFormats')
+  .desc(`Test that viewFormats is not allowed with TRANSIENT_ATTACHMENT textures.`)
+  .params(u =>
+    u
+      // Just test rgba8unorm formats as this check doesn't care about what the format is.
+      .combineWithParams([
+        { format: 'rgba8unorm', _otherFormat: 'rgba8unorm-srgb' },
+        { format: 'rgba8unorm-srgb', _otherFormat: 'rgba8unorm' },
+      ] as const)
+      .beginSubcases()
+      .expandWithParams(({ format, _otherFormat }) => [
+        // Control cases
+        { useTransient: true, viewFormats: undefined },
+        { useTransient: false, viewFormats: [format] },
+        { useTransient: false, viewFormats: [_otherFormat] },
+        // Invalid cases
+        { useTransient: true, viewFormats: [format] },
+        { useTransient: true, viewFormats: [_otherFormat] },
+        { useTransient: true, viewFormats: [format, _otherFormat] },
+      ])
+  )
+  .fn(t => {
+    const { format, viewFormats, useTransient } = t.params;
+    t.skipIfTextureFormatNotSupported(format);
+
+    const { blockWidth, blockHeight } = getBlockInfoForTextureFormat(format);
+
+    const invalid = useTransient && viewFormats !== undefined;
+    t.expectValidationError(() => {
+      t.createTextureTracked({
+        format,
+        size: [blockWidth, blockHeight],
+        usage:
+          GPUConst.TextureUsage.RENDER_ATTACHMENT |
+          (useTransient ? GPUConst.TextureUsage.TRANSIENT_ATTACHMENT : 0),
+        // Doesn't matter what formats we request, TRANSIENT_ATTACHMENT doesn't allow it.
+        // So we use [format] since that's otherwise ALWAYS valid regardless of format.
+        viewFormats,
+      });
+    }, invalid);
+  });
