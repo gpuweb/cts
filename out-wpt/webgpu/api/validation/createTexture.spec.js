@@ -1214,3 +1214,56 @@ fn((t) => {
     });
   }, !compatible);
 });
+
+g.test('transient_viewFormats').
+desc(`Test that viewFormats is not allowed with TRANSIENT_ATTACHMENT textures.`).
+params((u) =>
+u
+// Just test rgba8unorm formats as this check doesn't care about what the format is.
+.combineWithParams([
+{ format: 'rgba8unorm', _otherFormat: 'rgba8unorm-srgb' },
+{ format: 'rgba8unorm-srgb', _otherFormat: 'rgba8unorm' }]
+).
+beginSubcases().
+expandWithParams(({ format, _otherFormat }) => [
+// Control cases
+{ useTransient: true, viewFormat: undefined },
+{ useTransient: false, viewFormat: format },
+{ useTransient: false, viewFormat: _otherFormat },
+// Invalid cases
+{ useTransient: true, viewFormat: format },
+{ useTransient: true, viewFormat: _otherFormat }]
+)
+).
+fn((t) => {
+  const { format, viewFormat, useTransient } = t.params;
+  if (viewFormat && !textureFormatsAreViewCompatible(t.device.features, format, viewFormat)) {
+    t.skip(`"${format}" and "${viewFormat}" are not view-compatible`);
+  }
+
+  const { blockWidth, blockHeight } = getBlockInfoForTextureFormat(format);
+
+  const invalid = useTransient && viewFormat !== undefined;
+  let tex;
+  t.expectValidationError(() => {
+    tex = t.createTextureTracked({
+      format,
+      size: [blockWidth, blockHeight],
+      usage:
+      GPUConst.TextureUsage.RENDER_ATTACHMENT | (
+      useTransient ? GPUConst.TextureUsage.TRANSIENT_ATTACHMENT : 0),
+      // Doesn't matter what formats we request, TRANSIENT_ATTACHMENT doesn't allow it.
+      // So we use [format] since that's otherwise ALWAYS valid regardless of format.
+      viewFormats: viewFormat ? [viewFormat] : undefined
+    });
+  }, invalid);
+
+  if (invalid) {
+    // When we reach here the texture should be invalid, so creating a view should be invalid.
+    // But try it anyway just to see what happens - if the browser had a bug above, this could
+    // issue a bad command to the backend API.
+    t.expectValidationError(() => {
+      tex.createView({ format: viewFormat });
+    }, true);
+  }
+});
