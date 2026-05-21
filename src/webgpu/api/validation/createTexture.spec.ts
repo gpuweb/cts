@@ -1237,7 +1237,9 @@ g.test('transient_viewFormats')
   )
   .fn(t => {
     const { format, viewFormat, useTransient } = t.params;
-    t.skipIfTextureFormatNotSupported(format);
+    if (viewFormat && !textureFormatsAreViewCompatible(t.device.features, format, viewFormat)) {
+      t.skip(`"${format}" and "${viewFormat}" are not view-compatible`);
+    }
 
     const { blockWidth, blockHeight } = getBlockInfoForTextureFormat(format);
 
