@@ -1227,24 +1227,24 @@ g.test('transient_viewFormats')
       .beginSubcases()
       .expandWithParams(({ format, _otherFormat }) => [
         // Control cases
-        { useTransient: true, viewFormats: undefined },
-        { useTransient: false, viewFormats: [format] },
-        { useTransient: false, viewFormats: [_otherFormat] },
+        { useTransient: true, viewFormat: undefined },
+        { useTransient: false, viewFormat: format },
+        { useTransient: false, viewFormat: _otherFormat },
         // Invalid cases
-        { useTransient: true, viewFormats: [format] },
-        { useTransient: true, viewFormats: [_otherFormat] },
-        { useTransient: true, viewFormats: [format, _otherFormat] },
+        { useTransient: true, viewFormat: format },
+        { useTransient: true, viewFormat: _otherFormat },
       ])
   )
   .fn(t => {
-    const { format, viewFormats, useTransient } = t.params;
+    const { format, viewFormat, useTransient } = t.params;
     t.skipIfTextureFormatNotSupported(format);
 
     const { blockWidth, blockHeight } = getBlockInfoForTextureFormat(format);
 
-    const invalid = useTransient && viewFormats !== undefined;
+    const invalid = useTransient && viewFormat !== undefined;
+    let tex: GPUTexture;
     t.expectValidationError(() => {
-      t.createTextureTracked({
+      tex = t.createTextureTracked({
         format,
         size: [blockWidth, blockHeight],
         usage:
@@ -1252,7 +1252,16 @@ g.test('transient_viewFormats')
           (useTransient ? GPUConst.TextureUsage.TRANSIENT_ATTACHMENT : 0),
         // Doesn't matter what formats we request, TRANSIENT_ATTACHMENT doesn't allow it.
         // So we use [format] since that's otherwise ALWAYS valid regardless of format.
-        viewFormats,
+        viewFormats: viewFormat ? [viewFormat] : undefined,
       });
     }, invalid);
+
+    if (invalid) {
+      // When we reach here the texture should be invalid, so creating a view should be invalid.
+      // But try it anyway just to see what happens - if the browser had a bug above, this could
+      // issue a bad command to the backend API.
+      t.expectValidationError(() => {
+        tex.createView({ format: viewFormat });
+      }, true);
+    }
   });
