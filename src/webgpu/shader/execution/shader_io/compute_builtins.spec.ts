@@ -1169,9 +1169,46 @@ fn main(@builtin(local_invocation_id) local_id : vec3u,
     t.expectOK(checkNumSubgroupsConsistency(countData, outputData, wgThreads, t.params.numWGs));
   });
 
+/**
+ * Returns all valid subgroup sizes for the given adapter info, i.e. all power-of-two values
+ * between subgroupMinSize and subgroupMaxSize inclusive.
+ */
+async function getValidSubgroupSizes(device: GPUDevice): Promise<number[]> {
+  interface SubgroupProperties extends GPUAdapterInfo {
+    subgroupMinSize: number;
+    subgroupMaxSize: number;
+  }
+  const { subgroupMinSize, subgroupMaxSize } = device.adapterInfo as SubgroupProperties;
+
+  const sizes: number[] = [];
+  for (let subgroupSize = subgroupMinSize; subgroupSize <= subgroupMaxSize; subgroupSize *= 2) {
+    const wgsl = `
+enable subgroups;
+enable subgroup_size_control;
+
+@compute @workgroup_size(${subgroupSize}, 1, 1) @subgroup_size(${subgroupSize})
+fn main(@builtin(local_invocation_index) lid : u32) {
+}`;
+    device.pushErrorScope('validation');
+    const module = device.createShaderModule({ code: wgsl });
+    device.createComputePipeline({
+      layout: 'auto',
+      compute: { module, entryPoint: 'main' },
+    });
+    const error = await device.popErrorScope();
+    if (error) {
+      continue;
+    }
+    sizes.push(subgroupSize);
+  }
+  return sizes;
+}
+
 g.test('subgroup_size_attribute')
   .desc(
-    'Tests that the value of the subgroup_size builtin must equal the value of the @subgroup_size attribute.'
+    `Tests that at least one power-of-two value in [subgroupMinSize, subgroupMaxSize] can be used as
+    the @subgroup_size attribute in a simple compute pipeline.the value of the subgroup_size builtin
+    must equal the value of the @subgroup_size attribute.`
   )
   .params(u =>
     u.combine('numWorkGroups', [1, 2] as const).combine('numSubgroups', [1, 2, 4] as const)
@@ -1179,35 +1216,18 @@ g.test('subgroup_size_attribute')
   .fn(async t => {
     t.skipIfDeviceDoesNotHaveFeature('subgroup-size-control' as GPUFeatureName);
 
-    /**
-     * Returns a subgroup size value that is valid for use in the @subgroup_size
-     * attribute on the current adapter.
-     *
-     * On Intel gen-12lp, subgroupMinSize may be 8 in fragment stages, which is below the allowed range
-     * for `[WaveSize]` on D3D12 (can only be 16). subgroupMaxSize (16) is always within the explicit
-     * range, so it is returned for that architecture.
-     * On all other adapters, subgroupMinSize is returned as the conservative choice as on many D3D12
-     * drivers only `waveLaneCountMin` is reliable, while `waveLaneCountMax` is not.
-     *
-     * @param adapterInfo The GPUAdapterInfo of the current device's adapter.
-     * @returns A power-of-two subgroup size valid for @subgroup_size on this adapter.
-     */
-    const getValidSubgroupSizeForSubgroupSizeAttribute = (adapterInfo: GPUAdapterInfo): number => {
-      interface SubgroupAdapterInfo extends GPUAdapterInfo {
-        subgroupMinSize: number;
-        subgroupMaxSize: number;
-      }
-      const { vendor, architecture, subgroupMinSize, subgroupMaxSize } =
-        adapterInfo as SubgroupAdapterInfo;
-      return vendor === 'intel' && architecture === 'gen-12lp' ? subgroupMaxSize : subgroupMinSize;
-    };
-
-    const subgroupSize = getValidSubgroupSizeForSubgroupSizeAttribute(t.device.adapterInfo);
-
     const { numWorkGroups, numSubgroups } = t.params;
-    const wgx = subgroupSize * numSubgroups;
 
-    const wgsl = `
+    const subgroupSizes = await getValidSubgroupSizes(t.device);
+    t.expect(
+      subgroupSizes.length > 0,
+      `No valid @subgroup_size value found in [subgroupMinSize, subgroupMaxSize]`
+    );
+
+    for (const subgroupSize of subgroupSizes) {
+      const wgx = subgroupSize * numSubgroups;
+
+      const wgsl = `
 enable subgroups;
 enable subgroup_size_control;
 
@@ -1223,148 +1243,57 @@ fn main(@builtin(subgroup_size) builtin_size : u32,
   output[gid] = select(0u, 1u, builtin_size == ${subgroupSize}u);
 }`;
 
-    const numInvocations = wgx * numWorkGroups;
-    const outputBuffer = t.makeBufferWithContents(
-      new Uint32Array([...iterRange(numInvocations, x => 0)]),
-      GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
-    );
-    t.trackForCleanup(outputBuffer);
-
-    const pipeline = t.device.createComputePipeline({
-      layout: 'auto',
-      compute: {
-        module: t.device.createShaderModule({
-          code: wgsl,
-        }),
-        entryPoint: 'main',
-      },
-    });
-    const bg = t.device.createBindGroup({
-      layout: pipeline.getBindGroupLayout(0),
-      entries: [
-        {
-          binding: 0,
-          resource: {
-            buffer: outputBuffer,
-          },
-        },
-      ],
-    });
-
-    const encoder = t.device.createCommandEncoder();
-    const pass = encoder.beginComputePass();
-    pass.setPipeline(pipeline);
-    pass.setBindGroup(0, bg);
-    pass.dispatchWorkgroups(numWorkGroups, 1, 1);
-    pass.end();
-    t.queue.submit([encoder.finish()]);
-
-    const outputReadback = await t.readGPUBufferRangeTyped(outputBuffer, {
-      srcByteOffset: 0,
-      type: Uint32Array,
-      typedLength: numInvocations,
-      method: 'copy',
-    });
-    const outputData: Uint32Array = outputReadback.data;
-
-    for (let i = 0; i < numInvocations; i++) {
-      if (outputData[i] !== 1) {
-        t.fail(
-          `@subgroup_size(${subgroupSize}): invocation ${i} has builtin subgroup_size != ${subgroupSize}`
-        );
-        break;
-      }
-    }
-  });
-
-g.test('subgroup_size_attribute_valid_size_exists')
-  .desc(
-    `Tests that at least one power-of-two value in [subgroupMinSize, subgroupMaxSize] can be
-used as the @subgroup_size attribute in a simple compute pipeline.`
-  )
-  .fn(async t => {
-    t.skipIfDeviceDoesNotHaveFeature('subgroup-size-control' as GPUFeatureName);
-
-    interface SubgroupProperties extends GPUAdapterInfo {
-      subgroupMinSize: number;
-      subgroupMaxSize: number;
-    }
-    const { subgroupMinSize, subgroupMaxSize } = t.device.adapterInfo as SubgroupProperties;
-
-    let succeeded = false;
-
-    for (let subgroupSize = subgroupMinSize; subgroupSize <= subgroupMaxSize; subgroupSize *= 2) {
-      const wgsl = `
-enable subgroups;
-enable subgroup_size_control;
-
-@group(0) @binding(0)
-var<storage, read_write> output : array<u32>;
-
-@compute @workgroup_size(${subgroupSize}, 1, 1) @subgroup_size(${subgroupSize})
-fn main(@builtin(local_invocation_index) lid : u32) {
-  output[lid] = lid;
-}`;
-
-      // Use an error scope to catch validation errors from pipeline creation
-      // without crashing the test.
-      t.device.pushErrorScope('validation');
-      const module = t.device.createShaderModule({ code: wgsl });
-      const pipeline = t.device.createComputePipeline({
-        layout: 'auto',
-        compute: { module, entryPoint: 'main' },
-      });
-      const error = await t.device.popErrorScope();
-      if (error) {
-        continue;
-      }
-
+      const numInvocations = wgx * numWorkGroups;
       const outputBuffer = t.makeBufferWithContents(
-        new Uint32Array([...iterRange(subgroupSize, x => 0)]),
+        new Uint32Array([...iterRange(numInvocations, x => 0)]),
         GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
       );
       t.trackForCleanup(outputBuffer);
 
+      const pipeline = t.device.createComputePipeline({
+        layout: 'auto',
+        compute: {
+          module: t.device.createShaderModule({
+            code: wgsl,
+          }),
+          entryPoint: 'main',
+        },
+      });
       const bg = t.device.createBindGroup({
         layout: pipeline.getBindGroupLayout(0),
-        entries: [{ binding: 0, resource: { buffer: outputBuffer } }],
+        entries: [
+          {
+            binding: 0,
+            resource: {
+              buffer: outputBuffer,
+            },
+          },
+        ],
       });
 
       const encoder = t.device.createCommandEncoder();
       const pass = encoder.beginComputePass();
       pass.setPipeline(pipeline);
       pass.setBindGroup(0, bg);
-      pass.dispatchWorkgroups(1, 1, 1);
+      pass.dispatchWorkgroups(numWorkGroups, 1, 1);
       pass.end();
       t.queue.submit([encoder.finish()]);
 
       const outputReadback = await t.readGPUBufferRangeTyped(outputBuffer, {
         srcByteOffset: 0,
         type: Uint32Array,
-        typedLength: subgroupSize,
+        typedLength: numInvocations,
         method: 'copy',
       });
       const outputData: Uint32Array = outputReadback.data;
 
-      // Validate that each invocation wrote its local_invocation_index.
-      let valid = true;
-      for (let i = 0; i < subgroupSize; i++) {
-        if (outputData[i] !== i) {
+      for (let i = 0; i < numInvocations; i++) {
+        if (outputData[i] !== 1) {
           t.fail(
-            `@subgroup_size(${subgroupSize}): output[${i}] expected ${i}, got ${outputData[i]}`
+            `@subgroup_size(${subgroupSize}): invocation ${i} has builtin subgroup_size != ${subgroupSize}`
           );
-          valid = false;
           break;
         }
       }
-
-      if (valid) {
-        succeeded = true;
-        break;
-      }
-    }
-
-    if (!succeeded) {
-      t.fail(`No valid @subgroup_size value found in [${subgroupMinSize}, ${subgroupMaxSize}]`);
     }
   });
