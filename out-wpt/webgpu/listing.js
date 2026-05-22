@@ -729,6 +729,15 @@ export const listing = [
       "validation",
       "capability_checks",
       "features",
+      "subgroup_size_control"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
+      "capability_checks",
+      "features",
       "texture_component_swizzle"
     ]
   },
