@@ -127,7 +127,9 @@ export function virtualMipSize(
  * Get texture dimension from view dimension in order to create an compatible texture for a given
  * view dimension.
  */
-export function getTextureDimensionFromView(viewDimension: GPUTextureViewDimension) {
+export function getTextureDimensionFromView(
+  viewDimension: GPUTextureViewDimension
+): GPUTextureDimension {
   switch (viewDimension) {
     case '1d':
       return '1d';
