@@ -1169,46 +1169,11 @@ fn main(@builtin(local_invocation_id) local_id : vec3u,
     t.expectOK(checkNumSubgroupsConsistency(countData, outputData, wgThreads, t.params.numWGs));
   });
 
-/**
- * Returns all valid subgroup sizes for the given adapter info, i.e. all power-of-two values
- * between subgroupMinSize and subgroupMaxSize inclusive.
- */
-async function getValidSubgroupSizes(device: GPUDevice): Promise<number[]> {
-  interface SubgroupProperties extends GPUAdapterInfo {
-    subgroupMinSize: number;
-    subgroupMaxSize: number;
-  }
-  const { subgroupMinSize, subgroupMaxSize } = device.adapterInfo as SubgroupProperties;
-
-  const sizes: number[] = [];
-  for (let subgroupSize = subgroupMinSize; subgroupSize <= subgroupMaxSize; subgroupSize *= 2) {
-    const wgsl = `
-enable subgroups;
-enable subgroup_size_control;
-
-@compute @workgroup_size(${subgroupSize}, 1, 1) @subgroup_size(${subgroupSize})
-fn main(@builtin(local_invocation_index) lid : u32) {
-}`;
-    device.pushErrorScope('validation');
-    const module = device.createShaderModule({ code: wgsl });
-    device.createComputePipeline({
-      layout: 'auto',
-      compute: { module, entryPoint: 'main' },
-    });
-    const error = await device.popErrorScope();
-    if (error) {
-      continue;
-    }
-    sizes.push(subgroupSize);
-  }
-  return sizes;
-}
-
 g.test('subgroup_size_attribute')
   .desc(
     `Tests that at least one power-of-two value in [subgroupMinSize, subgroupMaxSize] can be used as
-    the @subgroup_size attribute in a simple compute pipeline.the value of the subgroup_size builtin
-    must equal the value of the @subgroup_size attribute.`
+    the @subgroup_size attribute in a simple compute pipeline. The value of the subgroup_size
+    builtin must equal the value of the @subgroup_size attribute.`
   )
   .params(u =>
     u.combine('numWorkGroups', [1, 2] as const).combine('numSubgroups', [1, 2, 4] as const)
@@ -1218,13 +1183,15 @@ g.test('subgroup_size_attribute')
 
     const { numWorkGroups, numSubgroups } = t.params;
 
-    const subgroupSizes = await getValidSubgroupSizes(t.device);
-    t.expect(
-      subgroupSizes.length > 0,
-      `No valid @subgroup_size value found in [subgroupMinSize, subgroupMaxSize]`
-    );
+    interface SubgroupProperties extends GPUAdapterInfo {
+      subgroupMinSize: number;
+      subgroupMaxSize: number;
+    }
+    const { subgroupMinSize, subgroupMaxSize } = t.device.adapterInfo as SubgroupProperties;
 
-    for (const subgroupSize of subgroupSizes) {
+    let atLeastOneSucceeded = false;
+
+    for (let subgroupSize = subgroupMinSize; subgroupSize <= subgroupMaxSize; subgroupSize *= 2) {
       const wgx = subgroupSize * numSubgroups;
 
       const wgsl = `
@@ -1243,6 +1210,20 @@ fn main(@builtin(subgroup_size) builtin_size : u32,
   output[gid] = select(0u, 1u, builtin_size == ${subgroupSize}u);
 }`;
 
+      // Try to create the pipeline; skip this subgroup size if it fails validation.
+      t.device.pushErrorScope('validation');
+      const module = t.device.createShaderModule({ code: wgsl });
+      const pipeline = t.device.createComputePipeline({
+        layout: 'auto',
+        compute: { module, entryPoint: 'main' },
+      });
+      const error = await t.device.popErrorScope();
+      if (error) {
+        continue;
+      }
+
+      atLeastOneSucceeded = true;
+
       const numInvocations = wgx * numWorkGroups;
       const outputBuffer = t.makeBufferWithContents(
         new Uint32Array([...iterRange(numInvocations, x => 0)]),
@@ -1250,15 +1231,6 @@ fn main(@builtin(subgroup_size) builtin_size : u32,
       );
       t.trackForCleanup(outputBuffer);
 
-      const pipeline = t.device.createComputePipeline({
-        layout: 'auto',
-        compute: {
-          module: t.device.createShaderModule({
-            code: wgsl,
-          }),
-          entryPoint: 'main',
-        },
-      });
       const bg = t.device.createBindGroup({
         layout: pipeline.getBindGroupLayout(0),
         entries: [
@@ -1296,4 +1268,9 @@ fn main(@builtin(subgroup_size) builtin_size : u32,
         }
       }
     }
+
+    t.expect(
+      atLeastOneSucceeded,
+      `No valid @subgroup_size value found in [subgroupMinSize, subgroupMaxSize]`
+    );
   });
