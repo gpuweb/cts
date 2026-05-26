@@ -192,30 +192,16 @@ g.test('subgroup_size_override_must_be_power_of_2_at_pipeline_creation')
   .fn(t => {
     const { size } = t.params;
 
-    const code = `
-      enable subgroups;
-      enable subgroup_size_control;
-      override S: u32;
-      @compute @workgroup_size(S) @subgroup_size(S)
-      fn main() {}
-    `;
-
-    const shaderModule = t.device.createShaderModule({ code });
-
-    t.expectGPUError(
-      'validation',
-      () => {
-        t.device.createComputePipeline({
-          layout: 'auto',
-          compute: {
-            module: shaderModule,
-            entryPoint: 'main',
-            constants: { S: size },
-          },
-        });
-      },
-      true
-    );
+    t.expectPipelineResult({
+      expectedResult: false,
+      code: `
+        enable subgroups;
+        enable subgroup_size_control;
+        override S: u32;
+        @workgroup_size(S) @subgroup_size(S)`,
+      constants: { S: size },
+      addWorkgroupSize: false,
+    });
   });
 
 /**
@@ -268,31 +254,17 @@ g.test('subgroup_size_override_valid_values_no_error')
     const validSubgroupSizes = await getValidSubgroupSizes(t.device);
     t.expect(validSubgroupSizes.length > 0, 'Expected at least one valid subgroup size');
 
-    const code = `
-      enable subgroups;
-      enable subgroup_size_control;
-      override S: u32;
-      @compute @workgroup_size(S) @subgroup_size(S)
-      fn main() {}
-    `;
-
-    const shaderModule = t.device.createShaderModule({ code });
-
     for (const subgroupSize of validSubgroupSizes) {
-      t.expectGPUError(
-        'validation',
-        () => {
-          t.device.createComputePipeline({
-            layout: 'auto',
-            compute: {
-              module: shaderModule,
-              entryPoint: 'main',
-              constants: { S: subgroupSize },
-            },
-          });
-        },
-        false
-      );
+      t.expectPipelineResult({
+        expectedResult: true,
+        code: `
+          enable subgroups;
+          enable subgroup_size_control;
+          override S: u32;
+          @workgroup_size(S) @subgroup_size(S)`,
+        constants: { S: subgroupSize },
+        addWorkgroupSize: false,
+      });
     }
   });
 
@@ -325,109 +297,20 @@ g.test('workgroup_size_x_must_be_multiple_of_subgroup_size_at_pipeline_creation'
 
       const isMultiple = workgroupSizeX % subgroupSize === 0;
 
-      if (!workgroupSizeIsOverride && !subgroupSizeIsOverride) {
-        // Both are constants
-        const code = `
+      t.expectPipelineResult({
+        expectedResult: isMultiple,
+        code: `
             enable subgroups;
             enable subgroup_size_control;
-            @compute @workgroup_size(${workgroupSizeX}) @subgroup_size(${subgroupSize})
-            fn main() {}
-        `;
-
-        const shaderModule = t.device.createShaderModule({ code });
-
-        t.expectGPUError(
-          'validation',
-          () => {
-            t.device.createComputePipeline({
-              layout: 'auto',
-              compute: {
-                module: shaderModule,
-                entryPoint: 'main',
-              },
-            });
-          },
-          !isMultiple
-        );
-      } else if (workgroupSizeIsOverride && subgroupSizeIsOverride) {
-        // Both are overrides
-        const code = `
-          enable subgroups;
-          enable subgroup_size_control;
-          override S: u32;
-          override W: u32;
-          @compute @workgroup_size(W) @subgroup_size(S)
-          fn main() {}
-        `;
-
-        const shaderModule = t.device.createShaderModule({ code });
-
-        t.expectGPUError(
-          'validation',
-          () => {
-            t.device.createComputePipeline({
-              layout: 'auto',
-              compute: {
-                module: shaderModule,
-                entryPoint: 'main',
-                constants: { S: subgroupSize, W: workgroupSizeX },
-              },
-            });
-          },
-          !isMultiple
-        );
-      } else if (workgroupSizeIsOverride && !subgroupSizeIsOverride) {
-        // workgroup_size is override, subgroup_size is constant
-        const code = `
-          enable subgroups;
-          enable subgroup_size_control;
-          override W: u32;
-          @compute @workgroup_size(W) @subgroup_size(${subgroupSize})
-          fn main() {}
-        `;
-
-        const shaderModule = t.device.createShaderModule({ code });
-
-        t.expectGPUError(
-          'validation',
-          () => {
-            t.device.createComputePipeline({
-              layout: 'auto',
-              compute: {
-                module: shaderModule,
-                entryPoint: 'main',
-                constants: { W: workgroupSizeX },
-              },
-            });
-          },
-          !isMultiple
-        );
-      } else {
-        // workgroup_size is constant, subgroup_size is override
-        const code = `
-          enable subgroups;
-          enable subgroup_size_control;
-          override S: u32;
-          @compute @workgroup_size(${workgroupSizeX}) @subgroup_size(S)
-          fn main() {}
-        `;
-
-        const shaderModule = t.device.createShaderModule({ code });
-
-        t.expectGPUError(
-          'validation',
-          () => {
-            t.device.createComputePipeline({
-              layout: 'auto',
-              compute: {
-                module: shaderModule,
-                entryPoint: 'main',
-                constants: { S: subgroupSize },
-              },
-            });
-          },
-          !isMultiple
-        );
-      }
+            const const_S = ${subgroupSize}u;
+            const const_W = ${workgroupSizeX}u;
+            override override_S: u32;
+            override override_W: u32;
+            @workgroup_size(${workgroupSizeIsOverride ? 'override_W' : 'const_W'})
+            @subgroup_size(${subgroupSizeIsOverride ? 'override_S' : 'const_S'})
+          `,
+        constants: { override_S: subgroupSize, override_W: workgroupSizeX },
+        addWorkgroupSize: false,
+      });
     }
   });
