@@ -70,8 +70,6 @@ export function makeTestGroup<F extends Fixture>(fixture: FixtureClass<F>): Test
 export interface IterableTestGroup {
   iterate(): Iterable<IterableTest>;
   validate(fileQuery: TestQueryMultiFile): void;
-  /** Returns the file-relative test paths of tests which have >0 cases. */
-  collectNonEmptyTests(): { testPath: string[] }[];
 }
 export interface IterableTest {
   testPath: string[];

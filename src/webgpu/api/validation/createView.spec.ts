@@ -5,6 +5,7 @@ import { kUnitCaseParamsBuilder } from '../../../common/framework/params_builder
 import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { unreachable } from '../../../common/util/util.js';
 import {
+  isValidTextureUsageCombination,
   kTextureAspects,
   kTextureDimensions,
   kTextureUsages,
@@ -62,7 +63,7 @@ g.test('format')
 
     const compatible =
       viewFormat === undefined ||
-      textureFormatsAreViewCompatible(t.device, textureFormat, viewFormat);
+      textureFormatsAreViewCompatible(t.device.features, textureFormat, viewFormat);
 
     const texture = t.createTextureTracked({
       format: textureFormat,
@@ -356,7 +357,14 @@ g.test('texture_view_usage')
         );
       })
       .beginSubcases()
-      .combine('textureViewUsage', [0, ...kTextureUsages])
+      .combine('textureViewUsage', kTextureUsages)
+      .unless(({ textureUsage, textureViewUsage }) => {
+        // TRANSIENT_ATTACHMENT is only valid when combined with RENDER_ATTACHMENT.
+        return (
+          textureUsage === GPUConst.TextureUsage.TRANSIENT_ATTACHMENT ||
+          textureViewUsage === GPUConst.TextureUsage.TRANSIENT_ATTACHMENT
+        );
+      })
   )
   .fn(t => {
     const { format, textureUsage, textureViewUsage } = t.params;
@@ -384,9 +392,50 @@ g.test('texture_view_usage')
     }, !success);
   });
 
+g.test('texture_view_usage_of_multiple_usages')
+  .desc(
+    `For a single format (rgba8unorm), check that createView:
+    - allows 0 usages
+    - disallows subsetting usages of TRANSIENT_ATTACHMENT textures
+  `
+  )
+  .params(u =>
+    u
+      .combine('usage1', kTextureUsages)
+      .combine('usage2', kTextureUsages)
+      .filter(p => p.usage1 <= p.usage2)
+      .filter(p => isValidTextureUsageCombination(p.usage1 | p.usage2))
+      .beginSubcases()
+      .expand('viewUsage', p => new Set([0, p.usage1, p.usage2, p.usage1 | p.usage2]))
+  )
+  .fn(t => {
+    const { usage1, usage2, viewUsage } = t.params;
+    const usage = usage1 | usage2;
+
+    // MAINTENANCE_TODO(#4509): Remove this after all implementations have TRANSIENT_ATTACHMENT.
+    if ((usage & GPUConst.TextureUsage.TRANSIENT_ATTACHMENT) !== 0) {
+      t.skipIfTransientAttachmentNotSupported();
+    }
+
+    let isValid = true;
+    if (usage & GPUTextureUsage.TRANSIENT_ATTACHMENT) {
+      isValid &&= viewUsage === usage;
+    }
+
+    const texture = t.createTextureTracked({ format: 'rgba8unorm', size: [1, 1], usage });
+    t.expectGPUError(
+      'validation',
+      () => {
+        texture.createView({ usage: viewUsage });
+      },
+      !isValid
+    );
+  });
+
 g.test('texture_view_usage_with_view_format')
   .desc(
-    `Test that the texture view usage must be supported by the view's format. Checks for every view format possible, and every usage supported by the texture's format`
+    `Test that the texture view usage must be supported by the view's format. Checks for every view
+    format possible, and every usage supported by the texture's format`
   )
   .params(u =>
     u
@@ -394,6 +443,10 @@ g.test('texture_view_usage_with_view_format')
       .combine('usage', kTextureUsages)
       .beginSubcases()
       .combine('viewFormat', kAllTextureFormats)
+      .unless(({ usage }) => {
+        // TRANSIENT_ATTACHMENT is only valid when combined with RENDER_ATTACHMENT.
+        return usage === GPUConst.TextureUsage.TRANSIENT_ATTACHMENT;
+      })
   )
   .fn(t => {
     const { textureFormat, viewFormat, usage } = t.params;
@@ -401,7 +454,7 @@ g.test('texture_view_usage_with_view_format')
     t.skipIfTextureFormatNotSupported(textureFormat, viewFormat);
     t.skipIfTextureFormatDoesNotSupportUsage(usage, textureFormat);
 
-    if (!textureFormatsAreViewCompatible(t.device, textureFormat, viewFormat)) {
+    if (!textureFormatsAreViewCompatible(t.device.features, textureFormat, viewFormat)) {
       t.skip(`"${textureFormat}" and "${viewFormat}" are not view-compatible`);
     }
 
@@ -417,11 +470,14 @@ g.test('texture_view_usage_with_view_format')
 
     // Texture view usage must be a subset of texture usage
     if (usage & GPUTextureUsage.STORAGE_BINDING) {
-      if (!isTextureFormatUsableWithStorageAccessMode(t.device, viewFormat, 'write-only'))
+      if (!isTextureFormatUsableWithStorageAccessMode(t.device.features, viewFormat, 'write-only'))
         success = false;
     }
     if (usage & GPUTextureUsage.RENDER_ATTACHMENT) {
-      if (isColorTextureFormat(viewFormat) && !isTextureFormatColorRenderable(t.device, viewFormat))
+      if (
+        isColorTextureFormat(viewFormat) &&
+        !isTextureFormatColorRenderable(t.device.features, viewFormat)
+      )
         success = false;
     }
 

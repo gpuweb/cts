@@ -34,6 +34,7 @@ g.test('inputs')
       .beginSubcases()
   )
   .fn(t => {
+    const linear_indexing = t.hasLanguageFeature('linear_indexing');
     const invocationsPerGroup = t.params.groupSize.x * t.params.groupSize.y * t.params.groupSize.z;
     const totalInvocations =
       invocationsPerGroup * t.params.numGroups.x * t.params.numGroups.y * t.params.numGroups.z;
@@ -46,6 +47,8 @@ g.test('inputs')
     let global_id = '';
     let group_id = '';
     let num_groups = '';
+    let global_index = '';
+    let group_index = '';
     switch (t.params.method) {
       case 'param':
         params = `
@@ -54,12 +57,18 @@ g.test('inputs')
           @builtin(global_invocation_id) global_id : vec3<u32>,
           @builtin(workgroup_id) group_id : vec3<u32>,
           @builtin(num_workgroups) num_groups : vec3<u32>,
+          ${linear_indexing ? '@builtin(global_invocation_index) global_index : u32,' : ''}
+          ${linear_indexing ? '@builtin(workgroup_index) group_index : u32,' : ''}
         `;
         local_id = 'local_id';
         local_index = 'local_index';
         global_id = 'global_id';
         group_id = 'group_id';
         num_groups = 'num_groups';
+        if (linear_indexing) {
+          global_index = 'global_index';
+          group_index = 'group_index';
+        }
         break;
       case 'struct':
         structures = `struct Inputs {
@@ -68,6 +77,8 @@ g.test('inputs')
             @builtin(global_invocation_id) global_id : vec3<u32>,
             @builtin(workgroup_id) group_id : vec3<u32>,
             @builtin(num_workgroups) num_groups : vec3<u32>,
+            ${linear_indexing ? '@builtin(global_invocation_index) global_index : u32,' : ''}
+            ${linear_indexing ? '@builtin(workgroup_index) group_index : u32,' : ''}
           };`;
         params = `inputs : Inputs`;
         local_id = 'inputs.local_id';
@@ -75,6 +86,10 @@ g.test('inputs')
         global_id = 'inputs.global_id';
         group_id = 'inputs.group_id';
         num_groups = 'inputs.num_groups';
+        if (linear_indexing) {
+          global_index = 'inputs.global_index';
+          group_index = 'inputs.group_index';
+        }
         break;
       case 'mixed':
         structures = `struct InputsA {
@@ -87,12 +102,19 @@ g.test('inputs')
         params = `@builtin(local_invocation_id) local_id : vec3<u32>,
                   inputsA : InputsA,
                   inputsB : InputsB,
-                  @builtin(num_workgroups) num_groups : vec3<u32>,`;
+                  @builtin(num_workgroups) num_groups : vec3<u32>,
+                  ${linear_indexing ? '@builtin(global_invocation_index) global_index : u32,' : ''}
+                  ${linear_indexing ? '@builtin(workgroup_index) group_index : u32,' : ''}
+                  `;
         local_id = 'local_id';
         local_index = 'inputsA.local_index';
         global_id = 'inputsA.global_id';
         group_id = 'inputsB.group_id';
         num_groups = 'num_groups';
+        if (linear_indexing) {
+          global_index = 'global_index';
+          group_index = 'group_index';
+        }
         break;
     }
 
@@ -104,6 +126,8 @@ g.test('inputs')
         global_id: vec3u,
         group_id: vec3u,
         num_groups: vec3u,
+        ${linear_indexing ? 'global_index : u32,' : ''}
+        ${linear_indexing ? 'group_index : u32,' : ''}
       };
       @group(0) @binding(0) var<storage, read_write> outputs : array<Outputs>;
 
@@ -117,15 +141,17 @@ g.test('inputs')
       fn main(
         ${params}
         ) {
-        let group_index = ((${group_id}.z * ${num_groups}.y) + ${group_id}.y) * ${num_groups}.x + ${group_id}.x;
-        let global_index = group_index * ${invocationsPerGroup}u + ${local_index};
+        let o_group_index = ((${group_id}.z * ${num_groups}.y) + ${group_id}.y) * ${num_groups}.x + ${group_id}.x;
+        let o_global_index = o_group_index * ${invocationsPerGroup}u + ${local_index};
         var o: Outputs;
         o.local_id = ${local_id};
         o.local_index = ${local_index};
         o.global_id = ${global_id};
         o.group_id = ${group_id};
         o.num_groups = ${num_groups};
-        outputs[global_index] = o;
+        ${linear_indexing ? `o.global_index = ${global_index};` : ``}
+        ${linear_indexing ? `o.group_index = ${group_index};` : ``}
+        outputs[o_global_index] = o;
       }
     `;
 
@@ -145,7 +171,9 @@ g.test('inputs')
     const kGlobalIdOffset = 4;
     const kGroupIdOffset = 8;
     const kNumGroupsOffset = 12;
-    const kOutputElementSize = 16;
+    const kGlobalIndexOffset = 15;
+    const kGroupIndexOffset = 16;
+    const kOutputElementSize = linear_indexing ? 20 : 16;
 
     // Create the output buffers.
     const outputBuffer = t.createBufferTracked({
@@ -203,6 +231,21 @@ g.test('inputs')
                   const localIndex = (lz * t.params.groupSize.y + ly) * t.params.groupSize.x + lx;
                   const globalIndex = groupIndex * invocationsPerGroup + localIndex;
                   const globalOffset = globalIndex * kOutputElementSize;
+                  const gidX = gx * t.params.groupSize.x + lx;
+                  const gidY = gy * t.params.groupSize.y + ly;
+                  const gidZ = gz * t.params.groupSize.z + lz;
+                  const globalLinearIndex =
+                    gidX +
+                    gidY * t.params.groupSize.x * t.params.numGroups.x +
+                    gidZ *
+                      t.params.groupSize.x *
+                      t.params.numGroups.x *
+                      t.params.groupSize.y *
+                      t.params.numGroups.y;
+                  const groupLinearIndex =
+                    gx +
+                    gy * t.params.numGroups.x +
+                    gz * t.params.numGroups.x * t.params.numGroups.y;
 
                   const expectEqual = (name: string, expected: number, actual: number) => {
                     if (actual !== expected) {
@@ -226,18 +269,26 @@ g.test('inputs')
 
                   const error =
                     checkVec3Value('local_id', kLocalIdOffset, { x: lx, y: ly, z: lz }) ||
-                    checkVec3Value('global_id', kGlobalIdOffset, {
-                      x: gx * t.params.groupSize.x + lx,
-                      y: gy * t.params.groupSize.y + ly,
-                      z: gz * t.params.groupSize.z + lz,
-                    }) ||
+                    checkVec3Value('global_id', kGlobalIdOffset, { x: gidX, y: gidY, z: gidZ }) ||
                     checkVec3Value('group_id', kGroupIdOffset, { x: gx, y: gy, z: gz }) ||
                     checkVec3Value('num_groups', kNumGroupsOffset, t.params.numGroups) ||
                     expectEqual(
                       'local_index',
                       localIndex,
                       output[globalOffset + kLocalIndexOffset]
-                    );
+                    ) ||
+                    (linear_indexing &&
+                      expectEqual(
+                        'global_index',
+                        globalLinearIndex,
+                        output[globalOffset + kGlobalIndexOffset]
+                      )) ||
+                    (linear_indexing &&
+                      expectEqual(
+                        'group_index',
+                        groupLinearIndex,
+                        output[globalOffset + kGroupIndexOffset]
+                      ));
                   if (error) {
                     return error;
                   }
@@ -1116,4 +1167,110 @@ fn main(@builtin(local_invocation_id) local_id : vec3u,
     const outputData: Uint32Array = outputReadback.data;
 
     t.expectOK(checkNumSubgroupsConsistency(countData, outputData, wgThreads, t.params.numWGs));
+  });
+
+g.test('subgroup_size_attribute')
+  .desc(
+    `Tests that at least one power-of-two value in [subgroupMinSize, subgroupMaxSize] can be used as
+    the @subgroup_size attribute in a simple compute pipeline. The value of the subgroup_size
+    builtin must equal the value of the @subgroup_size attribute.`
+  )
+  .params(u =>
+    u.combine('numWorkGroups', [1, 2] as const).combine('numSubgroups', [1, 2, 4] as const)
+  )
+  .fn(async t => {
+    t.skipIfDeviceDoesNotHaveFeature('subgroup-size-control' as GPUFeatureName);
+
+    const { numWorkGroups, numSubgroups } = t.params;
+
+    interface SubgroupProperties extends GPUAdapterInfo {
+      subgroupMinSize: number;
+      subgroupMaxSize: number;
+    }
+    const { subgroupMinSize, subgroupMaxSize } = t.device.adapterInfo as SubgroupProperties;
+
+    let atLeastOneSucceeded = false;
+
+    for (let subgroupSize = subgroupMinSize; subgroupSize <= subgroupMaxSize; subgroupSize *= 2) {
+      const wgx = subgroupSize * numSubgroups;
+
+      const wgsl = `
+enable subgroups;
+enable subgroup_size_control;
+
+@group(0) @binding(0)
+var<storage, read_write> output : array<u32>;
+
+@compute @workgroup_size(${wgx}, 1, 1) @subgroup_size(${subgroupSize})
+fn main(@builtin(subgroup_size) builtin_size : u32,
+        @builtin(local_invocation_index) lid : u32,
+        @builtin(workgroup_id) wgid : vec3u) {
+  let gid = lid + wgid.x * ${wgx}u;
+  // Store 1 if builtin subgroup_size matches the @subgroup_size attribute, 0 otherwise.
+  output[gid] = select(0u, 1u, builtin_size == ${subgroupSize}u);
+}`;
+
+      // Try to create the pipeline; skip this subgroup size if it fails validation.
+      t.device.pushErrorScope('validation');
+      const module = t.device.createShaderModule({ code: wgsl });
+      const pipeline = t.device.createComputePipeline({
+        layout: 'auto',
+        compute: { module, entryPoint: 'main' },
+      });
+      const error = await t.device.popErrorScope();
+      if (error) {
+        continue;
+      }
+
+      atLeastOneSucceeded = true;
+
+      const numInvocations = wgx * numWorkGroups;
+      const outputBuffer = t.makeBufferWithContents(
+        new Uint32Array([...iterRange(numInvocations, x => 0)]),
+        GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
+      );
+      t.trackForCleanup(outputBuffer);
+
+      const bg = t.device.createBindGroup({
+        layout: pipeline.getBindGroupLayout(0),
+        entries: [
+          {
+            binding: 0,
+            resource: {
+              buffer: outputBuffer,
+            },
+          },
+        ],
+      });
+
+      const encoder = t.device.createCommandEncoder();
+      const pass = encoder.beginComputePass();
+      pass.setPipeline(pipeline);
+      pass.setBindGroup(0, bg);
+      pass.dispatchWorkgroups(numWorkGroups, 1, 1);
+      pass.end();
+      t.queue.submit([encoder.finish()]);
+
+      const outputReadback = await t.readGPUBufferRangeTyped(outputBuffer, {
+        srcByteOffset: 0,
+        type: Uint32Array,
+        typedLength: numInvocations,
+        method: 'copy',
+      });
+      const outputData: Uint32Array = outputReadback.data;
+
+      for (let i = 0; i < numInvocations; i++) {
+        if (outputData[i] !== 1) {
+          t.fail(
+            `@subgroup_size(${subgroupSize}): invocation ${i} has builtin subgroup_size != ${subgroupSize}`
+          );
+          break;
+        }
+      }
+    }
+
+    t.expect(
+      atLeastOneSucceeded,
+      `No valid @subgroup_size value found in [subgroupMinSize, subgroupMaxSize]`
+    );
   });

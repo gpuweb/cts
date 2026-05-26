@@ -32,8 +32,6 @@ import {
   getRequiredFeatureForTextureFormat,
   isTextureFormatUsableAsRenderAttachment,
   isTextureFormatMultisampled,
-  is32Float,
-  isSintOrUintFormat,
   isTextureFormatResolvable,
   isDepthTextureFormat,
   isStencilTextureFormat,
@@ -41,6 +39,8 @@ import {
   textureDimensionAndFormatCompatibleForDevice,
   isTextureFormatUsableWithStorageAccessMode,
   isTextureFormatUsableWithCopyExternalImageToTexture,
+  isTextureFormatFilterable,
+  isTextureFormatBlendable,
 } from './format_info.js';
 import { checkElementsEqual, checkElementsBetween } from './util/check_contents.js';
 import { CommandBufferMaker, EncoderType } from './util/command_buffer_maker.js';
@@ -512,7 +512,11 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
     viewDimension: GPUTextureViewDimension
   ) {
     this.skipIf(
-      !textureViewDimensionAndFormatCompatibleForDevice(this.device, viewDimension, format),
+      !textureViewDimensionAndFormatCompatibleForDevice(
+        this.device.features,
+        viewDimension,
+        format
+      ),
       `format: ${format} does not support viewDimension: ${viewDimension}`
     );
   }
@@ -522,7 +526,7 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
     dimension: GPUTextureDimension | undefined
   ) {
     this.skipIf(
-      !textureDimensionAndFormatCompatibleForDevice(this.device, dimension, format),
+      !textureDimensionAndFormatCompatibleForDevice(this.device.features, dimension, format),
       `format: ${format} does not support dimension: ${dimension}`
     );
   }
@@ -530,7 +534,7 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
   skipIfTextureFormatNotResolvable(...formats: (GPUTextureFormat | undefined)[]) {
     for (const format of formats) {
       if (format === undefined) continue;
-      if (!isTextureFormatResolvable(this.device, format)) {
+      if (!isTextureFormatResolvable(this.device.features, format)) {
         this.skip(`texture format '${format}' is not resolvable`);
       }
     }
@@ -576,7 +580,7 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
     for (const format of formats) {
       if (!format) continue;
 
-      if (!isTextureFormatUsableWithStorageAccessMode(this.device, format, access)) {
+      if (!isTextureFormatUsableWithStorageAccessMode(this.device.features, format, access)) {
         this.skip(
           `Texture with ${format} is not usable as a storage texture with access ${access}`
         );
@@ -586,7 +590,7 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
 
   skipIfTextureFormatNotUsableAsRenderAttachment(...formats: (GPUTextureFormat | undefined)[]) {
     for (const format of formats) {
-      if (format && !isTextureFormatUsableAsRenderAttachment(this.device, format)) {
+      if (format && !isTextureFormatUsableAsRenderAttachment(this.device.features, format)) {
         this.skip(`Texture with ${format} is not usable as a render attachment`);
       }
     }
@@ -595,7 +599,7 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
   skipIfTextureFormatNotMultisampled(...formats: (GPUTextureFormat | undefined)[]) {
     for (const format of formats) {
       if (format === undefined) continue;
-      if (!isTextureFormatMultisampled(this.device, format)) {
+      if (!isTextureFormatMultisampled(this.device.features, format)) {
         this.skip(`texture format '${format}' does not support multisampling`);
       }
     }
@@ -604,26 +608,20 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
   skipIfTextureFormatNotBlendable(...formats: (GPUTextureFormat | undefined)[]) {
     for (const format of formats) {
       if (format === undefined) continue;
-      this.skipIf(isSintOrUintFormat(format), 'sint/uint formats are not blendable');
-      if (is32Float(format)) {
-        this.skipIf(
-          !hasFeature(this.device.features, 'float32-blendable'),
-          `texture format '${format}' is not blendable`
-        );
-      }
+      this.skipIf(
+        !isTextureFormatBlendable(this.device.features, format),
+        `${format} is not blendable`
+      );
     }
   }
 
   skipIfTextureFormatNotFilterable(...formats: (GPUTextureFormat | undefined)[]) {
     for (const format of formats) {
       if (format === undefined) continue;
-      this.skipIf(isSintOrUintFormat(format), 'sint/uint formats are not filterable');
-      if (is32Float(format)) {
-        this.skipIf(
-          !hasFeature(this.device.features, 'float32-filterable'),
-          `texture format '${format}' is not filterable`
-        );
-      }
+      this.skipIf(
+        !isTextureFormatFilterable(this.device.features, format),
+        `${format} is not filterable`
+      );
     }
   }
 
@@ -651,7 +649,7 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
 
   skipIfTextureFormatPossiblyNotUsableWithCopyExternalImageToTexture(format: GPUTextureFormat) {
     this.skipIf(
-      !isTextureFormatUsableWithCopyExternalImageToTexture(this.device, format),
+      !isTextureFormatUsableWithCopyExternalImageToTexture(this.device.features, format),
       `can not use copyExternalImageToTexture with ${format}`
     );
   }
@@ -674,6 +672,16 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
   hasLanguageFeature(langFeature: WGSLLanguageFeature) {
     const lf = getGPU(this.rec).wgslLanguageFeatures;
     return lf !== undefined && lf.has(langFeature);
+  }
+
+  /** Skips this test case if the GPUTextureUsage `TRANSIENT_ATTACHMENT` is *not* supported. */
+  // MAINTENANCE_TODO(#4509): Remove this after all implementations have TRANSIENT_ATTACHMENT.
+  skipIfTransientAttachmentNotSupported() {
+    const isTransientAttachmentSupported = 'TRANSIENT_ATTACHMENT' in GPUTextureUsage;
+    this.skipIf(
+      !isTransientAttachmentSupported,
+      'GPUTextureUsage TRANSIENT_ATTACHMENT is not supported'
+    );
   }
 
   /**

@@ -505,3 +505,36 @@ export function hasFeature(features: GPUSupportedFeatures, feature: GPUFeatureNa
   // eslint-disable-next-line no-restricted-syntax
   return features.has(feature);
 }
+
+/** Convenience helper for combinations of 1-2 usage bits from a list of usage bits. */
+export function combinationsOfOneOrTwoUsages(usages: readonly number[]) {
+  const combinations = [];
+  for (const usage0 of usages) {
+    for (const usage1 of usages) {
+      if (usage0 <= usage1) {
+        combinations.push(usage0 | usage1);
+      }
+    }
+  }
+  return combinations;
+}
+
+/**
+ * Checks if the browser supports immediate data (experimental).
+ *
+ * Checks for:
+ * - `setImmediates` method on `GPURenderPassEncoder`, `GPUComputePassEncoder`, or `GPURenderBundleEncoder` prototypes.
+ * - `maxImmediateSize` property on `GPUSupportedLimits` prototype.
+ * - `immediate_address_space` feature in `gpu.wgslLanguageFeatures`.
+ *
+ * This helper is used to skip tests when the environment does not support immediate data functionality.
+ */
+export function supportsImmediateData(gpu: GPU): boolean {
+  return (
+    'setImmediates' in GPURenderPassEncoder.prototype ||
+    'setImmediates' in GPUComputePassEncoder.prototype ||
+    'setImmediates' in GPURenderBundleEncoder.prototype ||
+    'maxImmediateSize' in GPUSupportedLimits.prototype ||
+    gpu.wgslLanguageFeatures.has('immediate_address_space')
+  );
+}

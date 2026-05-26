@@ -7,13 +7,13 @@ import {
   getBlockInfoForColorTextureFormat,
   getBlockInfoForTextureFormat,
   getTextureFormatType,
-  is32Float,
   isColorTextureFormat,
   isCompressedFloatTextureFormat,
   isCompressedTextureFormat,
   isDepthOrStencilTextureFormat,
   isDepthTextureFormat,
   isEncodableTextureFormat,
+  isTextureFormatFilterable,
   isSintOrUintFormat,
   isStencilTextureFormat,
   kEncodableTextureFormats,
@@ -49,7 +49,7 @@ import {
   copyTexelViewsToTexture,
   createTextureFromTexelViews,
 } from '../../../../../util/texture.js';
-import { reifyExtent3D } from '../../../../../util/unions.js';
+import { reifyExtent3D, reifyOrigin3D } from '../../../../../util/unions.js';
 import { ShaderStage } from '../../../../validation/decl/util.js';
 
 // These are needed because the list of parameters was too long when converted to a filename.
@@ -120,13 +120,7 @@ export function skipIfTextureFormatNotSupportedOrNeedsFilteringAndIsUnfilterable
 ) {
   t.skipIfTextureFormatNotSupported(format);
   if (filter === 'linear') {
-    t.skipIf(isDepthTextureFormat(format), 'depth texture are unfilterable');
-
-    const type = getTextureFormatType(format);
-    if (type === 'unfilterable-float') {
-      assert(is32Float(format));
-      t.skipIfDeviceDoesNotHaveFeature('float32-filterable');
-    }
+    t.skipIfTextureFormatNotFilterable(format);
   }
 }
 
@@ -2327,6 +2321,11 @@ const kRComponent = [TexelComponent.R] as const;
 
 /**
  * Compares two Texels
+ *
+ * Note: device is needed because if texture-component-swizzle
+ * is enabled then depth and stencil textures are required to
+ * return specific values for g, b, and a where is if it's not
+ * enabled then they are implementation defined.
  */
 export function texelsApproximatelyEqual(
   device: GPUDevice,
@@ -3291,10 +3290,8 @@ export async function readTextureToTexelViews(
   device.queue.submit([encoder.finish()]);
 
   const texelViews: TexelView[] = [];
-
   for (const { readBuffer, size } of readBuffers) {
     await readBuffer.mapAsync(GPUMapMode.READ);
-
     // need a copy of the data since unmapping will nullify the typedarray view.
     const Ctor =
       componentType === 'i32' ? Int32Array : componentType === 'u32' ? Uint32Array : Float32Array;
@@ -5320,8 +5317,7 @@ ${stageWGSL}
     ? 'uint'
     : type ?? 'float';
   if (isFiltering && sampleType === 'unfilterable-float') {
-    assert(is32Float(format));
-    assert(hasFeature(t.device.features, 'float32-filterable'));
+    assert(isTextureFormatFilterable(t.device.features, format));
     sampleType = 'float';
   }
   if (sampleCount > 1 && sampleType === 'float') {
@@ -5582,4 +5578,139 @@ export async function doTextureCalls<T extends Dimensionality>(
     runner,
     results,
   };
+}
+
+function texelFormat(texel: Readonly<PerTexelComponent<number>>, rep: TexelRepresentationInfo) {
+  return rep.componentOrder.map(component => `${component}: ${texel[component]}`).join(', ');
+}
+
+function compareTexelViewsImpl(
+  device: GPUDevice,
+  {
+    actualTexelView,
+    expectedTexelView,
+    origin,
+    size,
+    sampleCount,
+  }: {
+    actualTexelView: TexelView;
+    expectedTexelView: TexelView;
+    origin: Required<GPUOrigin3DDict>;
+    size: Required<GPUExtent3DDict>;
+    sampleCount: number;
+  }
+) {
+  const errors: string[] = [];
+  const actualRep = kTexelRepresentationInfo[actualTexelView.format];
+  const expectedRep = kTexelRepresentationInfo[expectedTexelView.format];
+
+  for (let z = origin.z; z < size.depthOrArrayLayers; ++z) {
+    for (let y = origin.y; y < size.height; ++y) {
+      for (let x = origin.x; x < size.width; ++x) {
+        for (let sampleIndex = 0; sampleIndex < sampleCount; ++sampleIndex) {
+          const actual = actualTexelView.color({ x, y, z, sampleIndex });
+          const expected = expectedTexelView.color({ x, y, z, sampleIndex });
+
+          const actualRGBA = convertPerTexelComponentToResultFormat(actual, actualTexelView.format);
+          const expectedRGBA = convertPerTexelComponentToResultFormat(
+            expected,
+            expectedTexelView.format
+          );
+
+          // This currently expects the exact same values in actual vs expected.
+          // It's possible this needs to be relaxed slightly but only for non-integer formats.
+          // For now, if the tests pass everywhere, we'll keep it at 0 tolerance.
+          const maxFractionalDiff = 0;
+          if (
+            !texelsApproximatelyEqual(
+              device,
+              'textureLoad',
+              'unused',
+              actualRGBA,
+              actualTexelView.format,
+              expectedRGBA,
+              expectedTexelView.format,
+              maxFractionalDiff
+            )
+          ) {
+            const actualStr = texelFormat(actual, actualRep);
+            const expectedStr = texelFormat(expected, expectedRep);
+            errors.push(
+              `texel at ${x}, ${y}, ${z}, sampleIndex: ${sampleIndex} expected: ${expectedStr}, actual: ${actualStr}`
+            );
+          }
+        }
+      }
+    }
+  }
+  return errors;
+}
+
+/**
+ * Compares 1 mip level of two arrays of TexelViews where each element in the array is the next mip level.
+ */
+export function compareTexelViewsMipLevel(
+  device: GPUDevice,
+  {
+    actualTexelViews,
+    expectedTexelViews,
+    mipLevel = 0,
+    origin,
+    size,
+    sampleCount = 1,
+  }: {
+    actualTexelViews: TexelView[];
+    expectedTexelViews: TexelView[];
+    origin?: GPUOrigin3D;
+    size: GPUExtent3D;
+    mipLevel?: number;
+    sampleCount?: number;
+  }
+) {
+  const errors = compareTexelViewsImpl(device, {
+    actualTexelView: actualTexelViews[mipLevel ?? 0],
+    expectedTexelView: expectedTexelViews[mipLevel ?? 0],
+    origin: reifyOrigin3D(origin ?? [0]),
+    size: reifyExtent3D(size),
+    sampleCount: sampleCount ?? 1,
+  });
+  if (errors.length > 0) {
+    errors.unshift(`errors in mipLevel: ${mipLevel}`);
+  }
+  return errors;
+}
+
+/**
+ * Compares two arrays of TexelViews where each element in the array is the next mip level.
+ */
+export function compareTexelViews(
+  device: GPUDevice,
+  {
+    actualTexelViews,
+    expectedTexelViews,
+    size,
+    dimension = '2d',
+    sampleCount = 1,
+  }: {
+    actualTexelViews: TexelView[];
+    expectedTexelViews: TexelView[];
+    dimension?: GPUTextureDimension;
+    size: GPUExtent3D;
+    sampleCount?: number;
+  }
+) {
+  assert(actualTexelViews.length === expectedTexelViews.length);
+  const errors: string[] = [];
+  for (let mipLevel = 0; mipLevel < actualTexelViews.length; ++mipLevel) {
+    errors.push(
+      ...compareTexelViewsMipLevel(device, {
+        actualTexelViews,
+        expectedTexelViews,
+        size: virtualMipSize(dimension, size, mipLevel),
+        mipLevel,
+        sampleCount,
+      })
+    );
+  }
+  return errors;
 }

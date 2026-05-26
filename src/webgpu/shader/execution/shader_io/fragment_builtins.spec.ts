@@ -755,6 +755,33 @@ function checkSampleRectsApproximatelyEqual({
   return undefined;
 }
 
+function showExpected(
+  t: GPUTest,
+  width: number,
+  height: number,
+  sampleCount: number,
+  expected: Float32Array
+) {
+  t.debug(() => {
+    const lineSep = `    ${range(width, () => '+-- x --- y --- z --- w --').join('')}+`;
+    const lines = [''];
+    for (let y = 0; y < height; ++y) {
+      lines.push(lineSep);
+      for (let sampleIndex = 0; sampleIndex < sampleCount; ++sampleIndex) {
+        const line = [];
+        for (let x = 0; x < width; ++x) {
+          const offset = ((y * width + x) * sampleCount + sampleIndex) * 4;
+          const v = [...expected.slice(offset, offset + 4)];
+          line.push(`${v.map(v => v.toFixed(3)).join(' ')}`);
+        }
+        lines.push(`s${sampleIndex}: | ${line.join(' | ')} |`);
+      }
+    }
+    lines.push(lineSep);
+    return lines.join('\n');
+  });
+}
+
 g.test('inputs,position')
   .desc(
     `
@@ -827,6 +854,8 @@ g.test('inputs,position')
       interpolateFn: computeFragmentPosition,
       isSampleShading: t.params.interpolation.sampling === 'sample',
     });
+
+    showExpected(t, width, height, sampleCount, expected);
 
     // Since @builtin(position) is always a fragment position, never a sample position, check
     // the first coordinate. It should be 0.5, 0.5 always. This is just to double check
@@ -917,6 +946,8 @@ g.test('inputs,interStage')
       interpolateFn: await createInterStageInterpolationFn(t, interStagePoints, type, sampling),
       isSampleShading: t.params.interpolation.sampling === 'sample',
     });
+
+    showExpected(t, width, height, sampleCount, expected);
 
     t.expectOK(
       checkSampleRectsApproximatelyEqual({
@@ -1058,6 +1089,8 @@ g.test('inputs,interStage,centroid')
       isSampleShading: false,
     });
 
+    showExpected(t, width, height, sampleCount, expected);
+
     t.expectOK(
       checkSampleRectsApproximatelyEqual({
         width,
@@ -1137,6 +1170,8 @@ g.test('inputs,sample_index')
       interpolateFn: computeFragmentSampleIndex,
       isSampleShading: t.params.interpolation.sampling === 'sample',
     });
+
+    showExpected(t, width, height, sampleCount, expected);
 
     t.expectOK(
       checkSampleRectsApproximatelyEqual({
@@ -1253,6 +1288,8 @@ g.test('inputs,front_facing')
       interpolateFn: computeFragmentFrontFacing,
       isSampleShading: t.params.interpolation.sampling === 'sample',
     });
+
+    showExpected(t, width, height, sampleCount, expected);
 
     assert(expected.indexOf(0) >= 0, 'expect some values to be 0');
     assert(expected.findIndex(v => v !== 0) >= 0, 'expect some values to be non 0');
@@ -1428,6 +1465,8 @@ g.test('inputs,sample_mask')
       interpolateFn: computeSampleMask,
       isSampleShading: t.params.interpolation.sampling === 'sample',
     });
+
+    showExpected(t, width, height, sampleCount, expected);
 
     t.expectOK(
       checkSampleRectsApproximatelyEqual({

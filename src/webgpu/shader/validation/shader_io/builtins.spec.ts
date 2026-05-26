@@ -119,6 +119,20 @@ export const kBuiltins: readonly Builtin[] = [
     enable: 'subgroups',
     requires: 'subgroup_id',
   },
+  {
+    name: 'workgroup_index',
+    stage: 'compute',
+    io: 'in',
+    type: 'u32',
+    requires: 'linear_indexing',
+  },
+  {
+    name: 'global_invocation_index',
+    stage: 'compute',
+    io: 'in',
+    type: 'u32',
+    requires: 'linear_indexing',
+  },
 ] as const;
 
 // List of types to test against.
@@ -409,9 +423,6 @@ g.test('reuse_builtin_name')
   )
   .fn(t => {
     let code = '';
-    if (t.params.enable) {
-      code += `enable ${t.params.enable};\n`;
-    }
     if (t.params.use === 'alias') {
       code += `alias ${t.params.name} = i32;`;
     } else if (t.params.use === `struct`) {
@@ -423,8 +434,7 @@ g.test('reuse_builtin_name')
     } else if (t.params.use === `function-var`) {
       code += `fn test() { let ${t.params.name} = 1; }`;
     }
-    const expect = t.params.requires === undefined || t.hasLanguageFeature(t.params.requires);
-    t.expectCompileResult(expect, code);
+    t.expectCompileResult(true, code);
   });
 
 const kTests = {

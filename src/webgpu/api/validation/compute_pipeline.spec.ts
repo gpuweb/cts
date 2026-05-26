@@ -804,7 +804,7 @@ generates a validation error at createComputePipeline(Async)
     `;
     const module = t.device.createShaderModule({ code });
 
-    const success = isTextureFormatUsableWithStorageAccessMode(t.device, format, access);
+    const success = isTextureFormatUsableWithStorageAccessMode(t.device.features, format, access);
     const descriptor: GPUComputePipelineDescriptor = {
       layout: 'auto',
       compute: { module },
