@@ -358,6 +358,8 @@ export class UniqueFeaturesAndLimitsShaderValidationTest extends UniqueFeaturesO
 
 
 
+
+
   {
     const phonies = [];
 
@@ -372,9 +374,13 @@ export class UniqueFeaturesAndLimitsShaderValidationTest extends UniqueFeaturesO
     }
 
     const code =
-    args.code +
+    args.code + (
+    args.addWorkgroupSize !== false ?
     `
-@compute @workgroup_size(1)
+@compute @workgroup_size(1)` :
+    `
+@compute`) +
+    `
 fn main() {
   ${phonies.join('\n')}
 }`;
