@@ -358,6 +358,8 @@ export class UniqueFeaturesAndLimitsShaderValidationTest extends UniqueFeaturesO
     reference?: string[];
     // List of additional statements to insert in the entry point.
     statements?: string[];
+    // defaults to true. You must set to false to turn this off.
+    addWorkgroupSize?: boolean;
   }) {
     const phonies: Array<string> = [];
 
@@ -373,8 +375,12 @@ export class UniqueFeaturesAndLimitsShaderValidationTest extends UniqueFeaturesO
 
     const code =
       args.code +
+      (args.addWorkgroupSize !== false
+        ? `
+@compute @workgroup_size(1)`
+        : `
+@compute`) +
       `
-@compute @workgroup_size(1)
 fn main() {
   ${phonies.join('\n')}
 }`;
