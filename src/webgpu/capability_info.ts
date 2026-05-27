@@ -987,6 +987,7 @@ export const kKnownWGSLLanguageFeatures = [
   'swizzle_assignment',
   'linear_indexing',
   'texture_formats_tier1',
+  'buffer_view',
 ] as const;
 
 export type WGSLLanguageFeature = (typeof kKnownWGSLLanguageFeatures)[number];
