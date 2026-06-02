@@ -214,9 +214,11 @@ async function getValidSubgroupSizes(device: GPUDevice): Promise<number[]> {
     subgroupMaxSize: number;
   }
   const { subgroupMinSize, subgroupMaxSize } = device.adapterInfo as SubgroupProperties;
+  const maxWorkgroupSizeX = device.limits.maxComputeWorkgroupSizeX;
 
   const sizes: number[] = [];
   for (let subgroupSize = subgroupMinSize; subgroupSize <= subgroupMaxSize; subgroupSize *= 2) {
+    if (subgroupSize > maxWorkgroupSizeX) break;
     const wgsl = `
 enable subgroups;
 enable subgroup_size_control;
@@ -294,6 +296,7 @@ g.test('workgroup_size_x_must_be_multiple_of_subgroup_size_at_pipeline_creation'
     for (const subgroupSize of validSubgroupSizes) {
       const workgroupSizeX = subgroupSize * multiplier + offset;
       if (workgroupSizeX <= 0) continue;
+      if (workgroupSizeX > t.device.limits.maxComputeWorkgroupSizeX) continue;
 
       const isMultiple = workgroupSizeX % subgroupSize === 0;
 
