@@ -1193,6 +1193,9 @@ g.test('subgroup_size_attribute')
 
     for (let subgroupSize = subgroupMinSize; subgroupSize <= subgroupMaxSize; subgroupSize *= 2) {
       const wgx = subgroupSize * numSubgroups;
+      if (wgx > t.device.limits.maxComputeWorkgroupSizeX) {
+        continue;
+      }
 
       const wgsl = `
 enable subgroups;
