@@ -214,9 +214,11 @@ async function getValidSubgroupSizes(device) {
 
 
   const { subgroupMinSize, subgroupMaxSize } = device.adapterInfo;
+  const maxWorkgroupSizeX = device.limits.maxComputeWorkgroupSizeX;
 
   const sizes = [];
   for (let subgroupSize = subgroupMinSize; subgroupSize <= subgroupMaxSize; subgroupSize *= 2) {
+    if (subgroupSize > maxWorkgroupSizeX) break;
     const wgsl = `
 enable subgroups;
 enable subgroup_size_control;
@@ -294,6 +296,7 @@ fn(async (t) => {
   for (const subgroupSize of validSubgroupSizes) {
     const workgroupSizeX = subgroupSize * multiplier + offset;
     if (workgroupSizeX <= 0) continue;
+    if (workgroupSizeX > t.device.limits.maxComputeWorkgroupSizeX) continue;
 
     const isMultiple = workgroupSizeX % subgroupSize === 0;
 
