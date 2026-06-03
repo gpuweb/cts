@@ -419,7 +419,7 @@ fn((t) => {
 
   let isValid = true;
   if (usage & GPUTextureUsage.TRANSIENT_ATTACHMENT) {
-    isValid &&= viewUsage === usage;
+    isValid &&= viewUsage === 0 || viewUsage === usage;
   }
 
   const texture = t.createTextureTracked({ format: 'rgba8unorm', size: [1, 1], usage });
