@@ -303,6 +303,7 @@ g.test('partial_eval_errors')
     u
       .combine('op', ['<<', '>>'] as const)
       .combine('type', ['i32', 'u32'] as const)
+      .combine('lhs', ['const', 'var'] as const)
       .combine('vectorize', [undefined, 2, 3, 4] as const)
       .beginSubcases()
       .combine('stage', ['shader', 'pipeline'] as const)
@@ -320,7 +321,7 @@ g.test('partial_eval_errors')
     const wgsl = `
 override o = 0u;
 fn foo() -> ${vecType} {
-  var v : ${vecType} = ${vectorize('0', vec_size)};
+  ${t.params.lhs} v : ${vecType} = ${vectorize('0', vec_size)};
   return v ${t.params.op} ${vectorize(rhs, vec_size)};
 }`;
 
