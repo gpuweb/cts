@@ -1,5 +1,6 @@
 import { keysOf } from '../../common/util/data_tables.js';
 import { assert } from '../../common/util/util.js';
+import type { WGSLLanguageFeature } from '../capability_info.js';
 import { align } from '../util/math.js';
 
 const kDefaultArrayLength = 3;
@@ -102,7 +103,14 @@ export const kMatrixContainerTypeLayoutInfo =
   }
 } as const;
 
-export type AddressSpace = 'storage' | 'uniform' | 'private' | 'function' | 'workgroup' | 'handle';
+export type AddressSpace =
+  | 'storage'
+  | 'uniform'
+  | 'private'
+  | 'function'
+  | 'workgroup'
+  | 'immediate'
+  | 'handle';
 export type AccessMode = 'read' | 'write' | 'read_write';
 export type Scope = 'module' | 'function';
 
@@ -133,9 +141,12 @@ export type AddressSpaceInfo = {
   //   in the storage address space, must not be specified in the WGSL source.
   //   See §13.3 Address Spaces.
   spellAccessMode: Requirement;
+
+  // WGSL language feature required to use this address space, if any.
+  wgslLanguageFeature?: WGSLLanguageFeature;
 };
 
-export const kAddressSpaceInfo: Record<string, AddressSpaceInfo> = {
+export const kAddressSpaceInfo: Record<AddressSpace, AddressSpaceInfo> = {
   storage: {
     scope: 'module',
     binding: true,
@@ -170,6 +181,14 @@ export const kAddressSpaceInfo: Record<string, AddressSpaceInfo> = {
     spell: 'may',
     accessModes: ['read_write'],
     spellAccessMode: 'never',
+  },
+  immediate: {
+    scope: 'module',
+    binding: false,
+    spell: 'must',
+    accessModes: ['read'],
+    spellAccessMode: 'never',
+    wgslLanguageFeature: 'immediate_address_space',
   },
   handle: {
     scope: 'module',
@@ -237,8 +256,10 @@ export function* generateTypes({
   }
   const scalarType = isAtomic ? `atomic<${baseType}>` : baseType;
 
-  // Storage and uniform require host-sharable types.
-  if (addressSpace === 'storage' || addressSpace === 'uniform') {
+  // Storage, uniform, and immediate require host-shareable types.
+  const requiresHostShareable =
+    addressSpace === 'storage' || addressSpace === 'uniform' || addressSpace === 'immediate';
+  if (requiresHostShareable) {
     assert(isHostSharable(baseType), 'type ' + baseType.toString() + ' is not host sharable');
   }
 
@@ -289,6 +310,9 @@ export function* generateTypes({
 
   // Array types
   if (containerType === 'array') {
+    if (addressSpace === 'immediate') {
+      return;
+    }
     let arrayElemType: string = scalarType;
     let arrayElementCount: number = kDefaultArrayLength;
     let supportsAtomics = scalarInfo.supportsAtomics;
@@ -382,8 +406,11 @@ export function* supportedScalarTypes(p: { isAtomic: boolean; addressSpace: stri
     // Test atomics only on supported scalar types.
     if (p.isAtomic && !info.supportsAtomics) continue;
 
-    // Storage and uniform require host-sharable types.
-    const isHostShared = p.addressSpace === 'storage' || p.addressSpace === 'uniform';
+    // Storage, uniform, and immediate require host-shareable types.
+    const isHostShared =
+      p.addressSpace === 'storage' ||
+      p.addressSpace === 'uniform' ||
+      p.addressSpace === 'immediate';
     if (isHostShared && info.layout === undefined) continue;
 
     yield scalarType;
