@@ -230,6 +230,7 @@ const kLanguageCases = {
   packed_4x8_integer_dot_product: `requires packed_4x8_integer_dot_product;`,
   unrestricted_pointer_parameters: `requires unrestricted_pointer_parameters;`,
   pointer_composite_access: `requires pointer_composite_access;`,
+  immediate_address_space: `requires immediate_address_space;`,
 };
 
 g.test('language_names')
