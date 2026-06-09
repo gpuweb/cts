@@ -582,7 +582,7 @@ g.test('address_space_access_mode')
   });
 
 // Address spaces that can hold an i32 variable.
-const kNonHandleAddressSpaces = keysOf(kAddressSpaceInfo).filter(as => as !== 'handle');
+const kNonHandleAddressSpaces = keysOf(kAddressSpaceInfo).filter(as => as !== 'handle' && as !== 'immediate');
 
 g.test('explicit_access_mode')
   .desc('Validate uses of an explicit access mode on a var declaration')
