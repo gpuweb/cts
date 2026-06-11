@@ -1,3 +1,5 @@
+import { getGPU } from '../../../../common/util/navigator_gpu.js';
+import { supportsImmediateData } from '../../../../common/util/util.js';
 import {
   AccessMode,
   AddressSpace,
@@ -11,6 +13,40 @@ export type ShaderStage = 'vertex' | 'fragment' | 'compute';
 
 /** The list of all shader stages */
 export const kShaderStages = ['vertex', 'fragment', 'compute'] as const;
+
+export function requiredLanguageFeatureHeader(addressSpace: AddressSpace): string {
+  const feature = kAddressSpaceInfo[addressSpace].wgslLanguageFeature;
+  return feature === undefined ? '' : `requires ${feature};\n`;
+}
+
+type AddressSpaceSupportTest = {
+  readonly rec: Parameters<typeof getGPU>[0];
+  skip(message: string): never;
+  skipIfLanguageFeatureNotSupported(
+    langFeature: NonNullable<AddressSpaceInfo['wgslLanguageFeature']>
+  ): void;
+};
+
+export function skipIfImmediateDataNotSupported(t: AddressSpaceSupportTest): void {
+  if (!supportsImmediateData(getGPU(t.rec))) {
+    t.skip('Immediate data not supported');
+  }
+}
+
+export function skipIfAddressSpaceNotSupported(
+  t: AddressSpaceSupportTest,
+  addressSpace: AddressSpace
+): void {
+  if (addressSpace === 'immediate') {
+    skipIfImmediateDataNotSupported(t);
+    return;
+  }
+
+  const feature = kAddressSpaceInfo[addressSpace].wgslLanguageFeature;
+  if (feature !== undefined) {
+    t.skipIfLanguageFeatureNotSupported(feature);
+  }
+}
 
 /**
  * declareEntrypoint emits the WGSL to declare an entry point with the name, stage and body.
@@ -107,15 +143,16 @@ export function getVarDeclShader(
     p.explicitSpace ? p.addressSpace : '',
     p.explicitAccess ? p.accessMode : ''
   );
+  const header = requiredLanguageFeatureHeader(p.addressSpace);
 
   additionalBody = additionalBody ?? '';
 
   switch (info.scope) {
     case 'module':
-      return decl + '\n' + declareEntryPoint({ stage: p.stage, body: additionalBody });
+      return header + decl + '\n' + declareEntryPoint({ stage: p.stage, body: additionalBody });
 
     case 'function':
-      return declareEntryPoint({ stage: p.stage, body: decl + '\n' + additionalBody });
+      return header + declareEntryPoint({ stage: p.stage, body: decl + '\n' + additionalBody });
   }
 }
 
