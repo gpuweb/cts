@@ -4,7 +4,7 @@ Validation tests for host-shareable types.
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { keysOf } from '../../../../common/util/data_tables.js';
-import { AddressSpace, kAccessModeInfo, kAddressSpaceInfo } from '../../types.js';
+import { kAccessModeInfo, kAddressSpaceInfo } from '../../types.js';
 import { ShaderValidationTest } from '../shader_validation_test.js';
 
 import {
@@ -582,9 +582,7 @@ g.test('address_space_access_mode')
   });
 
 // Address spaces that can hold an i32 variable.
-const kNonHandleAddressSpaces = keysOf(kAddressSpaceInfo).filter(
-  as => as !== 'handle'
-) as AddressSpace[];
+const kNonHandleAddressSpaces = keysOf(kAddressSpaceInfo).filter(as => as !== 'handle');
 
 g.test('explicit_access_mode')
   .desc('Validate uses of an explicit access mode on a var declaration')

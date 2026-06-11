@@ -140,9 +140,7 @@ fn((t) => {
 });
 
 // Address spaces that can hold an i32 variable.
-const kNonHandleAddressSpaces = keysOf(kAddressSpaceInfo).filter(
-  (as) => as !== 'handle'
-);
+const kNonHandleAddressSpaces = keysOf(kAddressSpaceInfo).filter((as) => as !== 'handle');
 
 g.test('let_ptr_explicit_type_matches_var').
 desc(
