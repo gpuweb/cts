@@ -209,11 +209,8 @@ g.test('subgroup_size_override_must_be_power_of_2_at_pipeline_creation')
  * between subgroupMinSize and subgroupMaxSize inclusive.
  */
 async function getValidSubgroupSizes(device: GPUDevice): Promise<number[]> {
-  interface SubgroupProperties extends GPUAdapterInfo {
-    subgroupMinSize: number;
-    subgroupMaxSize: number;
-  }
-  const { subgroupMinSize, subgroupMaxSize } = device.adapterInfo as SubgroupProperties;
+  const subgroupMinSize = device.adapterInfo.subgroupMinSize!;
+  const subgroupMaxSize = device.adapterInfo.subgroupMaxSize!;
   const maxWorkgroupSizeX = device.limits.maxComputeWorkgroupSizeX;
 
   const sizes: number[] = [];
