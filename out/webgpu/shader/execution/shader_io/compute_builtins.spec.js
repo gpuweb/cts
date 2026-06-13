@@ -447,11 +447,8 @@ combine('lid', [
 ).
 fn(async (t) => {
   t.skipIfDeviceDoesNotHaveFeature('subgroups');
-
-
-
-
-  const { subgroupMinSize, subgroupMaxSize } = t.device.adapterInfo;
+  const subgroupMinSize = t.device.adapterInfo.subgroupMinSize;
+  const subgroupMaxSize = t.device.adapterInfo.subgroupMaxSize;
 
   const wgx = t.params.sizes[0];
   const wgy = t.params.sizes[1];
@@ -1183,11 +1180,8 @@ fn(async (t) => {
 
   const { numWorkGroups, numSubgroups } = t.params;
 
-
-
-
-
-  const { subgroupMinSize, subgroupMaxSize } = t.device.adapterInfo;
+  const subgroupMinSize = t.device.adapterInfo.subgroupMinSize;
+  const subgroupMaxSize = t.device.adapterInfo.subgroupMaxSize;
 
   let atLeastOneSucceeded = false;
 

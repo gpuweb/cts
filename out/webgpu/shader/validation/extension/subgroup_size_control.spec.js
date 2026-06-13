@@ -209,11 +209,8 @@ fn((t) => {
  * between subgroupMinSize and subgroupMaxSize inclusive.
  */
 async function getValidSubgroupSizes(device) {
-
-
-
-
-  const { subgroupMinSize, subgroupMaxSize } = device.adapterInfo;
+  const subgroupMinSize = device.adapterInfo.subgroupMinSize;
+  const subgroupMaxSize = device.adapterInfo.subgroupMaxSize;
   const maxWorkgroupSizeX = device.limits.maxComputeWorkgroupSizeX;
 
   const sizes = [];
