@@ -447,11 +447,8 @@ g.test('subgroup_size')
   )
   .fn(async t => {
     t.skipIfDeviceDoesNotHaveFeature('subgroups' as GPUFeatureName);
-    interface SubgroupProperties extends GPUAdapterInfo {
-      subgroupMinSize: number;
-      subgroupMaxSize: number;
-    }
-    const { subgroupMinSize, subgroupMaxSize } = t.device.adapterInfo as SubgroupProperties;
+    const subgroupMinSize = t.device.adapterInfo.subgroupMinSize!;
+    const subgroupMaxSize = t.device.adapterInfo.subgroupMaxSize!;
 
     const wgx = t.params.sizes[0];
     const wgy = t.params.sizes[1];
@@ -1183,11 +1180,8 @@ g.test('subgroup_size_attribute')
 
     const { numWorkGroups, numSubgroups } = t.params;
 
-    interface SubgroupProperties extends GPUAdapterInfo {
-      subgroupMinSize: number;
-      subgroupMaxSize: number;
-    }
-    const { subgroupMinSize, subgroupMaxSize } = t.device.adapterInfo as SubgroupProperties;
+    const subgroupMinSize = t.device.adapterInfo.subgroupMinSize!;
+    const subgroupMaxSize = t.device.adapterInfo.subgroupMaxSize!;
 
     let atLeastOneSucceeded = false;
 
