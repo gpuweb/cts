@@ -77,6 +77,10 @@ export const kAllBufferUsageBits = kBufferUsages.reduce(
   0
 );
 
+/** An arbitrary invalid buffer usage bit. */
+export const kSomeBogusBufferUsage: GPUBufferUsageFlags = 0x4000_0000;
+assert((kSomeBogusBufferUsage & kAllBufferUsageBits) === 0);
+
 // Errors
 
 /** Per-GPUErrorFilter info. */
@@ -225,7 +229,7 @@ const kTextureUsageInfo: {
 /** List of all GPUTextureUsage values. */
 export const kTextureUsages = numericKeysOf(kTextureUsageInfo);
 /** Bitmask of all known texture usages. */
-const kAllTextureUsages = kTextureUsages.reduce((acc, usage) => acc | usage, 0);
+export const kAllTextureUsages = kTextureUsages.reduce((acc, usage) => acc | usage, 0);
 
 /** An arbitrary invalid texture usage bit. */
 export const kSomeBogusTextureUsage: GPUTextureUsageFlags = 0x4000_0000;
@@ -983,6 +987,7 @@ export const kKnownWGSLLanguageFeatures = [
   'swizzle_assignment',
   'linear_indexing',
   'texture_formats_tier1',
+  'immediate_address_space',
 ] as const;
 
 export type WGSLLanguageFeature = (typeof kKnownWGSLLanguageFeatures)[number];

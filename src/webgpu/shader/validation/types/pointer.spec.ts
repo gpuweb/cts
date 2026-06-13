@@ -2,7 +2,7 @@ export const description = 'Test pointer type validation';
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { keysOf } from '../../../../common/util/data_tables.js';
-import { AddressSpace, kAccessModeInfo, kAddressSpaceInfo } from '../../types.js';
+import { kAccessModeInfo, kAddressSpaceInfo } from '../../types.js';
 import {
   pointerType,
   explicitSpaceExpander,
@@ -140,9 +140,7 @@ g.test('type')
   });
 
 // Address spaces that can hold an i32 variable.
-const kNonHandleAddressSpaces = keysOf(kAddressSpaceInfo).filter(
-  as => as !== 'handle'
-) as AddressSpace[];
+const kNonHandleAddressSpaces = keysOf(kAddressSpaceInfo).filter(as => as !== 'handle');
 
 g.test('let_ptr_explicit_type_matches_var')
   .desc(
