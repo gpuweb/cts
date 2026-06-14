@@ -29,7 +29,7 @@
   "webgpu/shader/execution/binary/f32_multiplication.bin": "40527d93",
   "webgpu/shader/execution/binary/f32_remainder.bin": "d8738967",
   "webgpu/shader/execution/binary/f32_subtraction.bin": "f5453a8",
-  "webgpu/shader/execution/binary/i32_arithmetic.bin": "37440f39",
+  "webgpu/shader/execution/binary/i32_arithmetic.bin": "7fb5b26a",
   "webgpu/shader/execution/binary/i32_comparison.bin": "9679ab05",
   "webgpu/shader/execution/binary/u32_arithmetic.bin": "c9fe0078",
   "webgpu/shader/execution/binary/u32_comparison.bin": "7d0ba49",
