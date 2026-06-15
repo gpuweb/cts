@@ -6,14 +6,9 @@ import { makeTestGroup } from '../../../../../../../common/framework/test_group.
 import { AllFeaturesMaxLimitsGPUTest } from '../../../../../../gpu_test.js';
 import { kValue } from '../../../../../../util/constants.js';
 
-import {
-  dispatchSizes,
-  onlyWorkgroupSizes,
-  typedArrayCtor,
-} from './harness.js';
+import { dispatchSizes, onlyWorkgroupSizes } from './harness.js';
 
 export const g = makeTestGroup(AllFeaturesMaxLimitsGPUTest);
-
 
 g.test('store_min_basic')
   .specURL('https://www.w3.org/TR/WGSL/#atomic-store-min')
@@ -32,13 +27,12 @@ the composite min of all values written.
     u
       .combine('workgroupSize', onlyWorkgroupSizes)
       .combine('dispatchSize', dispatchSizes)
-      .combine('rndMultiplyX', [0, 1, 3163, 176284061, 2**28])
-      .combine('rndMultiplyY', [0, 1, 41609, 138545483, 2**28])
+      .combine('rndMultiplyX', [0, 1, 3163, 176284061, 2 ** 28])
+      .combine('rndMultiplyY', [0, 1, 41609, 138545483, 2 ** 28])
   )
   .fn(async t => {
     t.skipIfDeviceDoesNotHaveFeature('atomic-vec2u-min-max' as GPUFeatureName);
-    const wgsl =
-      `
+    const wgsl = `
       enable atomic_vec2u_min_max;
       @group(0) @binding(0)
       var<storage, read_write> output : atomic<vec2u>;
@@ -47,14 +41,14 @@ the composite min of all values written.
       fn main(
           @builtin(global_invocation_id) global_invocation_id : vec3<u32>,
           ) {
-          let reversal = vec2u(${t.params.workgroupSize} - global_invocation_id[0], 
-                               ${t.params.dispatchSize} - global_invocation_id[1]); 
+          let reversal = vec2u(${t.params.workgroupSize} - global_invocation_id[0],
+                               ${t.params.dispatchSize} - global_invocation_id[1]);
         let id = reversal * vec2u(  ${t.params.rndMultiplyX} , ${t.params.rndMultiplyY});
 
         // All invocations store to the same location
         atomicStoreMin(&output, id);
       }
-    ` ;
+    `;
 
     const pipeline = t.device.createComputePipeline({
       layout: 'auto',
@@ -67,8 +61,10 @@ the composite min of all values written.
     // For a single vec2u atomic we need 2 u32s.
     // Initialize with max u32 value.
     const data = new Uint32Array([kValue.u32.max, kValue.u32.max]);
-    const outputBuffer = t.makeBufferWithContents(data, GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC);
-
+    const outputBuffer = t.makeBufferWithContents(
+      data,
+      GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
+    );
 
     const bindGroup = t.device.createBindGroup({
       layout: pipeline.getBindGroupLayout(0),
@@ -84,8 +80,6 @@ the composite min of all values written.
     pass.dispatchWorkgroups(1, t.params.dispatchSize);
     pass.end();
     t.queue.submit([encoder.finish()]);
-
-
 
     // Read back the buffer
     const outputBufferResult = (

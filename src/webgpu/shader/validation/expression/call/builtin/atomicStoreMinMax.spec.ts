@@ -30,9 +30,7 @@ fn foo() {
 g.test('stage')
   .desc('Tests that atomicStoreMin and atomicStoreMax must not be used in vertex shader stage')
   .params(u =>
-    u
-      .combine('op', keysOf(kAtomicOps))
-      .combine('stage', ['fragment', 'vertex', 'compute'] as const)
+    u.combine('op', keysOf(kAtomicOps)).combine('stage', ['fragment', 'vertex', 'compute'] as const)
   )
   .fn(t => {
     let code = `
@@ -95,7 +93,6 @@ g.test('atomic_ptr_parameterization')
       })
   )
   .fn(t => {
-
     let moduleVar = ``;
     let functionVar = ``;
     let param = ``;
@@ -225,7 +222,7 @@ g.test('atomic_ptr_type')
     u
       .combine('op', keysOf(kAtomicOps))
       .beginSubcases()
-      .combine('atomicType', ['vec4u','vec2u', 'u32', 'i32'] as const)
+      .combine('atomicType', ['vec4u', 'vec2u', 'u32', 'i32'] as const)
   )
   .fn(t => {
     const code = `

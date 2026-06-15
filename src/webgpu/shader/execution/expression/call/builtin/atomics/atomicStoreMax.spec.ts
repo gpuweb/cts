@@ -5,14 +5,9 @@ Atomically stores the max value v in the atomic object pointed to by atomic_ptr.
 import { makeTestGroup } from '../../../../../../../common/framework/test_group.js';
 import { AllFeaturesMaxLimitsGPUTest } from '../../../../../../gpu_test.js';
 
-import {
-  dispatchSizes,
-  onlyWorkgroupSizes,
-  typedArrayCtor,
-} from './harness.js';
+import { dispatchSizes, onlyWorkgroupSizes, typedArrayCtor } from './harness.js';
 
 export const g = makeTestGroup(AllFeaturesMaxLimitsGPUTest);
-
 
 g.test('store_max_basic')
   .specURL('https://www.w3.org/TR/WGSL/#atomic-store-max')
@@ -31,13 +26,12 @@ the composite max of all values written.
     u
       .combine('workgroupSize', onlyWorkgroupSizes)
       .combine('dispatchSize', dispatchSizes)
-      .combine('rndMultiplyX', [0, 1, 3163, 176284061, 2**28])
-      .combine('rndMultiplyY', [0, 1, 41609, 138545483, 2**28])
+      .combine('rndMultiplyX', [0, 1, 3163, 176284061, 2 ** 28])
+      .combine('rndMultiplyY', [0, 1, 41609, 138545483, 2 ** 28])
   )
   .fn(async t => {
     t.skipIfDeviceDoesNotHaveFeature('atomic-vec2u-min-max' as GPUFeatureName);
-    const wgsl =
-      `
+    const wgsl = `
       enable atomic_vec2u_min_max;
       @group(0) @binding(0)
       var<storage, read_write> output : atomic<vec2u>;
@@ -46,13 +40,13 @@ the composite max of all values written.
       fn main(
           @builtin(global_invocation_id) global_invocation_id : vec3<u32>,
           ) {
-        let id = vec2u(global_invocation_id[0] * ${t.params.rndMultiplyX} , 
+        let id = vec2u(global_invocation_id[0] * ${t.params.rndMultiplyX} ,
                        global_invocation_id[1] * ${t.params.rndMultiplyY});
 
         // All invocations store to the same location
         atomicStoreMax(&output, id);
       }
-    ` ;
+    `;
 
     const pipeline = t.device.createComputePipeline({
       layout: 'auto',
@@ -84,8 +78,6 @@ the composite max of all values written.
     pass.dispatchWorkgroups(1, t.params.dispatchSize);
     pass.end();
     t.queue.submit([encoder.finish()]);
-
-
 
     // Read back the buffer
     const outputBufferResult = (
