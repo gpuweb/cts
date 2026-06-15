@@ -1693,11 +1693,8 @@ g.test('subgroup_size')
   )
   .fn(async t => {
     t.skipIfDeviceDoesNotHaveFeature('subgroups' as GPUFeatureName);
-    interface SubgroupProperties extends GPUAdapterInfo {
-      subgroupMinSize: number;
-      subgroupMaxSize: number;
-    }
-    const { subgroupMinSize, subgroupMaxSize } = t.device.adapterInfo as SubgroupProperties;
+    const subgroupMinSize = t.device.adapterInfo.subgroupMinSize!;
+    const subgroupMaxSize = t.device.adapterInfo.subgroupMaxSize!;
 
     const fsShader = `
 enable subgroups;
