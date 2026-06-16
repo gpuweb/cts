@@ -9,7 +9,8 @@ const kEnables = {
   f16: 'shader-f16',
   subgroups: 'subgroups',
   clip_distances: 'clip-distances',
-  chromium_experimental_primitive_id: 'chromium-experimental-primitive-id'
+  chromium_experimental_primitive_id: 'chromium-experimental-primitive-id',
+  atomic_vec2u_min_max: 'atomic-vec2u-min-max'
 };
 
 /**
