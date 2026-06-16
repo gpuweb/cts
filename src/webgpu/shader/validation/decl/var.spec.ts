@@ -254,10 +254,6 @@ g.test('module_scope_types')
   .fn(t => {
     if (t.params.kind === 'immediate') {
       skipIfImmediateDataNotSupported(t);
-      t.skipIf(
-        kTypes[t.params.type].requiresF16,
-        'Immediate data blocks do not yet support f16 types'
-      );
     }
     if (kTypes[t.params.type].requiresF16) {
       t.skipIfDeviceDoesNotHaveFeature('shader-f16');

@@ -51,7 +51,7 @@ g.test('store_type,valid')
     skipIfImmediateDataNotSupported(t);
     const testcase = kValidStoreTypes[t.params.type];
     if (testcase.enable.includes('f16')) {
-      t.skip('Immediate data blocks do not yet support f16 types');
+      t.skipIfDeviceDoesNotHaveFeature('shader-f16');
     }
     const wgsl = `
 ${kImmediateHeader}
