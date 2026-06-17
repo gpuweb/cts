@@ -17,11 +17,9 @@ const kValidStoreTypes = {
   u32: { enable: ``, prelude: ``, type: `u32` },
   i32: { enable: ``, prelude: ``, type: `i32` },
   f32: { enable: ``, prelude: ``, type: `f32` },
-  f16: { enable: `enable f16;`, prelude: ``, type: `f16` },
   vec2u: { enable: ``, prelude: ``, type: `vec2u` },
   vec3i: { enable: ``, prelude: ``, type: `vec3i` },
   vec4f: { enable: ``, prelude: ``, type: `vec4f` },
-  vec3h: { enable: `enable f16;`, prelude: ``, type: `vec3h` },
   mat2x2f: { enable: ``, prelude: ``, type: `mat2x2f` },
   struct_numeric: { enable: ``, prelude: `struct S { a : u32, b : vec4f }`, type: `S` },
 } as const;
@@ -29,6 +27,8 @@ const kValidStoreTypes = {
 const kInvalidStoreTypes = {
   bool: { enable: ``, prelude: ``, type: `bool` },
   vec2_bool: { enable: ``, prelude: ``, type: `vec2<bool>` },
+  f16: { enable: `enable f16;`, prelude: ``, type: `f16` },
+  vec3h: { enable: `enable f16;`, prelude: ``, type: `vec3h` },
   atomic_u32: { enable: ``, prelude: ``, type: `atomic<u32>` },
   ptr_function_u32: { enable: ``, prelude: ``, type: `ptr<function, u32>` },
   sampler: { enable: ``, prelude: ``, type: `sampler` },
@@ -50,9 +50,6 @@ g.test('store_type,valid')
   .fn(t => {
     skipIfImmediateDataNotSupported(t);
     const testcase = kValidStoreTypes[t.params.type];
-    if (testcase.enable.includes('f16')) {
-      t.skipIfDeviceDoesNotHaveFeature('shader-f16');
-    }
     const wgsl = `
 ${kImmediateHeader}
 ${testcase.enable}
@@ -71,6 +68,9 @@ g.test('store_type,invalid')
   .fn(t => {
     skipIfImmediateDataNotSupported(t);
     const testcase = kInvalidStoreTypes[t.params.type];
+    if (testcase.enable.includes('f16')) {
+      t.skipIfDeviceDoesNotHaveFeature('shader-f16');
+    }
     const wgsl = `
 ${kImmediateHeader}
 ${testcase.enable}
@@ -84,27 +84,18 @@ fn main() {
   });
 
 g.test('scope')
-  .desc('Validates that immediate variables are module-scope only.')
-  .params(u => u.combine('scope', ['module', 'function'] as const))
+  .desc('Validates that immediate variables cannot be declared at function scope.')
+  .params(u => u.combine('addressSpace', ['function', 'immediate'] as const))
   .fn(t => {
     skipIfImmediateDataNotSupported(t);
-    const wgsl =
-      t.params.scope === 'module'
-        ? `
-${kImmediateHeader}
-var<immediate> data : u32;
-@compute @workgroup_size(1)
-fn main() {
-  _ = data;
-}`
-        : `
+    const wgsl = `
 ${kImmediateHeader}
 @compute @workgroup_size(1)
 fn main() {
-  var<immediate> data : u32;
+  var<${t.params.addressSpace}> data : u32;
   _ = data;
 }`;
-    t.expectCompileResult(t.params.scope === 'module', wgsl);
+    t.expectCompileResult(t.params.addressSpace === 'function', wgsl);
   });
 
 g.test('binding_attributes')
