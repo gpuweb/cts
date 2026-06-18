@@ -17,9 +17,11 @@ const kValidStoreTypes = {
   u32: { enable: ``, prelude: ``, type: `u32` },
   i32: { enable: ``, prelude: ``, type: `i32` },
   f32: { enable: ``, prelude: ``, type: `f32` },
+  f16: { enable: `enable f16;`, prelude: ``, type: `f16` },
   vec2u: { enable: ``, prelude: ``, type: `vec2u` },
   vec3i: { enable: ``, prelude: ``, type: `vec3i` },
   vec4f: { enable: ``, prelude: ``, type: `vec4f` },
+  vec3h: { enable: `enable f16;`, prelude: ``, type: `vec3h` },
   mat2x2f: { enable: ``, prelude: ``, type: `mat2x2f` },
   struct_numeric: { enable: ``, prelude: `struct S { a : u32, b : vec4f }`, type: `S` },
 } as const;
@@ -27,8 +29,6 @@ const kValidStoreTypes = {
 const kInvalidStoreTypes = {
   bool: { enable: ``, prelude: ``, type: `bool` },
   vec2_bool: { enable: ``, prelude: ``, type: `vec2<bool>` },
-  f16: { enable: `enable f16;`, prelude: ``, type: `f16` },
-  vec3h: { enable: `enable f16;`, prelude: ``, type: `vec3h` },
   atomic_u32: { enable: ``, prelude: ``, type: `atomic<u32>` },
   ptr_function_u32: { enable: ``, prelude: ``, type: `ptr<function, u32>` },
   sampler: { enable: ``, prelude: ``, type: `sampler` },
@@ -50,6 +50,9 @@ g.test('store_type,valid')
   .fn(t => {
     skipIfImmediateDataNotSupported(t);
     const testcase = kValidStoreTypes[t.params.type];
+    if (testcase.enable.includes('f16')) {
+      t.skipIfDeviceDoesNotHaveFeature('shader-f16');
+    }
     const wgsl = `
 ${kImmediateHeader}
 ${testcase.enable}
@@ -68,9 +71,6 @@ g.test('store_type,invalid')
   .fn(t => {
     skipIfImmediateDataNotSupported(t);
     const testcase = kInvalidStoreTypes[t.params.type];
-    if (testcase.enable.includes('f16')) {
-      t.skipIfDeviceDoesNotHaveFeature('shader-f16');
-    }
     const wgsl = `
 ${kImmediateHeader}
 ${testcase.enable}

@@ -230,7 +230,6 @@ function isImmediateStoreType(typeName: keyof typeof kTypes): boolean {
     type.isHostShareable &&
     type.isConstructible &&
     type.isFixedFootprint &&
-    !type.requiresF16 &&
     !kImmediateTypesWithArray.has(typeName)
   );
 }
