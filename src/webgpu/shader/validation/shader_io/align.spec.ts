@@ -161,6 +161,7 @@ g.test('required_alignment')
         'immediate',
       ] as const)
       .combine('align', [1, 2, 'alignment', 32])
+      .beginSubcases()
       .combine('type', [
         // Storage is used for all non-uniform address spaces.
         { name: 'i32', storage: 4, uniform: 4 },
