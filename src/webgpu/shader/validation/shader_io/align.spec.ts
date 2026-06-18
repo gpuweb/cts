@@ -220,10 +220,6 @@ g.test('required_alignment')
         if (t.type.name === 'array<u32>' && t.address_space !== 'storage') {
           return false;
         }
-        if (t.type.name.indexOf('f16') !== -1 && t.address_space === 'immediate') {
-          // Remove this filter when f16 properly supported.
-          return false;
-        }
         return true;
       })
   )
