@@ -46,9 +46,17 @@ type TexelViewComparer = {
   tableRows: (failedCoords: readonly Required<GPUOrigin3DDict>[]) => Iterable<string>[];
 };
 
+// Creates a texel view comparer that compares an actual texel view against
+// an expected texel view and optionally a second, alternate, texel view.
+// The comparison for each texel succeeds if the actual texel is close enough
+// to either
 function makeTexelViewComparer(
   format: EncodableTextureFormat,
-  { actTexelView, expTexelView }: { actTexelView: TexelView; expTexelView: TexelView },
+  {
+    actTexelView,
+    expTexelView,
+    altExpTexelView,
+  }: { actTexelView: TexelView; expTexelView: TexelView; altExpTexelView?: TexelView },
   opts: TexelCompareOptions
 ): TexelViewComparer {
   const {
@@ -76,27 +84,35 @@ function makeTexelViewComparer(
   const tvc = {} as TexelViewComparer;
   if (fmtIsInt) {
     tvc.predicate = coords =>
-      comparePerComponent(actTexelView.color(coords), expTexelView.color(coords), maxIntDiff);
+      comparePerComponent(
+        actTexelView.color(coords),
+        expTexelView.color(coords),
+        maxIntDiff,
+        altExpTexelView?.color(coords)
+      );
   } else if (fmtIsNorm && maxDiffULPsForNormFormat !== undefined) {
     tvc.predicate = coords =>
       comparePerComponent(
         actTexelView.ulpFromZero(coords),
         expTexelView.ulpFromZero(coords),
-        maxDiffULPsForNormFormat
+        maxDiffULPsForNormFormat,
+        altExpTexelView?.ulpFromZero(coords)
       );
   } else if (fmtIsFloat && maxDiffULPsForFloatFormat !== undefined) {
     tvc.predicate = coords =>
       comparePerComponent(
         actTexelView.ulpFromZero(coords),
         expTexelView.ulpFromZero(coords),
-        maxDiffULPsForFloatFormat
+        maxDiffULPsForFloatFormat,
+        altExpTexelView?.ulpFromZero(coords)
       );
   } else if (maxFractionalDiff !== undefined) {
     tvc.predicate = coords =>
       comparePerComponent(
         actTexelView.color(coords),
         expTexelView.color(coords),
-        maxFractionalDiff
+        maxFractionalDiff,
+        altExpTexelView?.color(coords)
       );
   } else {
     if (fmtIsNorm) {
@@ -114,10 +130,17 @@ function makeTexelViewComparer(
       [`tolerance ± ${maxIntDiff}`],
       (function* () {
         yield* [` diff (act - exp)`, '==', ''];
+        if (altExpTexelView) {
+          yield* [` diff (act - alternateExp)`, '==', ''];
+        }
         for (const coords of failedCoords) {
           const act = actTexelView.color(coords);
           const exp = expTexelView.color(coords);
           yield repr.componentOrder.map(ch => act[ch]! - exp[ch]!).join(',');
+          if (altExpTexelView) {
+            const altExp = altExpTexelView.color(coords);
+            yield repr.componentOrder.map(ch => act[ch]! - altExp[ch]!).join(',');
+          }
         }
       })(),
     ];
@@ -130,10 +153,17 @@ function makeTexelViewComparer(
       [`tolerance ± ${toleranceULPs} normal-ULPs`],
       (function* () {
         yield* [` diff (act - exp) in normal-ULPs`, '==', ''];
+        if (altExpTexelView) {
+          yield* [` diff (act - alternateExp) in normal-ULPs`, '==', ''];
+        }
         for (const coords of failedCoords) {
           const act = actTexelView.ulpFromZero(coords);
           const exp = expTexelView.ulpFromZero(coords);
           yield repr.componentOrder.map(ch => act[ch]! - exp[ch]!).join(',');
+          if (altExpTexelView) {
+            const altExp = altExpTexelView.ulpFromZero(coords);
+            yield repr.componentOrder.map(ch => act[ch]! - altExp[ch]!).join(',');
+          }
         }
       })(),
     ];
@@ -143,10 +173,17 @@ function makeTexelViewComparer(
       [`tolerance ± ${maxFractionalDiff}`],
       (function* () {
         yield* [` diff (act - exp)`, '==', ''];
+        if (altExpTexelView) {
+          yield* [` diff (act - alternateExp)`, '==', ''];
+        }
         for (const coords of failedCoords) {
           const act = actTexelView.color(coords);
           const exp = expTexelView.color(coords);
           yield repr.componentOrder.map(ch => (act[ch]! - exp[ch]!).toPrecision(4)).join(',');
+          if (altExpTexelView) {
+            const altExp = altExpTexelView.color(coords);
+            yield repr.componentOrder.map(ch => (act[ch]! - altExp[ch]!).toPrecision(4)).join(',');
+          }
         }
       })(),
     ];
@@ -155,18 +192,32 @@ function makeTexelViewComparer(
   return tvc;
 }
 
+/** Returns true if all components of an "actual" texel compare as
+ * nearly equal (with tolerance) against either a (required) expected
+ * texel or against an optional alternate texel.
+ */
 function comparePerComponent(
   actual: PerTexelComponent<number>,
   expected: PerTexelComponent<number>,
-  maxDiff: number
+  maxDiff: number,
+  alternateExpected?: PerTexelComponent<number>
 ) {
-  return Object.keys(actual).every(key => {
-    const k = key as TexelComponent;
-    const act = actual[k]!;
-    const exp = expected[k];
-    if (exp === undefined) return false;
-    return numbersApproximatelyEqual(act, exp, maxDiff);
-  });
+  const similar = (a: PerTexelComponent<number>, b: PerTexelComponent<number>, maxDiff: number) =>
+    Object.keys(a).every(key => {
+      const k = key as TexelComponent;
+      const act = a[k]!;
+      const exp = b[k];
+      if (exp === undefined) return false;
+      return numbersApproximatelyEqual(act, exp, maxDiff);
+    });
+
+  if (similar(actual, expected, maxDiff)) {
+    return true;
+  }
+  if (alternateExpected) {
+    return similar(actual, alternateExpected, maxDiff);
+  }
+  return false;
 }
 
 /** Create a new mappable GPUBuffer, and copy a subrectangle of GPUTexture data into it. */
@@ -196,13 +247,17 @@ export function findFailedPixels(
   format: EncodableTextureFormat,
   subrectOrigin: Required<GPUOrigin3DDict>,
   subrectSize: Required<GPUExtent3DDict>,
-  { actTexelView, expTexelView }: { actTexelView: TexelView; expTexelView: TexelView },
+  {
+    actTexelView,
+    expTexelView,
+    altExpTexelView,
+  }: { actTexelView: TexelView; expTexelView: TexelView; altExpTexelView?: TexelView },
   texelCompareOptions: TexelCompareOptions,
   coords?: Generator<Required<GPUOrigin3DDict>>
 ) {
   const comparer = makeTexelViewComparer(
     format,
-    { actTexelView, expTexelView },
+    { actTexelView, expTexelView, altExpTexelView },
     texelCompareOptions
   );
 
@@ -260,6 +315,15 @@ export function findFailedPixels(
       yield `${repr.componentOrder.map(ch => numericToString(pixel[ch]!)).join(',')}`;
     }
   })();
+  const printAlternateExpectedColors = (function* () {
+    if (altExpTexelView) {
+      yield* [' alternateExp. colors', '==', componentOrderStr];
+      for (const coords of failedPixels) {
+        const pixel = altExpTexelView.color(coords);
+        yield `${repr.componentOrder.map(ch => numericToString(pixel[ch]!)).join(',')}`;
+      }
+    }
+  })();
   const printActualULPs = (function* () {
     yield* [' act. normal-ULPs-from-zero', '==', componentOrderStr];
     for (const coords of failedPixels) {
@@ -274,6 +338,15 @@ export function findFailedPixels(
       yield `${repr.componentOrder.map(ch => pixel[ch]).join(',')}`;
     }
   })();
+  const printAlternateExpectedULPs = (function* () {
+    if (altExpTexelView) {
+      yield* [` alternateExp. normal-ULPs-from-zero`, '==', componentOrderStr];
+      for (const coords of failedPixels) {
+        const pixel = altExpTexelView.ulpFromZero(coords);
+        yield `${repr.componentOrder.map(ch => pixel[ch]).join(',')}`;
+      }
+    }
+  })();
 
   const opts = {
     fillToWidth: 120,
@@ -286,8 +359,10 @@ ${generatePrettyTable(opts, [
   printActualBytes,
   printActualColors,
   printExpectedColors,
+  printAlternateExpectedColors,
   printActualULPs,
   printExpectedULPs,
+  printAlternateExpectedULPs,
   ...comparer.tableRows(failedPixels),
 ])}`;
 }
