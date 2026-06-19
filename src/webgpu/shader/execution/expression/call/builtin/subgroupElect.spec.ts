@@ -186,10 +186,7 @@ g.test('compute,each_invocation')
     t.skipIfDeviceDoesNotHaveFeature('subgroups' as GPUFeatureName);
     const wgThreads = t.params.wgSize[0] * t.params.wgSize[1] * t.params.wgSize[2];
 
-    interface SubgroupProperties extends GPUAdapterInfo {
-      subgroupMaxSize: number;
-    }
-    const { subgroupMaxSize } = t.device.adapterInfo as SubgroupProperties;
+    const subgroupMaxSize = t.device.adapterInfo.subgroupMaxSize!;
     t.skipIf(subgroupMaxSize <= t.params.id, 'No invocation selected');
 
     const wgsl = `
@@ -332,10 +329,7 @@ g.test('fragment')
   )
   .fn(async t => {
     t.skipIfDeviceDoesNotHaveFeature('subgroups' as GPUFeatureName);
-    interface SubgroupProperties extends GPUAdapterInfo {
-      subgroupMinSize: number;
-    }
-    const { subgroupMinSize } = t.device.adapterInfo as SubgroupProperties;
+    const subgroupMinSize = t.device.adapterInfo.subgroupMinSize!;
     const innerTexels = (t.params.size[0] - 1) * (t.params.size[1] - 1);
     t.skipIf(innerTexels < subgroupMinSize, 'Too few texels to be reliable');
 
