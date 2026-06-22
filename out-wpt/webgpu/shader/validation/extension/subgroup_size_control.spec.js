@@ -314,3 +314,73 @@ fn(async (t) => {
     });
   }
 });
+
+g.test('subgroup_size_must_be_between_min_and_max_at_pipeline_creation').
+desc(
+  `Checks that a pipeline-creation error results if the subgroup_size value is smaller than
+     subgroupMinSize or greater than subgroupMaxSize. Tests both constant and override expressions
+     for the subgroup_size attribute.`
+).
+params((u) =>
+u.
+combine('subgroupSizeIsOverride', [false, true]).
+combine('relation', ['below_min', 'at_min', 'at_max', 'above_max'])
+).
+beforeAllSubcases((t) => {
+  t.selectDeviceOrSkipTestCase({
+    requiredFeatures: ['subgroup-size-control']
+  });
+}).
+fn((t) => {
+  const { subgroupSizeIsOverride, relation } = t.params;
+  const subgroupMinSize = t.device.adapterInfo.subgroupMinSize;
+  const subgroupMaxSize = t.device.adapterInfo.subgroupMaxSize;
+
+  let subgroupSize;
+  let shouldSucceed;
+  switch (relation) {
+    case 'below_min':
+      // Use a power-of-2 value below min. If min is already 1, skip.
+      subgroupSize = subgroupMinSize / 2;
+      if (subgroupSize < 1) {
+        t.skip('subgroupMinSize is 1, cannot test below minimum');
+        return;
+      }
+      shouldSucceed = false;
+      break;
+    case 'at_min':
+      subgroupSize = subgroupMinSize;
+      shouldSucceed = true;
+      break;
+    case 'at_max':
+      subgroupSize = subgroupMaxSize;
+      shouldSucceed = true;
+      break;
+    case 'above_max':
+      // Use a power-of-2 value above max.
+      subgroupSize = subgroupMaxSize * 2;
+      shouldSucceed = false;
+      break;
+  }
+
+  // Ensure workgroup_size x is a multiple of subgroup_size and within limits.
+  const workgroupSizeX = subgroupSize;
+  if (workgroupSizeX > t.device.limits.maxComputeWorkgroupSizeX) {
+    t.skip('subgroup size exceeds maxComputeWorkgroupSizeX');
+    return;
+  }
+
+  t.expectPipelineResult({
+    expectedResult: shouldSucceed,
+    code: `
+          enable subgroups;
+          enable subgroup_size_control;
+          const const_S = ${subgroupSize}u;
+          override override_S: u32;
+          @workgroup_size(${workgroupSizeX})
+          @subgroup_size(${subgroupSizeIsOverride ? 'override_S' : 'const_S'})
+        `,
+    constants: { override_S: subgroupSize },
+    addWorkgroupSize: false
+  });
+});

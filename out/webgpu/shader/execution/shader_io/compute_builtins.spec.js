@@ -1168,30 +1168,36 @@ fn main(@builtin(local_invocation_id) local_id : vec3u,
 
 g.test('subgroup_size_attribute').
 desc(
-  `Tests that at least one power-of-two value in [subgroupMinSize, subgroupMaxSize] can be used as
+  `Tests that all power-of-two values in [subgroupMinSize, subgroupMaxSize] can be used as
     the @subgroup_size attribute in a simple compute pipeline. The value of the subgroup_size
     builtin must equal the value of the @subgroup_size attribute.`
 ).
 params((u) =>
-u.combine('numWorkGroups', [1, 2]).combine('numSubgroups', [1, 2, 4])
+u.
+combine('subgroupSize', [4, 8, 16, 32, 64, 128]).
+combine('numWorkGroups', [1, 2]).
+combine('numSubgroups', [1, 2, 4])
 ).
 fn(async (t) => {
   t.skipIfDeviceDoesNotHaveFeature('subgroup-size-control');
 
-  const { numWorkGroups, numSubgroups } = t.params;
+  const { subgroupSize, numWorkGroups, numSubgroups } = t.params;
 
   const subgroupMinSize = t.device.adapterInfo.subgroupMinSize;
   const subgroupMaxSize = t.device.adapterInfo.subgroupMaxSize;
 
-  let atLeastOneSucceeded = false;
+  t.skipIf(
+    subgroupSize < subgroupMinSize || subgroupSize > subgroupMaxSize,
+    `subgroupSize ${subgroupSize} is outside device range [${subgroupMinSize}, ${subgroupMaxSize}]`
+  );
 
-  for (let subgroupSize = subgroupMinSize; subgroupSize <= subgroupMaxSize; subgroupSize *= 2) {
-    const wgx = subgroupSize * numSubgroups;
-    if (wgx > t.device.limits.maxComputeWorkgroupSizeX) {
-      continue;
-    }
+  const wgx = subgroupSize * numSubgroups;
+  t.skipIf(
+    wgx > t.device.limits.maxComputeWorkgroupSizeX,
+    `workgroup size ${wgx} exceeds maxComputeWorkgroupSizeX`
+  );
 
-    const wgsl = `
+  const wgsl = `
 enable subgroups;
 enable subgroup_size_control;
 
@@ -1207,68 +1213,53 @@ fn main(@builtin(subgroup_size) builtin_size : u32,
   output[gid] = select(0u, 1u, builtin_size == ${subgroupSize}u);
 }`;
 
-    // Try to create the pipeline; skip this subgroup size if it fails validation.
-    t.device.pushErrorScope('validation');
-    const module = t.device.createShaderModule({ code: wgsl });
-    const pipeline = t.device.createComputePipeline({
-      layout: 'auto',
-      compute: { module, entryPoint: 'main' }
-    });
-    const error = await t.device.popErrorScope();
-    if (error) {
-      continue;
-    }
+  const module = t.device.createShaderModule({ code: wgsl });
+  const pipeline = t.device.createComputePipeline({
+    layout: 'auto',
+    compute: { module, entryPoint: 'main' }
+  });
 
-    atLeastOneSucceeded = true;
+  const numInvocations = wgx * numWorkGroups;
+  const outputBuffer = t.makeBufferWithContents(
+    new Uint32Array([...iterRange(numInvocations, (x) => 0)]),
+    GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
+  );
 
-    const numInvocations = wgx * numWorkGroups;
-    const outputBuffer = t.makeBufferWithContents(
-      new Uint32Array([...iterRange(numInvocations, (x) => 0)]),
-      GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
-    );
-    t.trackForCleanup(outputBuffer);
-
-    const bg = t.device.createBindGroup({
-      layout: pipeline.getBindGroupLayout(0),
-      entries: [
-      {
-        binding: 0,
-        resource: {
-          buffer: outputBuffer
-        }
-      }]
-
-    });
-
-    const encoder = t.device.createCommandEncoder();
-    const pass = encoder.beginComputePass();
-    pass.setPipeline(pipeline);
-    pass.setBindGroup(0, bg);
-    pass.dispatchWorkgroups(numWorkGroups, 1, 1);
-    pass.end();
-    t.queue.submit([encoder.finish()]);
-
-    const outputReadback = await t.readGPUBufferRangeTyped(outputBuffer, {
-      srcByteOffset: 0,
-      type: Uint32Array,
-      typedLength: numInvocations,
-      method: 'copy'
-    });
-    const outputData = outputReadback.data;
-
-    for (let i = 0; i < numInvocations; i++) {
-      if (outputData[i] !== 1) {
-        t.fail(
-          `@subgroup_size(${subgroupSize}): invocation ${i} has builtin subgroup_size != ${subgroupSize}`
-        );
-        break;
+  const bg = t.device.createBindGroup({
+    layout: pipeline.getBindGroupLayout(0),
+    entries: [
+    {
+      binding: 0,
+      resource: {
+        buffer: outputBuffer
       }
+    }]
+
+  });
+
+  const encoder = t.device.createCommandEncoder();
+  const pass = encoder.beginComputePass();
+  pass.setPipeline(pipeline);
+  pass.setBindGroup(0, bg);
+  pass.dispatchWorkgroups(numWorkGroups, 1, 1);
+  pass.end();
+  t.queue.submit([encoder.finish()]);
+
+  const outputReadback = await t.readGPUBufferRangeTyped(outputBuffer, {
+    srcByteOffset: 0,
+    type: Uint32Array,
+    typedLength: numInvocations,
+    method: 'copy'
+  });
+  const outputData = outputReadback.data;
+
+  for (let i = 0; i < numInvocations; i++) {
+    if (outputData[i] !== 1) {
+      t.fail(
+        `@subgroup_size(${subgroupSize}): invocation ${i} has builtin subgroup_size != ${subgroupSize}`
+      );
+      break;
     }
   }
-
-  t.expect(
-    atLeastOneSucceeded,
-    `No valid @subgroup_size value found in [subgroupMinSize, subgroupMaxSize]`
-  );
 });
 //# sourceMappingURL=compute_builtins.spec.js.map
