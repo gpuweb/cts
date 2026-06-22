@@ -1224,7 +1224,6 @@ fn main(@builtin(subgroup_size) builtin_size : u32,
       new Uint32Array([...iterRange(numInvocations, x => 0)]),
       GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
     );
-    t.trackForCleanup(outputBuffer);
 
     const bg = t.device.createBindGroup({
       layout: pipeline.getBindGroupLayout(0),
