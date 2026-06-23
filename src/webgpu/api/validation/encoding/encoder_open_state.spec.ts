@@ -401,6 +401,11 @@ g.test('render_pass_commands')
             renderPass.setStencilReference(0);
           }
           break;
+        case 'setImmediates':
+          {
+            renderPass.setImmediates!(0, new Uint32Array(1));
+          }
+          break;
         case 'beginOcclusionQuery':
           {
             renderPass.beginOcclusionQuery(0);
@@ -525,6 +530,11 @@ g.test('render_bundle_commands')
             bundleEncoder.setVertexBuffer(1, buffer);
           }
           break;
+        case 'setImmediates':
+          {
+            bundleEncoder.setImmediates!(0, new Uint32Array(1));
+          }
+          break;
         case 'pushDebugGroup':
           {
             bundleEncoder.pushDebugGroup('group');
@@ -612,6 +622,11 @@ g.test('compute_pass_commands')
         case 'dispatchWorkgroupsIndirect':
           {
             computePass.dispatchWorkgroupsIndirect(indirectBuffer, 0);
+          }
+          break;
+        case 'setImmediates':
+          {
+            computePass.setImmediates!(0, new Uint32Array(1));
           }
           break;
         case 'pushDebugGroup':
