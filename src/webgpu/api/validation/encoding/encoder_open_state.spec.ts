@@ -403,7 +403,7 @@ g.test('render_pass_commands')
           break;
         case 'setImmediates':
           {
-            renderPass.setImmediates!(0, new Uint32Array(1));
+            renderPass.setImmediates(0, new Uint32Array(1));
           }
           break;
         case 'beginOcclusionQuery':
@@ -532,7 +532,7 @@ g.test('render_bundle_commands')
           break;
         case 'setImmediates':
           {
-            bundleEncoder.setImmediates!(0, new Uint32Array(1));
+            bundleEncoder.setImmediates(0, new Uint32Array(1));
           }
           break;
         case 'pushDebugGroup':
@@ -626,7 +626,7 @@ g.test('compute_pass_commands')
           break;
         case 'setImmediates':
           {
-            computePass.setImmediates!(0, new Uint32Array(1));
+            computePass.setImmediates(0, new Uint32Array(1));
           }
           break;
         case 'pushDebugGroup':
