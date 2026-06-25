@@ -1,5 +1,3 @@
-import { getGPU } from '../../../../common/util/navigator_gpu.js';
-import { supportsImmediateData } from '../../../../common/util/util.js';
 import {
   AccessMode,
   AddressSpace,
@@ -20,28 +18,19 @@ export function requiredLanguageFeatureHeader(addressSpace: AddressSpace): strin
 }
 
 type AddressSpaceSupportTest = {
-  readonly rec: Parameters<typeof getGPU>[0];
-  skip(message: string): never;
   skipIfLanguageFeatureNotSupported(
     langFeature: NonNullable<AddressSpaceInfo['wgslLanguageFeature']>
   ): void;
 };
 
 export function skipIfImmediateDataNotSupported(t: AddressSpaceSupportTest): void {
-  if (!supportsImmediateData(getGPU(t.rec))) {
-    t.skip('Immediate data not supported');
-  }
+  t.skipIfLanguageFeatureNotSupported('immediate_address_space');
 }
 
 export function skipIfAddressSpaceNotSupported(
   t: AddressSpaceSupportTest,
   addressSpace: AddressSpace
 ): void {
-  if (addressSpace === 'immediate') {
-    skipIfImmediateDataNotSupported(t);
-    return;
-  }
-
   const feature = kAddressSpaceInfo[addressSpace].wgslLanguageFeature;
   if (feature !== undefined) {
     t.skipIfLanguageFeatureNotSupported(feature);

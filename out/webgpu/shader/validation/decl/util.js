@@ -1,8 +1,6 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
-**/import { getGPU } from '../../../../common/util/navigator_gpu.js';import { supportsImmediateData } from '../../../../common/util/util.js';import {
-
-
+**/import {
 
   kAccessModeInfo,
   kAddressSpaceInfo } from
@@ -25,23 +23,14 @@ export function requiredLanguageFeatureHeader(addressSpace) {
 
 
 
-
-
 export function skipIfImmediateDataNotSupported(t) {
-  if (!supportsImmediateData(getGPU(t.rec))) {
-    t.skip('Immediate data not supported');
-  }
+  t.skipIfLanguageFeatureNotSupported('immediate_address_space');
 }
 
 export function skipIfAddressSpaceNotSupported(
 t,
 addressSpace)
 {
-  if (addressSpace === 'immediate') {
-    skipIfImmediateDataNotSupported(t);
-    return;
-  }
-
   const feature = kAddressSpaceInfo[addressSpace].wgslLanguageFeature;
   if (feature !== undefined) {
     t.skipIfLanguageFeatureNotSupported(feature);
