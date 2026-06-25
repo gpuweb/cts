@@ -14,6 +14,9 @@ import {
   supportsRead,
   supportsWrite,
   ShaderStage,
+  requiredLanguageFeatureHeader,
+  skipIfAddressSpaceNotSupported,
+  skipIfImmediateDataNotSupported,
 } from './util.js';
 
 export const g = makeTestGroup(ShaderValidationTest);
@@ -209,6 +212,28 @@ const kTypes = {
   },
 };
 
+const kImmediateTypesWithArray = new Set<string>([
+  'array<vec4<bool>>',
+  'array<vec4<bool>, 4>',
+  'array<vec4u>',
+  'array<vec4u, 4>',
+  'array<vec4u, array_size_const>',
+  'array<vec4u, array_size_override>',
+  'S_array_vec4u',
+  'S_array_vec4u_4',
+  'S_array_bool_4',
+] as const);
+
+function isImmediateStoreType(typeName: keyof typeof kTypes): boolean {
+  const type = kTypes[typeName];
+  return (
+    type.isHostShareable &&
+    type.isConstructible &&
+    type.isFixedFootprint &&
+    !kImmediateTypesWithArray.has(typeName)
+  );
+}
+
 g.test('module_scope_types')
   .desc('Test that only types that are allowed for a given address space are accepted.')
   .params(u =>
@@ -222,10 +247,14 @@ g.test('module_scope_types')
         'storage_rw',
         'uniform',
         'workgroup',
+        'immediate',
       ])
       .combine('via_alias', [false, true])
   )
   .fn(t => {
+    if (t.params.kind === 'immediate') {
+      skipIfImmediateDataNotSupported(t);
+    }
     if (kTypes[t.params.type].requiresF16) {
       t.skipIfDeviceDoesNotHaveFeature('shader-f16');
     }
@@ -265,9 +294,16 @@ g.test('module_scope_types')
         decl = 'var<workgroup> foo : ';
         shouldPass = type.isFixedFootprint;
         break;
+      case 'immediate':
+        decl = 'var<immediate> foo : ';
+        shouldPass = isImmediateStoreType(t.params.type);
+        break;
     }
 
-    const wgsl = `${type.requiresF16 ? 'enable f16;' : ''}
+    const featureHeader =
+      t.params.kind === 'immediate' ? requiredLanguageFeatureHeader('immediate') : '';
+
+    const wgsl = `${featureHeader}${type.requiresF16 ? 'enable f16;' : ''}
     const array_size_const = 4;
     override array_size_override = 4;
 
@@ -461,13 +497,18 @@ g.test('binding_point_on_non_resources')
   .desc('Test that non-resource variables cannot have either @group or @binding attributes.')
   .params(u =>
     u
-      .combine('addrspace', ['private', 'workgroup'])
+      .combine('addrspace', ['private', 'workgroup', 'immediate'] as const)
       .combine('group', ['', '@group(0)'])
       .combine('binding', ['', '@binding(0)'])
   )
   .fn(t => {
+    if (t.params.addrspace === 'immediate') {
+      skipIfImmediateDataNotSupported(t);
+    }
     const shouldPass = t.params.group === '' && t.params.binding === '';
-    const wgsl = `${t.params.group} ${t.params.binding} var<${t.params.addrspace}> foo : i32;`;
+    const header =
+      t.params.addrspace === 'immediate' ? requiredLanguageFeatureHeader('immediate') : '';
+    const wgsl = `${header}${t.params.group} ${t.params.binding} var<${t.params.addrspace}> foo : i32;`;
     t.expectCompileResult(shouldPass, wgsl);
   });
 
@@ -538,13 +579,24 @@ g.test('address_space_access_mode')
   .desc('Test that only storage accepts an access mode')
   .params(u =>
     u
-      .combine('address_space', ['private', 'storage', 'uniform', 'function', 'workgroup'] as const)
+      .combine('address_space', [
+        'private',
+        'storage',
+        'uniform',
+        'function',
+        'workgroup',
+        'immediate',
+      ] as const)
       .combine('access_mode', ['', 'read', 'write', 'read_write'] as const)
       .combine('trailing_comma', [true, false] as const)
   )
   .fn(t => {
+    if (t.params.address_space === 'immediate') {
+      skipIfImmediateDataNotSupported(t);
+    }
     let fdecl = ``;
     let mdecl = ``;
+    let header = ``;
     // Most address spaces do not accept an access mode, but should accept no
     // template argument or a trailing comma.
     let shouldPass = t.params.access_mode === '';
@@ -573,8 +625,12 @@ g.test('address_space_access_mode')
       case 'function':
         fdecl = `var<function${suffix}> x : u32;`;
         break;
+      case 'immediate':
+        header = requiredLanguageFeatureHeader('immediate');
+        mdecl = `var<immediate${suffix}> x : u32;`;
+        break;
     }
-    const code = `${mdecl}
+    const code = `${header}${mdecl}
     fn foo() {
       ${fdecl}
     }`;
@@ -601,6 +657,7 @@ g.test('explicit_access_mode')
         .combine('stage', ['compute' as ShaderStage]) // Only need to check compute shaders
   )
   .fn(t => {
+    skipIfAddressSpaceNotSupported(t, t.params.addressSpace);
     const prog = getVarDeclShader(t.params);
     const info = kAddressSpaceInfo[t.params.addressSpace];
 
@@ -628,6 +685,7 @@ g.test('implicit_access_mode')
         .combine('stage', ['compute' as ShaderStage]) // Only need to check compute shaders
   )
   .fn(t => {
+    skipIfAddressSpaceNotSupported(t, t.params.addressSpace);
     const prog = getVarDeclShader(t.params);
 
     // 7.3 var Declarations
@@ -650,6 +708,7 @@ g.test('read_access')
         .combine('stage', ['compute' as ShaderStage]) // Only need to check compute shaders
   )
   .fn(t => {
+    skipIfAddressSpaceNotSupported(t, t.params.addressSpace);
     const prog = getVarDeclShader(t.params, 'let copy = x;');
     const ok = supportsRead(t.params);
     t.expectCompileResult(ok, prog);
@@ -668,6 +727,7 @@ g.test('write_access')
         .combine('stage', ['compute' as ShaderStage]) // Only need to check compute shaders
   )
   .fn(t => {
+    skipIfAddressSpaceNotSupported(t, t.params.addressSpace);
     const prog = getVarDeclShader(t.params, 'x = 0;');
     const ok = supportsWrite(t.params);
     t.expectCompileResult(ok, prog);
