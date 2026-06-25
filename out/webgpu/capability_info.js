@@ -970,6 +970,7 @@ export const kFeatureNameInfo =
   'texture-formats-tier2': {},
   'primitive-index': {},
   'texture-component-swizzle': {},
+  'subgroup-size-control': {},
   ['atomic-vec2u-min-max']: {}
 };
 /** List of all GPUFeatureName values. */

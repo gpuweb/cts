@@ -1179,7 +1179,7 @@ g.test('subgroup_size_attribute')
       .combine('numSubgroups', [1, 2, 4] as const)
   )
   .fn(async t => {
-    t.skipIfDeviceDoesNotHaveFeature('subgroup-size-control' as GPUFeatureName);
+    t.skipIfDeviceDoesNotHaveFeature('subgroup-size-control');
 
     const { subgroupSize, numWorkGroups, numSubgroups } = t.params;
 
