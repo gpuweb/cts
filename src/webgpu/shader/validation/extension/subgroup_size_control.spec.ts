@@ -17,7 +17,7 @@ g.test('enable_subgroup_size_control_requires_subgroups')
   .params(u => u.combine('enableSubgroups', [false, true] as const))
   .beforeAllSubcases(t => {
     t.selectDeviceOrSkipTestCase({
-      requiredFeatures: ['subgroup-size-control' as GPUFeatureName],
+      requiredFeatures: ['subgroup-size-control'],
     });
   })
   .fn(t => {
@@ -43,7 +43,7 @@ g.test('use_subgroup_size_attribute_requires_subgroup_size_control_extension_ena
   .params(u => u.combine('enableExtension', [false, true] as const))
   .beforeAllSubcases(t => {
     t.selectDeviceOrSkipTestCase({
-      requiredFeatures: ['subgroup-size-control' as GPUFeatureName],
+      requiredFeatures: ['subgroup-size-control'],
     });
   })
   .fn(t => {
@@ -69,7 +69,7 @@ g.test('subgroup_size_attribute_only_valid_in_compute_stage')
   .params(u => u.combine('stage', ['compute', 'vertex', 'fragment'] as const))
   .beforeAllSubcases(t => {
     t.selectDeviceOrSkipTestCase({
-      requiredFeatures: ['subgroup-size-control' as GPUFeatureName],
+      requiredFeatures: ['subgroup-size-control'],
     });
   })
   .fn(t => {
@@ -133,7 +133,7 @@ g.test('subgroup_size_value_must_be_const_or_override_i32_u32')
   .params(u => u.combine('case', keysOf(kSubgroupSizeValueCases)))
   .beforeAllSubcases(t => {
     t.selectDeviceOrSkipTestCase({
-      requiredFeatures: ['subgroup-size-control' as GPUFeatureName],
+      requiredFeatures: ['subgroup-size-control'],
     });
   })
   .fn(t => {
@@ -161,7 +161,7 @@ g.test('subgroup_size_constant_value_must_be_power_of_2')
   )
   .beforeAllSubcases(t => {
     t.selectDeviceOrSkipTestCase({
-      requiredFeatures: ['subgroup-size-control' as GPUFeatureName],
+      requiredFeatures: ['subgroup-size-control'],
     });
   })
   .fn(t => {
@@ -186,7 +186,7 @@ g.test('subgroup_size_override_must_be_power_of_2_at_pipeline_creation')
   .params(u => u.combine('size', [3, 5, 7, 15, 31, 63, 127] as const))
   .beforeAllSubcases(t => {
     t.selectDeviceOrSkipTestCase({
-      requiredFeatures: ['subgroup-size-control' as GPUFeatureName],
+      requiredFeatures: ['subgroup-size-control'],
     });
   })
   .fn(t => {
@@ -246,7 +246,7 @@ g.test('subgroup_size_override_valid_values_no_error')
   )
   .beforeAllSubcases(t => {
     t.selectDeviceOrSkipTestCase({
-      requiredFeatures: ['subgroup-size-control' as GPUFeatureName],
+      requiredFeatures: ['subgroup-size-control'],
     });
   })
   .fn(async t => {
@@ -282,7 +282,7 @@ g.test('workgroup_size_x_must_be_multiple_of_subgroup_size_at_pipeline_creation'
   )
   .beforeAllSubcases(t => {
     t.selectDeviceOrSkipTestCase({
-      requiredFeatures: ['subgroup-size-control' as GPUFeatureName],
+      requiredFeatures: ['subgroup-size-control'],
     });
   })
   .fn(async t => {
@@ -328,7 +328,7 @@ g.test('subgroup_size_must_be_between_min_and_max_at_pipeline_creation')
   )
   .beforeAllSubcases(t => {
     t.selectDeviceOrSkipTestCase({
-      requiredFeatures: ['subgroup-size-control' as GPUFeatureName],
+      requiredFeatures: ['subgroup-size-control'],
     });
   })
   .fn(t => {
