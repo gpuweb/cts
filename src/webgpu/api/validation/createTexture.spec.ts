@@ -1003,9 +1003,15 @@ g.test('texture_size,3d_texture,compressed_format')
       usage: GPUTextureUsage.TEXTURE_BINDING,
     };
 
+    // With 'texture-compression-unaligned', mip level 0 of a compressed texture is no longer
+    // required to be a multiple of the texel block size, so unaligned widths/heights are valid.
+    const supportsUnaligned = hasFeature(
+      t.device.features,
+      'texture-compression-unaligned' as GPUFeatureName
+    );
     const success =
-      size[0] % info.blockWidth === 0 &&
-      size[1] % info.blockHeight === 0 &&
+      (supportsUnaligned ||
+        (size[0] % info.blockWidth === 0 && size[1] % info.blockHeight === 0)) &&
       size[0] <= maxTextureDimension3D &&
       size[1] <= maxTextureDimension3D &&
       size[2] <= maxTextureDimension3D &&
