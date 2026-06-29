@@ -8,8 +8,10 @@ import {
   explicitSpaceExpander,
   accessModeExpander,
   getVarDeclShader,
-  supportsWrite } from
+  supportsWrite,
 
+  skipIfAddressSpaceNotSupported,
+  skipIfImmediateDataNotSupported } from
 '../decl/util.js';
 import { ShaderValidationTest } from '../shader_validation_test.js';
 
@@ -19,11 +21,22 @@ g.test('missing_type').
 desc('Test that pointer types require an element type').
 params((u) =>
 u.
-combine('aspace', ['function', 'private', 'workgroup', 'storage', 'uniform']).
+combine('aspace', [
+'function',
+'private',
+'workgroup',
+'storage',
+'uniform',
+'immediate']
+).
 combine('comma', ['', ','])
 ).
 fn((t) => {
-  const code = `alias T = ptr<${t.params.aspace}${t.params.comma}>;`;
+  if (t.params.aspace === 'immediate') {
+    skipIfImmediateDataNotSupported(t);
+  }
+  const header = t.params.aspace === 'immediate' ? 'requires immediate_address_space;\n' : '';
+  const code = `${header}alias T = ptr<${t.params.aspace}${t.params.comma}>;`;
   t.expectCompileResult(false, code);
 });
 
@@ -37,13 +50,18 @@ combine('aspace', [
 'workgroup',
 'storage',
 'uniform',
+'immediate',
 'handle',
 'bad_aspace']
 ).
 combine('comma', ['', ','])
 ).
 fn((t) => {
-  const code = `alias T = ptr<${t.params.aspace}, u32${t.params.comma}>;`;
+  if (t.params.aspace === 'immediate') {
+    skipIfImmediateDataNotSupported(t);
+  }
+  const header = t.params.aspace === 'immediate' ? 'requires immediate_address_space;\n' : '';
+  const code = `${header}alias T = ptr<${t.params.aspace}, u32${t.params.comma}>;`;
   const success = t.params.aspace !== 'handle' && t.params.aspace !== 'bad_aspace';
   t.expectCompileResult(success, code);
 });
@@ -52,13 +70,24 @@ g.test('access_mode').
 desc('Test access mode in pointer type parameterization').
 params((u) =>
 u.
-combine('aspace', ['function', 'private', 'storage', 'uniform', 'workgroup']).
+combine('aspace', [
+'function',
+'private',
+'storage',
+'uniform',
+'workgroup',
+'immediate']
+).
 combine('access', ['read', 'write', 'read_write']).
 combine('comma', ['', ','])
 ).
 fn((t) => {
   // Default access mode is tested above.
-  const code = `alias T = ptr<${t.params.aspace}, u32, ${t.params.access}${t.params.comma}>;`;
+  if (t.params.aspace === 'immediate') {
+    skipIfImmediateDataNotSupported(t);
+  }
+  const header = t.params.aspace === 'immediate' ? 'requires immediate_address_space;\n' : '';
+  const code = `${header}alias T = ptr<${t.params.aspace}, u32, ${t.params.access}${t.params.comma}>;`;
   const success = t.params.aspace === 'storage' && t.params.access !== 'write';
   t.expectCompileResult(success, code);
 });
@@ -158,6 +187,7 @@ combine('stage', ['compute']) // Only need to check compute shaders
 .combine('ptrStoreType', ['i32', 'u32'])
 ).
 fn((t) => {
+  skipIfAddressSpaceNotSupported(t, t.params.addressSpace);
   // Match the address space and access mode.
   const prog = getVarDeclShader(t.params, `let p: ${pointerType(t.params)} = &x;`);
   const ok = t.params.ptrStoreType === 'i32'; // The store type matches the variable's store type.
@@ -178,6 +208,7 @@ combine('stage', ['compute']) // Only need to check compute shaders
 combine('ptrStoreType', ['i32'])
 ).
 fn((t) => {
+  skipIfAddressSpaceNotSupported(t, t.params.addressSpace);
   // Try reading through the pointer.
   const typePart = t.params.inferPtrType ? `: ${pointerType(t.params)}` : '';
   const prog = getVarDeclShader(t.params, `let p${typePart} = &x; let read = *p;`);
@@ -200,6 +231,7 @@ combine('stage', ['compute']) // Only need to check compute shaders
 combine('ptrStoreType', ['i32'])
 ).
 fn((t) => {
+  skipIfAddressSpaceNotSupported(t, t.params.addressSpace);
   // Try writing through the pointer.
   const typePart = t.params.inferPtrType ? `: ${pointerType(t.params)}` : '';
   const prog = getVarDeclShader(t.params, `let p${typePart} = &x; *p = 42;`);
@@ -242,7 +274,13 @@ const kStoreTypeNotInstantiable = {
   privateRTArray: 'alias p = ptr<private,array<i32>>;',
   functionRTArray: 'alias p = ptr<function,array<i32>>;',
   RTArrayNotLast: 'struct S { a: array<i32>, b: i32 } alias p = ptr<storage,S>;',
-  nestedRTArray: 'struct S { a: array<i32>, b: i32 } struct { s: S } alias p = ptr<storage,T>;'
+  nestedRTArray: 'struct S { a: array<i32>, b: i32 } struct { s: S } alias p = ptr<storage,T>;',
+  immediateBool: 'requires immediate_address_space; alias p = ptr<immediate,bool>;',
+  immediateArray: 'requires immediate_address_space; alias p = ptr<immediate,array<u32, 4>>;',
+  immediateStructWithArray:
+  'requires immediate_address_space; struct S { data: array<u32, 4> } alias p = ptr<immediate,S>;',
+  immediateAtomic: 'requires immediate_address_space; alias p = ptr<immediate,atomic<u32>>;',
+  immediateRuntimeArray: 'requires immediate_address_space; alias p = ptr<immediate,array<u32>>;'
 };
 
 g.test('ptr_not_instantiable').
