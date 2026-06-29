@@ -16,7 +16,7 @@ g.test('enables_subgroups')
   Test that enabling the 'subgroup-size-control' feature also enables the 'subgroups' feature.
   `
   )
-  .beforeAllSubcases(t => t.selectDeviceOrSkipTestCase('subgroup-size-control' as GPUFeatureName))
+  .beforeAllSubcases(t => t.selectDeviceOrSkipTestCase('subgroup-size-control'))
   .fn(t => {
     t.expect(() => hasFeature(t.device.features, 'subgroups'));
   });
