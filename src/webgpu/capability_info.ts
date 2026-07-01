@@ -972,6 +972,7 @@ export const kFeatureNameInfo: {
   'texture-component-swizzle':          {},
   'subgroup-size-control':              {},
   ['atomic-vec2u-min-max' as GPUFeatureName]: {},
+  ['texture-compression-unaligned' as GPUFeatureName]: {},
 };
 /** List of all GPUFeatureName values. */
 export const kFeatureNames = keysOf(kFeatureNameInfo);
