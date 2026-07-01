@@ -183,7 +183,7 @@ desc(
   `Checks that when @subgroup_size is an override expression, it is a pipeline creation error
      if the override value resolves to a value that is not a power of 2.`
 ).
-params((u) => u.combine('size', [3, 5, 7, 15, 31, 63, 127])).
+params((u) => u.combine('size', [0, 3, 5, 7, 15, 31, 63, 127])).
 beforeAllSubcases((t) => {
   t.selectDeviceOrSkipTestCase({
     requiredFeatures: ['subgroup-size-control']
