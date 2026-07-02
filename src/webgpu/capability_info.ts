@@ -990,6 +990,7 @@ export const kKnownWGSLLanguageFeatures = [
   'linear_indexing',
   'texture_formats_tier1',
   'immediate_address_space',
+  'buffer_view',
 ] as const;
 
 export type WGSLLanguageFeature = (typeof kKnownWGSLLanguageFeatures)[number];
