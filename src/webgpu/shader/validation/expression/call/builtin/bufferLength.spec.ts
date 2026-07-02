@@ -88,3 +88,28 @@ fn main() {
 
     t.expectCompileResult(t.params.ptr, wgsl);
   });
+
+const kInvalidCases = {
+  baseline: `&b`,
+  no_args: `bufferLength()`,
+  two_args: `bufferLength(&b, 0)`,
+  scalar: `bufferLength(0u)`,
+  ptr_to_scalar: `bufferLength(&v[0])`,
+  ptr_to_array: `bufferLength(&v)`,
+};
+
+g.test('invalid_cases')
+  .desc('Test a smattering of invalid bufferLength calls')
+  .params(u => u.combine('test', keysOf(kInvalidCases)))
+  .fn(t => {
+    t.skipIfLanguageFeatureNotSupported('buffer_view');
+    const code = `
+var<workgroup> v : array<u32, 4>;
+var<workgroup> b : buffer<128>;
+@compute @workgroup_size(1)
+fn main() {
+  _ = ${kInvalidCases[t.params.test]};
+}`;
+
+    t.expectCompileResult(t.params.test === 'baseline', code);
+  });

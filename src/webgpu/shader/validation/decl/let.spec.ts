@@ -115,7 +115,7 @@ const kTypeCases: Record<string, Case> = {
     decls: `@group(0) @binding(0) var<storage> b : buffer;`,
   },
   buffer_sized: {
-    code: `let x = buffer<128> = b;`,
+    code: `let x : buffer<128> = b;`,
     valid: false,
     decls: `@group(0) @binding(0) var<uniform> b : buffer<128>;`,
   },
@@ -219,6 +219,11 @@ const kInitCases: Record<string, Case> = {
     code: `let x : ptr<uniform, buffer<64>> = &b;`,
     valid: false,
     decls: `@group(0) @binding(0) var<uniform> b : buffer<128>;`,
+  },
+  buffer_mismatched_overrides: {
+    code: `let p : ptr<workgroup, buffer<o1>> = &b;`,
+    valid: false,
+    decls: `override o1 : u32;\noverride o2 : u32;\nvar<workgroup> b : buffer<o2>;`,
   },
 };
 

@@ -37,7 +37,7 @@ const kParseCases = {
     code: `const x = 0; alias T = buffer<x>;`,
     valid: false,
   },
-  const_functio: {
+  const_function: {
     code: `const x = 16; const y = 32; alias T = buffer<min(x, y)>;`,
     valid: true,
   },
@@ -69,6 +69,42 @@ const kParseCases = {
     code: `alias T = buffer<u32>;`,
     valid: false,
   },
+  pointer_workgroup_unsized_buffer: {
+    code: `alias T = buffer; alias PT = ptr<workgroup, T>;`,
+    valid: true,
+  },
+  pointer_uniform_unsized_buffer: {
+    code: `alias T = buffer; alias PT = ptr<uniform, T>;`,
+    valid: true,
+  },
+  pointer_storage_unsized_buffer: {
+    code: `alias T = buffer; alias PT = ptr<storage, T>;`,
+    valid: true,
+  },
+  pointer_workgroup_sized_buffer: {
+    code: `alias T = buffer<32>; alias PT = ptr<workgroup, T>;`,
+    valid: true,
+  },
+  pointer_uniform_sized_buffer: {
+    code: `alias T = buffer<32>; alias PT = ptr<uniform, T>;`,
+    valid: true,
+  },
+  pointer_storage_sized_buffer: {
+    code: `alias T = buffer<32>; alias PT = ptr<storage, T>;`,
+    valid: true,
+  },
+  pointer_workgroup_override_sized_buffer: {
+    code: `override o : i32; alias T = buffer<o>; alias PT = ptr<workgroup, T>;`,
+    valid: true,
+  },
+  pointer_uniform_override_sized_buffer: {
+    code: `override o : i32; alias T = buffer<o>; alias PT = ptr<uniform, T>;`,
+    valid: false,
+  },
+  pointer_storage_override_sized_buffer: {
+    code: `override o : i32; alias T = buffer<o>; alias PT = ptr<storage, T>;`,
+    valid: false,
+  },
 };
 
 g.test('parse')
@@ -86,10 +122,17 @@ g.test('address_space')
     u
       .combine('case', keysOf(kParseCases))
       .filter(t => {
-        return kParseCases[t.case].valid;
+        return kParseCases[t.case].valid && !t.case.includes('pointer');
       })
       .beginSubcases()
-      .combine('aspace', ['function', 'private', 'storage', 'uniform', 'workgroup'] as const)
+      .combine('aspace', [
+        'function',
+        'private',
+        'storage',
+        'uniform',
+        'workgroup',
+        'immediate',
+      ] as const)
   )
   .fn(t => {
     t.skipIfLanguageFeatureNotSupported('buffer_view');
@@ -103,6 +146,7 @@ g.test('address_space')
         break;
       case 'private':
       case 'workgroup':
+      case 'immediate':
         mvar = `var<${t.params.aspace}> v : T;`;
         break;
       case 'storage':
@@ -119,7 +163,10 @@ fn main() {
   ${fvar}
 }`;
 
-    let expected = t.params.aspace !== 'function' && t.params.aspace !== 'private';
+    let expected =
+      t.params.aspace !== 'function' &&
+      t.params.aspace !== 'private' &&
+      t.params.aspace !== 'immediate';
     if (t.params.case === 'unsized') {
       expected = t.params.aspace === 'storage';
     } else if (t.params.case.includes('override')) {

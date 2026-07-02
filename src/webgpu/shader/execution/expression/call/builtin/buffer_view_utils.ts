@@ -16,7 +16,7 @@ import {
 export const kBufferSizes = [128, 256, 512, 1024] as const;
 export const kOffsets = [0, 1, 2, 3, 4, 8, 12, 16, 32, 100, 156, 480, 768] as const;
 export const kSizes = [...kBufferSizes, 32, 48, 64] as const;
-export const kCalls = ['unsized', 'sized', 'sized_indirect'] as const;
+export const kCalls = ['unsized', 'sized', 'sized_indirect', 'sized_sized_indirect'] as const;
 
 interface ArrayLengthType {
   type: string;
@@ -28,6 +28,15 @@ interface ArrayLengthType {
   uniformStdLayout?: boolean;
 }
 
+/**
+ * Return true if the case is valid
+ *
+ * @param type The testcase
+ * @param offset The offset to the view call
+ * @param size The size to the view call
+ * @param bufferSize The size of the buffer
+ * @returns true if case is valid.
+ */
 export function isValidArrayLengthCase(
   type: ArrayLengthType,
   offset: number,
@@ -36,16 +45,25 @@ export function isValidArrayLengthCase(
 ): boolean {
   if (size === 0) {
     // bufferView case
-    return offset + (type.arrayOffset ?? 0) + type.stride < bufferSize;
+    return offset + (type.arrayOffset ?? 0) + type.stride <= bufferSize;
   } else {
     // bufferArrayView case
     if ((type.arrayOffset ?? 0) + type.stride > size) {
       return false;
     }
-    return offset + size < bufferSize;
+    return offset + size <= bufferSize;
   }
 }
 
+/**
+ * Calculates the return length in elements
+ *
+ * @param type The testcase
+ * @param offset The offset to the view call
+ * @param size The size to the view call
+ * @param bufferSize The buffer size
+ * @returns The number of elements in the arrayLength call
+ */
 export function calculateArrayLength(
   type: ArrayLengthType,
   offset: number,

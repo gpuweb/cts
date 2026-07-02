@@ -146,7 +146,7 @@ fn main(@builtin(${t.params.builtin}) input : u32,
 
 interface RequiredSizeCase {
   code: string;
-  size: number;
+  size: number; // Size must be greater than 4
   binding_type: GPUBufferBindingType;
   requires?: WGSLLanguageFeature[];
 }
@@ -233,7 +233,8 @@ fn main() {
 fn main() {
   let p = bufferView<array<u32, 16>>(&v, 56);
 }`,
-    size: 16 * 4 + 56,
+    // Offset does not count toward min binding size.
+    size: 16 * 4,
     binding_type: 'read-only-storage',
     requires: ['buffer_view'],
   },
@@ -292,7 +293,8 @@ fn main() {
   let p = bufferView<u32>(&v, 16);
   let q = bufferView<S>(&v, 0);
 }`,
-    size: 20,
+    // Offset does not count toward min binding size.
+    size: 16,
     binding_type: 'storage',
     requires: ['buffer_view'],
   },
@@ -301,13 +303,14 @@ fn main() {
 @group(0) @binding(0) var<storage, read_write> v : buffer;
 @compute @workgroup_size(1)
 fn main() {
-  let p = bufferView<u32>(&v, 16);
+  let p = bufferView<vec2i>(&v, 16);
 }
 @fragment
 fn main2() {
   let q = bufferView<vec4u>(&v, 32);
 }`,
-    size: 20,
+    // Offset does not count toward min binding size.
+    size: 8,
     binding_type: 'storage',
     requires: ['buffer_view'],
   },
@@ -316,12 +319,13 @@ fn main2() {
 @group(0) @binding(0) var<storage, read_write> v : buffer;
 @compute @workgroup_size(1)
 fn main() {
-  let p = bufferView<u32>(&v, 16);
+  let p = bufferView<vec2f>(&v, 16);
 }
 fn foo() {
   let q = bufferView<vec4u>(&v, 32);
 }`,
-    size: 20,
+    // Offset does not count toward min binding size.
+    size: 8,
     binding_type: 'storage',
     requires: ['buffer_view'],
   },
@@ -336,7 +340,8 @@ fn main() {
 fn foo(p : ptr<storage, buffer, read_write>) {
   let q = bufferView<vec4u>(&v, 32);
 }`,
-    size: 16 + 32,
+    // Offset does not count toward min binding size.
+    size: 16,
     binding_type: 'storage',
     requires: ['buffer_view', 'unrestricted_pointer_parameters'],
   },
@@ -345,9 +350,10 @@ fn foo(p : ptr<storage, buffer, read_write>) {
 @group(0) @binding(0) var<storage> v : buffer;
 @compute @workgroup_size(1)
 fn main() {
-  let p = bufferArrayView<array<u32>>(&v, 0, 32);
+  let p = bufferArrayView<array<vec2u>>(&v, 0, 32);
 }`,
-    size: 32,
+    // Size does not count toward min binding size.
+    size: 8,
     binding_type: 'read-only-storage',
     requires: ['buffer_view'],
   },
@@ -356,9 +362,10 @@ fn main() {
 @group(0) @binding(0) var<storage> v : buffer;
 @compute @workgroup_size(1)
 fn main() {
-  let p = bufferArrayView<array<u32>>(&v, 16, 32);
+  let p = bufferArrayView<array<vec2f>>(&v, 16, 32);
 }`,
-    size: 16 + 32,
+    // Offset and size do not count toward min binding size.
+    size: 8,
     binding_type: 'read-only-storage',
     requires: ['buffer_view'],
   },
@@ -390,6 +397,89 @@ fn main() {
 }`,
     size: 32,
     binding_type: 'read-only-storage',
+    requires: ['buffer_view'],
+  },
+  storage_unsized_buffer_bufferArrayView5: {
+    code: `
+struct S {
+  a : vec4f,
+  b : vec4f,
+}
+@group(0) @binding(0) var<storage, read_write> v : buffer;
+@compute @workgroup_size(1)
+fn main() {
+  let o = 0u;
+  let s = 64;
+  let p1 = bufferArrayView<array<u32>>(&v, o, s);
+  let p2 = bufferArrayView<array<S>>(&v, o, s);
+}`,
+    size: 32,
+    binding_type: 'storage',
+    requires: ['buffer_view'],
+  },
+  storage_unsized_buffer_bufferArrayView6: {
+    code: `
+struct S {
+  a : vec4f,
+  b : vec4f,
+}
+var<private> o : i32;
+var<private> s : i32;
+@group(0) @binding(0) var<storage, read_write> v : buffer;
+@compute @workgroup_size(1)
+fn main() {
+  let p = bufferArrayView<array<vec4u>>(&v, o, s);
+}
+fn foo() {
+  let p = bufferArrayView<array<S>>(&v, o, s);
+}`,
+    size: 16,
+    binding_type: 'storage',
+    requires: ['buffer_view'],
+  },
+  storage_unsized_buffer_bufferArrayView7: {
+    code: `
+struct S {
+  a : vec4f,
+  b : vec4f,
+}
+var<private> o : i32;
+var<private> s : i32;
+@group(0) @binding(0) var<storage, read_write> v : buffer;
+@compute @workgroup_size(1)
+fn main() {
+  let p = bufferArrayView<array<vec4u>>(&v, o, s);
+}
+@fragment
+fn foo() {
+  let p = bufferArrayView<array<S>>(&v, o, s);
+}`,
+    size: 16,
+    binding_type: 'storage',
+    requires: ['buffer_view'],
+  },
+  storage_unsized_buffer_bufferArrayView8: {
+    code: `
+struct S {
+  a : vec4f,
+  b : vec4f,
+}
+var<private> o : i32;
+var<private> s : i32;
+@group(0) @binding(0) var<storage, read_write> v : buffer;
+@compute @workgroup_size(1)
+fn main() {
+  bar();
+  foo();
+}
+fn bar() {
+  let p = bufferArrayView<array<vec4u>>(&v, o, s);
+}
+fn foo() {
+  let p = bufferArrayView<array<S>>(&v, o, s);
+}`,
+    size: 32,
+    binding_type: 'storage',
     requires: ['buffer_view'],
   },
 };

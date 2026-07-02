@@ -27,7 +27,7 @@ fn main() {
 
 const kTypes = objectsToRecord(kAllScalarsAndVectors);
 
-g.test('return_type')
+g.test('return_store_type')
   .desc('Validates return type')
   .params(u =>
     u
@@ -91,6 +91,20 @@ g.test('buffer_type')
   )
   .fn(t => {
     t.skipIfLanguageFeatureNotSupported('buffer_view');
+    const aspace = t.params.type.substr(t.params.type.lastIndexOf('_') + 1);
+    let access = '';
+    switch (t.params.type) {
+      case 'unsized_ro_storage':
+      case 'sized_ro_storage':
+        access = ', read';
+        break;
+      case 'unsized_storage':
+      case 'sized_storage':
+        access = ', read_write';
+        break;
+      default:
+        break;
+    }
     const wgsl = `
 @group(0) @binding(0) var<storage> unsized_ro_storage : buffer;
 @group(0) @binding(1) var<storage, read_write> unsized_storage : buffer;
@@ -103,7 +117,9 @@ var<workgroup> override_workgroup : buffer<o>;
 
 @compute @workgroup_size(1)
 fn main() {
-  let p = bufferView<u32>(${t.params.ptr ? '&' : ''}${t.params.type}, 0);
+  let p : ptr<${aspace}, u32${access}> = bufferView<u32>(${t.params.ptr ? '&' : ''}${
+    t.params.type
+  }, 0);
 }`;
 
     t.expectCompileResult(t.params.ptr, wgsl);
@@ -270,7 +286,7 @@ fn foo() {
     valid: false,
     ptr_param: true,
   },
-  ro_storage_unsized_buffer_to_smaller_param: {
+  ro_storage_unsized_buffer_to_sized_param: {
     code: `
 @group(0) @binding(0) var<storage> v : buffer;
 fn bar(p : ptr<storage, buffer<16>) {

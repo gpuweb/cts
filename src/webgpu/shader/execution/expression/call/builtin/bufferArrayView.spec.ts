@@ -229,6 +229,12 @@ fn sized_indirectLength(p : ptr<${t.params.aspace}, buffer<${
   return unsizedLength(p, gidx);
 }
 
+fn sized_sized_indirectLength(p : ptr<${t.params.aspace}, buffer<${
+      t.params.bufferSize
+    }>>, gidx : u32) -> u32 {
+  return sizedLength(p, gidx);
+}
+
 override bufferSize : u32 = 0u;
 ${decl}
 @group(0) @binding(1) var<storage> offsets : array<u32>;
