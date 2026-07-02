@@ -2226,6 +2226,7 @@
   "webgpu:shader,validation,expression,call,builtin,any:must_use:*": { "subcaseMS": 7467.652 },
   "webgpu:shader,validation,expression,call,builtin,arrayLength:access_mode:*": { "subcaseMS": 0.000 },
   "webgpu:shader,validation,expression,call,builtin,arrayLength:bool_type:*": { "subcaseMS": 0.000 },
+  "webgpu:shader,validation,expression,call,builtin,arrayLength:buffer_type:*": { "subcaseMS": 183.140 },
   "webgpu:shader,validation,expression,call,builtin,arrayLength:must_use:*": { "subcaseMS": 1.822 },
   "webgpu:shader,validation,expression,call,builtin,arrayLength:type:*": { "subcaseMS": 0.000 },
   "webgpu:shader,validation,expression,call,builtin,asin:integer_argument:*": { "subcaseMS": 0.878 },
