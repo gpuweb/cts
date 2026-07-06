@@ -107,7 +107,7 @@ const kParseCases = {
   },
   buffer_3bytes: {
     code: `alias T = buffer<3>;`,
-      valid: false,
+    valid: false,
   },
   buffer_2bytes_f16: {
     code: `enable f16;\nalias T = buffer<2>;`,
