@@ -2913,7 +2913,6 @@
   "webgpu:shader,validation,shader_io,builtins:duplicates:*": { "subcaseMS": 1.913 },
   "webgpu:shader,validation,shader_io,builtins:missing_vertex_position:*": { "subcaseMS": 0.975 },
   "webgpu:shader,validation,shader_io,builtins:nesting:*": { "subcaseMS": 2.700 },
-  "webgpu:shader,validation,shader_io,builtins:parse:*": { "subcaseMS": 10.114 },
   "webgpu:shader,validation,shader_io,builtins:placement:*": { "subcaseMS": 10.371 },
   "webgpu:shader,validation,shader_io,builtins:reuse_builtin_name:*": { "subcaseMS": 1.202 },
   "webgpu:shader,validation,shader_io,builtins:stage_inout:*": { "subcaseMS": 1.231 },
