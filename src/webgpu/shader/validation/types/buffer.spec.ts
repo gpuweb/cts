@@ -105,6 +105,18 @@ const kParseCases = {
     code: `override o : i32; alias T = buffer<o>; alias PT = ptr<storage, T>;`,
     valid: false,
   },
+  buffer_3bytes: {
+    code: `alias T = buffer<3>;`,
+      valid: false,
+  },
+  buffer_2bytes_f16: {
+    code: `enable f16;\nalias T = buffer<2>;`,
+    valid: true,
+  },
+  buffer_2bytes_no_f16: {
+    code: `alias T = buffer<2>;`,
+    valid: false,
+  },
 };
 
 g.test('parse')
