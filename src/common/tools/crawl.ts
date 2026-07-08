@@ -44,9 +44,7 @@ async function crawlFilesRecursively(dir: string): Promise<string[]> {
   );
 }
 
-export async function crawl(
-  suiteDir: string,
-): Promise<TestSuiteListingEntry[]> {
+export async function crawl(suiteDir: string): Promise<TestSuiteListingEntry[]> {
   if (!fs.existsSync(suiteDir)) {
     throw new Error(`Could not find suite: ${suiteDir}`);
   }

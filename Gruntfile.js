@@ -199,10 +199,7 @@ module.exports = function (grunt) {
 
     concurrent: {
       'write-out-wpt-cts-html-all': {
-        tasks: [
-          'run:write-out-wpt-cts-html',
-          'run:write-out-wpt-cts-html-withsomeworkers',
-        ],
+        tasks: ['run:write-out-wpt-cts-html', 'run:write-out-wpt-cts-html-withsomeworkers'],
       },
       'all-builds': {
         tasks: ['build-standalone', 'build-wpt', 'run:build-out-node'],

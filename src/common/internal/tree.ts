@@ -100,10 +100,7 @@ export class TestTree {
     );
   }
 
-  static async create(
-    forQuery: TestQuery,
-    root: TestSubtree,
-  ): Promise<TestTree> {
+  static async create(forQuery: TestQuery, root: TestSubtree): Promise<TestTree> {
     const suite = forQuery.suite;
 
     await TestTree.propagateCounts(root);
@@ -197,7 +194,7 @@ export class TestTree {
 
   /** Propagate the subtreeTODOs/subtreeTests state upward from leaves to parent nodes. */
   static async propagateCounts(
-    subtree: TestSubtree,
+    subtree: TestSubtree
   ): Promise<{ tests: number; nodesWithTODO: number; totalTimeMS: number; subcaseCount: number }> {
     subtree.subtreeCounts ??= { tests: 0, nodesWithTODO: 0, totalTimeMS: 0 };
     subtree.subcaseCount = 0;
