@@ -5,8 +5,11 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
+import { SpecFile } from '../internal/file_loader.js';
+import { TestQueryMultiCase, TestQueryMultiFile } from '../internal/query/query.js';
+import { validQueryPart } from '../internal/query/validQueryPart.js';
 import { TestSuiteListingEntry, TestSuiteListing } from '../internal/test_suite_listing.js';
-import { unreachable } from '../util/util.js';
+import { assert, unreachable } from '../util/util.js';
 
 const specFileSuffix = __filename.endsWith('.ts') ? '.spec.ts' : '.spec.js';
 
@@ -41,10 +44,16 @@ async function crawlFilesRecursively(dir: string): Promise<string[]> {
   );
 }
 
-export async function crawl(suiteDir: string): Promise<TestSuiteListingEntry[]> {
+export async function crawl(
+  suiteDir: string,
+  opts: { validate: boolean; printCaseCountReport: boolean } | null = null
+): Promise<TestSuiteListingEntry[]> {
   if (!fs.existsSync(suiteDir)) {
     throw new Error(`Could not find suite: ${suiteDir}`);
   }
+
+  let totalCases = 0;
+  let totalSubcases = 0;
 
   // Crawl files and convert paths to be POSIX-style, relative to suiteDir.
   const filesToEnumerate = (await crawlFilesRecursively(suiteDir))
@@ -58,6 +67,45 @@ export async function crawl(suiteDir: string): Promise<TestSuiteListingEntry[]> 
       const filepathWithoutExtension = file.substring(0, file.length - specFileSuffix.length);
       const pathSegments = filepathWithoutExtension.split('/');
 
+      if (opts?.validate) {
+        const suite = path.basename(suiteDir);
+        const filename = `../../${suite}/${filepathWithoutExtension}.spec.js`;
+
+        assert(!process.env.STANDALONE_DEV_SERVER);
+        const mod = (await import(filename)) as SpecFile;
+        assert(mod.description !== undefined, 'Test spec file missing description: ' + filename);
+        assert(mod.g !== undefined, 'Test spec file missing TestGroup definition: ' + filename);
+
+        mod.g.validate(new TestQueryMultiFile(suite, pathSegments));
+
+        if (opts?.printCaseCountReport) {
+          for (const t of mod.g.iterate()) {
+            const testQuery = new TestQueryMultiCase(
+              suite,
+              pathSegments,
+              t.testPath,
+              {}
+            ).toString();
+
+            let cases = 0;
+            let subcases = 0;
+            for (const c of t.iterate(null)) {
+              cases++;
+              subcases += c.computeSubcaseCount();
+            }
+
+            const perCase = (subcases / cases).toFixed(0);
+            console.log(`${testQuery} - ${cases} cases, ${subcases} subcases (~${perCase}/case)`);
+            totalCases += cases;
+            totalSubcases += subcases;
+          }
+        }
+      }
+
+      for (const p of pathSegments) {
+        assert(validQueryPart.test(p), `Invalid directory name ${p}; must match ${validQueryPart}`);
+      }
+
       entries.push({ file: pathSegments });
     } else if (path.basename(file) === 'README.txt') {
       const dirname = path.dirname(file);
@@ -68,6 +116,10 @@ export async function crawl(suiteDir: string): Promise<TestSuiteListingEntry[]> 
     } else {
       unreachable(`Matched an unrecognized filename ${file}`);
     }
+  }
+
+  if (opts?.printCaseCountReport) {
+    console.log(`-----\nTOTAL: ${totalCases} cases, ${totalSubcases} subcases`);
   }
 
   return entries;

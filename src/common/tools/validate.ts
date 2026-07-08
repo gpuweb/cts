@@ -32,12 +32,14 @@ if (args.indexOf('--help') !== -1) {
   usage(0);
 }
 
+let printCaseCountReport = false;
 const suiteDirs = [];
 for (const arg of args) {
   switch (arg) {
     case '--print-metadata-warnings':
       break;
     case '--print-case-count-report':
+      printCaseCountReport = true;
       break;
     default:
       suiteDirs.push(arg);
@@ -50,5 +52,8 @@ if (suiteDirs.length === 0) {
 }
 
 for (const suiteDir of suiteDirs) {
-  void crawl(suiteDir);
+  void crawl(suiteDir, {
+    validate: true,
+    printCaseCountReport,
+  });
 }
