@@ -58,10 +58,6 @@ module.exports = function (grunt) {
         cmd: 'node',
         args: ['tools/gen_wpt_cts_html', 'tools/gen_wpt_cfg_unchunked.json'],
       },
-      'write-out-wpt-cts-html-chunked2sec': {
-        cmd: 'node',
-        args: ['tools/gen_wpt_cts_html', 'tools/gen_wpt_cfg_chunked2sec.json'],
-      },
       'write-out-wpt-cts-html-withsomeworkers': {
         cmd: 'node',
         args: ['tools/gen_wpt_cts_html', 'tools/gen_wpt_cfg_withsomeworkers.json'],
@@ -205,7 +201,6 @@ module.exports = function (grunt) {
       'write-out-wpt-cts-html-all': {
         tasks: [
           'run:write-out-wpt-cts-html',
-          'run:write-out-wpt-cts-html-chunked2sec',
           'run:write-out-wpt-cts-html-withsomeworkers',
         ],
       },
