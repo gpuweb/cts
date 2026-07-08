@@ -101,8 +101,6 @@ export class TestTree {
   }
 
   static async create(forQuery: TestQuery, root: TestSubtree): Promise<TestTree> {
-    const suite = forQuery.suite;
-
     await TestTree.propagateCounts(root);
     return new TestTree(forQuery, root);
   }

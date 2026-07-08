@@ -5,11 +5,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
-import { SpecFile } from '../internal/file_loader.js';
-import { TestQueryMultiCase, TestQueryMultiFile } from '../internal/query/query.js';
-import { validQueryPart } from '../internal/query/validQueryPart.js';
 import { TestSuiteListingEntry, TestSuiteListing } from '../internal/test_suite_listing.js';
-import { assert, unreachable } from '../util/util.js';
+import { unreachable } from '../util/util.js';
 
 const specFileSuffix = __filename.endsWith('.ts') ? '.spec.ts' : '.spec.js';
 
@@ -61,7 +58,6 @@ export async function crawl(suiteDir: string): Promise<TestSuiteListingEntry[]> 
       const filepathWithoutExtension = file.substring(0, file.length - specFileSuffix.length);
       const pathSegments = filepathWithoutExtension.split('/');
 
-      const suite = path.basename(suiteDir);
       entries.push({ file: pathSegments });
     } else if (path.basename(file) === 'README.txt') {
       const dirname = path.dirname(file);

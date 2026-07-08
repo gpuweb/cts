@@ -32,16 +32,12 @@ if (args.indexOf('--help') !== -1) {
   usage(0);
 }
 
-let printMetadataWarnings = false;
-let printCaseCountReport = false;
 const suiteDirs = [];
 for (const arg of args) {
   switch (arg) {
     case '--print-metadata-warnings':
-      printMetadataWarnings = true;
       break;
     case '--print-case-count-report':
-      printCaseCountReport = true;
       break;
     default:
       suiteDirs.push(arg);

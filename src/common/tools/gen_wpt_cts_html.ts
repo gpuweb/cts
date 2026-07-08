@@ -243,7 +243,7 @@ let config: Config;
     let variantCount = 0;
 
     const alwaysExpandThroughLevel = 2; // expand to, at minimum, every test.
-    loopOverNodes: for (const { query, subtreeCounts } of tree.iterateCollapsedNodes({
+    loopOverNodes: for (const { query, _subtreeCounts } of tree.iterateCollapsedNodes({
       alwaysExpandThroughLevel,
     })) {
       assert(query instanceof TestQueryMultiCase);
