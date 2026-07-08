@@ -54,9 +54,5 @@ if (suiteDirs.length === 0) {
 }
 
 for (const suiteDir of suiteDirs) {
-  void crawl(suiteDir, {
-    validate: true,
-    printMetadataWarnings,
-    printCaseCountReport,
-  });
+  void crawl(suiteDir);
 }
