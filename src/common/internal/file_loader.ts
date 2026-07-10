@@ -74,8 +74,7 @@ export abstract class TestFileLoader extends EventTarget {
     {
       subqueriesToExpand = [],
       fullyExpandSubtrees = [],
-      maxChunkTime = Infinity,
-    }: { subqueriesToExpand?: string[]; fullyExpandSubtrees?: string[]; maxChunkTime?: number } = {}
+    }: { subqueriesToExpand?: string[]; fullyExpandSubtrees?: string[] } = {}
   ): Promise<TestTree> {
     const tree = await loadTreeForQuery(this, query, {
       subqueriesToExpand: subqueriesToExpand.map(s => {
@@ -84,7 +83,6 @@ export abstract class TestFileLoader extends EventTarget {
         return q;
       }),
       fullyExpandSubtrees: fullyExpandSubtrees.map(s => parseQuery(s)),
-      maxChunkTime,
     });
     this.dispatchEvent(new MessageEvent<void>('finish'));
     return tree;
