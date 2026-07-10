@@ -30,7 +30,6 @@ gen_wpt_cts_html.ts. Example:
     "out": "path/to/output/cts.https.html",
     "outJSON": "path/to/output/webgpu_variant_list.json",
     "template": "path/to/template/cts.https.html",
-    "maxChunkTimeMS": 2000
   }
 
 Usage (advanced) (deprecated, use config file):
@@ -53,15 +52,6 @@ and myexpectations.txt is a file containing a list of WPT paths to suppress, e.g
 `);
   process.exit(rc);
 }
-
-
-
-
-
-
-
-
-
 
 
 
@@ -144,7 +134,6 @@ let config;
           suite: configJSON.suite,
           out: path.resolve(jsonFileDir, configJSON.out),
           template: path.resolve(jsonFileDir, configJSON.template),
-          maxChunkTimeMS: configJSON.maxChunkTimeMS ?? Infinity,
           argumentsPrefixes: configJSON.argumentsPrefixes ?
           [...reifyArgumentsPrefixesConfig(configJSON.argumentsPrefixes)] :
           [{ prefix: '?q=' }],
@@ -185,7 +174,6 @@ let config;
           suite,
           out: outFile,
           template: templateFile,
-          maxChunkTimeMS: Infinity,
           argumentsPrefixes: [{ prefix: '?q=' }],
           noLongPathAssert: false
         };
@@ -205,8 +193,6 @@ let config;
       console.error('incorrect number of arguments!');
       printUsageAndExit(1);
   }
-
-  const useChunking = Number.isFinite(config.maxChunkTimeMS);
 
   // Sort prefixes from longest to shortest
   config.argumentsPrefixes.sort((a, b) => b.prefix.length - a.prefix.length);
@@ -246,20 +232,18 @@ let config;
 
     const tree = await loader.loadTree(rootQuery, {
       subqueriesToExpand,
-      fullyExpandSubtrees: fullyExpand.get(prefix),
-      maxChunkTime: config.maxChunkTimeMS
+      fullyExpandSubtrees: fullyExpand.get(prefix)
     });
 
     lines.push(undefined); // output blank line between prefixes
     const prefixComment = { comment: `Prefix: "${prefix}"` }; // contents will be updated later
-    if (useChunking) lines.push(prefixComment);
 
     const filesSeen = new Set();
     const testsSeen = new Set();
     let variantCount = 0;
 
     const alwaysExpandThroughLevel = 2; // expand to, at minimum, every test.
-    loopOverNodes: for (const { query, subtreeCounts } of tree.iterateCollapsedNodes({
+    loopOverNodes: for (const { query } of tree.iterateCollapsedNodes({
       alwaysExpandThroughLevel
     })) {
       assert(query instanceof TestQueryMultiCase);
@@ -287,8 +271,7 @@ let config;
       }
 
       lines.push({
-        urlQueryString: prefix + query.toString(), // "?debug=0&q=..."
-        comment: useChunking ? `estimated: ${subtreeCounts?.totalTimeMS.toFixed(3)} ms` : undefined
+        urlQueryString: prefix + query.toString() // "?debug=0&q=..."
       });
 
       variantCount++;
