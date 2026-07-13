@@ -298,7 +298,7 @@ let config;
       `Generated test variant would produce too-long -actual.txt filename. Possible solutions:
   - Reduce the length of the parts of the test query
   - Reduce the parameterization of the test
-  - Make the test function faster and regenerate the listing_meta entry
+  - Make the test function faster
   - Reduce the specificity of test expectations (if you're using them)
 |<${''.padEnd(kMaxQueryLength - 4, '-')}>|
 ${[...queryStrings.values()].join('\n')}`
