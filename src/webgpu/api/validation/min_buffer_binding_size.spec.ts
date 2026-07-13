@@ -382,7 +382,9 @@ g.test('compute,shader_required_buffer_size')
         },
       ],
     });
-    const layout =t.device.createPipelineLayout({ bindGroupLayouts: [bgLayout] });
+    const layout = t.device.createPipelineLayout({
+      bindGroupLayouts: [bgLayout],
+    });
 
     const pipeline = t.device.createComputePipeline({
       layout: t.params.layout === 'auto' ? 'auto' : layout,
@@ -434,7 +436,7 @@ g.test('compute,shader_required_buffer_size')
     }
   });
 
-const kRequiredRenderSizeCases : Record<string, RequiredSizeCase> = {
+const kRequiredRenderSizeCases: Record<string, RequiredSizeCase> = {
   fragment_larger_buffer_view_ro_storage: {
     code: `
 @group(0) @binding(0) var<storage> buf : buffer;
@@ -534,7 +536,7 @@ g.test('render,shader_required_buffer_size')
 
     const buffer = t.createBufferTracked({
       size: t.params.valid ? testcase.size : testcase.size - 4,
-      usage: testcase.binding_type == 'uniform' ? GPUBufferUsage.UNIFORM : GPUBufferUsage.STORAGE,
+      usage: testcase.binding_type === 'uniform' ? GPUBufferUsage.UNIFORM : GPUBufferUsage.STORAGE,
     });
 
     const bgLayout = t.device.createBindGroupLayout({
@@ -549,7 +551,9 @@ g.test('render,shader_required_buffer_size')
         },
       ],
     });
-    const layout = t.device.createPipelineLayout({ bindGroupLayouts: [bgLayout] });
+    const layout = t.device.createPipelineLayout({
+      bindGroupLayouts: [bgLayout],
+    });
 
     const colorTexture = t.createTextureTracked({
       size: { width: 1, height: 1 },
@@ -612,9 +616,8 @@ g.test('render,shader_required_buffer_size')
       });
       pass.setPipeline(pipeline);
       pass.setBindGroup(0, bg);
-      pass.draw(1),
-      pass.end();
-      
+      pass.draw(1), pass.end();
+
       t.expectValidationError(() => {
         encoder.finish();
       }, !t.params.valid);
