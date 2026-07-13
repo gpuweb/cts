@@ -440,15 +440,18 @@ const kRequiredRenderSizeCases: Record<string, RequiredSizeCase> = {
   fragment_larger_buffer_view_ro_storage: {
     code: `
 @group(0) @binding(0) var<storage> buf : buffer;
+@group(0) @binding(1) var<uniform> uni : u32;
 
 @vertex
 fn vs() -> @builtin(position) vec4f {
+  _ = uni;
   _ = bufferView<array<u32, 2>>(&buf, 0);
   return vec4f(0);
 }
 
 @fragment
 fn fs() -> @location(0) vec4f {
+  _ = uni;
   _ = bufferView<array<u32, 4>>(&buf, 0);
   return vec4f(0);
 }
@@ -460,15 +463,18 @@ fn fs() -> @location(0) vec4f {
   vertex_larger_buffer_view_ro_storage: {
     code: `
 @group(0) @binding(0) var<storage> buf : buffer;
+@group(0) @binding(1) var<uniform> uni : u32;
 
 @vertex
 fn vs() -> @builtin(position) vec4f {
+  _ = uni;
   _ = bufferView<array<vec4f, 2>>(&buf, 0);
   return vec4f(0);
 }
 
 @fragment
 fn fs() -> @location(0) vec4f {
+  _ = uni;
   _ = bufferView<array<u32, 4>>(&buf, 0);
   return vec4f(0);
 }
@@ -480,16 +486,17 @@ fn fs() -> @location(0) vec4f {
   fragment_larger_buffer_array_view_ro_storage: {
     code: `
 @group(0) @binding(0) var<storage> buf : buffer;
+@group(0) @binding(1) var<uniform> uni : u32;
 
 @vertex
 fn vs() -> @builtin(position) vec4f {
-  _ = bufferArrayView<array<u32>>(&buf, 0, 16);
+  _ = bufferArrayView<array<u32>>(&buf, 0, uni);
   return vec4f(0);
 }
 
 @fragment
 fn fs() -> @location(0) vec4f {
-  _ = bufferArrayView<array<vec4u>>(&buf, 0, 16);
+  _ = bufferArrayView<array<vec4u>>(&buf, 0, uni);
   return vec4f(0);
 }
 `,
@@ -500,16 +507,17 @@ fn fs() -> @location(0) vec4f {
   vertex_larger_buffer_array_view_ro_storage: {
     code: `
 @group(0) @binding(0) var<storage> buf : buffer;
+@group(0) @binding(1) var<uniform> uni : u32;
 
 @vertex
 fn vs() -> @builtin(position) vec4f {
-  _ = bufferArrayView<array<vec4f>>(&buf, 0, 32);
+  _ = bufferArrayView<array<vec4f>>(&buf, 0, uni);
   return vec4f(0);
 }
 
 @fragment
 fn fs() -> @location(0) vec4f {
-  _ = bufferArrayView<array<u32>>(&buf, 0, 32);
+  _ = bufferArrayView<array<u32>>(&buf, 0, uni);
   return vec4f(0);
 }
 `,
@@ -539,6 +547,11 @@ g.test('render,shader_required_buffer_size')
       usage: testcase.binding_type === 'uniform' ? GPUBufferUsage.UNIFORM : GPUBufferUsage.STORAGE,
     });
 
+    const uniform = t.createBufferTracked({
+      size: 4,
+      usage: GPUBufferUsage.UNIFORM,
+    });
+
     const bgLayout = t.device.createBindGroupLayout({
       entries: [
         {
@@ -547,6 +560,14 @@ g.test('render,shader_required_buffer_size')
           buffer: {
             type: testcase.binding_type,
             minBindingSize: 0,
+          },
+        },
+        {
+          binding: 1,
+          visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
+          buffer: {
+            type: 'uniform',
+            minBindingSize: 4,
           },
         },
       ],
@@ -586,6 +607,12 @@ g.test('render,shader_required_buffer_size')
                 buffer,
               },
             },
+            {
+              binding: 1,
+              resource: {
+                buffer: uniform,
+              },
+            },
           ],
         }),
           true;
@@ -598,6 +625,12 @@ g.test('render,shader_required_buffer_size')
             binding: 0,
             resource: {
               buffer,
+            },
+          },
+          {
+            binding: 1,
+            resource: {
+              buffer: uniform,
             },
           },
         ],
