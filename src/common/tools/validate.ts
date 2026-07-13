@@ -18,7 +18,6 @@ Example:
 
 Options:
   --help                     Print this message and exit.
-  --print-metadata-warnings  Print non-fatal warnings about listing_meta.json files to stderr.
   --print-case-count-report  Print the case/subcase counts of every test to stdout.
 `);
   process.exit(rc);
