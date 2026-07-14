@@ -1,5 +1,5 @@
 export const description = `
-Compute dispatch validation tests.
+Minimum buffer binding size tests
 `;
 
 import { AllFeaturesMaxLimitsGPUTest } from '../.././gpu_test.js';
@@ -8,141 +8,6 @@ import { keysOf } from '../../../common/util/data_tables.js';
 import { WGSLLanguageFeature } from '../../capability_info.js';
 
 export const g = makeTestGroup(AllFeaturesMaxLimitsGPUTest);
-
-g.test('dispatch,linear_indexing_range')
-  .desc('Tests validation of total invocations for linear_indexing built-in values')
-  .params(u =>
-    u
-      .combine('builtin', ['global_invocation_index', 'workgroup_index'] as const)
-      .beginSubcases()
-      .combine('size', ['max', 'valid'] as const)
-  )
-  .fn(t => {
-    // Other builtins are not tested due to onerous runtimes.
-    t.skipIf(!t.hasLanguageFeature('linear_indexing'), 'Missing linear_indexing language feature');
-
-    // Spec limits:
-    // - maxComputeWorkgroupsPerDimension = 65535
-    const { maxComputeWorkgroupsPerDimension } = t.device.limits;
-    const x = t.params.builtin === 'global_invocation_index' ? 2 : 1,
-      y = 1,
-      z = 1;
-    const wgSize = x * y * z;
-    const countX = maxComputeWorkgroupsPerDimension;
-    const countY = t.params.size === 'max' ? maxComputeWorkgroupsPerDimension : 1;
-    const countZ = t.params.builtin === 'workgroup_index' ? 2 : 1;
-
-    const totalInvocations = wgSize * countX * countY * countZ;
-    t.skipIf(t.params.size === 'max' && totalInvocations <= 0xffffffff, 'Uninteresting test');
-
-    const code = `
-@compute @workgroup_size(${x}, ${y}, ${z})
-fn main(@builtin(${t.params.builtin}) input : u32) {
-  _ = input;
-}`;
-
-    const shaderModule = t.device.createShaderModule({ code });
-    const computePipeline = t.device.createComputePipeline({
-      layout: 'auto',
-      compute: {
-        module: shaderModule,
-      },
-    });
-    const commandEncoder = t.device.createCommandEncoder();
-    const computePassEncoder = commandEncoder.beginComputePass();
-    computePassEncoder.setPipeline(computePipeline);
-    computePassEncoder.dispatchWorkgroups(countX, countY, countZ);
-    computePassEncoder.end();
-
-    t.expectValidationError(() => {
-      commandEncoder.finish();
-    }, t.params.size === 'max');
-  });
-
-g.test('dispatchIndirect,linear_indexing_range')
-  .desc('Tests dispatchIndirect skips when linear_indexing is out of range')
-  .params(u =>
-    u
-      .combine('builtin', ['global_invocation_index', 'workgroup_index'] as const)
-      .beginSubcases()
-      .combine('size', ['max', 'valid'] as const)
-  )
-  .fn(t => {
-    // Other builtins are not tested due to onerous runtimes.
-    t.skipIf(!t.hasLanguageFeature('linear_indexing'), 'Missing linear_indexing language feature');
-
-    // Spec limits:
-    // - maxComputeWorkgroupsPerDimension = 65535
-    const { maxComputeWorkgroupsPerDimension } = t.device.limits;
-    const x = t.params.builtin === 'global_invocation_index' ? 2 : 1,
-      y = 1,
-      z = 1;
-    const wgSize = x * y * z;
-    const countX = maxComputeWorkgroupsPerDimension;
-    const countY = t.params.size === 'max' ? maxComputeWorkgroupsPerDimension : 1;
-    const countZ = t.params.builtin === 'workgroup_index' ? 2 : 1;
-
-    const totalInvocations = wgSize * countX * countY * countZ;
-    t.skipIf(t.params.size === 'max' && totalInvocations <= 0xffffffff, 'Uninteresting test');
-
-    const kMagic = 0xdeadbeef;
-    const code = `
-@group(0) @binding(0)
-var<storage, read_write> out : u32;
-
-@compute @workgroup_size(${x}, ${y}, ${z})
-fn main(@builtin(${t.params.builtin}) input : u32,
-        @builtin(global_invocation_id) gid : vec3u) {
-  _ = input;
-  if (gid.x == 0 && gid.y == 0 && gid.z == 0) {
-    out = ${kMagic};
-  }
-}`;
-
-    const dispatchIndirectCounts = new Uint32Array(3);
-    dispatchIndirectCounts[0] = countX;
-    dispatchIndirectCounts[1] = countY;
-    dispatchIndirectCounts[2] = countZ;
-    const indirectBuffer = t.makeBufferWithContents(
-      dispatchIndirectCounts,
-      GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST | GPUBufferUsage.INDIRECT
-    );
-    t.trackForCleanup(indirectBuffer);
-    const outputBuffer = t.makeBufferWithContents(
-      new Uint32Array([0]),
-      GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE
-    );
-    t.trackForCleanup(outputBuffer);
-
-    const shaderModule = t.device.createShaderModule({ code });
-    const computePipeline = t.device.createComputePipeline({
-      layout: 'auto',
-      compute: {
-        module: shaderModule,
-      },
-    });
-    const bg = t.device.createBindGroup({
-      layout: computePipeline.getBindGroupLayout(0),
-      entries: [
-        {
-          binding: 0,
-          resource: {
-            buffer: outputBuffer,
-          },
-        },
-      ],
-    });
-    const commandEncoder = t.device.createCommandEncoder();
-    const computePassEncoder = commandEncoder.beginComputePass();
-    computePassEncoder.setPipeline(computePipeline);
-    computePassEncoder.setBindGroup(0, bg);
-    computePassEncoder.dispatchWorkgroupsIndirect(indirectBuffer, 0);
-    computePassEncoder.end();
-    t.queue.submit([commandEncoder.finish()]);
-
-    const expected = t.params.size === 'max' ? 0 : kMagic;
-    t.expectGPUBufferValuesEqual(outputBuffer, new Uint32Array([expected]));
-  });
 
 interface RequiredSizeCase {
   code: string;
@@ -484,7 +349,7 @@ fn foo() {
   },
 };
 
-g.test('shader_required_buffer_size')
+g.test('compute,shader_required_buffer_size')
   .desc('Test that dispatch time validation occurs about the required buffer size')
   .params(u =>
     u
@@ -517,7 +382,9 @@ g.test('shader_required_buffer_size')
         },
       ],
     });
-    const layout = t.device.createPipelineLayout({ bindGroupLayouts: [bgLayout] });
+    const layout = t.device.createPipelineLayout({
+      bindGroupLayouts: [bgLayout],
+    });
 
     const pipeline = t.device.createComputePipeline({
       layout: t.params.layout === 'auto' ? 'auto' : layout,
@@ -565,6 +432,227 @@ g.test('shader_required_buffer_size')
 
       t.expectValidationError(() => {
         commandEncoder.finish();
+      }, !t.params.valid);
+    }
+  });
+
+const kRequiredRenderSizeCases: Record<string, RequiredSizeCase> = {
+  fragment_larger_buffer_view_ro_storage: {
+    code: `
+@group(0) @binding(0) var<storage> buf : buffer;
+@group(0) @binding(1) var<uniform> uni : u32;
+
+@vertex
+fn vs() -> @builtin(position) vec4f {
+  _ = uni;
+  _ = bufferView<array<u32, 2>>(&buf, 0);
+  return vec4f(0);
+}
+
+@fragment
+fn fs() -> @location(0) vec4f {
+  _ = uni;
+  _ = bufferView<array<u32, 4>>(&buf, 0);
+  return vec4f(0);
+}
+`,
+    size: 16,
+    binding_type: 'read-only-storage',
+    requires: ['buffer_view'],
+  },
+  vertex_larger_buffer_view_ro_storage: {
+    code: `
+@group(0) @binding(0) var<storage> buf : buffer;
+@group(0) @binding(1) var<uniform> uni : u32;
+
+@vertex
+fn vs() -> @builtin(position) vec4f {
+  _ = uni;
+  _ = bufferView<array<vec4f, 2>>(&buf, 0);
+  return vec4f(0);
+}
+
+@fragment
+fn fs() -> @location(0) vec4f {
+  _ = uni;
+  _ = bufferView<array<u32, 4>>(&buf, 0);
+  return vec4f(0);
+}
+`,
+    size: 32,
+    binding_type: 'read-only-storage',
+    requires: ['buffer_view'],
+  },
+  fragment_larger_buffer_array_view_ro_storage: {
+    code: `
+@group(0) @binding(0) var<storage> buf : buffer;
+@group(0) @binding(1) var<uniform> uni : u32;
+
+@vertex
+fn vs() -> @builtin(position) vec4f {
+  _ = bufferArrayView<array<u32>>(&buf, 0, uni);
+  return vec4f(0);
+}
+
+@fragment
+fn fs() -> @location(0) vec4f {
+  _ = bufferArrayView<array<vec4u>>(&buf, 0, uni);
+  return vec4f(0);
+}
+`,
+    size: 16,
+    binding_type: 'read-only-storage',
+    requires: ['buffer_view'],
+  },
+  vertex_larger_buffer_array_view_ro_storage: {
+    code: `
+@group(0) @binding(0) var<storage> buf : buffer;
+@group(0) @binding(1) var<uniform> uni : u32;
+
+@vertex
+fn vs() -> @builtin(position) vec4f {
+  _ = bufferArrayView<array<vec4f>>(&buf, 0, uni);
+  return vec4f(0);
+}
+
+@fragment
+fn fs() -> @location(0) vec4f {
+  _ = bufferArrayView<array<u32>>(&buf, 0, uni);
+  return vec4f(0);
+}
+`,
+    size: 16,
+    binding_type: 'read-only-storage',
+    requires: ['buffer_view'],
+  },
+};
+
+g.test('render,shader_required_buffer_size')
+  .params(u =>
+    u
+      .combine('case', keysOf(kRequiredRenderSizeCases))
+      .beginSubcases()
+      .combine('valid', [false, true] as const)
+      .combine('layout', ['auto', 'explicit'] as const)
+  )
+  .fn(t => {
+    const testcase = kRequiredRenderSizeCases[t.params.case];
+    const features = testcase.requires ?? [];
+    features.forEach(f => {
+      t.skipIfLanguageFeatureNotSupported(f);
+    });
+
+    const buffer = t.createBufferTracked({
+      size: t.params.valid ? testcase.size : testcase.size - 4,
+      usage: testcase.binding_type === 'uniform' ? GPUBufferUsage.UNIFORM : GPUBufferUsage.STORAGE,
+    });
+
+    const uniform = t.createBufferTracked({
+      size: 4,
+      usage: GPUBufferUsage.UNIFORM,
+    });
+
+    const bgLayout = t.device.createBindGroupLayout({
+      entries: [
+        {
+          binding: 0,
+          visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
+          buffer: {
+            type: testcase.binding_type,
+            minBindingSize: 0,
+          },
+        },
+        {
+          binding: 1,
+          visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
+          buffer: {
+            type: 'uniform',
+            minBindingSize: 4,
+          },
+        },
+      ],
+    });
+    const layout = t.device.createPipelineLayout({
+      bindGroupLayouts: [bgLayout],
+    });
+
+    const colorTexture = t.createTextureTracked({
+      size: { width: 1, height: 1 },
+      format: 'rgba8unorm',
+      usage: GPUTextureUsage.RENDER_ATTACHMENT,
+    });
+
+    const shaderModule = t.device.createShaderModule({ code: testcase.code });
+    const pipeline = t.device.createRenderPipeline({
+      layout: t.params.layout === 'auto' ? 'auto' : layout,
+      vertex: { module: shaderModule },
+      fragment: {
+        module: shaderModule,
+        targets: [{ format: 'rgba8unorm' }],
+      },
+      primitive: {
+        topology: 'triangle-list',
+      },
+    });
+
+    if (t.params.layout === 'auto' && !t.params.valid) {
+      // 'auto' layout get minBindingSize from shaders
+      t.expectValidationError(() => {
+        t.device.createBindGroup({
+          layout: pipeline.getBindGroupLayout(0),
+          entries: [
+            {
+              binding: 0,
+              resource: {
+                buffer,
+              },
+            },
+            {
+              binding: 1,
+              resource: {
+                buffer: uniform,
+              },
+            },
+          ],
+        }),
+          true;
+      });
+    } else {
+      const bg = t.device.createBindGroup({
+        layout: pipeline.getBindGroupLayout(0),
+        entries: [
+          {
+            binding: 0,
+            resource: {
+              buffer,
+            },
+          },
+          {
+            binding: 1,
+            resource: {
+              buffer: uniform,
+            },
+          },
+        ],
+      });
+
+      const encoder = t.device.createCommandEncoder();
+      const pass = encoder.beginRenderPass({
+        colorAttachments: [
+          {
+            view: colorTexture.createView(),
+            clearValue: [0, 0, 0, 0],
+            loadOp: 'clear',
+            storeOp: 'store',
+          },
+        ],
+      });
+      pass.setPipeline(pipeline);
+      pass.setBindGroup(0, bg);
+      pass.draw(1), pass.end();
+
+      t.expectValidationError(() => {
+        encoder.finish();
       }, !t.params.valid);
     }
   });
