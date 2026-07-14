@@ -747,6 +747,15 @@ export const listing = [
       "validation",
       "capability_checks",
       "features",
+      "texture_compression_unaligned"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
+      "capability_checks",
+      "features",
       "texture_formats"
     ]
   },
