@@ -2,6 +2,7 @@ export const description = `Validation tests for function restrictions`;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { keysOf } from '../../../../common/util/data_tables.js';
+import { skipIfImmediateDataNotSupported } from '../decl/util.js';
 import { ShaderValidationTest } from '../shader_validation_test.js';
 
 export const g = makeTestGroup(ShaderValidationTest);
@@ -274,6 +275,10 @@ const kFunctionParamTypeCases: Record<string, ParamTypeCase> = {
     name: `ptr<uniform, host_shareable>`,
     valid: 'with_unrestricted_pointer_parameters',
   },
+  ptrImmediate: {
+    name: `ptr<immediate, u32>`,
+    valid: 'with_unrestricted_pointer_parameters',
+  },
   ptrWorkgroupAtomic: {
     name: `ptr<workgroup, atomic<u32>>`,
     valid: 'with_unrestricted_pointer_parameters',
@@ -304,6 +309,12 @@ const kFunctionParamTypeCases: Record<string, ParamTypeCase> = {
   invalid_ptr6: { name: `ptr<private,u32,read_write>`, valid: false }, // Can't specify access mode
   invalid_ptr7: { name: `ptr<private,clamp>`, valid: false }, // Invalid store type
   invalid_ptr8: { name: `ptr<function, texture_external>`, valid: false }, // non-constructible pointer type
+  invalid_ptr_immediate_access_read: { name: `ptr<immediate, u32, read>`, valid: false },
+  invalid_ptr_immediate_access_write: { name: `ptr<immediate, u32, write>`, valid: false },
+  invalid_ptr_immediate_access_read_write: {
+    name: `ptr<immediate, u32, read_write>`,
+    valid: false,
+  },
 };
 
 g.test('function_parameter_types')
@@ -313,8 +324,20 @@ g.test('function_parameter_types')
   .fn(t => {
     const testcase = kFunctionParamTypeCases[t.params.case];
     const enable = testcase.name === 'f16' ? 'enable f16;' : '';
+    const needsImmediate = testcase.name.includes('immediate');
+    if (needsImmediate) {
+      skipIfImmediateDataNotSupported(t);
+    }
+    const immediateRequires = needsImmediate ? 'requires immediate_address_space;' : '';
+    const unrestrictedRequires =
+      testcase.valid === 'with_unrestricted_pointer_parameters' &&
+      t.hasLanguageFeature('unrestricted_pointer_parameters')
+        ? 'requires unrestricted_pointer_parameters;'
+        : '';
     const code = `
 ${enable}
+${immediateRequires}
+${unrestrictedRequires}
 
 ${kCCommonTypeDecls}
 
@@ -504,6 +527,11 @@ const kFunctionParamValueCases: Record<string, ParamValueCase> = {
     matches: ['ptr12'],
     needsUnrestrictedPointerParameters: true,
   },
+  ptrImmediate: {
+    value: `&immediate_u32`,
+    matches: ['ptrImmediate'],
+    needsUnrestrictedPointerParameters: true,
+  },
   ptrWorkgroupOverrideNoDefault: {
     value: `&wg_override_no_default`,
     matches: ['ptrWorkgroupOverrideNoDefault'],
@@ -548,8 +576,23 @@ g.test('function_parameter_matching')
     const param = kFunctionParamTypeCases[t.params.decl];
     const arg = kFunctionParamValueCases[t.params.arg];
     const enable = param.name === 'f16' ? 'enable f16;' : '';
+    const needsUnrestrictedPointerParameters =
+      (kFunctionParamTypeCases[t.params.decl].valid === 'with_unrestricted_pointer_parameters' ||
+        arg.needsUnrestrictedPointerParameters) ??
+      false;
+    const needsImmediate = param.name.includes('immediate') || t.params.arg === 'ptrImmediate';
+    if (needsImmediate) {
+      skipIfImmediateDataNotSupported(t);
+    }
+    const immediateRequires = needsImmediate ? 'requires immediate_address_space;' : '';
+    const unrestrictedRequires =
+      needsUnrestrictedPointerParameters && t.hasLanguageFeature('unrestricted_pointer_parameters')
+        ? 'requires unrestricted_pointer_parameters;'
+        : '';
     const code = `
 ${enable}
+${immediateRequires}
+${unrestrictedRequires}
 
 ${kCCommonTypeDecls}
 @group(0) @binding(0)
@@ -573,6 +616,7 @@ var<storage> ro_host_shareable : host_shareable;
 var<storage, read_write> rw_host_shareable : host_shareable;
 @group(1) @binding(2)
 var<uniform> uniform_host_shareable : host_shareable;
+${needsImmediate ? 'var<immediate> immediate_u32 : u32;' : ''}
 
 fn bar(param : ${param.name}) { }
 
@@ -637,11 +681,6 @@ fn foo() {
   bar(${arg.value});
 }
 `;
-
-    const needsUnrestrictedPointerParameters =
-      (kFunctionParamTypeCases[t.params.decl].valid === 'with_unrestricted_pointer_parameters' ||
-        arg.needsUnrestrictedPointerParameters) ??
-      false;
 
     let isValid = parameterMatches(t.params.decl, arg.matches);
     if (isValid && needsUnrestrictedPointerParameters) {
