@@ -28,31 +28,36 @@ const kTypes = {
     isHostShareable: false,
     isConstructible: true,
     isFixedFootprint: true,
-    requiresF16: false
+    requiresF16: false,
+    requiresBufferView: false
   },
   i32: {
     isHostShareable: true,
     isConstructible: true,
     isFixedFootprint: true,
-    requiresF16: false
+    requiresF16: false,
+    requiresBufferView: false
   },
   u32: {
     isHostShareable: true,
     isConstructible: true,
     isFixedFootprint: true,
-    requiresF16: false
+    requiresF16: false,
+    requiresBufferView: false
   },
   f32: {
     isHostShareable: true,
     isConstructible: true,
     isFixedFootprint: true,
-    requiresF16: false
+    requiresF16: false,
+    requiresBufferView: false
   },
   f16: {
     isHostShareable: true,
     isConstructible: true,
     isFixedFootprint: true,
-    requiresF16: true
+    requiresF16: true,
+    requiresBufferView: false
   },
 
   // Vectors.
@@ -60,31 +65,36 @@ const kTypes = {
     isHostShareable: false,
     isConstructible: true,
     isFixedFootprint: true,
-    requiresF16: false
+    requiresF16: false,
+    requiresBufferView: false
   },
   vec3i: {
     isHostShareable: true,
     isConstructible: true,
     isFixedFootprint: true,
-    requiresF16: false
+    requiresF16: false,
+    requiresBufferView: false
   },
   vec4u: {
     isHostShareable: true,
     isConstructible: true,
     isFixedFootprint: true,
-    requiresF16: false
+    requiresF16: false,
+    requiresBufferView: false
   },
   vec2f: {
     isHostShareable: true,
     isConstructible: true,
     isFixedFootprint: true,
-    requiresF16: false
+    requiresF16: false,
+    requiresBufferView: false
   },
   vec3h: {
     isHostShareable: true,
     isConstructible: true,
     isFixedFootprint: true,
-    requiresF16: true
+    requiresF16: true,
+    requiresBufferView: false
   },
 
   // Matrices.
@@ -92,13 +102,15 @@ const kTypes = {
     isHostShareable: true,
     isConstructible: true,
     isFixedFootprint: true,
-    requiresF16: false
+    requiresF16: false,
+    requiresBufferView: false
   },
   mat3x4h: {
     isHostShareable: true,
     isConstructible: true,
     isFixedFootprint: true,
-    requiresF16: true
+    requiresF16: true,
+    requiresBufferView: false
   },
 
   // Atomics.
@@ -106,13 +118,15 @@ const kTypes = {
     isHostShareable: true,
     isConstructible: false,
     isFixedFootprint: true,
-    requiresF16: false
+    requiresF16: false,
+    requiresBufferView: false
   },
   'atomic<u32>': {
     isHostShareable: true,
     isConstructible: false,
     isFixedFootprint: true,
-    requiresF16: false
+    requiresF16: false,
+    requiresBufferView: false
   },
 
   // Arrays.
@@ -120,37 +134,43 @@ const kTypes = {
     isHostShareable: false,
     isConstructible: false,
     isFixedFootprint: false,
-    requiresF16: false
+    requiresF16: false,
+    requiresBufferView: false
   },
   'array<vec4<bool>, 4>': {
     isHostShareable: false,
     isConstructible: true,
     isFixedFootprint: true,
-    requiresF16: false
+    requiresF16: false,
+    requiresBufferView: false
   },
   'array<vec4u>': {
     isHostShareable: true,
     isConstructible: false,
     isFixedFootprint: false,
-    requiresF16: false
+    requiresF16: false,
+    requiresBufferView: false
   },
   'array<vec4u, 4>': {
     isHostShareable: true,
     isConstructible: true,
     isFixedFootprint: true,
-    requiresF16: false
+    requiresF16: false,
+    requiresBufferView: false
   },
   'array<vec4u, array_size_const>': {
     isHostShareable: true,
     isConstructible: true,
     isFixedFootprint: true,
-    requiresF16: false
+    requiresF16: false,
+    requiresBufferView: false
   },
   'array<vec4u, array_size_override>': {
     isHostShareable: false,
     isConstructible: false,
     isFixedFootprint: true,
-    requiresF16: false
+    requiresF16: false,
+    requiresBufferView: false
   },
 
   // Structures.
@@ -158,37 +178,43 @@ const kTypes = {
     isHostShareable: true,
     isConstructible: true,
     isFixedFootprint: true,
-    requiresF16: false
+    requiresF16: false,
+    requiresBufferView: false
   },
   S_bool: {
     isHostShareable: false,
     isConstructible: true,
     isFixedFootprint: true,
-    requiresF16: false
+    requiresF16: false,
+    requiresBufferView: false
   },
   S_S_bool: {
     isHostShareable: false,
     isConstructible: true,
     isFixedFootprint: true,
-    requiresF16: false
+    requiresF16: false,
+    requiresBufferView: false
   },
   S_array_vec4u: {
     isHostShareable: true,
     isConstructible: false,
     isFixedFootprint: false,
-    requiresF16: false
+    requiresF16: false,
+    requiresBufferView: false
   },
   S_array_vec4u_4: {
     isHostShareable: true,
     isConstructible: true,
     isFixedFootprint: true,
-    requiresF16: false
+    requiresF16: false,
+    requiresBufferView: false
   },
   S_array_bool_4: {
     isHostShareable: false,
     isConstructible: true,
     isFixedFootprint: true,
-    requiresF16: false
+    requiresF16: false,
+    requiresBufferView: false
   },
 
   // Misc.
@@ -196,19 +222,45 @@ const kTypes = {
     isHostShareable: false,
     isConstructible: false,
     isFixedFootprint: false,
-    requiresF16: false
+    requiresF16: false,
+    requiresBufferView: false
   },
   sampler: {
     isHostShareable: false,
     isConstructible: false,
     isFixedFootprint: false,
-    requiresF16: false
+    requiresF16: false,
+    requiresBufferView: false
   },
   'texture_2d<f32>': {
     isHostShareable: false,
     isConstructible: false,
     isFixedFootprint: false,
-    requiresF16: false
+    requiresF16: false,
+    requiresBufferView: false
+  },
+
+  // Buffers
+  buffer: {
+    isHostShareable: true,
+    isConstructible: false,
+    isFixedFootprint: false,
+    requiresF16: false,
+    requiresBufferView: true
+  },
+  'buffer<128>': {
+    isHostShareable: true,
+    isConstructible: false,
+    isFixedFootprint: true,
+    requiresF16: false,
+    requiresBufferView: true
+  },
+  'buffer<array_size_override>': {
+    isHostShareable: false,
+    isConstructible: false,
+    isFixedFootprint: true,
+    requiresF16: false,
+    requiresBufferView: true
   }
 };
 
@@ -288,7 +340,8 @@ fn((t) => {
       break;
     case 'uniform':
       decl = '@group(0) @binding(0) var<uniform> foo : ';
-      shouldPass = type.isHostShareable && type.isConstructible;
+      shouldPass =
+      type.isHostShareable && (type.isConstructible || t.params.type === 'buffer<128>');
       break;
     case 'workgroup':
       decl = 'var<workgroup> foo : ';
@@ -319,6 +372,7 @@ fn((t) => {
     ${decl} ${t.params.via_alias ? 'MyType' : t.params.type};
     `;
 
+  shouldPass &&= !kTypes[t.params.type].requiresBufferView || t.hasLanguageFeature('buffer_view');
   t.expectCompileResult(shouldPass, wgsl);
 });
 
@@ -368,6 +422,7 @@ fn((t) => {
       ${decl} ${t.params.via_alias ? 'MyType' : t.params.type};
     }`;
 
+  shouldPass &&= !kTypes[t.params.type].requiresBufferView || t.hasLanguageFeature('buffer_view');
   t.expectCompileResult(shouldPass, wgsl);
 });
 

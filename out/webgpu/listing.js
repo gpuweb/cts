@@ -1490,6 +1490,13 @@ export const listing = [
     "file": [
       "api",
       "validation",
+      "min_buffer_binding_size"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
       "non_filterable_texture"
     ]
   },
@@ -2703,6 +2710,36 @@ export const listing = [
       "call",
       "builtin",
       "bitcast"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "call",
+      "builtin",
+      "bufferArrayView"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "call",
+      "builtin",
+      "bufferLength"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "call",
+      "builtin",
+      "bufferView"
     ]
   },
   {
@@ -4629,6 +4666,36 @@ export const listing = [
       "expression",
       "call",
       "builtin",
+      "bufferArrayView"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
+      "call",
+      "builtin",
+      "bufferLength"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
+      "call",
+      "builtin",
+      "bufferView"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
+      "call",
+      "builtin",
       "ceil"
     ]
   },
@@ -6158,6 +6225,14 @@ export const listing = [
       "validation",
       "types",
       "atomics"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "types",
+      "buffer"
     ]
   },
   {

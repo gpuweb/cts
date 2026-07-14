@@ -990,4 +990,5 @@ export const kKnownWGSLLanguageFeatures = [
 'swizzle_assignment',
 'linear_indexing',
 'texture_formats_tier1',
-'immediate_address_space'];
+'immediate_address_space',
+'buffer_view'];
