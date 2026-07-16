@@ -234,14 +234,18 @@ async function createVideoFrameWithDisplayScale(
   const codedWidth = sourceFrame.codedWidth;
   const codedHeight = sourceFrame.codedHeight;
 
+  // 'same' means display size == coded size, which sourceFrame already satisfies.
+  // Return it directly instead of re-wrapping via the VideoFrame constructor.
+  if (displayScale === 'same') {
+    return sourceFrame;
+  }
+
   let displayWidth = codedWidth;
   let displayHeight = codedHeight;
   switch (displayScale) {
     case 'smaller':
       displayWidth = Math.floor(codedWidth / 2);
       displayHeight = Math.floor(codedHeight / 2);
-      break;
-    case 'same':
       break;
     case 'larger':
       displayWidth = codedWidth * 2;
@@ -499,8 +503,8 @@ differ from codedWidth/codedHeight, and that sampling produces correct results a
 
 'displayScale' controls the ratio of display size to coded size:
 - 'smaller': displayWidth/Height < codedWidth/Height (e.g., 0.5x). Only achievable by
-  explicitly setting displayWidth/Height via VideoFrame constructor; cannot occur naturally
-  in video container metadata (where SAR >= 1).
+  explicitly setting displayWidth/Height via VideoFrame constructor; rarely occurs naturally in
+  video container metadata, whose SAR is typically >= 1 in the tested assets.
 - 'same': displayWidth/Height == codedWidth/Height (square pixels, no scaling).
 - 'larger': displayWidth/Height > codedWidth/Height (e.g., 2x).
 `
@@ -557,41 +561,60 @@ differ from codedWidth/codedHeight, and that sampling produces correct results a
     passEncoder.end();
     t.device.queue.submit([commandEncoder.finish()]);
 
-    // Build expected sampled colors by drawing the same source frame to a 2D canvas at display size.
-    // This reference ensures importExternalTexture honors display dimensions (not coded dimensions)
-    // and produces results consistent with the browser's standard video rendering path,
-    // making the validation robust across different codecs and container metadata.
-    const canvas = createCanvas(t, 'onscreen', displayWidth, displayHeight);
-    const canvasContext = canvas.getContext('2d', { colorSpace: 'srgb' });
-    if (canvasContext === null) {
-      frame.close();
-      t.skip('onscreen canvas 2d context not available');
+    let expected: {
+      topLeft: Uint8Array;
+      topRight: Uint8Array;
+      bottomLeft: Uint8Array;
+      bottomRight: Uint8Array;
+    };
+    if (displayScale === 'same' && sourceType === 'video') {
+      // At 'same' displayScale there is no scaling, so sample points land on exactly the pixels
+      // 'importExternalTexture,sample' validates; reuse its precomputed kVideoExpectedColors table
+      // as an exact reference. drawImage would instead do its own YUV->RGB conversion that can
+      // disagree with importExternalTexture on real hardware (~0.1/channel), forcing a wide
+      // tolerance, so the fixed table keeps the check tight.
+      const srcColorSpace = kVideoInfo[videoName!].colorSpace;
+      const presentColors = kVideoExpectedColors[srcColorSpace]['srgb'];
+      const expect = kVideoInfo[videoName!].display;
+      expected = {
+        topLeft: convertToUnorm8(presentColors[expect.topLeftColor]),
+        topRight: convertToUnorm8(presentColors[expect.topRightColor]),
+        bottomLeft: convertToUnorm8(presentColors[expect.bottomLeftColor]),
+        bottomRight: convertToUnorm8(presentColors[expect.bottomRightColor]),
+      };
+    } else {
+      // 'smaller'/'larger' scale (any source): the table only has colors for the unscaled 'same'
+      // sample points, so there is no precomputed reference for scaled samples; drawImage at
+      // display size reproduces the browser's resize.
+      // 'canvas' source (any scale): the frame is already RGBA (no YUV), so drawImage is
+      // lossless and matches importExternalTexture exactly. Building the expectation from
+      // drawImage at display size also confirms importExternalTexture honors display (not coded)
+      // dimensions across codecs and container metadata.
+      const canvas = createCanvas(t, 'onscreen', displayWidth, displayHeight);
+      const canvasContext = canvas.getContext('2d', { colorSpace: 'srgb' });
+      if (canvasContext === null) {
+        frame.close();
+        t.skip('onscreen canvas 2d context not available');
+      }
+      const ctx = canvasContext as CanvasRenderingContext2D;
+      ctx.drawImage(frame, 0, 0, displayWidth, displayHeight);
+      const imageData = ctx.getImageData(0, 0, displayWidth, displayHeight, {
+        colorSpace: 'srgb',
+      });
+      const bytes = imageData.data;
+      const sample = (x: number, y: number): Uint8Array => {
+        const xi = Math.floor(x);
+        const yi = Math.floor(y);
+        const i = (yi * displayWidth + xi) * 4;
+        return new Uint8Array([bytes[i + 0], bytes[i + 1], bytes[i + 2], bytes[i + 3]]);
+      };
+      expected = {
+        topLeft: sample(displayWidth * 0.25, displayHeight * 0.25),
+        topRight: sample(displayWidth * 0.75, displayHeight * 0.25),
+        bottomLeft: sample(displayWidth * 0.25, displayHeight * 0.75),
+        bottomRight: sample(displayWidth * 0.75, displayHeight * 0.75),
+      };
     }
-    const ctx = canvasContext as CanvasRenderingContext2D;
-    ctx.drawImage(frame, 0, 0, displayWidth, displayHeight);
-    const imageData = ctx.getImageData(0, 0, displayWidth, displayHeight, { colorSpace: 'srgb' });
-    const bytes = imageData.data;
-    const sample = (x: number, y: number): Uint8Array => {
-      const xi = Math.floor(x);
-      const yi = Math.floor(y);
-      const i = (yi * displayWidth + xi) * 4;
-      return new Uint8Array([bytes[i + 0], bytes[i + 1], bytes[i + 2], bytes[i + 3]]);
-    };
-    const expected = {
-      topLeft: sample(displayWidth * 0.25, displayHeight * 0.25),
-      topRight: sample(displayWidth * 0.75, displayHeight * 0.25),
-      bottomLeft: sample(displayWidth * 0.25, displayHeight * 0.75),
-      bottomRight: sample(displayWidth * 0.75, displayHeight * 0.75),
-    };
-
-    // Tolerance: 'video' actual (importExternalTexture) and expected (2D-canvas drawImage) each do
-    // YUV->RGB conversion independently, so a single channel can diverge by ~0.25 (hardware/decoder
-    // dependent, e.g. green quadrant reads R~0.25 on some Nvidia GPUs). Use maxFractionalDiff 0.3 to
-    // absorb this. The four quadrant colors differ pairwise by >= 1.0 in some channel, so a real
-    // display-scaling bug (wrong quadrant) still gives a ~1.0 diff and is caught. 'canvas' sources
-    // are exact sRGB RGBA (no YUV), so leave undefined to use the tight default.
-    const comparisonOptions =
-      sourceType === 'video' ? { maxFractionalDiff: 0.3 } : undefined;
 
     ttu.expectSinglePixelComparisonsAreOkInTexture(
       t,
@@ -617,8 +640,7 @@ differ from codedWidth/codedHeight, and that sampling produces correct results a
           coord: { x: displayWidth * 0.75, y: displayHeight * 0.75 },
           exp: expected.bottomRight,
         },
-      ],
-      comparisonOptions
+      ]
     );
 
     frame.close();
