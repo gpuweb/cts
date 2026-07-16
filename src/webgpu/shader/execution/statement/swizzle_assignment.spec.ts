@@ -265,6 +265,9 @@ g.test('swizzle_assignment_vars')
       kSwizzleAssignmentCases[t.params.case];
 
     t.skipIf(t.params.address_space === 'storage' && elemType === 'bool');
+    if (t.params.memory_view === 'ptr') {
+      t.skipIfLanguageFeatureNotSupported('pointer_composite_access');
+    }
 
     const vecType = `vec${vecSize}<${elemType}>`;
     const initialValues =
@@ -282,6 +285,7 @@ g.test('swizzle_assignment_vars')
 
     const wgsl = `
 requires swizzle_assignment;
+${t.params.memory_view === 'ptr' ? 'requires pointer_composite_access;' : ''}
 ${elemType === 'f16' ? 'enable f16;' : ''}
 
 struct Outputs {
@@ -380,6 +384,10 @@ g.test('swizzle_compound_assignment')
     const { elemType, vecSize, initial, swizzle, op, rhs, expected } =
       kSwizzleCompoundAssignmentCases[t.params.case];
 
+    if (t.params.memory_view === 'ptr') {
+      t.skipIfLanguageFeatureNotSupported('pointer_composite_access');
+    }
+
     const vecType = `vec${vecSize}<${elemType}>`;
     const initialValues = initial.join(', ');
 
@@ -392,6 +400,7 @@ g.test('swizzle_compound_assignment')
 
     const wgsl = `
 requires swizzle_assignment;
+${t.params.memory_view === 'ptr' ? 'requires pointer_composite_access;' : ''}
 ${elemType === 'f16' ? 'enable f16;' : ''}
 
 struct Outputs {

@@ -144,3 +144,38 @@ fn main() {
 `;
   t.expectCompileResult(false, code);
 });
+
+g.test('pointer_swizzle_assignment').
+desc('Validate swizzle assignments on pointers').
+params((u) =>
+u.
+combine('use_pointer', [true, false]).
+combine('requires_pointer_composite_access', [true, false]).
+combine('use_compound', [true, false])
+).
+fn((t) => {
+  t.skipIfLanguageFeatureNotSupported('swizzle_assignment');
+  const { use_pointer, requires_pointer_composite_access, use_compound } = t.params;
+
+  const requires_directive = requires_pointer_composite_access ?
+  'requires pointer_composite_access;' :
+  '';
+
+  const lhs = use_pointer ? 'p.xy' : '(*p).xy';
+  const op = use_compound ? '+=' : '=';
+
+  const code = `
+${requires_directive}
+@fragment
+fn main() {
+  var v = vec4f();
+  let p = &v;
+  ${lhs} ${op} vec2f(1.0);
+}
+`;
+
+  const has_feature = t.hasLanguageFeature('pointer_composite_access');
+  const expected = !use_pointer || has_feature;
+
+  t.expectCompileResult(expected, code);
+});
