@@ -84,6 +84,7 @@ g.test('required_slots_set')
         'scalar',
         'vector',
         'struct_padding',
+        'dynamic_indexing',
         'mixed_types',
         'multiple_variables',
       ] as const)
