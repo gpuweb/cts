@@ -99,6 +99,7 @@ fn((t) => {
 
 
 
+
 const kTypeCases = {
   // Scalars
   bool: { type: `bool`, storable: true, aspace: 'function' },
@@ -149,7 +150,21 @@ const kTypeCases = {
   alias: { type: `u32_alias`, storable: true },
 
   // Reference
-  reference: { type: `ref<function, u32>`, storable: false, aspace: 'function' }
+  reference: { type: `ref<function, u32>`, storable: false, aspace: 'function' },
+
+  // Runtime arrays (allowed by buffer_view).
+  uniform_runtime_array: {
+    type: 'array<u32>',
+    storable: true,
+    aspace: 'uniform',
+    buffer_view: true
+  },
+  workgroup_runtime_array: {
+    type: 'array<u32>',
+    storable: true,
+    aspace: 'workgroup',
+    buffer_view: true
+  }
 };
 
 g.test('type').
@@ -157,6 +172,10 @@ desc('Tests that pointee type must be storable').
 params((u) => u.combine('case', keysOf(kTypeCases))).
 fn((t) => {
   const testcase = kTypeCases[t.params.case];
+  let expect = testcase.storable;
+  if (testcase.buffer_view === true) {
+    expect &&= t.hasLanguageFeature('buffer_view');
+  }
   const aspace = testcase.aspace ?? 'storage';
   const access = testcase.type.includes('atomic') ? ', read_write' : '';
   const code = `${testcase.f16 ? 'enable f16;' : ''}
@@ -165,7 +184,7 @@ fn((t) => {
     struct T { s : array<S> }
     alias u32_alias = u32;
     alias Type = ptr<${aspace}, ${testcase.type}${access}>;`;
-  t.expectCompileResult(testcase.storable, code);
+  t.expectCompileResult(expect, code);
 });
 
 // Address spaces that can hold an i32 variable.
@@ -269,8 +288,6 @@ const kStoreTypeNotInstantiable = {
   privateAtomic: 'alias p = ptr<private,atomic<u32>>;',
   functionAtomic: 'alias p = ptr<function,atomic<u32>>;',
   uniformAtomic: 'alias p = ptr<uniform,atomic<u32>>;',
-  workgroupRTArray: 'alias p = ptr<workgroup,array<i32>>;',
-  uniformRTArray: 'alias p = ptr<uniform,array<i32>>;',
   privateRTArray: 'alias p = ptr<private,array<i32>>;',
   functionRTArray: 'alias p = ptr<function,array<i32>>;',
   RTArrayNotLast: 'struct S { a: array<i32>, b: i32 } alias p = ptr<storage,S>;',
