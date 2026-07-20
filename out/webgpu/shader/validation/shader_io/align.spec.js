@@ -220,6 +220,13 @@ filter((t) => {
   if (t.type.name === 'array<u32>' && t.address_space !== 'storage') {
     return false;
   }
+  // No arrays in immediate address space.
+  if (
+  (t.type.name.startsWith('array') || t.type.name === 'S') &&
+  t.address_space === 'immediate')
+  {
+    return false;
+  }
   return true;
 })
 ).
