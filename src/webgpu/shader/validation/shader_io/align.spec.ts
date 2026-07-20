@@ -221,7 +221,10 @@ g.test('required_alignment')
           return false;
         }
         // No arrays in immediate address space.
-        if ((t.type.name.startsWith('array') || t.type.name === 'S') && t.address_space === 'immediate') {
+        if (
+          (t.type.name.startsWith('array') || t.type.name === 'S') &&
+          t.address_space === 'immediate'
+        ) {
           return false;
         }
         return true;
