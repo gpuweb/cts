@@ -129,11 +129,9 @@ g.test('offset_type').
 desc('Validates the offset parameter type').
 params((u) => u.combine('type', keysOf(kTypes))).
 fn((t) => {
+  t.skipIfLanguageFeatureNotSupported('buffer_view');
   const type = kTypes[t.params.type];
-  let enables = `enable subgroups;\n`;
-  if (type.requiresF16()) {
-    enables += `enable f16;`;
-  }
+  const enables = type.requiresF16() ? 'enable f16;' : '';
   const wgsl = `
 ${enables}
 @group(0) @binding(0) var<storage> v : buffer;
