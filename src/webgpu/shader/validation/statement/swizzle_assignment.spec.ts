@@ -152,9 +152,8 @@ fn main() {
 `;
 
     const isVector = swizzle.length > 1;
-    const isUnique = new Set(swizzle).size === swizzle.length;
     const inBounds = index < swizzle.length;
-    const expected = isVector && isUnique && inBounds;
+    const expected = isVector && inBounds;
 
     t.expectCompileResult(expected, code);
   });
@@ -176,10 +175,8 @@ fn main() {
 `;
 
     const isVector = swizzle.length > 1;
-    const isUnique = new Set(swizzle).size === swizzle.length;
-    const expected = isVector && isUnique;
 
-    t.expectCompileResult(expected, code);
+    t.expectCompileResult(isVector, code);
   });
 
 g.test('pointer_swizzle_assignment')

@@ -597,6 +597,7 @@ g.test('dynamic_index_into_swizzle')
       .beginSubcases()
       .combine('address_space', ['function', 'private', 'workgroup', 'storage'] as const)
       .combine('memory_view', ['ref', 'ptr'] as const)
+      .filter(p => !(p.address_space === 'storage' && p.elemType === 'bool'))
   )
   .fn(t => {
     const { elemType, vecSize, indexType, address_space, memory_view } = t.params;
@@ -605,7 +606,6 @@ g.test('dynamic_index_into_swizzle')
     if (elemType === 'f16') {
       t.skipIfDeviceDoesNotHaveFeature('shader-f16');
     }
-    t.skipIf(address_space === 'storage' && elemType === 'bool');
     if (memory_view === 'ptr') {
       t.skipIfLanguageFeatureNotSupported('pointer_composite_access');
     }
