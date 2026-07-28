@@ -132,17 +132,51 @@ fn main() {
     t.expectCompileResult(false, code);
   });
 
-g.test('invalid_index_into_swizzle_view')
-  .desc('Invalid to index into a swizzle view on the lhs')
+g.test('index_into_swizzle_view')
+  .desc('Validate constant indexing into a swizzle view on the lhs')
+  .params(u =>
+    u
+      .combine('swizzle', ['x', 'xy', 'xx', 'xyz', 'xyzw', 'zxy'] as const)
+      .combine('index', [0, 1, 2, 3, 4] as const)
+  )
   .fn(t => {
     t.skipIfLanguageFeatureNotSupported('swizzle_assignment');
+    const { swizzle, index } = t.params;
+
     const code = `
 @fragment
 fn main() {
-  var v = vec2u();
-  v.xy[0] = 1;
+  var v = vec4u();
+  v.${swizzle}[${index}] = 1u;
+}
 `;
-    t.expectCompileResult(false, code);
+
+    const isVector = swizzle.length > 1;
+    const inBounds = index < swizzle.length;
+    const expected = isVector && inBounds;
+
+    t.expectCompileResult(expected, code);
+  });
+
+g.test('dynamic_index_into_swizzle_view')
+  .desc('Validate dynamic indexing into a swizzle view on the lhs')
+  .params(u => u.combine('swizzle', ['x', 'xy', 'xx', 'xyz', 'xyzw', 'zxy'] as const))
+  .fn(t => {
+    t.skipIfLanguageFeatureNotSupported('swizzle_assignment');
+    const { swizzle } = t.params;
+
+    const code = `
+@fragment
+fn main() {
+  var v = vec4u();
+  var i = 1u;
+  v.${swizzle}[i] = 1u;
+}
+`;
+
+    const isVector = swizzle.length > 1;
+
+    t.expectCompileResult(isVector, code);
   });
 
 g.test('pointer_swizzle_assignment')
