@@ -539,12 +539,8 @@ g.test('reverse_depth')
   });
 
 g.test('fragment_depth_qualifiers')
-  .desc(
-    `Validates that less and greater qualifiers to @builtin(frag_depth) are accepted.`
-  )
-  .params(u =>
-    u.combine('mode', ['less', 'greater'])
-  )
+  .desc(`Validates that less and greater qualifiers to @builtin(frag_depth) are accepted.`)
+  .params(u => u.combine('mode', ['less', 'greater']))
   .fn(async t => {
     t.skipIfLanguageFeatureNotSupported('fragment_depth');
 
@@ -555,7 +551,7 @@ g.test('fragment_depth_qualifiers')
     const colorFormat = 'rgba8unorm';
     const depthFormat = 'depth32float';
 
-    const val = mode === "less" ? "0.4" : "0.6";
+    const val = mode === 'less' ? '0.4' : '0.6';
     const pipeline = t.device.createRenderPipeline({
       layout: 'auto',
       vertex: {
@@ -594,13 +590,13 @@ g.test('fragment_depth_qualifiers')
       },
     });
 
-    const colorTexture = t.device.createTexture({
+    const colorTexture = t.createTextureTracked({
       size: [textureWidth, textureHeight],
       format: colorFormat,
       usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
     });
 
-    const depthTexture = t.device.createTexture({
+    const depthTexture = t.createTextureTracked({
       size: [textureWidth, textureHeight],
       format: depthFormat,
       usage: GPUTextureUsage.RENDER_ATTACHMENT,
@@ -630,7 +626,7 @@ g.test('fragment_depth_qualifiers')
 
     t.device.queue.submit([encoder.finish()]);
 
-    const expectedColor =  new Uint8Array([0, 255, 0, 255])
+    const expectedColor = new Uint8Array([0, 255, 0, 255]);
     ttu.expectSinglePixelComparisonsAreOkInTexture(t, { texture: colorTexture }, [
       {
         coord: { x: 0, y: 0 },
