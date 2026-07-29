@@ -297,6 +297,26 @@ const kSwizzleAssignmentCases: Record<string, SwizzleAssignmentCase> = {
     rhs: 'true',
     expected: [1, 0],
   },
+  // v = vec3u(1, 2, 3)
+  // v.xyy.xy = vec2u(4, 5);
+  vec3u_chained_dup_lhs_pass: {
+    elemType: 'u32',
+    vecSize: 3,
+    initial: [1, 2, 3],
+    swizzle: 'xyy.xy',
+    rhs: 'vec2u(4, 5)',
+    expected: [4, 5, 3],
+  },
+  // v = vec2f(1.0, 2.0)
+  // v.xx.x = 5.0;
+  vec2f_chained_dup_lhs_pass: {
+    elemType: 'f32',
+    vecSize: 2,
+    initial: [1.0, 2.0],
+    swizzle: 'xx.x',
+    rhs: '5.0f',
+    expected: [5.0, 2.0],
+  },
 };
 
 g.test('swizzle_assignment_vars')
