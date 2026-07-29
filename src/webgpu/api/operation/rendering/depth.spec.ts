@@ -541,7 +541,7 @@ g.test('reverse_depth')
 g.test('fragment_depth_qualifiers')
   .desc(`Validates that less and greater qualifiers to @builtin(frag_depth) are accepted.`)
   .params(u => u.combine('mode', ['less', 'greater']))
-  .fn(async t => {
+  .fn(t => {
     t.skipIfLanguageFeatureNotSupported('fragment_depth');
 
     const { mode } = t.params;
