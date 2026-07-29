@@ -620,7 +620,7 @@ g.test('parse_frag_depth')
   .desc(`Test that @builtin is parsed correctly.`)
   .params(u => u.combine('builtin', keysOf(kFragDepthTests)))
   .fn(t => {
-    let data = kFragDepthTests[t.params.builtin];
+    const data = kFragDepthTests[t.params.builtin];
 
     if (data.requires_feature) {
       t.skipIfLanguageFeatureNotSupported('fragment_depth');
@@ -633,4 +633,3 @@ fn main() -> ${data.src} f32 {
 }`;
     t.expectCompileResult(data.pass, code);
   });
-
