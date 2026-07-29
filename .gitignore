@@ -11,6 +11,9 @@
 *.tmp.txt
 /docs/tsdoc/
 
+# vim swap files
+*.swp*
+
 # `pnpm` lockfile
 pnpm-lock.yaml
 

@@ -95,6 +95,8 @@ const kInvalidLocationTypes = new Set([
   'texture_depth_multisampled_2d',
   'sampler',
   'sampler_comparison',
+  'buffer',
+  'buffer<16>',
 ]);
 
 g.test('stage_inout')
