@@ -11,8 +11,8 @@ export const g = makeTestGroup(UniqueFeaturesAndLimitsShaderValidationTest);
 
 g.test('enable_subgroup_size_control_requires_subgroups')
   .desc(
-    `Checks that enabling the WGSL extension subgroup_size_control without also enabling the
-     subgroups extension is a compilation error.`
+    `Checks that enabling the WGSL extension subgroup_size_control also enables the
+     subgroups extension.`
   )
   .params(u => u.combine('enableSubgroups', [false, true] as const))
   .beforeAllSubcases(t => {
@@ -24,7 +24,7 @@ g.test('enable_subgroup_size_control_requires_subgroups')
     const { enableSubgroups } = t.params;
 
     t.expectCompileResult(
-      enableSubgroups,
+      true,
       `
         ${enableSubgroups ? 'enable subgroups;' : ''}
         enable subgroup_size_control;
