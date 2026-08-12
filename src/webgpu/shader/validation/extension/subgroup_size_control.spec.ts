@@ -28,8 +28,11 @@ g.test('enable_subgroup_size_control_requires_subgroups')
       `
         ${enableSubgroups ? 'enable subgroups;' : ''}
         enable subgroup_size_control;
+        @group(0) @binding(0) var<storage, read_write> out : u32;
         @compute @workgroup_size(1)
-        fn main() {}
+        fn main(@builtin(subgroup_size) size : u32) {
+          out = size;
+        }
       `
     );
   });
