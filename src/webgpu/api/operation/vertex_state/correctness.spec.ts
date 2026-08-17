@@ -71,6 +71,25 @@ function normalizeRgb10a2(rgba: number, index: number): number {
   return rgba / normalizationFactor;
 }
 
+function makeRgb10a2Signed(rgba: Array<number>): number {
+  const [r, g, b, a] = rgba;
+  assert(r >= -512 && r <= 511);
+  assert(g >= -512 && g <= 511);
+  assert(b >= -512 && b <= 511);
+  assert(a >= -2 && a <= 1);
+  const r_bits = (r < 0 ? r + 1024 : r) & 0x3ff;
+  const g_bits = (g < 0 ? g + 1024 : g) & 0x3ff;
+  const b_bits = (b < 0 ? b + 1024 : b) & 0x3ff;
+  const a_bits = (a < 0 ? a + 4 : a) & 0x3;
+  return r_bits | (g_bits << 10) | (b_bits << 20) | (a_bits << 30);
+}
+
+function normalizeRgb10a2Signed(val: number, index: number): number {
+  const isAlpha = index % 4 === 3;
+  const maxVal = isAlpha ? 1 : 511;
+  return Math.max(val / maxVal, -1.0);
+}
+
 type TestData = {
   shaderBaseType: string;
   floatTolerance?: number;
@@ -379,6 +398,32 @@ struct VSOutputs {
       }
 
       case 'snorm': {
+        if (formatInfo.bytesPerComponent === 'packed') {
+          assert(bitSize === 0);
+          switch (format as string) {
+            case 'snorm10-10-10-2': {
+              /* prettier-ignore */
+              const data = [
+                [   0,    0,    0,  0],
+                [ 511,  511,  511,  1],
+                [-512, -512, -512, -2],
+                [ 243, -123,  342, -1],
+              ];
+              const vertexData = new Uint32Array(data.map(makeRgb10a2Signed)).buffer;
+              const expectedData = new Float32Array(data.flat().map(normalizeRgb10a2Signed)).buffer;
+
+              return {
+                shaderBaseType: 'f32',
+                testComponentCount: data.flat().length,
+                expectedData,
+                vertexData,
+                floatTolerance: 0.1 / 511,
+              };
+            }
+            default:
+              unreachable();
+          }
+        }
         /* prettier-ignore */
         const data = [
           42,
