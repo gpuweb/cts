@@ -73,14 +73,15 @@ function normalizeRgb10a2(rgba: number, index: number): number {
 
 function makeRgb10a2Signed(rgba: Array<number>): number {
   const [r, g, b, a] = rgba;
-  assert(r >= -512 && r <= 511);
-  assert(g >= -512 && g <= 511);
-  assert(b >= -512 && b <= 511);
-  assert(a >= -2 && a <= 1);
-  const r_bits = (r < 0 ? r + 1024 : r) & 0x3ff;
-  const g_bits = (g < 0 ? g + 1024 : g) & 0x3ff;
-  const b_bits = (b < 0 ? b + 1024 : b) & 0x3ff;
-  const a_bits = (a < 0 ? a + 4 : a) & 0x3;
+  // Check the input fits in i32, then check it's in range for i10 or i2.
+  assert((r | 0) === r && r >= -512 && r <= 511);
+  assert((g | 0) === g && g >= -512 && g <= 511);
+  assert((b | 0) === b && b >= -512 && b <= 511);
+  assert((a | 0) === a && a >= -2 && a <= 1);
+  const r_bits = r & 0x3ff;
+  const g_bits = g & 0x3ff;
+  const b_bits = b & 0x3ff;
+  const a_bits = a & 0x3;
   return r_bits | (g_bits << 10) | (b_bits << 20) | (a_bits << 30);
 }
 
