@@ -4275,6 +4275,15 @@ export const listing = [
       "shader",
       "execution",
       "statement",
+      "assignment",
+      "vector"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "statement",
       "compound"
     ]
   },
