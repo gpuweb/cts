@@ -31,7 +31,7 @@ the composite min of all values written.
       .combine('rndMultiplyY', [0, 1, 41609, 138545483, 2 ** 28])
   )
   .fn(async t => {
-    t.skipIfDeviceDoesNotHaveFeature('atomic-vec2u-min-max' as GPUFeatureName);
+    t.skipIfDeviceDoesNotHaveFeature('atomic-vec2u-min-max');
     const wgsl = `
       enable atomic_vec2u_min_max;
       @group(0) @binding(0)

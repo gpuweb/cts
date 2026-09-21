@@ -108,7 +108,7 @@ g.test('data_types')
   .fn(async t => {
     const wgSize = [4, 1, 1];
     const type = kTypes[t.params.type];
-    t.skipIfDeviceDoesNotHaveFeature('subgroups' as GPUFeatureName);
+    t.skipIfDeviceDoesNotHaveFeature('subgroups');
     if (type.requiresF16()) {
       t.skipIfDeviceDoesNotHaveFeature('shader-f16');
     }
@@ -242,7 +242,7 @@ Quad operations require a full quad so workgroup sizes are limited to multiples 
       .combine('id', [0, 1, 2, 3] as const)
   )
   .fn(async t => {
-    t.skipIfDeviceDoesNotHaveFeature('subgroups' as GPUFeatureName);
+    t.skipIfDeviceDoesNotHaveFeature('subgroups');
     const wgThreads = t.params.wgSize[0] * t.params.wgSize[1] * t.params.wgSize[2];
 
     const wgsl = `
@@ -322,7 +322,7 @@ predication filters are skipped.
       .combine('id', [0, 1, 2, 3] as const)
   )
   .fn(async t => {
-    t.skipIfDeviceDoesNotHaveFeature('subgroups' as GPUFeatureName);
+    t.skipIfDeviceDoesNotHaveFeature('subgroups');
     const wgThreads = t.params.wgSize[0] * t.params.wgSize[1] * t.params.wgSize[2];
     const testcase = kPredicateCases[t.params.predicate];
 
@@ -501,7 +501,7 @@ g.test('fragment,all_active')
       .combineWithParams([{ format: 'rgba32uint' }] as const)
   )
   .fn(async t => {
-    t.skipIfDeviceDoesNotHaveFeature('subgroups' as GPUFeatureName);
+    t.skipIfDeviceDoesNotHaveFeature('subgroups');
     const fsShader = `
 enable subgroups;
 

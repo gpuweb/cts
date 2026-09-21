@@ -63,7 +63,7 @@ g.test('compute,all_active')
   .desc('Test subgroupElect in compute shader with all active invocations')
   .params(u => u.combine('wgSize', kWGSizes))
   .fn(async t => {
-    t.skipIfDeviceDoesNotHaveFeature('subgroups' as GPUFeatureName);
+    t.skipIfDeviceDoesNotHaveFeature('subgroups');
     const wgThreads = t.params.wgSize[0] * t.params.wgSize[1] * t.params.wgSize[2];
 
     const wgsl = `
@@ -119,7 +119,7 @@ g.test('compute,split')
     u.combine('predicate', keysOf(kPredicateCases)).beginSubcases().combine('wgSize', kWGSizes)
   )
   .fn(async t => {
-    t.skipIfDeviceDoesNotHaveFeature('subgroups' as GPUFeatureName);
+    t.skipIfDeviceDoesNotHaveFeature('subgroups');
     const testcase = kPredicateCases[t.params.predicate];
     const wgThreads = t.params.wgSize[0] * t.params.wgSize[1] * t.params.wgSize[2];
 
@@ -183,7 +183,7 @@ g.test('compute,each_invocation')
       .combine('wgSize', kWGSizes)
   )
   .fn(async t => {
-    t.skipIfDeviceDoesNotHaveFeature('subgroups' as GPUFeatureName);
+    t.skipIfDeviceDoesNotHaveFeature('subgroups');
     const wgThreads = t.params.wgSize[0] * t.params.wgSize[1] * t.params.wgSize[2];
 
     const subgroupMaxSize = t.device.adapterInfo.subgroupMaxSize!;
@@ -328,7 +328,7 @@ g.test('fragment')
       .combineWithParams([{ format: 'rgba32uint' }] as const)
   )
   .fn(async t => {
-    t.skipIfDeviceDoesNotHaveFeature('subgroups' as GPUFeatureName);
+    t.skipIfDeviceDoesNotHaveFeature('subgroups');
     const subgroupMinSize = t.device.adapterInfo.subgroupMinSize!;
     const innerTexels = (t.params.size[0] - 1) * (t.params.size[1] - 1);
     t.skipIf(innerTexels < subgroupMinSize, 'Too few texels to be reliable');

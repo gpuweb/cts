@@ -108,7 +108,7 @@ g.test('data_types')
   .fn(async t => {
     const wgSize = [4, 1, 1];
     const type = kDataTypes[t.params.type];
-    t.skipIfDeviceDoesNotHaveFeature('subgroups' as GPUFeatureName);
+    t.skipIfDeviceDoesNotHaveFeature('subgroups');
     if (type.requiresF16()) {
       t.skipIfDeviceDoesNotHaveFeature('shader-f16');
     }
@@ -174,7 +174,7 @@ g.test('workgroup_uniform_load')
       .combine('first', [false, true] as const)
   )
   .fn(t => {
-    t.skipIfDeviceDoesNotHaveFeature('subgroups' as GPUFeatureName);
+    t.skipIfDeviceDoesNotHaveFeature('subgroups');
     // Compatibility mode has lower workgroup limits.
     const wgThreads = t.params.wgSize[0] * t.params.wgSize[1] * t.params.wgSize[2];
     const {
@@ -368,7 +368,7 @@ g.test('compute,all_active')
       .combine('id', [0, 1, 2, 3, 7, 13, 25, 46] as const)
   )
   .fn(async t => {
-    t.skipIfDeviceDoesNotHaveFeature('subgroups' as GPUFeatureName);
+    t.skipIfDeviceDoesNotHaveFeature('subgroups');
     const wgThreads = t.params.wgSize[0] * t.params.wgSize[1] * t.params.wgSize[2];
 
     const broadcast =
@@ -459,7 +459,7 @@ g.test('compute,split')
       .combine('wgSize', kWGSizes)
   )
   .fn(async t => {
-    t.skipIfDeviceDoesNotHaveFeature('subgroups' as GPUFeatureName);
+    t.skipIfDeviceDoesNotHaveFeature('subgroups');
     const testcase = kPredicateCases[t.params.predicate];
     const wgThreads = t.params.wgSize[0] * t.params.wgSize[1] * t.params.wgSize[2];
 
@@ -540,7 +540,7 @@ g.test('broadcastFirst,split')
     u.combine('predicate', keysOf(kPredicateCases)).beginSubcases().combine('wgSize', kWGSizes)
   )
   .fn(async t => {
-    t.skipIfDeviceDoesNotHaveFeature('subgroups' as GPUFeatureName);
+    t.skipIfDeviceDoesNotHaveFeature('subgroups');
     const testcase = kPredicateCases[t.params.predicate];
     const wgThreads = t.params.wgSize[0] * t.params.wgSize[1] * t.params.wgSize[2];
 
@@ -691,7 +691,7 @@ g.test('fragment')
       .combineWithParams([{ format: 'rgba32uint' }] as const)
   )
   .fn(async t => {
-    t.skipIfDeviceDoesNotHaveFeature('subgroups' as GPUFeatureName);
+    t.skipIfDeviceDoesNotHaveFeature('subgroups');
     const innerTexels = (t.params.size[0] - 1) * (t.params.size[1] - 1);
     const subgroupMaxSize = t.device.adapterInfo.subgroupMaxSize!;
     t.skipIf(innerTexels < subgroupMaxSize, 'Too few texels to be reliable');

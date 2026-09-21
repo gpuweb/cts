@@ -186,7 +186,7 @@ g.test('compute,split')
   .desc('Tests ballot in a split subgroup')
   .params(u => u.combine('case', keysOf(kCases)))
   .fn(async t => {
-    t.skipIfDeviceDoesNotHaveFeature('subgroups' as GPUFeatureName);
+    t.skipIfDeviceDoesNotHaveFeature('subgroups');
     const testcase = kCases[t.params.case];
     const wgsl = `
 enable subgroups;
@@ -222,7 +222,7 @@ g.test('predicate')
   .desc('Tests the predicate parameter')
   .params(u => u.combine('case', keysOf(kCases)))
   .fn(async t => {
-    t.skipIfDeviceDoesNotHaveFeature('subgroups' as GPUFeatureName);
+    t.skipIfDeviceDoesNotHaveFeature('subgroups');
     const testcase = kCases[t.params.case];
     const wgsl = `
 enable subgroups;
@@ -310,7 +310,7 @@ g.test('predicate_and_control_flow')
   .desc('Test dynamic predicate and control flow together')
   .params(u => u.combine('case', keysOf(kBothCases)))
   .fn(async t => {
-    t.skipIfDeviceDoesNotHaveFeature('subgroups' as GPUFeatureName);
+    t.skipIfDeviceDoesNotHaveFeature('subgroups');
     const testcase = kBothCases[t.params.case];
     const wgsl = `
 enable subgroups;
@@ -519,7 +519,7 @@ g.test('fragment')
       .combineWithParams([{ format: 'rgba32uint' }] as const)
   )
   .fn(async t => {
-    t.skipIfDeviceDoesNotHaveFeature('subgroups' as GPUFeatureName);
+    t.skipIfDeviceDoesNotHaveFeature('subgroups');
     const width = t.params.size[0];
     const height = t.params.size[1];
     const testcase = kFragmentPredicates[t.params.predicate];
