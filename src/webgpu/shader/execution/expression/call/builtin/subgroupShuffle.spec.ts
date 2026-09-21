@@ -111,7 +111,7 @@ g.test('shuffle,id')
   .desc(`Tests various ways to shuffle invocations`)
   .params(u => u.combine('case', keysOf(kShuffleCases)))
   .fn(async t => {
-    t.skipIfDeviceDoesNotHaveFeature('subgroups' as GPUFeatureName);
+    t.skipIfDeviceDoesNotHaveFeature('subgroups');
     const testcase = kShuffleCases[t.params.case];
 
     const wgsl = `
@@ -233,7 +233,7 @@ g.test('shuffleUpDown,delta')
   .desc(`Test ShuffleUp and ShuffleDown deltas`)
   .params(u => u.combine('op', kUpDownOps).combine('case', keysOf(kUpDownCases)))
   .fn(async t => {
-    t.skipIfDeviceDoesNotHaveFeature('subgroups' as GPUFeatureName);
+    t.skipIfDeviceDoesNotHaveFeature('subgroups');
     const testcase = kUpDownCases[t.params.case];
 
     const wgsl = `
@@ -324,7 +324,7 @@ g.test('shuffleXor,mask')
   .desc(`Test ShuffleXor masks`)
   .params(u => u.combine('case', keysOf(kMaskCases)))
   .fn(async t => {
-    t.skipIfDeviceDoesNotHaveFeature('subgroups' as GPUFeatureName);
+    t.skipIfDeviceDoesNotHaveFeature('subgroups');
     const testcase = kMaskCases[t.params.case];
 
     const wgsl = `
@@ -508,7 +508,7 @@ g.test('compute,all_active')
       .combine('case', [...iterRange(kNumCases, x => x)])
   )
   .fn(async t => {
-    t.skipIfDeviceDoesNotHaveFeature('subgroups' as GPUFeatureName);
+    t.skipIfDeviceDoesNotHaveFeature('subgroups');
     const wgThreads = t.params.wgSize[0] * t.params.wgSize[1] * t.params.wgSize[2];
 
     let selectValue = `input[lid]`;
@@ -586,7 +586,7 @@ g.test('compute,split')
       .combine('wgSize', kWGSizes)
   )
   .fn(async t => {
-    t.skipIfDeviceDoesNotHaveFeature('subgroups' as GPUFeatureName);
+    t.skipIfDeviceDoesNotHaveFeature('subgroups');
     const testcase = kPredicateCases[t.params.predicate];
     const wgThreads = t.params.wgSize[0] * t.params.wgSize[1] * t.params.wgSize[2];
 
@@ -741,7 +741,7 @@ g.test('data_types')
   .fn(async t => {
     const wgSize = [4, 1, 1];
     const type = kTypes[t.params.type];
-    t.skipIfDeviceDoesNotHaveFeature('subgroups' as GPUFeatureName);
+    t.skipIfDeviceDoesNotHaveFeature('subgroups');
     if (type.requiresF16()) {
       t.skipIfDeviceDoesNotHaveFeature('shader-f16');
     }
@@ -887,7 +887,7 @@ g.test('fragment')
       .combineWithParams([{ format: 'rgba32uint' }] as const)
   )
   .fn(async t => {
-    t.skipIfDeviceDoesNotHaveFeature('subgroups' as GPUFeatureName);
+    t.skipIfDeviceDoesNotHaveFeature('subgroups');
     const fsShader = `
 enable subgroups;
 

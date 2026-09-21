@@ -446,7 +446,7 @@ g.test('subgroup_size')
       ] as const)
   )
   .fn(async t => {
-    t.skipIfDeviceDoesNotHaveFeature('subgroups' as GPUFeatureName);
+    t.skipIfDeviceDoesNotHaveFeature('subgroups');
     const subgroupMinSize = t.device.adapterInfo.subgroupMinSize!;
     const subgroupMaxSize = t.device.adapterInfo.subgroupMaxSize!;
 
@@ -650,7 +650,7 @@ g.test('subgroup_invocation_id')
       ] as const)
   )
   .fn(async t => {
-    t.skipIfDeviceDoesNotHaveFeature('subgroups' as GPUFeatureName);
+    t.skipIfDeviceDoesNotHaveFeature('subgroups');
     const wgx = t.params.sizes[0];
     const wgy = t.params.sizes[1];
     const wgz = t.params.sizes[2];
@@ -879,7 +879,7 @@ g.test('subgroup_id')
       ] as const)
   )
   .fn(async t => {
-    t.skipIfDeviceDoesNotHaveFeature('subgroups' as GPUFeatureName);
+    t.skipIfDeviceDoesNotHaveFeature('subgroups');
     t.skipIfLanguageFeatureNotSupported('subgroup_id');
     const wgx = t.params.sizes[0];
     const wgy = t.params.sizes[1];
@@ -1037,7 +1037,7 @@ g.test('num_subgroups')
       ] as const)
   )
   .fn(async t => {
-    t.skipIfDeviceDoesNotHaveFeature('subgroups' as GPUFeatureName);
+    t.skipIfDeviceDoesNotHaveFeature('subgroups');
     t.skipIfLanguageFeatureNotSupported('subgroup_id');
     const wgx = t.params.sizes[0];
     const wgy = t.params.sizes[1];

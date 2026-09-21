@@ -132,7 +132,7 @@ g.test('compute,all_active')
       .combine('case', [...iterRange(kNumCases, x => x)])
   )
   .fn(async t => {
-    t.skipIfDeviceDoesNotHaveFeature('subgroups' as GPUFeatureName);
+    t.skipIfDeviceDoesNotHaveFeature('subgroups');
     const wgThreads = t.params.wgSize[0] * t.params.wgSize[1] * t.params.wgSize[2];
 
     const wgsl = `
@@ -196,7 +196,7 @@ g.test('compute,split')
       .combine('case', [...iterRange(kNumCases, x => x)])
   )
   .fn(async t => {
-    t.skipIfDeviceDoesNotHaveFeature('subgroups' as GPUFeatureName);
+    t.skipIfDeviceDoesNotHaveFeature('subgroups');
     const testcase = kPredicateCases[t.params.predicate];
     const wgThreads = t.params.wgSize[0] * t.params.wgSize[1] * t.params.wgSize[2];
 
@@ -327,7 +327,7 @@ g.test('fragment,all_active')
       .combineWithParams([{ format: 'rg32uint' }] as const)
   )
   .fn(async t => {
-    t.skipIfDeviceDoesNotHaveFeature('subgroups' as GPUFeatureName);
+    t.skipIfDeviceDoesNotHaveFeature('subgroups');
     const numInputs = t.params.size[0] * t.params.size[1];
     const inputData = generateInputData(t.params.case, numInputs);
 

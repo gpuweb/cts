@@ -1727,7 +1727,7 @@ g.test('subgroup_size')
       .combineWithParams([{ format: 'rgba32uint' }] as const)
   )
   .fn(async t => {
-    t.skipIfDeviceDoesNotHaveFeature('subgroups' as GPUFeatureName);
+    t.skipIfDeviceDoesNotHaveFeature('subgroups');
     const subgroupMinSize = t.device.adapterInfo.subgroupMinSize!;
     const subgroupMaxSize = t.device.adapterInfo.subgroupMaxSize!;
 
@@ -1877,7 +1877,7 @@ g.test('subgroup_invocation_id')
       .combineWithParams([{ format: 'rgba32uint' }] as const)
   )
   .fn(async t => {
-    t.skipIfDeviceDoesNotHaveFeature('subgroups' as GPUFeatureName);
+    t.skipIfDeviceDoesNotHaveFeature('subgroups');
     const fsShader = `
 enable subgroups;
 
@@ -2134,7 +2134,7 @@ g.test('primitive_index,basic')
   )
   .fn(t => {
     const { triCount, instances, firstVertex, firstIndex, firstInstance } = t.params;
-    t.skipIfDeviceDoesNotHaveFeature('primitive-index' as GPUFeatureName);
+    t.skipIfDeviceDoesNotHaveFeature('primitive-index');
 
     runPrimitiveIndexTest(t, {
       count: triCount * 3,
@@ -2165,7 +2165,7 @@ g.test('primitive_index,primitive_reset')
     'Tests that the primitive_index built-in value does not increment or reset across primitive resets'
   )
   .fn(t => {
-    t.skipIfDeviceDoesNotHaveFeature('primitive-index' as GPUFeatureName);
+    t.skipIfDeviceDoesNotHaveFeature('primitive-index');
 
     runPrimitiveIndexTest(t, {
       count: 10,
@@ -2190,7 +2190,7 @@ g.test('primitive_index,discarded_primitves')
   )
   .fn(t => {
     const { vertices } = t.params;
-    t.skipIfDeviceDoesNotHaveFeature('primitive-index' as GPUFeatureName);
+    t.skipIfDeviceDoesNotHaveFeature('primitive-index');
 
     runPrimitiveIndexTest(t, {
       count: 6,
@@ -2203,7 +2203,7 @@ g.test('primitive_index,discarded_primitves')
 g.test('primitive_index,topologies')
   .desc('Tests that the primitive_index built-in value works every topology')
   .fn(t => {
-    t.skipIfDeviceDoesNotHaveFeature('primitive-index' as GPUFeatureName);
+    t.skipIfDeviceDoesNotHaveFeature('primitive-index');
 
     const triListVertices = [
       //           0,2
