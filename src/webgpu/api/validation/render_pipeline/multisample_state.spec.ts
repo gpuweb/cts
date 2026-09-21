@@ -4,9 +4,9 @@ This test dedicatedly tests validation of GPUMultisampleState of createRenderPip
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import {
-  kColorTextureFormats,
-  isTextureFormatBlendable,
+  kPossibleColorRenderableTextureFormats,
   isColorTextureFormatWithAlpha,
+  isTextureFormatBlendable,
 } from '../../../format_info.js';
 import { kDefaultVertexShaderCode, kDefaultFragmentShaderCode } from '../../../util/shader.js';
 import * as vtu from '../validation_test_utils.js';
@@ -117,8 +117,8 @@ g.test('alpha_to_coverage,first_format_blendable_and_has_alpha')
     u
       .combine('isAsync', [false, true])
       .combine('alphaToCoverageEnabled', [false, true])
-      //.beginSubcases()
-      .combine('format', kColorTextureFormats)
+      .beginSubcases()
+      .combine('format', kPossibleColorRenderableTextureFormats)
   )
   .fn(t => {
     const { isAsync, alphaToCoverageEnabled, format } = t.params;

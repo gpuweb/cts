@@ -2427,7 +2427,7 @@ export function isColorTextureFormat(format: GPUTextureFormat) {
 }
 
 export function isColorTextureFormatWithAlpha(format: GPUTextureFormat) {
-  return isColorTextureFormat(format) && !!(kTextureFormatInfo[format].color?.componentCount === 4);
+  return isColorTextureFormat(format) && kTextureFormatInfo[format].color?.componentCount === 4;
 }
 
 export function isDepthTextureFormat(format: GPUTextureFormat) {
