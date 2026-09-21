@@ -1009,7 +1009,7 @@ g.test('color_textures,compressed,unaligned,non_array')
   )
   .fn(t => {
     const { partialEdge, srcFormat, dstFormat, copyBoxOffsets } = t.params;
-    t.skipIfDeviceDoesNotHaveFeature('texture-compression-unaligned' as GPUFeatureName);
+    t.skipIfDeviceDoesNotHaveFeature('texture-compression-unaligned');
     t.skipIfCopyTextureToTextureNotSupportedForFormat(srcFormat, dstFormat);
 
     // The source and destination formats share the same base format, so they have the same texel

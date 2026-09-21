@@ -17,8 +17,6 @@ import { UniqueFeaturesOrLimitsGPUTest } from '../../../../gpu_test.js';
 
 export const g = makeTestGroup(UniqueFeaturesOrLimitsGPUTest);
 
-const kTextureCompressionUnaligned = 'texture-compression-unaligned' as GPUFeatureName;
-
 g.test('createTexture,unaligned_size')
   .desc(
     `Test that creating a compressed texture whose mip level 0 size is not a multiple of the texel
@@ -40,7 +38,7 @@ g.test('createTexture,unaligned_size')
       requiredFeatures.push(formatFeature);
     }
     if (enable_feature) {
-      requiredFeatures.push(kTextureCompressionUnaligned);
+      requiredFeatures.push('texture-compression-unaligned');
     }
 
     t.selectDeviceOrSkipTestCase({ requiredFeatures });

@@ -7,10 +7,10 @@ import {
 
 const kEnables: Record<string, GPUFeatureName> = {
   f16: 'shader-f16',
-  subgroups: 'subgroups' as GPUFeatureName,
-  clip_distances: 'clip-distances' as GPUFeatureName,
+  subgroups: 'subgroups',
+  clip_distances: 'clip-distances',
   chromium_experimental_primitive_id: 'chromium-experimental-primitive-id' as GPUFeatureName,
-  atomic_vec2u_min_max: 'atomic-vec2u-min-max' as GPUFeatureName,
+  atomic_vec2u_min_max: 'atomic-vec2u-min-max',
 };
 
 /**

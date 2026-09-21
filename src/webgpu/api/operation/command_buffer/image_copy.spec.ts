@@ -1768,7 +1768,7 @@ g.test('compressed_textures,unaligned_mip_level_0')
   .fn(t => {
     const { format, initMethod, checkMethod, copyCase } = t.params;
     t.skipIfTextureFormatNotSupported(format);
-    t.skipIfDeviceDoesNotHaveFeature('texture-compression-unaligned' as GPUFeatureName);
+    t.skipIfDeviceDoesNotHaveFeature('texture-compression-unaligned');
 
     const info = getBlockInfoForColorTextureFormat(format);
 
