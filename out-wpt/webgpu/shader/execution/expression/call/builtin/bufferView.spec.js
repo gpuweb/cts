@@ -20,7 +20,16 @@ import {
   kLayoutCases,
   runReadLayoutTest,
   runWriteLayoutTest,
-  runReadWriteTest } from
+  runReadWriteTest,
+  kMixedTypeOps,
+  kMixedTypeIdx,
+  kMixedTypePairs,
+  kMixedTypeOverlaps,
+  kMixedTypeBuffers,
+
+  mixedTypeName,
+  mixedTypeWords,
+  runMixedTypeAliasingTest } from
 './buffer_view_utils.js';
 
 export const g = makeTestGroup(AllFeaturesMaxLimitsGPUTest);
@@ -581,4 +590,56 @@ fn main() {
 `;
 
   runReadWriteTest(false, t, wgsl, ele_ty, ty, t.params.aspace, t.params.offset, bufferSize);
+});
+
+g.test('mixed_types_aliasing').
+desc(
+  `Test that differently typed pointers formed with bufferView behave correctly when they are views
+of overlapping bytes of a buffer, and both are formed and used within a single function.
+
+Aliasing within a function is valid WGSL, so an implementation must not assume that differently
+typed views do not alias (e.g. by applying C++ style type-based alias analysis).
+
+ * 'pair' selects the types of the two views, covering combinations of scalars, vectors, and
+   structures (with and without padding), including f16 types.
+ * 'overlap' selects whether the views start at the same byte, partially overlap, or only overlap
+   padding.
+ * 'offset' selects whether the byte offset passed to bufferView is a constant or a runtime value.
+ * If 'aliased' is false, the second view is formed on a different buffer.`
+).
+params((u) =>
+u.
+combine('buffer', kMixedTypeBuffers).
+combine('pair', keysOf(kMixedTypePairs)).
+combine('overlap', kMixedTypeOverlaps).
+filter((t) => {
+  const pair = kMixedTypePairs[t.pair];
+  return mixedTypeWords(pair.int, pair.other, t.overlap) !== undefined;
+}).
+combine('offset', ['constant', 'dynamic']).
+combine('aliased', [true, false]).
+beginSubcases().
+combine('op', keysOf(kMixedTypeOps))
+).
+fn((t) => {
+  const pair = kMixedTypePairs[t.params.pair];
+  const words = mixedTypeWords(pair.int, pair.other, t.params.overlap);
+  // The dynamic offset adds 'input.p[3] * 16' bytes, which preserves the alignment of all types.
+  const dynamicWords = 4 * kMixedTypeIdx;
+  const view = (type, buffer, word) => {
+    const ty = mixedTypeName(type);
+    return t.params.offset === 'constant' ?
+    `bufferView<${ty}>(&${buffer}, ${word * 4}u)` :
+    `bufferView<${ty}>(&${buffer}, ${(word - dynamicWords) * 4}u + u32(input.p[3]) * 16u)`;
+  };
+  runMixedTypeAliasingTest(t, {
+    buffer: t.params.buffer,
+    int: pair.int,
+    other: pair.other,
+    intWord: words.intWord,
+    otherWord: words.otherWord,
+    view,
+    aliased: t.params.aliased,
+    op: kMixedTypeOps[t.params.op]
+  });
 });

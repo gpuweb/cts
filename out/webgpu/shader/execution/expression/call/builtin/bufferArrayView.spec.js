@@ -21,7 +21,16 @@ import {
   kLayoutCases,
   runReadLayoutTest,
   runWriteLayoutTest,
-  runReadWriteTest } from
+  runReadWriteTest,
+  kMixedTypeOps,
+  kMixedTypeIdx,
+  kMixedTypePairs,
+  kMixedTypeOverlaps,
+  kMixedTypeBuffers,
+
+  mixedTypeName,
+  mixedTypeWords,
+  runMixedTypeAliasingTest } from
 './buffer_view_utils.js';
 
 export const g = makeTestGroup(AllFeaturesMaxLimitsGPUTest);
@@ -615,5 +624,76 @@ fn main() {
 `;
 
   runReadWriteTest(false, t, wgsl, ele_ty, ty, t.params.aspace, t.params.offset, bufferSize);
+});
+
+g.test('mixed_types_aliasing').
+desc(
+  `Test that differently typed element pointers formed with bufferArrayView behave correctly when
+they refer to overlapping bytes of a buffer, and both are formed and used within a single function.
+
+Aliasing within a function is valid WGSL, so an implementation must not assume that differently
+typed views do not alias (e.g. by applying C++ style type-based alias analysis).
+
+ * 'pair' selects the element types of the two views, covering combinations of scalars, vectors,
+   and structures (with and without padding), including f16 types.
+ * 'overlap' selects whether the elements start at the same byte, partially overlap, or only
+   overlap padding.
+ * 'access' selects how the element is located:
+   - 'constant_base': a constant byte offset, and element index 0.
+   - 'dynamic_base': a runtime byte offset, and element index 0.
+   - 'dynamic_index': a constant byte offset one element before the target, and a runtime element
+     index of 1. The two views therefore start at different offsets.
+ * If 'aliased' is false, the second view is formed on a different buffer.`
+).
+params((u) =>
+u.
+combine('buffer', kMixedTypeBuffers).
+combine('pair', keysOf(kMixedTypePairs)).
+combine('overlap', kMixedTypeOverlaps).
+filter((t) => {
+  const pair = kMixedTypePairs[t.pair];
+  return mixedTypeWords(pair.int, pair.other, t.overlap) !== undefined;
+}).
+combine('access', ['constant_base', 'dynamic_base', 'dynamic_index']).
+combine('aliased', [true, false]).
+beginSubcases().
+combine('op', keysOf(kMixedTypeOps))
+).
+fn((t) => {
+  const pair = kMixedTypePairs[t.params.pair];
+  const words = mixedTypeWords(pair.int, pair.other, t.params.overlap);
+  // The dynamic base adds 'input.p[3] * 16' bytes, which preserves the alignment of all types.
+  const dynamicWords = 4 * kMixedTypeIdx;
+  const view = (type, buffer, word) => {
+    const ty = mixedTypeName(type);
+    // The element stride in bytes. All of the tested types have a stride equal to their size.
+    const stride = type.size;
+    let base = '';
+    let index = '0';
+    switch (t.params.access) {
+      case 'constant_base':
+        base = `${word * 4}u`;
+        break;
+      case 'dynamic_base':
+        base = `${(word - dynamicWords) * 4}u + u32(input.p[3]) * 16u`;
+        break;
+      case 'dynamic_index':
+        base = `${word * 4 - stride * kMixedTypeIdx}u`;
+        index = 'input.p[3]';
+        break;
+    }
+    // Each view spans 32 bytes, which keeps all views within the buffer.
+    return `&(*bufferArrayView<array<${ty}>>(&${buffer}, ${base}, 32u))[${index}]`;
+  };
+  runMixedTypeAliasingTest(t, {
+    buffer: t.params.buffer,
+    int: pair.int,
+    other: pair.other,
+    intWord: words.intWord,
+    otherWord: words.otherWord,
+    view,
+    aliased: t.params.aliased,
+    op: kMixedTypeOps[t.params.op]
+  });
 });
 //# sourceMappingURL=bufferArrayView.spec.js.map
