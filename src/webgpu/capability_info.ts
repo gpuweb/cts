@@ -994,6 +994,7 @@ export const kKnownWGSLLanguageFeatures = [
   'immediate_address_space',
   'fragment_depth',
   'buffer_view',
+  'unrestricted_aliasing',
   // This list should be kept in sync with .eslintrc.cjs.
 ] as const;
 
