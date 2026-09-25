@@ -1204,14 +1204,17 @@ export const kMixedTypePairs: Record<string, { int: MixedType; other: MixedType 
   // scalar - scalar
   i32_f32: { int: kI32, other: kF32 },
   u32_f32: { int: kU32, other: kF32 },
+  i32_i32: { int: kI32, other: kI32 },
   // vector - scalar
   vec2i_f32: { int: kVec2I, other: kF32 },
   vec4i_f32: { int: kVec4I, other: kF32 },
   vec4u_f32: { int: kVec4U, other: kF32 },
+  vec4u_u32: { int: kVec4U, other: kU32 },
   // scalar - vector
   i32_vec2f: { int: kI32, other: kVec2F },
   i32_vec4f: { int: kI32, other: kVec4F },
   i32_vec4u: { int: kI32, other: kVec4U },
+  i32_vec4i: { int: kI32, other: kVec4I },
   // vector - vector
   vec2i_vec2f: { int: kVec2I, other: kVec2F },
   vec4i_vec4f: { int: kVec4I, other: kVec4F },
@@ -1219,6 +1222,7 @@ export const kMixedTypePairs: Record<string, { int: MixedType; other: MixedType 
   vec4i_vec2f: { int: kVec4I, other: kVec2F },
   vec2i_vec4f: { int: kVec2I, other: kVec4F },
   vec4i_vec4u: { int: kVec4I, other: kVec4U },
+  vec4i_vec4i: { int: kVec4I, other: kVec4I },
   // struct - scalar
   structi_f32: { int: kStructI, other: kF32 },
   structv_f32: { int: kStructV, other: kF32 },
