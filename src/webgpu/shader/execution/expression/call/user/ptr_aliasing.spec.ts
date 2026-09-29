@@ -31,7 +31,7 @@ import {
   mixedTypeName,
   mixedTypeWords,
   runMixedTypeAliasingTest,
-} from '../builtin/buffer_view_utils.js';
+} from '../mixed_type_aliasing_utils.js';
 
 export const g = makeTestGroup(AllFeaturesMaxLimitsGPUTest);
 

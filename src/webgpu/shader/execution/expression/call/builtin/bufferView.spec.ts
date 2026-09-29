@@ -21,16 +21,18 @@ import {
   runReadLayoutTest,
   runWriteLayoutTest,
   runReadWriteTest,
-  kMixedTypeOps,
-  kMixedTypeIdx,
-  kMixedTypePairs,
-  kMixedTypeOverlaps,
+} from './buffer_view_utils.js';
+import {
   kMixedTypeBuffers,
+  kMixedTypeIdx,
+  kMixedTypeOps,
+  kMixedTypeOverlaps,
+  kMixedTypePairs,
   MixedType,
   mixedTypeName,
   mixedTypeWords,
   runMixedTypeAliasingTest,
-} from './buffer_view_utils.js';
+} from '../mixed_type_aliasing_utils.js';
 
 export const g = makeTestGroup(AllFeaturesMaxLimitsGPUTest);
 
