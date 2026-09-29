@@ -20,10 +20,20 @@ Cases that form pointers using runtime indices into the same root variable alway
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { keysOf } from '../../../../../../common/util/data_tables.js';
-import { GPUTest } from '../../../../../gpu_test.js';
-import { kMixedTypeOps, kMixedTypePairs, mixedTypeDecls } from '../builtin/buffer_view_utils.js';
+import { AllFeaturesMaxLimitsGPUTest, GPUTest } from '../../../../../gpu_test.js';
+import {
+  kMixedTypeBuffers,
+  kMixedTypeIdx,
+  kMixedTypeOps,
+  kMixedTypeOverlaps,
+  kMixedTypePairs,
+  MixedType,
+  mixedTypeName,
+  mixedTypeWords,
+  runMixedTypeAliasingTest,
+} from '../builtin/buffer_view_utils.js';
 
-export const g = makeTestGroup(GPUTest);
+export const g = makeTestGroup(AllFeaturesMaxLimitsGPUTest);
 
 type AddressSpace = 'function' | 'private' | 'workgroup' | 'storage';
 
@@ -1093,58 +1103,74 @@ fn f(pd : ${parr}, ps : ${parr}, m : i32) -> i32 {
     });
   });
 
-/** The f32 value passed as 'vf'. */
-const kVF = kVB;
-
-/** Locations in the buffer that the i32 and f32 views are formed at. */
-const kBufferViewTargets = {
-  scalar: { offset: 0, wgsl: '0u' },
-  array_element: { offset: 3, wgsl: '12u' },
-  dynamic: { offset: kIdx, wgsl: 'u32(input.p[3]) * 4u' },
-};
-
 g.test('buffer_view_mixed_types')
   .desc(
-    `Test that a function taking an i32 pointer and an f32 pointer behaves correctly when both are
-views of the same bytes of a buffer, formed with bufferView.
+    `Test that a function taking two differently typed pointer parameters behaves correctly when
+the pointers are views of overlapping bytes of a buffer, formed with bufferView or bufferArrayView.
 
-Stores are never followed by loads of a different type from the same location except through i32,
-so that f32 denormal flushing and NaN canonicalization cannot affect the results.`
+The views are formed in the entry point and passed to the function. This is the pointer parameter
+counterpart of the bufferView and bufferArrayView 'mixed_types_aliasing' tests.
+
+Only the integer view is loaded from, so that float denormal flushing and NaN canonicalization
+cannot affect the results.
+
+ * 'pair' selects the types of the two views, covering combinations of scalars, vectors, and
+   structures (with and without padding), including f16 types.
+ * 'overlap' selects whether the views start at the same byte, partially overlap, or only overlap
+   padding.
+ * 'view' selects how the views are formed:
+   - 'constant_offset': bufferView with a constant byte offset.
+   - 'dynamic_offset': bufferView with a runtime byte offset.
+   - 'dynamic_index': an element of bufferArrayView, with a runtime element index.`
   )
   .params(u =>
     u
-      .combine('address_space', ['workgroup', 'storage'] as const)
-      .combine('target', keysOf(kBufferViewTargets))
+      .combine('buffer', kMixedTypeBuffers)
+      .combine('pair', keysOf(kMixedTypePairs))
+      .combine('overlap', kMixedTypeOverlaps)
+      .filter(t => {
+        const pair = kMixedTypePairs[t.pair];
+        return mixedTypeWords(pair.int, pair.other, t.overlap) !== undefined;
+      })
+      .combine('view', ['constant_offset', 'dynamic_offset', 'dynamic_index'] as const)
       .combine('aliased', [true, false])
       .beginSubcases()
       .combine('op', keysOf(kMixedTypeOps))
   )
   .fn(t => {
-    const space = t.params.address_space;
-    const target = kBufferViewTargets[t.params.target];
-    const op = kMixedTypeOps[t.params.op];
-
-    const pi = target.offset;
-    const pf = (t.params.aliased ? 0 : kB) + target.offset;
-    const m = new Memory();
-    const { int, other } = kMixedTypePairs.i32_f32;
-    m.r[0] = op.sim(m, int, other, pi, pf, { va: kVA, vf: kVF, n: kN })[0];
-
-    run(t, {
-      space,
-      requiresAliasing: t.params.aliased,
-      bufferView: true,
-      helpers: `
-${mixedTypeDecls(int, other)}
-
-fn f(pi : ${ptr(space, 'i32')}, pf : ${ptr(space, 'f32')},
-     va : i32, vf : f32, n : i32) -> i32 {
-  ${op.wgsl(int, other)}
-}`,
-      body: `
-  output.r[0] = f(bufferView<i32>(&A, ${target.wgsl}),
-                  bufferView<f32>(&${t.params.aliased ? 'A' : 'B'}, ${target.wgsl}),
-                  input.p[0], f32(input.p[1]), input.p[2]);`,
-      expected: m.expected(),
+    //if (t.params.aliased) {
+    //  t.skipIfLanguageFeatureNotSupported('unrestricted_aliasing');
+    //}
+    const pair = kMixedTypePairs[t.params.pair];
+    const words = mixedTypeWords(pair.int, pair.other, t.params.overlap)!;
+    // The dynamic offset adds 'input.p[3] * 16' bytes, which preserves the alignment of all types.
+    const dynamicWords = 4 * kMixedTypeIdx;
+    const view = (type: MixedType, buffer: string, word: number) => {
+      const ty = mixedTypeName(type);
+      switch (t.params.view) {
+        case 'constant_offset':
+          return `bufferView<${ty}>(&${buffer}, ${word * 4}u)`;
+        case 'dynamic_offset':
+          return `bufferView<${ty}>(&${buffer}, ${(word - dynamicWords) * 4}u + u32(input.p[3]) * 16u)`;
+        case 'dynamic_index': {
+          // The array starts one element before the target. All of the tested types have an
+          // element stride equal to their size. Each view spans 32 bytes, which keeps all views
+          // within the buffer.
+          const base = word * 4 - type.size * kMixedTypeIdx;
+          return `&(*bufferArrayView<array<${ty}>>(&${buffer}, ${base}u, 32u))[input.p[3]]`;
+        }
+      }
+    };
+    runMixedTypeAliasingTest(t, {
+      buffer: t.params.buffer,
+      int: pair.int,
+      other: pair.other,
+      intWord: words.intWord,
+      otherWord: words.otherWord,
+      view,
+      aliased: t.params.aliased,
+      op: kMixedTypeOps[t.params.op],
+      pointerParams: true,
+      directives: t.params.aliased ? '// requires unrestricted_aliasing;' : '',
     });
   });

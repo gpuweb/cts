@@ -1509,12 +1509,20 @@ interface MixedTypeAliasingParams {
   aliased: boolean;
   /** The operation to perform. */
   op: MixedTypeOp;
+  /**
+   * If true, the views are formed in the entry point and passed to 'f' as pointer parameters.
+   * Otherwise the views are formed within 'f'.
+   */
+  pointerParams?: boolean;
+  /** WGSL directives placed at the start of the shader. */
+  directives?: string;
 }
 
 /**
  * Runs a test where two differently typed pointers are formed from buffer views and used within a
- * single function. If 'aliased' is true, then both views refer to the same buffer, otherwise the
- * 'other' view refers to a different buffer.
+ * single function, or passed to a function as pointer parameters if 'pointerParams' is true.
+ * If 'aliased' is true, then both views refer to the same buffer, otherwise the 'other' view refers
+ * to a different buffer.
  *
  * The shader initializes buffers 'A' and 'B' from 'input', calls the op, and writes the lanes of
  * the result of the op, followed by the contents of 'A' and 'B', to 'output'.
@@ -1543,9 +1551,32 @@ export function runMixedTypeAliasingTest(t: GPUTest, params: MixedTypeAliasingPa
   }
 
   const intTy = mixedTypeName(params.int);
+  const otherTy = mixedTypeName(params.other);
   const writeResult = mixedTypeWriteLanes(params.int, 'r', 'output.r');
+  const viewI = params.view(params.int, 'A', params.intWord);
+  const viewF = params.view(params.other, params.aliased ? 'A' : 'B', params.otherWord);
+  // Only storage pointers may specify an access mode.
+  const ptr = (ty: string) =>
+    params.buffer === 'workgroup' ? `ptr<workgroup, ${ty}>` : `ptr<storage, ${ty}, read_write>`;
+  let fn = '';
+  let call = '';
+  if (params.pointerParams) {
+    fn = `fn f(pi : ${ptr(intTy)}, pf : ${ptr(otherTy)},
+     va : i32, vf : f32, n : i32) -> ${intTy} {
+  ${params.op.wgsl(params.int, params.other)}
+}`;
+    call = `f(${viewI}, ${viewF}, input.p[0], f32(input.p[1]), input.p[2])`;
+  } else {
+    fn = `fn f(va : i32, vf : f32, n : i32) -> ${intTy} {
+  let pi = ${viewI};
+  let pf = ${viewF};
+  ${params.op.wgsl(params.int, params.other)}
+}`;
+    call = `f(input.p[0], f32(input.p[1]), input.p[2])`;
+  }
 
-  const wgsl = `${usesF16 ? 'enable f16;' : ''}
+  const wgsl = `${params.directives ?? ''}
+${usesF16 ? 'enable f16;' : ''}
 struct In {
   a : array<i32, ${N}>,
   b : array<i32, ${N}>,
@@ -1565,17 +1596,13 @@ ${decls}
 
 ${mixedTypeDecls(params.int, params.other)}
 
-fn f(va : i32, vf : f32, n : i32) -> ${intTy} {
-  let pi = ${params.view(params.int, 'A', params.intWord)};
-  let pf = ${params.view(params.other, params.aliased ? 'A' : 'B', params.otherWord)};
-  ${params.op.wgsl(params.int, params.other)}
-}
+${fn}
 
 @compute @workgroup_size(1)
 fn main() {
   *bufferView<array<i32, ${N}>>(&A, 0) = input.a;
   *bufferView<array<i32, ${N}>>(&B, 0) = input.b;
-  let r = f(input.p[0], f32(input.p[1]), input.p[2]);
+  let r = ${call};
   ${writeResult}
   output.a = *bufferView<array<i32, ${N}>>(&A, 0);
   output.b = *bufferView<array<i32, ${N}>>(&B, 0);
