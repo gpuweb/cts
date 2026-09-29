@@ -1151,7 +1151,9 @@ cannot affect the results.
         case 'constant_offset':
           return `bufferView<${ty}>(&${buffer}, ${word * 4}u)`;
         case 'dynamic_offset':
-          return `bufferView<${ty}>(&${buffer}, ${(word - dynamicWords) * 4}u + u32(input.p[3]) * 16u)`;
+          return `bufferView<${ty}>(&${buffer}, ${
+            (word - dynamicWords) * 4
+          }u + u32(input.p[3]) * 16u)`;
         case 'dynamic_index': {
           // The array starts one element before the target. All of the tested types have an
           // element stride equal to their size. Each view spans 32 bytes, which keeps all views
