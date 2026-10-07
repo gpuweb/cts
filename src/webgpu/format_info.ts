@@ -2438,7 +2438,7 @@ export function isStencilTextureFormat(format: GPUTextureFormat) {
   return !!kTextureFormatInfo[format].stencil;
 }
 
-export function isDepthStencilTextureFormat(format: GPUTextureFormat) {
+export function isDepthAndStencilTextureFormat(format: GPUTextureFormat) {
   return isDepthTextureFormat(format) && isStencilTextureFormat(format);
 }
 

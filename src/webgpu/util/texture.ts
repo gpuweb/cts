@@ -2,7 +2,7 @@ import { assert, unreachable } from '../../common/util/util.js';
 import {
   getBlockInfoForTextureFormat,
   isDepthOrStencilTextureFormat,
-  isDepthStencilTextureFormat,
+  isDepthAndStencilTextureFormat,
   isDepthTextureFormat,
   isSintOrUintFormat,
   isStencilTextureFormat,
@@ -752,7 +752,7 @@ export function createTextureFromTexelViews(
   // Note: At the time of this writing there is no such thing as a depth-stencil TexelView
   // so we couldn't have passed in data for "all" aspects. This seems like a code smell issue
   // but it's a big change to fix.
-  const aspect = isDepthStencilTextureFormat(textureFormat)
+  const aspect = isDepthAndStencilTextureFormat(textureFormat)
     ? isSintOrUintFormat(viewsFormat)
       ? 'stencil-only'
       : 'depth-only'
