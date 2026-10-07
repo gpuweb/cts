@@ -5,10 +5,13 @@ Samples a texture.
 
 - TODO: Test un-encodable formats.
 `;import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
+import { range } from '../../../../../../common/util/util.js';
 import {
+  getBlockInfoForTextureFormat,
   isDepthTextureFormat,
   isTextureFormatPossiblyFilterableAsTextureF32,
   kAllTextureFormats,
+  kCompressedTextureFormats,
   kDepthStencilFormats } from
 '../../../../../format_info.js';
 import { AllFeaturesMaxLimitsGPUTest } from '../../../../../gpu_test.js';
@@ -243,7 +246,7 @@ specURL('https://www.w3.org/TR/WGSL/#texturesamplelevel').
 desc(
   `
 tests textureSampleLevel with 2d coordinates and various combinations of
-baseMipLevel, lodMinClamp, and lodMaxClamp, with an dwithout filtering.
+baseMipLevel, lodMinClamp, and lodMaxClamp, with and without filtering.
 `
 ).
 params((u) =>
@@ -323,6 +326,138 @@ fn(async (t) => {
   const res = await checkCallResults(
     t,
     { texels, descriptor, viewDescriptor },
+    textureType,
+    sampler,
+    calls,
+    results,
+    stage,
+    texture
+  );
+  t.expectOK(res);
+});
+
+g.test('sampled_2d_coords,compressed_unaligned').
+specURL('https://www.w3.org/TR/WGSL/#texturesamplelevel').
+desc(
+  `
+Tests textureSampleLevel with block-compressed textures whose mip level 0 size is NOT a multiple of
+the texel block size, using the 'texture-compression-unaligned' feature.
+
+The blocks at the unaligned edges of the texture are only partially inside the texture. The texels
+of those blocks that are outside the texture must never be sampled. In particular:
+ * with 'repeat', sampling at the edge must blend the last texel with texel 0 (and vice versa).
+ * with 'clamp-to-edge' and 'mirror-repeat', sampling at the edge must only use the edge texel.
+
+The texture is filled with random blocks, so the texels outside the texture have different values
+than the ones inside. The expected values are computed only from the texels inside the texture.
+
+In addition to the usual sample points, samples every row and/or column on and around the
+unaligned edges (and the edges opposite to them, which wrap around to the unaligned edges).
+`
+).
+params((u) =>
+u.
+combine('stage', ['f', 'c']).
+combine('format', kCompressedTextureFormats).
+filter((t) => isPotentiallyFilterableAndFillable(t.format)).
+combine('filt', ['nearest', 'linear']).
+combine('mode', kShortAddressModes).
+beginSubcases()
+// Which dimension(s) of mip level 0 have a partial edge block.
+.combine('partialEdge', ['width', 'height', 'both'])
+).
+fn(async (t) => {
+  const { format, stage, mode, filt: minFilter, partialEdge } = t.params;
+  skipIfTextureFormatNotSupportedOrNeedsFilteringAndIsUnfilterable(t, minFilter, format);
+  t.skipIfDeviceDoesNotHaveFeature('texture-compression-unaligned');
+
+  // Mip level 0 size: a few full blocks plus a one-texel partial edge block in the selected
+  // dimension(s). An unaligned mip level 0 is only valid with 'texture-compression-unaligned'.
+  const { blockWidth, blockHeight } = getBlockInfoForTextureFormat(format);
+  const width = partialEdge === 'height' ? 4 * blockWidth : 3 * blockWidth + 1;
+  const height = partialEdge === 'width' ? 4 * blockHeight : 3 * blockHeight + 1;
+
+  const descriptor = {
+    format,
+    size: { width, height },
+    mipLevelCount: 1,
+    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
+  };
+  const viewDescriptor = {};
+  const { texels, texture } = await createTextureWithRandomDataAndGetTexels(t, descriptor);
+  const softwareTexture = { texels, descriptor, viewDescriptor };
+  const sampler = {
+    addressModeU: kShortAddressModeToAddressMode[mode],
+    addressModeV: kShortAddressModeToAddressMode[mode],
+    minFilter,
+    magFilter: minFilter,
+    mipmapFilter: minFilter
+  };
+
+  const coords = generateTextureBuiltinInputs2D(50, {
+    method: 'spiral',
+    sampler,
+    softwareTexture,
+    hashInputs: [stage, format, mode, minFilter, partialEdge]
+  }).map(({ coords }) => coords);
+
+  // Coordinates, in one axis, on and a quarter texel to each side of both edges of the texture.
+  // With linear filtering, sampling exactly on the edge blends the texels on each side of it
+  // with equal weights. With nearest filtering we skip the edge itself since either texel could
+  // be chosen.
+  const edgeOffsets = minFilter === 'linear' ? [-0.25, 0, 0.25] : [-0.25, 0.25];
+  const edgeCoords = (size) =>
+  [0, 1].flatMap((edge) => edgeOffsets.map((offset) => edge + offset / size));
+  // Coordinates, in one axis, of the center of every texel.
+  const centerCoords = (size) => range(size, (i) => (i + 0.5) / size);
+
+  if (partialEdge !== 'height') {
+    // Sample across the left and right edges on every row.
+    for (const u of edgeCoords(width)) {
+      for (const v of centerCoords(height)) {
+        coords.push([u, v]);
+      }
+    }
+  }
+  if (partialEdge !== 'width') {
+    // Sample across the top and bottom edges on every column.
+    for (const v of edgeCoords(height)) {
+      for (const u of centerCoords(width)) {
+        coords.push([u, v]);
+      }
+    }
+  }
+  if (partialEdge === 'both') {
+    // Sample across the corners.
+    for (const u of edgeCoords(width)) {
+      for (const v of edgeCoords(height)) {
+        coords.push([u, v]);
+      }
+    }
+  }
+
+  const calls = coords.map((coords) => {
+    return {
+      builtin: 'textureSampleLevel',
+      coordType: 'f',
+      coords,
+      mipLevel: 0,
+      levelType: 'f'
+    };
+  });
+  const textureType = appendComponentTypeForFormatToTextureType('texture_2d', format);
+  const results = await doTextureCalls(
+    t,
+    texture,
+    viewDescriptor,
+    textureType,
+    sampler,
+    calls,
+    stage
+  );
+  const res = await checkCallResults(
+    t,
+    softwareTexture,
     textureType,
     sampler,
     calls,
