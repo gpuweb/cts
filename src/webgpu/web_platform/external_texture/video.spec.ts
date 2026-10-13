@@ -7,8 +7,6 @@ Tests for external textures from HTMLVideoElement (and other video-type sources?
 TODO: consider whether external_texture and copyToTexture video tests should be in the same file
 TODO(#3193): Test video in BT.2020 color space
 TODO(#4364): Test camera capture with copyExternalImageToTexture (not necessarily in this file)
-TODO(#4605): Test importExternalTexture with video frame display size different with coded size from
-  a video file
 `;
 
 import { makeTestGroup } from '../../../common/framework/test_group.js';
@@ -33,6 +31,17 @@ import {
 const kHeight = 16;
 const kWidth = 16;
 const kFormat = 'rgba8unorm';
+
+const kDisplayScaleVideoNames = [
+  'four-colors-h264-bt601.mp4',
+  'four-colors-vp9-bt601.webm',
+  'four-colors-vp9-bt709.webm',
+] as const;
+
+const kDisplaySizeSourceParams = [
+  ...kDisplayScaleVideoNames.map(videoName => ({ sourceType: 'video' as const, videoName })),
+  { sourceType: 'canvas' as const },
+];
 
 export const g = makeTestGroup(TextureUploadingUtils);
 
@@ -164,67 +173,96 @@ function checkNonStandardIsZeroCopyIfAvailable(): { checkNonStandardIsZeroCopy?:
   }
 }
 
-function createVideoFrameWithDisplayScale(
+// Creates a VideoFrame and applies display-size scaling relative to coded size.
+async function createVideoFrameWithDisplayScale(
   t: GPUTest,
+  sourceType: 'video' | 'canvas',
+  videoName: (typeof kDisplayScaleVideoNames)[number] | undefined,
   displayScale: 'smaller' | 'same' | 'larger'
-): { frame: VideoFrame; displayWidth: number; displayHeight: number } {
-  const canvas = createCanvas(t, 'onscreen', kWidth, kHeight);
-  const canvasContext = canvas.getContext('2d');
+): Promise<VideoFrame> {
+  let sourceFrame: VideoFrame;
 
-  if (canvasContext === null) {
-    t.skip(' onscreen canvas 2d context not available');
+  if (sourceType === 'video') {
+    let source: VideoFrame | undefined;
+
+    if (videoName === undefined) {
+      t.skip('videoName is required when sourceType is video');
+    }
+
+    const videoElement = getVideoElement(t, videoName);
+
+    await startPlayingAndWaitForVideo(videoElement, async () => {
+      source = await getVideoFrameFromVideoElement(t, videoElement);
+    });
+
+    if (source === undefined) {
+      t.skip(`Failed to get video frame for ${videoName}`);
+    }
+
+    sourceFrame = source;
+  } else {
+    const canvasWidth = 320;
+    const canvasHeight = 240;
+    const canvas = createCanvas(t, 'onscreen', canvasWidth, canvasHeight);
+    const canvasContext = canvas.getContext('2d');
+    if (canvasContext === null) {
+      t.skip('onscreen canvas 2d context not available');
+    }
+
+    const ctx = canvasContext;
+    const rectWidth = Math.floor(canvasWidth / 2);
+    const rectHeight = Math.floor(canvasHeight / 2);
+
+    ctx.fillStyle = `rgba(255, 0, 0, 1.0)`;
+    ctx.fillRect(0, 0, rectWidth, rectHeight);
+    ctx.fillStyle = `rgba(0, 255, 0, 1.0)`;
+    ctx.fillRect(rectWidth, 0, canvasWidth - rectWidth, rectHeight);
+    ctx.fillStyle = `rgba(0, 0, 255, 1.0)`;
+    ctx.fillRect(0, rectHeight, rectWidth, canvasHeight - rectHeight);
+    ctx.fillStyle = `rgba(255, 0, 255, 1.0)`;
+    ctx.fillRect(rectWidth, rectHeight, canvasWidth - rectWidth, canvasHeight - rectHeight);
+
+    const imageData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
+    sourceFrame = new VideoFrame(imageData.data.buffer, {
+      format: 'RGBA',
+      codedWidth: canvasWidth,
+      codedHeight: canvasHeight,
+      timestamp: 0,
+    });
   }
 
-  const ctx = canvasContext;
+  const codedWidth = sourceFrame.codedWidth;
+  const codedHeight = sourceFrame.codedHeight;
 
-  const rectWidth = Math.floor(kWidth / 2);
-  const rectHeight = Math.floor(kHeight / 2);
+  // 'same' means display size == coded size, which sourceFrame already satisfies.
+  // Return it directly instead of re-wrapping via the VideoFrame constructor.
+  if (displayScale === 'same') {
+    return sourceFrame;
+  }
 
-  // Red
-  ctx.fillStyle = `rgba(255, 0, 0, 1.0)`;
-  ctx.fillRect(0, 0, rectWidth, rectHeight);
-  // Lime
-  ctx.fillStyle = `rgba(0, 255, 0, 1.0)`;
-  ctx.fillRect(rectWidth, 0, kWidth - rectWidth, rectHeight);
-  // Blue
-  ctx.fillStyle = `rgba(0, 0, 255, 1.0)`;
-  ctx.fillRect(0, rectHeight, rectWidth, kHeight - rectHeight);
-  // Fuchsia
-  ctx.fillStyle = `rgba(255, 0, 255, 1.0)`;
-  ctx.fillRect(rectWidth, rectHeight, kWidth - rectWidth, kHeight - rectHeight);
-
-  const imageData = ctx.getImageData(0, 0, kWidth, kHeight);
-
-  let displayWidth = kWidth;
-  let displayHeight = kHeight;
+  let displayWidth = codedWidth;
+  let displayHeight = codedHeight;
   switch (displayScale) {
     case 'smaller':
-      displayWidth = Math.floor(kWidth / 2);
-      displayHeight = Math.floor(kHeight / 2);
-      break;
-    case 'same':
-      displayWidth = kWidth;
-      displayHeight = kHeight;
+      displayWidth = Math.floor(codedWidth / 2);
+      displayHeight = Math.floor(codedHeight / 2);
       break;
     case 'larger':
-      displayWidth = kWidth * 2;
-      displayHeight = kHeight * 2;
+      displayWidth = codedWidth * 2;
+      displayHeight = codedHeight * 2;
       break;
     default:
       unreachable();
   }
 
-  const frameInit: VideoFrameBufferInit = {
-    format: 'RGBA',
-    codedWidth: kWidth,
-    codedHeight: kHeight,
+  const frame = new VideoFrame(sourceFrame, {
     displayWidth,
     displayHeight,
-    timestamp: 0,
-  };
+    timestamp: sourceFrame.timestamp,
+  });
+  sourceFrame.close();
 
-  const frame = new VideoFrame(imageData.data.buffer, frameInit);
-  return { frame, displayWidth, displayHeight };
+  return frame;
 }
 
 g.test('importExternalTexture,sample')
@@ -446,27 +484,54 @@ Tests that we can import an VideoFrame with non-YUV pixel format into a GPUExter
     ]);
   });
 
-g.test('importExternalTexture,video_frame_display_size_diff_with_coded_size')
+g.test('importExternalTexture,video_frame_display_size_scale')
   .desc(
     `
-Tests that we can import a VideoFrame with display size different with its coded size, and
-sampling works without validation errors.
+Tests that importExternalTexture correctly handles VideoFrames where displayWidth/displayHeight
+differ from codedWidth/codedHeight, and that sampling produces correct results at display dimensions.
+
+'sourceType' controls the VideoFrame backing storage type:
+- 'video': VideoFrame obtained from decoded video file via HTMLVideoElement. The frame is
+  typically GPU-backed (SharedImage), and may use the 0-copy import path if GPU supports it,
+  or fall back to 1-copy path. Tests multiple video codecs (H.264, VP9) and color spaces
+  (bt.601, bt.709) to ensure display scaling works across real-world video formats.
+
+- 'canvas': VideoFrame created from RGBA buffer data via canvas ImageData. The frame is
+  CPU-backed (no SharedImage) and always uses the 1-copy import path. This is the regression
+  test for crbug.com/471021591 where the 1-copy path incorrectly used visibleRect dimensions
+  instead of displayWidth/Height for the imported texture.
+
+'displayScale' controls the ratio of display size to coded size:
+- 'smaller': displayWidth/Height < codedWidth/Height (e.g., 0.5x). Only achievable by
+  explicitly setting displayWidth/Height via VideoFrame constructor; rarely occurs naturally in
+  video container metadata, whose SAR is typically >= 1 in the tested assets.
+- 'same': displayWidth/Height == codedWidth/Height (square pixels, no scaling).
+- 'larger': displayWidth/Height > codedWidth/Height (e.g., 2x).
 `
   )
   .params(u =>
     u //
+      .combineWithParams(kDisplaySizeSourceParams)
       .combine('displayScale', ['smaller', 'same', 'larger'] as const)
   )
-  .fn(t => {
+  .fn(async t => {
+    const { sourceType, displayScale } = t.params;
+    const videoName =
+      'videoName' in t.params
+        ? (t.params.videoName as (typeof kDisplayScaleVideoNames)[number])
+        : undefined;
+
     if (typeof VideoFrame === 'undefined') {
       t.skip('WebCodec is not supported');
     }
 
-    const { frame } = createVideoFrameWithDisplayScale(t, t.params.displayScale);
+    const frame = await createVideoFrameWithDisplayScale(t, sourceType, videoName, displayScale);
+    const displayWidth = frame.displayWidth;
+    const displayHeight = frame.displayHeight;
 
     const colorAttachment = t.createTextureTracked({
       format: kFormat,
-      size: { width: kWidth, height: kHeight, depthOrArrayLayers: 1 },
+      size: { width: displayWidth, height: displayHeight, depthOrArrayLayers: 1 },
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
     });
 
@@ -496,35 +561,87 @@ sampling works without validation errors.
     passEncoder.end();
     t.device.queue.submit([commandEncoder.finish()]);
 
-    const expected = {
-      topLeft: new Uint8Array([255, 0, 0, 255]),
-      topRight: new Uint8Array([0, 255, 0, 255]),
-      bottomLeft: new Uint8Array([0, 0, 255, 255]),
-      bottomRight: new Uint8Array([255, 0, 255, 255]),
+    let expected: {
+      topLeft: Uint8Array;
+      topRight: Uint8Array;
+      bottomLeft: Uint8Array;
+      bottomRight: Uint8Array;
     };
+    if (displayScale === 'same' && sourceType === 'video') {
+      // At 'same' displayScale there is no scaling, so sample points land on exactly the pixels
+      // 'importExternalTexture,sample' validates; reuse its precomputed kVideoExpectedColors table
+      // as an exact reference. drawImage would instead do its own YUV->RGB conversion that can
+      // disagree with importExternalTexture on real hardware (~0.1/channel), forcing a wide
+      // tolerance, so the fixed table keeps the check tight.
+      const srcColorSpace = kVideoInfo[videoName!].colorSpace;
+      const presentColors = kVideoExpectedColors[srcColorSpace]['srgb'];
+      const expect = kVideoInfo[videoName!].display;
+      expected = {
+        topLeft: convertToUnorm8(presentColors[expect.topLeftColor]),
+        topRight: convertToUnorm8(presentColors[expect.topRightColor]),
+        bottomLeft: convertToUnorm8(presentColors[expect.bottomLeftColor]),
+        bottomRight: convertToUnorm8(presentColors[expect.bottomRightColor]),
+      };
+    } else {
+      // 'smaller'/'larger' scale (any source): the table only has colors for the unscaled 'same'
+      // sample points, so there is no precomputed reference for scaled samples; drawImage at
+      // display size reproduces the browser's resize.
+      // 'canvas' source (any scale): the frame is already RGBA (no YUV), so drawImage is
+      // lossless and matches importExternalTexture exactly. Building the expectation from
+      // drawImage at display size also confirms importExternalTexture honors display (not coded)
+      // dimensions across codecs and container metadata.
+      const canvas = createCanvas(t, 'onscreen', displayWidth, displayHeight);
+      const canvasContext = canvas.getContext('2d', { colorSpace: 'srgb' });
+      if (canvasContext === null) {
+        frame.close();
+        t.skip('onscreen canvas 2d context not available');
+      }
+      const ctx = canvasContext as CanvasRenderingContext2D;
+      ctx.drawImage(frame, 0, 0, displayWidth, displayHeight);
+      const imageData = ctx.getImageData(0, 0, displayWidth, displayHeight, {
+        colorSpace: 'srgb',
+      });
+      const bytes = imageData.data;
+      const sample = (x: number, y: number): Uint8Array => {
+        const xi = Math.floor(x);
+        const yi = Math.floor(y);
+        const i = (yi * displayWidth + xi) * 4;
+        return new Uint8Array([bytes[i + 0], bytes[i + 1], bytes[i + 2], bytes[i + 3]]);
+      };
+      expected = {
+        topLeft: sample(displayWidth * 0.25, displayHeight * 0.25),
+        topRight: sample(displayWidth * 0.75, displayHeight * 0.25),
+        bottomLeft: sample(displayWidth * 0.25, displayHeight * 0.75),
+        bottomRight: sample(displayWidth * 0.75, displayHeight * 0.75),
+      };
+    }
 
-    ttu.expectSinglePixelComparisonsAreOkInTexture(t, { texture: colorAttachment }, [
-      // Top-left.
-      {
-        coord: { x: kWidth * 0.25, y: kHeight * 0.25 },
-        exp: expected.topLeft,
-      },
-      // Top-right.
-      {
-        coord: { x: kWidth * 0.75, y: kHeight * 0.25 },
-        exp: expected.topRight,
-      },
-      // Bottom-left.
-      {
-        coord: { x: kWidth * 0.25, y: kHeight * 0.75 },
-        exp: expected.bottomLeft,
-      },
-      // Bottom-right.
-      {
-        coord: { x: kWidth * 0.75, y: kHeight * 0.75 },
-        exp: expected.bottomRight,
-      },
-    ]);
+    ttu.expectSinglePixelComparisonsAreOkInTexture(
+      t,
+      { texture: colorAttachment },
+      [
+        // Top-left.
+        {
+          coord: { x: displayWidth * 0.25, y: displayHeight * 0.25 },
+          exp: expected.topLeft,
+        },
+        // Top-right.
+        {
+          coord: { x: displayWidth * 0.75, y: displayHeight * 0.25 },
+          exp: expected.topRight,
+        },
+        // Bottom-left.
+        {
+          coord: { x: displayWidth * 0.25, y: displayHeight * 0.75 },
+          exp: expected.bottomLeft,
+        },
+        // Bottom-right.
+        {
+          coord: { x: displayWidth * 0.75, y: displayHeight * 0.75 },
+          exp: expected.bottomRight,
+        },
+      ]
+    );
 
     frame.close();
   });
@@ -532,22 +649,36 @@ sampling works without validation errors.
 g.test('importExternalTexture,video_frame_display_size_from_textureDimensions')
   .desc(
     `
-Tests that textureDimensions() for texture_external matches VideoFrame display size.
+Tests that textureDimensions() builtin on texture_external returns the VideoFrame's display
+dimensions (displayWidth/displayHeight), not its coded dimensions (codedWidth/codedHeight).
+
+This is critical for shaders that need to compute texture coordinates or sample offsets,
+as they must use the presentation size that matches what textureSampleBaseClampToEdge and
+textureLoad operate on.
+
+Validates using:
+- VideoFrames with various display scales: smaller (0.5x), same (1x), larger (2x)
+- Multiple sources: decoded video files (H.264, VP9) and buffer-backed VideoFrames
+- Different video color spaces: bt.601, bt.709
 `
   )
   .params(u =>
     u //
+      .combineWithParams(kDisplaySizeSourceParams)
       .combine('displayScale', ['smaller', 'same', 'larger'] as const)
   )
-  .fn(t => {
+  .fn(async t => {
+    const { sourceType, displayScale } = t.params;
+    const videoName =
+      'videoName' in t.params
+        ? (t.params.videoName as (typeof kDisplayScaleVideoNames)[number])
+        : undefined;
+
     if (typeof VideoFrame === 'undefined') {
       t.skip('WebCodec is not supported');
     }
 
-    const { frame, displayWidth, displayHeight } = createVideoFrameWithDisplayScale(
-      t,
-      t.params.displayScale
-    );
+    const frame = await createVideoFrameWithDisplayScale(t, sourceType, videoName, displayScale);
 
     const externalTexture = t.device.importExternalTexture({
       source: frame,
@@ -594,7 +725,10 @@ Tests that textureDimensions() for texture_external matches VideoFrame display s
     pass.end();
     t.device.queue.submit([encoder.finish()]);
 
-    t.expectGPUBufferValuesEqual(storageBuffer, new Uint32Array([displayWidth, displayHeight]));
+    t.expectGPUBufferValuesEqual(
+      storageBuffer,
+      new Uint32Array([frame.displayWidth, frame.displayHeight])
+    );
 
     frame.close();
   });
