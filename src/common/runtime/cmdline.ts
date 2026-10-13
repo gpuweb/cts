@@ -179,13 +179,15 @@ if (queries.length === 0) {
 
 (async () => {
   const loader = new DefaultTestFileLoader();
-  assert(queries.length === 1, 'currently, there must be exactly one query on the cmd line');
-  const filterQuery = parseQuery(queries[0]);
-  const testcases = await loader.loadCases(filterQuery);
-  const expectations = parseExpectationsForTestQuery(
-    await (loadWebGPUExpectations ?? []),
-    filterQuery
-  );
+  const rawExpectations = await (loadWebGPUExpectations ?? []);
+  const queryCases = [];
+  for (const q of queries) {
+    const filterQuery = parseQuery(q);
+    queryCases.push({
+      testcases: await loader.loadCases(filterQuery),
+      expectations: parseExpectationsForTestQuery(rawExpectations, filterQuery),
+    });
+  }
 
   const log = new Logger();
 
@@ -199,43 +201,45 @@ if (queries.length === 0) {
     codeCoverage.begin();
   }
 
-  for (const testcase of testcases) {
-    const name = testcase.query.toString();
-    switch (listMode) {
-      case 'cases':
-        console.log(name);
-        continue;
-      case 'unimplemented':
-        if (testcase.isUnimplemented) {
+  for (const { testcases, expectations } of queryCases) {
+    for (const testcase of testcases) {
+      const name = testcase.query.toString();
+      switch (listMode) {
+        case 'cases':
           console.log(name);
-        }
-        continue;
-      default:
-        break;
-    }
+          continue;
+        case 'unimplemented':
+          if (testcase.isUnimplemented) {
+            console.log(name);
+          }
+          continue;
+        default:
+          break;
+      }
 
-    const [rec, res] = log.record(name);
-    await testcase.run(rec, expectations);
+      const [rec, res] = log.record(name);
+      await testcase.run(rec, expectations);
 
-    if (verbose) {
-      printResults([[name, res]]);
-    }
+      if (verbose) {
+        printResults([[name, res]]);
+      }
 
-    total++;
-    switch (res.status) {
-      case 'pass':
-        break;
-      case 'fail':
-        failed.push([name, res]);
-        break;
-      case 'warn':
-        warned.push([name, res]);
-        break;
-      case 'skip':
-        skipped.push([name, res]);
-        break;
-      default:
-        unreachable('unrecognized status');
+      total++;
+      switch (res.status) {
+        case 'pass':
+          break;
+        case 'fail':
+          failed.push([name, res]);
+          break;
+        case 'warn':
+          warned.push([name, res]);
+          break;
+        case 'skip':
+          skipped.push([name, res]);
+          break;
+        default:
+          unreachable('unrecognized status');
+      }
     }
   }
 
