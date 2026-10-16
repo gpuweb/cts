@@ -16,6 +16,8 @@ import {
   isTextureFormatColorRenderable,
   isDepthTextureFormat,
   isStencilTextureFormat,
+  isDepthAndStencilTextureFormat,
+  isDepthOrStencilTextureFormat,
   isTextureFormatResolvable,
 } from '../../../format_info.js';
 import { AllFeaturesMaxLimitsGPUTest } from '../../../gpu_test.js';
@@ -181,6 +183,40 @@ g.test('color_attachments,empty')
         ? t.getDepthStencilAttachment(t.createTestTexture({ format: 'depth24plus-stencil8' }))
         : undefined,
     });
+  });
+
+g.test('color_attachments,depth_stencil_format')
+  .desc(
+    `
+    Test that texture views of depth and/or stencil format are invalid as color attachments in render passes:
+    - One control (color) case and all error (depth-and/or-stencil) cases.
+    `
+  )
+  .params(u =>
+    u
+      .combine('format', ['rgba8unorm', ...kDepthStencilFormats] as const)
+      .beginSubcases()
+      .expand('aspect', p =>
+        isDepthAndStencilTextureFormat(p.format)
+          ? (['all', 'depth-only', 'stencil-only'] as const)
+          : (['all'] as const)
+      )
+  )
+  .fn(t => {
+    const { format, aspect } = t.params;
+    t.skipIfTextureFormatNotSupported(format);
+
+    const texture = t.createTestTexture({ format });
+    const descriptor: GPURenderPassDescriptor = {
+      colorAttachments: [
+        t.getColorAttachment(texture, {
+          textureViewDescriptor: { aspect },
+        }),
+      ],
+    };
+
+    const isValid = isTextureFormatColorRenderable(t.device.features, format);
+    t.tryRenderPass(isValid, descriptor);
   });
 
 g.test('color_attachments,limits,maxColorAttachments')
@@ -535,31 +571,6 @@ g.test('attachments,same_size')
           t.getColorAttachment(colorTexture1x1B),
         ],
         depthStencilAttachment: t.getDepthStencilAttachment(depthStencilTexture2x2),
-      };
-
-      t.tryRenderPass(false, descriptor);
-    }
-  });
-
-g.test('attachments,color_depth_mismatch')
-  .desc(`Test that attachments match whether they are used for color or depth stencil.`)
-  .fn(t => {
-    const colorTexture = t.createTestTexture({ format: 'rgba8unorm' });
-    const depthStencilTexture = t.createTestTexture({ format: 'depth24plus-stencil8' });
-
-    {
-      // Using depth-stencil for color
-      const descriptor: GPURenderPassDescriptor = {
-        colorAttachments: [t.getColorAttachment(depthStencilTexture)],
-      };
-
-      t.tryRenderPass(false, descriptor);
-    }
-    {
-      // Using color for depth-stencil
-      const descriptor: GPURenderPassDescriptor = {
-        colorAttachments: [],
-        depthStencilAttachment: t.getDepthStencilAttachment(colorTexture),
       };
 
       t.tryRenderPass(false, descriptor);
@@ -1021,6 +1032,44 @@ g.test('resolveTarget,different_size')
 
       t.tryRenderPass(true, descriptor);
     }
+  });
+
+g.test('depth_stencil_attachment,color_format')
+  .desc(
+    `
+    Test that texture views of color formats are invalid as depth stencil attachments in render passes:
+    - One control (depth) case and a selection of error (color) cases.
+    `
+  )
+  .params(u =>
+    u
+      .combine('format', [
+        'depth24plus-stencil8',
+        'r8uint',
+        'r8unorm',
+        'rgba16float',
+        'rgba8unorm',
+      ] as const)
+      .beginSubcases()
+      .expand('aspect', p =>
+        isDepthAndStencilTextureFormat(p.format)
+          ? (['all', 'depth-only', 'stencil-only'] as const)
+          : (['all'] as const)
+      )
+  )
+  .fn(t => {
+    const { format } = t.params;
+    t.skipIfTextureFormatNotSupported(format);
+    t.skipIfTextureFormatNotUsableAsRenderAttachment(format);
+
+    const texture = t.createTestTexture({ format });
+    const descriptor: GPURenderPassDescriptor = {
+      colorAttachments: [],
+      depthStencilAttachment: t.getDepthStencilAttachment(texture),
+    };
+
+    const isValid = isDepthOrStencilTextureFormat(format);
+    t.tryRenderPass(isValid, descriptor);
   });
 
 g.test('depth_stencil_attachment,sample_counts_mismatch')
