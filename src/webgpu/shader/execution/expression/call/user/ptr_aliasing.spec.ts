@@ -163,9 +163,9 @@ interface ShaderParams {
  */
 function run(t: GPUTest, params: ShaderParams) {
   t.skipIfLanguageFeatureNotSupported('unrestricted_pointer_parameters');
-  //if (params.requiresAliasing) {
-  //  t.skipIfLanguageFeatureNotSupported('unrestricted_aliasing');
-  //}
+  if (params.requiresAliasing) {
+    t.skipIfLanguageFeatureNotSupported('unrestricted_aliasing');
+  }
   if (params.bufferView) {
     t.skipIfLanguageFeatureNotSupported('buffer_view');
   }
