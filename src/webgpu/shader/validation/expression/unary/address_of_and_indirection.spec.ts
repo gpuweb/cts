@@ -4,11 +4,12 @@ Validation tests for unary address-of and indirection (dereference)
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { keysOf } from '../../../../../common/util/data_tables.js';
+import { skipIfImmediateDataNotSupported } from '../../decl/util.js';
 import { ShaderValidationTest } from '../../shader_validation_test.js';
 
 export const g = makeTestGroup(ShaderValidationTest);
 
-const kAddressSpaces = ['function', 'private', 'workgroup', 'uniform', 'storage'];
+const kAddressSpaces = ['function', 'private', 'workgroup', 'uniform', 'storage', 'immediate'];
 const kAccessModes = ['read', 'read_write'];
 const kStorageTypes = ['bool', 'u32', 'i32', 'f32', 'f16'];
 const kCompositeTypes = ['array', 'struct', 'vec', 'mat'];
@@ -50,15 +51,24 @@ g.test('basic')
         return true;
       })
       .filter(t => {
+        if (t.addressSpace !== 'immediate') return true;
+        return t.storageType !== 'bool';
+      })
+      .filter(t => {
         // This test does not test composite access
         return !kDerefTypes[t.derefType].requires_pointer_composite_access;
       })
   )
   .fn(t => {
+    if (t.params.addressSpace === 'immediate') {
+      skipIfImmediateDataNotSupported(t);
+    }
     const isLocal = t.params.addressSpace === 'function';
     const deref = kDerefTypes[t.params.derefType];
     // Only specify access mode for storage buffers
     const commaAccessMode = t.params.addressSpace === 'storage' ? `, ${t.params.accessMode}` : '';
+    const header =
+      t.params.addressSpace === 'immediate' ? 'requires immediate_address_space;\n' : '';
 
     let varDecl = '';
     if (t.params.addressSpace === 'uniform' || t.params.addressSpace === 'storage') {
@@ -66,7 +76,7 @@ g.test('basic')
     }
     varDecl += `var<${t.params.addressSpace}${commaAccessMode}> a : VarType;`;
 
-    const wgsl = `
+    const wgsl = `${header}
       ${t.params.storageType === 'f16' ? 'enable f16;' : ''}
 
       alias VarType = ${t.params.storageType};
@@ -111,12 +121,21 @@ g.test('composite')
         }
         return true;
       })
+      .filter(t => {
+        if (t.addressSpace !== 'immediate') return true;
+        return t.compositeType !== 'array' && t.storageType !== 'bool';
+      })
   )
   .fn(t => {
+    if (t.params.addressSpace === 'immediate') {
+      skipIfImmediateDataNotSupported(t);
+    }
     const isLocal = t.params.addressSpace === 'function';
     const deref = kDerefTypes[t.params.derefType];
     // Only specify access mode for storage buffers
     const commaAccessMode = t.params.addressSpace === 'storage' ? `, ${t.params.accessMode}` : '';
+    const header =
+      t.params.addressSpace === 'immediate' ? 'requires immediate_address_space;\n' : '';
 
     let varDecl = '';
     if (t.params.addressSpace === 'uniform' || t.params.addressSpace === 'storage') {
@@ -124,7 +143,7 @@ g.test('composite')
     }
     varDecl += `var<${t.params.addressSpace}${commaAccessMode}> a : VarType;`;
 
-    let wgsl = `
+    let wgsl = `${header}
           ${t.params.storageType === 'f16' ? 'enable f16;' : ''}`;
 
     switch (t.params.compositeType) {

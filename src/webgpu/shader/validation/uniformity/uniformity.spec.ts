@@ -4,6 +4,7 @@ import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { keysOf } from '../../../../common/util/data_tables.js';
 import { unreachable } from '../../../../common/util/util.js';
 import { WGSLLanguageFeature } from '../../../capability_info.js';
+import { skipIfImmediateDataNotSupported } from '../decl/util.js';
 import { ShaderValidationTest } from '../shader_validation_test.js';
 
 import { Snippet, LoopCase, compileShouldSucceed } from './snippet.js';
@@ -41,6 +42,7 @@ const kConditions = [
   { cond: 'uniform_override', expectation: true },
   { cond: 'uniform_let', expectation: true },
   { cond: 'nonuniform_let', expectation: false },
+  { cond: 'uniform_immediate', expectation: true },
   { cond: 'uniform_or', expectation: true },
   { cond: 'nonuniform_or1', expectation: false },
   { cond: 'nonuniform_or2', expectation: false },
@@ -81,6 +83,9 @@ function generateCondition(condition: string): string {
     }
     case 'nonuniform_let': {
       return `n_let == 0`;
+    }
+    case 'uniform_immediate': {
+      return `immediate_value == 0u`;
     }
     case 'uniform_or': {
       return `u_let == 0 || uniform_buffer.y > 1`;
@@ -468,8 +473,13 @@ g.test('basics')
     if (t.params.op === 'textureBarrier' || t.params.cond.startsWith('storage_texture')) {
       t.skipIfLanguageFeatureNotSupported('readonly_and_readwrite_storage_textures');
     }
+    const needsImmediate = t.params.cond === 'uniform_immediate';
+    if (needsImmediate) {
+      skipIfImmediateDataNotSupported(t);
+    }
 
     let code = `
+ ${needsImmediate ? 'requires immediate_address_space;' : ''}
  @group(0) @binding(0) var s : sampler;
  @group(0) @binding(1) var s_comp : sampler_comparison;
  @group(0) @binding(2) var tex : texture_2d<f32>;
@@ -478,6 +488,7 @@ g.test('basics')
  @group(1) @binding(0) var<storage, read> ro_buffer : array<f32, 4>;
  @group(1) @binding(1) var<storage, read_write> rw_buffer : array<f32, 4>;
  @group(1) @binding(2) var<uniform> uniform_buffer : vec4<f32>;
+ ${needsImmediate ? 'var<immediate> immediate_value : u32;' : ''}
 
  @group(2) @binding(0) var ro_storage_texture : texture_storage_2d<rgba8unorm, read>;
  @group(2) @binding(1) var rw_storage_texture : texture_storage_2d<rgba8unorm, read_write>;
@@ -566,8 +577,14 @@ g.test('basics,subgroups')
       .combine('stage', ['compute', 'fragment'] as const)
   )
   .fn(t => {
+    const needsImmediate = t.params.cond === 'uniform_immediate';
+    if (needsImmediate) {
+      skipIfImmediateDataNotSupported(t);
+    }
+
     let code = `
  enable subgroups;
+ ${needsImmediate ? 'requires immediate_address_space;' : ''}
 
  @group(0) @binding(0) var s : sampler;
  @group(0) @binding(1) var s_comp : sampler_comparison;
@@ -577,6 +594,7 @@ g.test('basics,subgroups')
  @group(1) @binding(0) var<storage, read> ro_buffer : array<f32, 4>;
  @group(1) @binding(1) var<storage, read_write> rw_buffer : array<f32, 4>;
  @group(1) @binding(2) var<uniform> uniform_buffer : vec4<f32>;
+ ${needsImmediate ? 'var<immediate> immediate_value : u32;' : ''}
 
  @group(2) @binding(0) var ro_storage_texture : texture_storage_2d<rgba8unorm, read>;
  @group(2) @binding(1) var rw_storage_texture : texture_storage_2d<rgba8unorm, read_write>;
