@@ -158,6 +158,37 @@ fn(async (t) => {
   );
 });
 
+g.test('mapAsync,destroyedDevice').
+desc('Test that mapAsync is an error when called on a destroyed device.').
+params((u) =>
+u.combine('bufferState', ['valid', 'invalid']).combine('awaitLost', [true, false])
+).
+fn(async (t) => {
+  const { awaitLost, bufferState } = t.params;
+  const buffer =
+  bufferState === 'valid' ? t.createMappableBuffer(GPUMapMode.READ, 4) : vtu.getErrorBuffer(t);
+  t.expectDeviceLost('destroyed');
+
+  await t.testMapAsyncCall(
+    bufferState === 'valid' ?
+    'success' :
+    { validationError: true, earlyRejection: false, rejectName: 'OperationError' },
+    buffer,
+    GPUMapMode.READ
+  );
+  buffer.unmap();
+  t.device.destroy();
+  if (awaitLost) {
+    const lostInfo = await t.device.lost;
+    t.expect(lostInfo.reason === 'destroyed');
+  }
+  await t.testMapAsyncCall(
+    { validationError: false, earlyRejection: false, rejectName: 'AbortError' },
+    buffer,
+    GPUMapMode.READ
+  );
+});
+
 g.test('mapAsync,state,destroyed').
 desc('Test that mapAsync is an error when called on a destroyed buffer.').
 paramsSubcasesOnly((u) => u.combine('mapMode', kMapModeOptions)).
