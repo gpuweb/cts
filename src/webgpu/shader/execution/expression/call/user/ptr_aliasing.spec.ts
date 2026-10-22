@@ -40,6 +40,7 @@ type AddressSpace = 'function' | 'private' | 'workgroup' | 'storage';
 const kAddressSpaces = ['function', 'private', 'workgroup', 'storage'] as const;
 const kModuleScopeAddressSpaces = ['private', 'workgroup', 'storage'] as const;
 const kAtomicAddressSpaces = ['workgroup', 'storage'] as const;
+const kAtomicDataSize = 6; // Num i32s in AtomicData
 
 /**
  * WGSL type declarations shared by all shaders.
@@ -63,6 +64,8 @@ struct Data {
   big : array<i32, 32>,
 }
 
+// Structurally similar to Data(x, y, arr).
+// Used in two_atomic_pointers tests.
 struct AtomicData {
   x : atomic<i32>,
   y : atomic<i32>,
@@ -110,6 +113,7 @@ const [kVA, kVB, kN, kIdx, kM] = kParams;
 /** A simulation of the memory of variables 'A' and 'B', and the output results. */
 class Memory {
   readonly mem: number[] = [...kInitA, ...kInitB];
+  // Storage for the result of simulated expectations.
   readonly r: number[] = [0, 0, 0, 0];
   ld(ptr: number): number {
     return this.mem[ptr];
@@ -227,7 +231,6 @@ fn main() {
     layout: 'auto',
     compute: {
       module: t.device.createShaderModule({ code }),
-      entryPoint: 'main',
     },
   });
 
@@ -958,7 +961,7 @@ refer to the same atomic.`
     m.r[0] = op.sim(m, pa, pb);
     // 's' is not present in 'AtomicData', so is not written to the output.
     for (const base of [0, kB]) {
-      for (let i = 6; i < kDataSize; i++) {
+      for (let i = kAtomicDataSize; i < kDataSize; i++) {
         m.mem[base + i] = 0;
       }
     }
@@ -1138,9 +1141,9 @@ cannot affect the results.
       .combine('op', keysOf(kMixedTypeOps))
   )
   .fn(t => {
-    //if (t.params.aliased) {
-    //  t.skipIfLanguageFeatureNotSupported('unrestricted_aliasing');
-    //}
+    if (t.params.aliased) {
+      t.skipIfLanguageFeatureNotSupported('unrestricted_aliasing');
+    }
     const pair = kMixedTypePairs[t.params.pair];
     const words = mixedTypeWords(pair.int, pair.other, t.params.overlap)!;
     // The dynamic offset adds 'input.p[3] * 16' bytes, which preserves the alignment of all types.
