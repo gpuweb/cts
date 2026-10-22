@@ -4,6 +4,7 @@ Validation tests for override declarations
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { keysOf } from '../../../../common/util/data_tables.js';
+import { WGSLLanguageFeature } from '../../../capability_info.js';
 import { ShaderValidationTest } from '../shader_validation_test.js';
 
 export const g = makeTestGroup(ShaderValidationTest);
@@ -240,7 +241,9 @@ g.test('function_scope')
     t.expectCompileResult(false, code);
   });
 
-const kArrayCases = {
+const kArrayCases: {
+  [k: string]: { code: string; valid_with_override_size: boolean; feature?: WGSLLanguageFeature };
+} = {
   workgroup_var: {
     code: `var<workgroup> a: array<u32, size>;`,
     valid_with_override_size: true,
@@ -264,6 +267,7 @@ const kArrayCases = {
   workgroup_ptr_param: {
     code: `fn f(a: ptr<workgroup, array<u32, size>>) {}`,
     valid_with_override_size: true,
+    feature: 'unrestricted_pointer_parameters',
   },
   private_ptr_param: {
     code: `fn f(a: ptr<private, array<u32, size>>) {}`,
@@ -298,6 +302,11 @@ g.test('array_size')
   .params(u => u.combine('case', keysOf(kArrayCases)).combine('stage', ['const', 'override']))
   .fn(t => {
     const testcase = kArrayCases[t.params.case];
+
+    if (testcase.feature) {
+      t.skipIfLanguageFeatureNotSupported(testcase.feature);
+    }
+
     const wgsl = `
 ${t.params.stage} size = 1;
 ${testcase.code}
