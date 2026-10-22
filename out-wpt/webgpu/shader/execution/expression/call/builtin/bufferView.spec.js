@@ -7,6 +7,17 @@ import { keysOf } from '../../../../../../common/util/data_tables.js';
 import { assert } from '../../../../../../common/util/util.js';
 import { AllFeaturesMaxLimitsGPUTest } from '../../../../../gpu_test.js';
 import { Type } from '../../../../../util/conversion.js';
+import {
+  kMixedTypeBuffers,
+  kMixedTypeIdx,
+  kMixedTypeOps,
+  kMixedTypeOverlaps,
+  kMixedTypePairs,
+
+  mixedTypeName,
+  mixedTypeWords,
+  runMixedTypeAliasingTest } from
+'../mixed_type_aliasing_utils.js';
 
 import {
   kBufferSizes,
@@ -20,16 +31,7 @@ import {
   kLayoutCases,
   runReadLayoutTest,
   runWriteLayoutTest,
-  runReadWriteTest,
-  kMixedTypeOps,
-  kMixedTypeIdx,
-  kMixedTypePairs,
-  kMixedTypeOverlaps,
-  kMixedTypeBuffers,
-
-  mixedTypeName,
-  mixedTypeWords,
-  runMixedTypeAliasingTest } from
+  runReadWriteTest } from
 './buffer_view_utils.js';
 
 export const g = makeTestGroup(AllFeaturesMaxLimitsGPUTest);

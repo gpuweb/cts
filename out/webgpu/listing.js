@@ -3849,6 +3849,16 @@ export const listing = [
       "expression",
       "call",
       "user",
+      "ptr_aliasing"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "call",
+      "user",
       "ptr_params"
     ]
   },
