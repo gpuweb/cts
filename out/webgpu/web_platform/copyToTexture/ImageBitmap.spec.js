@@ -16,6 +16,7 @@ import {
   isTextureFormatPossiblyUsableWithCopyExternalImageToTexture,
   kRegularTextureFormats } from
 '../../format_info.js';
+import * as ttu from '../../texture_test_utils.js';
 import { TextureUploadingUtils, kCopySubrectInfo } from '../../util/copy_to_texture.js';
 
 import { kTestColorsAll, kTestColorsOpaque, makeTestColorsTexelView } from './util.js';
@@ -143,6 +144,74 @@ fn(async (t) => {
     // 1.0 and 0.6 are representable precisely by all formats except rgb10a2unorm, but
     // allow diffs of 1ULP since that's the generally-appropriate threshold.
     { maxDiffULPsForFloatFormat: 1, maxDiffULPsForNormFormat: 1 }
+  );
+});
+
+g.test('from_fully_transparent_ImageData').
+desc(
+  `
+  Test ImageBitmap generated from fully transparent ImageData with non-zero color
+  channels can be copied to WebGPU texture correctly.
+
+  Use a 2x2 ImageData whose every texel is (255, 102, 153, 0) as source, and build the
+  ImageBitmap with premultiplyAlpha: 'none', so createImageBitmap() must preserve the
+  color channels.
+
+  Then call copyExternalImageToTexture() to do a copy to the 0 mipLevel of dst texture,
+  and read the contents out to compare.
+  When dest alpha mode is:
+  - premultiplied, the content should be (0, 0, 0, 0)
+  - not premultiplied, the content should be the same as the source texel values
+    (255, 102, 153, 0).
+
+  This is the alpha == 0 counterpart of 'from_ImageData', which cannot cover it: its
+  color list bottoms out at alpha 0.6, and premultiplying by alpha 0.6 stays recoverable
+  within the 1ULP threshold, whereas alpha == 0 discards the color channels entirely.
+  Note that alpha == 0 is only well-defined here for an unpremultiplied source, which is
+  why this test does not vary premultiplyAlpha the way 'from_ImageData' does.
+  `
+).
+params((u) => u.combine('dstPremultiplied', [true, false])).
+beforeAllSubcases((t) => {
+  t.skipIf(typeof ImageData === 'undefined', 'ImageData does not exist in this environment');
+}).
+fn(async (t) => {
+  const { dstPremultiplied } = t.params;
+
+  const kColorFormat = 'rgba8unorm';
+  const kImageWidth = 2;
+  const kImageHeight = 2;
+
+  // Fully transparent, but with non-zero color channels.
+  const kSourceTexel = [255, 102, 153, 0];
+
+  const imageData = new ImageData(kImageWidth, kImageHeight);
+  for (let i = 0; i < imageData.data.length; i += 4) {
+    imageData.data.set(kSourceTexel, i);
+  }
+
+  const imageBitmap = await createImageBitmap(imageData, { premultiplyAlpha: 'none' });
+
+  const dst = t.createTextureTracked({
+    size: { width: kImageWidth, height: kImageHeight },
+    format: kColorFormat,
+    usage:
+    GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT
+  });
+
+  t.device.queue.copyExternalImageToTexture(
+    { source: imageBitmap },
+    { texture: dst, premultipliedAlpha: dstPremultiplied },
+    { width: kImageWidth, height: kImageHeight }
+  );
+
+  const expectedPixels = dstPremultiplied ?
+  new Uint8Array([0, 0, 0, 0]) :
+  new Uint8Array(kSourceTexel);
+
+  ttu.expectSinglePixelComparisonsAreOkInTexture(t, { texture: dst }, [
+  { coord: { x: 0, y: 0 }, exp: expectedPixels },
+  { coord: { x: kImageWidth - 1, y: kImageHeight - 1 }, exp: expectedPixels }]
   );
 });
 
