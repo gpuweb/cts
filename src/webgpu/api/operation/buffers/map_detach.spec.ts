@@ -62,10 +62,13 @@ g.test('while_mapped')
 
     if (mapMode !== undefined) {
       if (mappedAtCreation) {
+        t.expect(buffer.mapState === 'mapped');
         buffer.unmap();
       }
+      t.expect(buffer.mapState === 'unmapped');
       await buffer.mapAsync(mapMode);
     }
+    t.expect(buffer.mapState === 'mapped');
 
     const arrayBuffer = buffer.getMappedRange();
     const view = new Uint8Array(arrayBuffer);
@@ -78,4 +81,5 @@ g.test('while_mapped')
 
     t.expect(arrayBuffer.byteLength === 0, 'ArrayBuffer should be detached');
     t.expect(view.byteLength === 0, 'ArrayBufferView should be detached');
+    t.expect(buffer.mapState === 'unmapped');
   });
