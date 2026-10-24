@@ -627,7 +627,7 @@ broadcast)
       const res = data[offset];
 
       let bound = inBounds.get(res) ?? true;
-      bound = bound && row < height - 1 && col < height - 1;
+      bound = bound && row < height - 1 && col < width - 1;
       inBounds.set(res, bound);
     }
   }
@@ -668,12 +668,13 @@ broadcast)
     const id = Number(key);
     const ok = Boolean(value);
     if (ok) {
-      const size = sizes.get(id) ?? 0;
-      const seen = sizes.get(id) ?? 0;
-      if (size < seen) {
+      // Groups whose broadcasting invocation was not found have indeterminate results.
+      const size = sizes.get(id);
+      const numSeen = seen.get(id) ?? 0;
+      if (size !== undefined && size < numSeen) {
         return new Error(`Unexpected number of invocations for subgroup ${id}
 - expected: ${size}
--      got: ${seen}`);
+-      got: ${numSeen}`);
       }
     }
   }
