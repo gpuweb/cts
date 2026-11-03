@@ -12,7 +12,7 @@ import {
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { raceWithRejectOnTimeout, unreachable, assert } from '../../../../../common/util/util.js';
 import { kTextureUsages } from '../../../../capability_info.js';
-import { GPUConst } from '../../../../constants.js';
+import { GPUConst, kMaxUnsignedLongValue } from '../../../../constants.js';
 import {
   kAllTextureFormats,
   isTextureFormatUsableWithCopyExternalImageToTexture,
@@ -31,6 +31,11 @@ const kDefaultWidth = 32;
 const kDefaultHeight = 32;
 const kDefaultDepth = 1;
 const kDefaultMipLevelCount = 6;
+const kMaxCopySizeSubcases = [
+  { width: kMaxUnsignedLongValue, height: 1, depthOrArrayLayers: 1 },
+  { width: 1, height: kMaxUnsignedLongValue, depthOrArrayLayers: 1 },
+  { width: 1, height: 1, depthOrArrayLayers: kMaxUnsignedLongValue },
+];
 
 function computeMipMapSize(width: number, height: number, mipLevel: number) {
   return {
@@ -51,7 +56,11 @@ interface WithDstOriginMipLevel extends WithMipLevel {
 function generateCopySizeForSrcOOB({ srcOrigin }: { srcOrigin: Required<GPUOrigin2DDict> }) {
   // OOB origin fails even with no-op copy.
   if (srcOrigin.x > kDefaultWidth || srcOrigin.y > kDefaultHeight) {
-    return [{ width: 0, height: 0, depthOrArrayLayers: 0 }];
+    return [
+      { width: 0, height: 0, depthOrArrayLayers: 0 },
+      { width: 1, height: 1, depthOrArrayLayers: 1 },
+      ...kMaxCopySizeSubcases,
+    ];
   }
 
   const justFitCopySize = {
@@ -77,6 +86,7 @@ function generateCopySizeForSrcOOB({ srcOrigin }: { srcOrigin: Required<GPUOrigi
       height: justFitCopySize.height,
       depthOrArrayLayers: justFitCopySize.depthOrArrayLayers + 1,
     }, // OOB in depthOrArrayLayers
+    ...kMaxCopySizeSubcases,
   ];
 }
 
@@ -94,6 +104,9 @@ function generateDstOriginValue({ mipLevel }: WithMipLevel) {
     { x: origin.mipWidth + 1, y: 0, z: 0 },
     { x: 0, y: origin.mipHeight + 1, z: 0 },
     { x: 0, y: 0, z: kDefaultDepth + 1 },
+    { x: kMaxUnsignedLongValue, y: 0, z: 0 },
+    { x: 0, y: kMaxUnsignedLongValue, z: 0 },
+    { x: 0, y: 0, z: kMaxUnsignedLongValue },
   ];
 }
 
@@ -107,7 +120,11 @@ function generateCopySizeForDstOOB({ mipLevel, dstOrigin }: WithDstOriginMipLeve
     dstOrigin.y > dstMipMapSize.mipHeight ||
     dstOrigin.z > kDefaultDepth
   ) {
-    return [{ width: 0, height: 0, depthOrArrayLayers: 0 }];
+    return [
+      { width: 0, height: 0, depthOrArrayLayers: 0 },
+      { width: 1, height: 1, depthOrArrayLayers: 1 },
+      ...kMaxCopySizeSubcases,
+    ];
   }
 
   const justFitCopySize = {
@@ -718,6 +735,8 @@ g.test('OOB,source')
         { x: kDefaultWidth, y: kDefaultHeight }, // origin is on bottom-right
         { x: kDefaultWidth + 1, y: 0 }, // x is too large
         { x: 0, y: kDefaultHeight + 1 }, // y is too large
+        { x: kMaxUnsignedLongValue, y: 0 }, // x is the maximum unsigned long
+        { x: 0, y: kMaxUnsignedLongValue }, // y is the maximum unsigned long
       ])
       .expand('copySize', generateCopySizeForSrcOOB)
   )
