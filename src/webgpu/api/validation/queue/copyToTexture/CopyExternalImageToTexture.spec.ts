@@ -817,7 +817,11 @@ g.test('OOB,destination')
     ) {
       success = false;
     }
-    if (copySize.depthOrArrayLayers > 1) {
+    if (
+      copySize.depthOrArrayLayers > 1 ||
+      copySize.width > kDefaultWidth + 1 ||
+      copySize.height > kDefaultHeight + 1
+    ) {
       hasOperationError = true;
     }
 
