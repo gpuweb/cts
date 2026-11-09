@@ -940,6 +940,8 @@ g.test('shuffle,out_of_bounds')
     t.skipIfDeviceDoesNotHaveFeature('subgroups');
 
     const kSize = 32;
+    const kSentinelLeft = 0xDEAD;
+    const kSentinelRight = 0xBEEF;
 
     const wgsl = `
 enable subgroups;
@@ -960,15 +962,22 @@ fn main(
   // Force usage
   _ = metadata[0];
 
-  // Distinct magic value per lane
-  let value = 0xDEAD0000u + lid.x;
+  let id = input[0];
+  // offset is 1 (for id) + 64 (for SentinelLeft)
+  let offset = 65u;
+  let value = input[offset + lid.x];
   
-  // Dynamic OOB id read from the input buffer
-  let res = subgroupShuffle(value, input[0]);
+  let res = subgroupShuffle(value, id);
   output[lid.x] = res;
 }`;
 
-    const inputData = new Uint32Array([t.params.oob_id]);
+    // input buffer: [OOB_ID, SentinelLeft x 64, Predictable x 32, SentinelRight x 64]
+    const inputData = new Uint32Array(1 + 64 + 32 + 64);
+    inputData[0] = t.params.oob_id;
+    for (let i = 0; i < 64; i++) inputData[1 + i] = kSentinelLeft;
+    for (let i = 0; i < 32; i++) inputData[1 + 64 + i] = i;
+    for (let i = 0; i < 64; i++) inputData[1 + 64 + 32 + i] = kSentinelRight;
+
     const uintsPerOutput = 1;
     await runComputeTest(
       t,
@@ -980,14 +989,10 @@ fn main(
         for (let i = 0; i < kSize; i++) {
           const res = output[i];
           
-          // It must either be clamped to 0, or wrapped safely to one of our active lanes
-          const isClamped = (res === 0);
-          const isWrapped = (res >= 0xDEAD0000 && res < 0xDEAD0000 + kSize);
-
-          if (!isClamped && !isWrapped) {
+          if (res === kSentinelLeft || res === kSentinelRight) {
             return new Error(`Invocation ${i}: incorrect results (id ${t.params.oob_id})
-- expected: 0 or [0xDEAD0000..0xDEAD001F]
--      got: ${res}`);
+- expected: indeterminate value (not a sentinel marker)
+-      got: 0x${res.toString(16)}`);
           }
         }
         return undefined;
