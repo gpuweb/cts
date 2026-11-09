@@ -17,8 +17,8 @@ shader text. kMutations records, for each test, the implementation that was muta
 and where the mutation was.
 `;
 
-import { makeTestGroup } from '../../../common/framework/test_group.js';
-import { AllFeaturesMaxLimitsGPUTest, GPUTest } from '../../gpu_test.js';
+import { makeTestGroup } from '../../../../../common/framework/test_group.js';
+import { AllFeaturesMaxLimitsGPUTest, GPUTest } from '../../../../gpu_test.js';
 import { MutationInfo } from '../mutation_info.js';
 
 export const g = makeTestGroup(AllFeaturesMaxLimitsGPUTest);
