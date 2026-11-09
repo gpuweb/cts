@@ -1,16 +1,29 @@
 /**
- * Labels for tests found by mutation testing: which packages (and versions) were used to find
- * each test, and where the mutation was.
+ * Provenance for tests found by mutation testing.
+ *
+ * Each test was found by deliberately injecting a small change (a "mutant") into one component's
+ * source, here the Mesa NIR compiler, and searching for a shader whose result differs between the
+ * mutated and unmutated builds. The rest of the CTS did not detect these mutants, which means that
+ * the tests checks behaviour that existing tests did not.
  */
 
-/** A package (and version) used to find a test, and the mutation made to it, if any. */
-export interface Mutation {
-  package: string;
-  /** Git commit. */
+/** A component of the WebGPU stack used to run the test, e.g. Dawn or Mesa. */
+export interface ComponentVersion {
+  component: string;
+  /** Git commit in the component's repository. */
   version: string;
-  /**
-   * The mutated source: `file` and `line` in the package. `generatedFrom` is set if `file` is
-   * generated during the build.
-   */
-  mutated?: { file: string; line: number; generatedFrom?: string };
+}
+
+/** The configuration in which a test detected a mutant. */
+export interface MutationInfo {
+  /** The mutated component, at the commit the mutation was applied to. */
+  mutant: ComponentVersion & {
+    /** Location of the mutation in the component's source. */
+    file: string;
+    line: number;
+    /** Set if `file` is generated during the build: the script that generates it. */
+    generatedFrom?: string;
+  };
+  /** Other components used unmodified to run the test (e.g. Dawn). */
+  environment: ComponentVersion[];
 }

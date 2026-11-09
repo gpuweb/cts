@@ -17,7 +17,7 @@ and where the mutation was.
 
 import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { AllFeaturesMaxLimitsGPUTest, GPUTest } from '../../gpu_test.js';
-import { Mutation } from '../mutation_info.js';
+import { MutationInfo } from '../mutation_info.js';
 
 export const g = makeTestGroup(AllFeaturesMaxLimitsGPUTest);
 
@@ -25,7 +25,7 @@ export const g = makeTestGroup(AllFeaturesMaxLimitsGPUTest);
  * For each test: the packages used to find it, and the mutation that it detects. Each entry is
  * added just above its test.
  */
-export const kMutations: Record<string, Mutation[]> = {};
+const kMutations: Record<string, MutationInfo> = {};
 
 /**
  * Runs a shader (entry point `main`, one invocation) and checks the contents of its output
@@ -67,18 +67,16 @@ function runGeneratedTest(t: GPUTest, buffers: { output: Uint8Array }, wgsl: str
   t.expectGPUBufferValuesEqual(outputBuffer, buffers.output);
 }
 
-kMutations['shader_101299f4'] = [
-  { package: 'dawn', version: '9de0fd67086127228e8aa28e69616da37220cfc3' },
-  {
-    package: 'mesa',
+kMutations['shader_101299f4'] = {
+  mutant: {
+    component: 'mesa',
     version: 'ba8eaab4f07e33c0b74fa92c60852cba2518bf2e',
-    mutated: {
-      file: 'src/compiler/nir/nir_constant_expressions.c',
-      line: 48527,
-      generatedFrom: 'src/compiler/nir/nir_constant_expressions.py',
-    },
+    file: 'src/compiler/nir/nir_constant_expressions.c',
+    line: 48527,
+    generatedFrom: 'src/compiler/nir/nir_constant_expressions.py',
   },
-];
+  environment: [{ component: 'dawn', version: '9de0fd67086127228e8aa28e69616da37220cfc3' }],
+};
 g.test('shader_101299f4')
   .desc(
     `A fuzzer-generated compute shader. Found by mutation testing a constant folding compiler pass.`
@@ -110,18 +108,16 @@ fn main() {
     );
   });
 
-kMutations['shader_10c2ef9c'] = [
-  { package: 'dawn', version: '9de0fd67086127228e8aa28e69616da37220cfc3' },
-  {
-    package: 'mesa',
+kMutations['shader_10c2ef9c'] = {
+  mutant: {
+    component: 'mesa',
     version: 'ba8eaab4f07e33c0b74fa92c60852cba2518bf2e',
-    mutated: {
-      file: 'src/compiler/nir/nir_constant_expressions.c',
-      line: 50895,
-      generatedFrom: 'src/compiler/nir/nir_constant_expressions.py',
-    },
+    file: 'src/compiler/nir/nir_constant_expressions.c',
+    line: 50895,
+    generatedFrom: 'src/compiler/nir/nir_constant_expressions.py',
   },
-];
+  environment: [{ component: 'dawn', version: '9de0fd67086127228e8aa28e69616da37220cfc3'}],
+};
 g.test('shader_10c2ef9c')
   .desc(
     `A fuzzer-generated compute shader. Found by mutation testing a constant folding compiler pass.`
