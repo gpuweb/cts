@@ -37,7 +37,6 @@ const kMutations: Record<string, MutationInfo> = {};
  * @param wgsl The shader
  */
 function runGeneratedTest(t: GPUTest, expectedOutput: Uint8Array, wgsl: string) {
-
   const pipeline = t.device.createComputePipeline({
     layout: 'auto',
     compute: {
@@ -112,7 +111,7 @@ kMutations['shader_10c2ef9c'] = {
     line: 50895,
     generatedFrom: 'src/compiler/nir/nir_constant_expressions.py',
   },
-  environment: [{ component: 'dawn', version: '9de0fd67086127228e8aa28e69616da37220cfc3'}],
+  environment: [{ component: 'dawn', version: '9de0fd67086127228e8aa28e69616da37220cfc3' }],
 };
 g.test('shader_10c2ef9c')
   .desc(
