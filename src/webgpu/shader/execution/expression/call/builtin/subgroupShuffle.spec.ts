@@ -932,3 +932,65 @@ fn main(
       }
     );
   });
+
+g.test('shuffle,out_of_bounds')
+  .desc(`Tests that OOB subgroupShuffle (using dynamic IDs) does not leak data from outside the workgroup`)
+  .params(u => u.combine('oob_id', [32, 33, 64, 65, 127, 128, 1000, 0xFFFFFFFF]))
+  .fn(async t => {
+    t.skipIfDeviceDoesNotHaveFeature('subgroups');
+
+    const kSize = 32;
+
+    const wgsl = `
+enable subgroups;
+
+@group(0) @binding(0)
+var<storage, read> input : array<u32>;
+
+@group(0) @binding(1)
+var<storage, read_write> output : array<u32>;
+
+@group(0) @binding(2)
+var<storage, read_write> metadata : array<u32>; // unused
+
+@compute @workgroup_size(${kSize})
+fn main(
+  @builtin(local_invocation_id) lid : vec3<u32>,
+) {
+  // Force usage
+  _ = metadata[0];
+
+  // Distinct magic value per lane
+  let value = 0xDEAD0000u + lid.x;
+  
+  // Dynamic OOB id read from the input buffer
+  let res = subgroupShuffle(value, input[0]);
+  output[lid.x] = res;
+}`;
+
+    const inputData = new Uint32Array([t.params.oob_id]);
+    const uintsPerOutput = 1;
+    await runComputeTest(
+      t,
+      wgsl,
+      [kSize, 1, 1],
+      uintsPerOutput,
+      inputData,
+      (metadata: Uint32Array, output: Uint32Array) => {
+        for (let i = 0; i < kSize; i++) {
+          const res = output[i];
+          
+          // It must either be clamped to 0, or wrapped safely to one of our active lanes
+          const isClamped = (res === 0);
+          const isWrapped = (res >= 0xDEAD0000 && res < 0xDEAD0000 + kSize);
+
+          if (!isClamped && !isWrapped) {
+            return new Error(`Invocation ${i}: incorrect results (id ${t.params.oob_id})
+- expected: 0 or [0xDEAD0000..0xDEAD001F]
+-      got: ${res}`);
+          }
+        }
+        return undefined;
+      }
+    );
+  });
