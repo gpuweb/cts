@@ -968,7 +968,7 @@ fn main(
   // offset is 1 (for id) + 64 (for SentinelLeft)
   let offset = 65u;
   let value = input[offset + lid.x];
-  
+
   let res = subgroupShuffle(value, id);
   output[lid.x] = res;
 }`;
