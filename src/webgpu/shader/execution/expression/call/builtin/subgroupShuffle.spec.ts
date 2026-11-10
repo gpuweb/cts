@@ -934,14 +934,16 @@ fn main(
   });
 
 g.test('shuffle,out_of_bounds')
-  .desc(`Tests that OOB subgroupShuffle (using dynamic IDs) does not leak data from outside the workgroup`)
-  .params(u => u.combine('oob_id', [32, 33, 64, 65, 127, 128, 1000, 0xFFFFFFFF]))
+  .desc(
+    `Tests that OOB subgroupShuffle (using dynamic IDs) does not leak data from outside the workgroup`
+  )
+  .params(u => u.combine('oob_id', [32, 33, 64, 65, 127, 128, 1000, 0xffffffff]))
   .fn(async t => {
     t.skipIfDeviceDoesNotHaveFeature('subgroups');
 
     const kSize = 32;
-    const kSentinelLeft = 0xDEAD;
-    const kSentinelRight = 0xBEEF;
+    const kSentinelLeft = 0xdead;
+    const kSentinelRight = 0xbeef;
 
     const wgsl = `
 enable subgroups;
@@ -988,7 +990,7 @@ fn main(
       (metadata: Uint32Array, output: Uint32Array) => {
         for (let i = 0; i < kSize; i++) {
           const res = output[i];
-          
+
           if (res === kSentinelLeft || res === kSentinelRight) {
             return new Error(`Invocation ${i}: incorrect results (id ${t.params.oob_id})
 - expected: indeterminate value (not a sentinel marker)
