@@ -2,10 +2,12 @@ export const description = `
 Operation tests for immediate data usage in RenderPassEncoder, ComputePassEncoder, and RenderBundleEncoder.
 `;
 
+import { kUnitCaseParamsBuilder } from '../../../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { getGPU } from '../../../../../common/util/navigator_gpu.js';
 import {
   assert,
+  hasFeature,
   kTypedArrayBufferViews,
   kTypedArrayBufferViewKeys,
   memcpy,
@@ -24,6 +26,28 @@ const kRenderTargetFormat = 'rgba32uint' as const;
 const kBytesPerPixel = 16; // rgba32uint = 4 x u32 = 16 bytes
 const kMinBytesPerRow = 256; // WebGPU requires bytesPerRow to be a multiple of 256
 
+type ImmediateStage = 'compute' | 'vertex' | 'fragment';
+
+interface DrawOptions {
+  indirectBuffer?: GPUBuffer;
+  indirectOffset?: number;
+  indexBuffer?: GPUBuffer;
+  maxDrawCount?: number;
+  drawCountBuffer?: GPUBuffer;
+  drawCountOffset?: number;
+}
+
+const kIndirectExecutionParams = kUnitCaseParamsBuilder
+  .combine('encoderType', kProgrammableEncoderTypes)
+  .expand('stage', p =>
+    p.encoderType === 'compute pass' ? (['compute'] as const) : (['vertex', 'fragment'] as const)
+  )
+  .expand('indexed', p => (p.encoderType === 'compute pass' ? [false] : [false, true]));
+
+const kBundleExecutionParams = kUnitCaseParamsBuilder
+  .combine('drawType', ['direct', 'indexed', 'indirect', 'indexed-indirect'] as const)
+  .combine('stage', ['vertex', 'fragment'] as const);
+
 class ImmediateDataOperationTest extends AllFeaturesMaxLimitsGPUTest {
   override async init() {
     await super.init();
@@ -39,12 +63,13 @@ class ImmediateDataOperationTest extends AllFeaturesMaxLimitsGPUTest {
  * Creates a pipeline for testing immediate data.
  *
  * For compute pipelines: uses a storage buffer to write results.
- * For render pipelines: returns results via the fragment shader's rgba32uint color output,
- *   avoiding the need for storage buffers in the fragment stage.
+ * For render pipelines: reads immediates in the selected shader stage and returns results via
+ *   rgba32uint color output. The output pixel is selected by outIndex plus vertex_index.
  *
  * @param copyCode - Code that writes to `output[]` array (used by compute shader)
  * @param fragmentReturnExpr - WGSL expression returning vec4u (used by fragment shader)
  * @param renderTargetWidth - Width of the render target in pixels (for vertex positioning)
+ * @param immediateStage - Shader stage that reads immediate data (ignored for compute pipelines)
  */
 function createPipeline(
   t: AllFeaturesMaxLimitsGPUTest,
@@ -54,7 +79,8 @@ function createPipeline(
   fragmentReturnExpr: string,
   immediateSize: number,
   renderTargetWidth: number = 4,
-  pipelineLayout?: GPUPipelineLayout
+  pipelineLayout?: GPUPipelineLayout,
+  immediateStage: ImmediateStage = 'fragment'
 ) {
   if (encoderType === 'compute pass') {
     const layout =
@@ -115,17 +141,17 @@ function createPipeline(
         immediateSize,
       });
 
-    const vertexCode = `
+    let vertexCode = `
       @group(0) @binding(0) var<uniform> outIndex: u32;
 
-      @vertex fn vs_main() -> @builtin(position) vec4f {
+      @vertex fn vs_main(@builtin(vertex_index) vertexIndex: u32) -> @builtin(position) vec4f {
         // Map outIndex to pixel centers in a ${renderTargetWidth}x1 render target.
-        let x = (f32(outIndex) + 0.5) / f32(${renderTargetWidth}) * 2.0 - 1.0;
+        let x = (f32(outIndex + vertexIndex) + 0.5) / f32(${renderTargetWidth}) * 2.0 - 1.0;
         return vec4f(x, 0.0, 0.0, 1.0);
       }
     `;
 
-    const fragmentCode = `
+    let fragmentCode = `
       ${wgslDecl}
       @group(0) @binding(0) var<uniform> outIndex: u32;
 
@@ -133,6 +159,26 @@ function createPipeline(
         return ${fragmentReturnExpr};
       }
     `;
+
+    if (immediateStage === 'vertex') {
+      vertexCode = `
+        ${wgslDecl}
+        @group(0) @binding(0) var<uniform> outIndex: u32;
+        struct VertexOutput {
+          @builtin(position) position: vec4f,
+          @location(0) @interpolate(flat, either) value: vec4u,
+        }
+        @vertex fn vs_main(@builtin(vertex_index) vertexIndex: u32) -> VertexOutput {
+          let x = (f32(outIndex + vertexIndex) + 0.5) / f32(${renderTargetWidth}) * 2.0 - 1.0;
+          return VertexOutput(vec4f(x, 0.0, 0.0, 1.0), ${fragmentReturnExpr});
+        }
+      `;
+      fragmentCode = `
+        @fragment fn fs_main(@location(0) @interpolate(flat, either) value: vec4u) -> @location(0) vec4u {
+          return value;
+        }
+      `;
+    }
 
     return t.device.createRenderPipeline({
       layout,
@@ -150,16 +196,82 @@ function createPipeline(
   }
 }
 
-/** Dispatch or draw based on encoder type. */
+/** Issue a direct, indirect, or indexed command; maxDrawCount selects render-pass multi-draw. */
 function dispatchOrDraw(
   encoderType: ProgrammableEncoderType,
-  encoder: GPUComputePassEncoder | GPURenderPassEncoder | GPURenderBundleEncoder
+  encoder: GPUComputePassEncoder | GPURenderPassEncoder | GPURenderBundleEncoder,
+  {
+    indirectBuffer,
+    indirectOffset = 0,
+    indexBuffer,
+    maxDrawCount,
+    drawCountBuffer,
+    drawCountOffset = 0,
+  }: DrawOptions = {}
 ) {
   if (encoderType === 'compute pass') {
-    (encoder as GPUComputePassEncoder).dispatchWorkgroups(1);
+    const pass = encoder as GPUComputePassEncoder;
+    if (indirectBuffer) {
+      pass.dispatchWorkgroupsIndirect(indirectBuffer, indirectOffset);
+    } else {
+      pass.dispatchWorkgroups(1);
+    }
   } else {
-    (encoder as GPURenderPassEncoder | GPURenderBundleEncoder).draw(1); // 1 Vertex over 1 Instance
+    const pass = encoder as GPURenderPassEncoder | GPURenderBundleEncoder;
+    if (indexBuffer) {
+      pass.setIndexBuffer(indexBuffer, 'uint32');
+    }
+    if (maxDrawCount !== undefined) {
+      assert(encoderType === 'render pass' && indirectBuffer !== undefined);
+      const method = indexBuffer ? 'multiDrawIndexedIndirect' : 'multiDrawIndirect';
+      const multiPass = pass as GPURenderPassEncoder & {
+        [name in typeof method]: (
+          buffer: GPUBuffer,
+          offset: number,
+          count: number,
+          countBuffer?: GPUBuffer,
+          countOffset?: number
+        ) => void;
+      };
+      multiPass[method](
+        indirectBuffer,
+        indirectOffset,
+        maxDrawCount,
+        drawCountBuffer,
+        drawCountOffset
+      );
+    } else if (indirectBuffer) {
+      if (indexBuffer) {
+        pass.drawIndexedIndirect(indirectBuffer, indirectOffset);
+      } else {
+        pass.drawIndirect(indirectBuffer, indirectOffset);
+      }
+    } else if (indexBuffer) {
+      pass.drawIndexed(1);
+    } else {
+      pass.draw(1);
+    }
   }
+}
+
+/** Create one nonempty indirect command and its index buffer, when indexed. */
+function createIndirectDrawOptions(
+  t: AllFeaturesMaxLimitsGPUTest,
+  encoderType: ProgrammableEncoderType,
+  indexed: boolean,
+  indirectOffset: number = 0
+): DrawOptions {
+  const args =
+    encoderType === 'compute pass' ? [1, 1, 1] : indexed ? [1, 1, 0, 0, 0] : [1, 1, 0, 0];
+  const contents = new Uint32Array(indirectOffset / 4 + args.length);
+  contents.set(args, indirectOffset / 4);
+  return {
+    indirectBuffer: t.makeBufferWithContents(contents, GPUBufferUsage.INDIRECT),
+    indirectOffset,
+    indexBuffer: indexed
+      ? t.makeBufferWithContents(new Uint32Array([0]), GPUBufferUsage.INDEX)
+      : undefined,
+  };
 }
 
 /**
@@ -284,6 +396,7 @@ function runAndCheck(
     outputU32sPerDraw,
     encodeFn,
     renderTargetWidth = 4,
+    drawOptions,
   }: {
     numDraws?: number;
     outputU32sPerDraw?: number;
@@ -293,6 +406,7 @@ function runAndCheck(
       indexUniformBuffer: GPUBuffer
     ) => void;
     renderTargetWidth?: number;
+    drawOptions?: DrawOptions;
   } = {}
 ) {
   assert(expectedValues.length > 0, 'expectedValues must not be empty');
@@ -327,7 +441,7 @@ function runAndCheck(
       } else {
         encoder.setBindGroup(0, bindGroup, [0]);
         setImmediatesFn(encoder);
-        dispatchOrDraw(encoderType, encoder);
+        dispatchOrDraw(encoderType, encoder, drawOptions);
       }
     });
 
@@ -354,7 +468,7 @@ function runAndCheck(
         } else {
           encoder.setBindGroup(0, bindGroup, [0]);
           setImmediatesFn(encoder);
-          dispatchOrDraw(encoderType, encoder);
+          dispatchOrDraw(encoderType, encoder, drawOptions);
         }
       },
       pixelWidth
@@ -491,6 +605,166 @@ g.test('basic_execution')
         encoder.setImmediates(0, inputData);
       },
       expected
+    );
+  });
+
+g.test('indirect_execution')
+  .desc(
+    `
+    Verify immediate values are preserved by indirect dispatches and indexed/non-indexed indirect
+    draws in render passes and bundles. Render shaders consume immediates in either stage.
+    Exercise a single indirect command, repeated commands without resetting immediates,
+    direct-indirect-direct sequences, and partial updates between indirect commands.
+    Check each command's output separately, with zero and nonzero indirect-buffer offsets.
+  `
+  )
+  .params(
+    kIndirectExecutionParams
+      .beginSubcases()
+      .combine('indirectOffset', [0, 16])
+      .combine('sequence', ['single', 'repeated', 'mixed', 'partial_update'] as const)
+  )
+  .fn(t => {
+    const { encoderType, stage, indexed, indirectOffset, sequence } = t.params;
+    const numDraws = sequence === 'single' ? 1 : 3;
+    const pipeline = createPipeline(
+      t,
+      encoderType,
+      'var<immediate> data: vec4u;',
+      `
+        let base = outIndex * 4;
+        output[base] = data.x;
+        output[base + 1] = data.y;
+        output[base + 2] = data.z;
+        output[base + 3] = data.w;
+      `,
+      'data',
+      16,
+      numDraws,
+      undefined,
+      stage
+    );
+    const drawOptions = createIndirectDrawOptions(t, encoderType, indexed, indirectOffset);
+    const initial = [25, 128, 240, 255];
+    const subsequent = sequence === 'partial_update' ? [25, 42, 43, 255] : initial;
+    const expected = sequence === 'single' ? initial : [...initial, ...subsequent, ...subsequent];
+
+    runAndCheck(
+      t,
+      encoderType,
+      pipeline,
+      encoder => encoder.setImmediates(0, new Uint32Array(initial)),
+      expected,
+      {
+        numDraws,
+        outputU32sPerDraw: 4,
+        renderTargetWidth: numDraws,
+        drawOptions,
+        encodeFn:
+          sequence === 'single'
+            ? undefined
+            : (encoder, bindGroup) => {
+                encoder.setImmediates(0, new Uint32Array(initial));
+                for (let commandIndex = 0; commandIndex < numDraws; commandIndex++) {
+                  encoder.setBindGroup(0, bindGroup, [commandIndex * 256]);
+                  if (sequence === 'partial_update' && commandIndex === 1) {
+                    encoder.setImmediates(4, new Uint32Array([42, 43]));
+                  }
+                  const direct = sequence === 'mixed' && commandIndex !== 1;
+                  dispatchOrDraw(
+                    encoderType,
+                    encoder,
+                    direct ? { indexBuffer: drawOptions.indexBuffer } : drawOptions
+                  );
+                }
+              },
+      }
+    );
+  });
+
+g.test('multi_draw_indirect')
+  .desc(
+    `
+    Verify experimental multiDrawIndirect and multiDrawIndexedIndirect preserve immediate values
+    in vertex and fragment shaders, including a partial update before the multi-draw and a direct
+    draw afterward without resetting immediates. Distinct pixels identify each indirect record.
+    Exercise zero/nonzero indirect offsets and an optional count buffer with a nonzero offset;
+    counts below, equal to, and above maxDrawCount must draw the expected number of records.
+  `
+  )
+  .params(u =>
+    u
+      .combine('indexed', [false, true])
+      .combine('stage', ['vertex', 'fragment'] as const)
+      .beginSubcases()
+      .combine('indirectOffset', [0, 16])
+      .combine('drawCount', ['none', 0, 1, 2, 3] as const)
+  )
+  .fn(t => {
+    t.skipIf(
+      !hasFeature(
+        t.device.features,
+        'chromium-experimental-multi-draw-indirect' as GPUFeatureName
+      ) && !hasFeature(t.device.features, 'multi-draw-indirect' as GPUFeatureName),
+      'Multi-draw indirect not supported'
+    );
+    const { indexed, stage, indirectOffset, drawCount } = t.params;
+    const renderTargetWidth = 5;
+    const pipeline = createPipeline(
+      t,
+      'render pass',
+      'var<immediate> data: vec4u;',
+      '',
+      'data',
+      16,
+      renderTargetWidth,
+      undefined,
+      stage
+    );
+    const records = indexed
+      ? [1, 1, 0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 2, 0, 0]
+      : [1, 1, 0, 0, 1, 1, 1, 0, 1, 1, 2, 0];
+    const contents = new Uint32Array(indirectOffset / 4 + records.length);
+    contents.set(records, indirectOffset / 4);
+    const drawOptions: DrawOptions = {
+      indirectBuffer: t.makeBufferWithContents(contents, GPUBufferUsage.INDIRECT),
+      indirectOffset,
+      indexBuffer: indexed
+        ? t.makeBufferWithContents(new Uint32Array([0, 1, 2]), GPUBufferUsage.INDEX)
+        : undefined,
+      maxDrawCount: 2,
+      drawCountBuffer:
+        drawCount === 'none'
+          ? undefined
+          : t.makeBufferWithContents(new Uint32Array([0, drawCount]), GPUBufferUsage.INDIRECT),
+      drawCountOffset: drawCount === 'none' ? 0 : 4,
+    };
+    const updated = [25, 42, 43, 255];
+    const empty = [0, 0, 0, 0];
+    const first = drawCount === 0 ? empty : updated;
+    const second = drawCount === 0 || drawCount === 1 ? empty : updated;
+    runAndCheck(
+      t,
+      'render pass',
+      pipeline,
+      () => {},
+      [25, 128, 240, 255, ...first, ...second, ...empty, ...updated],
+      {
+        numDraws: renderTargetWidth,
+        outputU32sPerDraw: 4,
+        renderTargetWidth,
+        encodeFn: (encoder, bindGroup) => {
+          const directOptions = { indexBuffer: drawOptions.indexBuffer };
+          encoder.setBindGroup(0, bindGroup, [0]);
+          encoder.setImmediates(0, new Uint32Array([25, 128, 240, 255]));
+          dispatchOrDraw('render pass', encoder, directOptions);
+          encoder.setBindGroup(0, bindGroup, [256]);
+          encoder.setImmediates(4, new Uint32Array([42, 43]));
+          dispatchOrDraw('render pass', encoder, drawOptions);
+          encoder.setBindGroup(0, bindGroup, [4 * 256]);
+          dispatchOrDraw('render pass', encoder, directOptions);
+        },
+      }
     );
   });
 
@@ -940,8 +1214,19 @@ g.test('multiple_updates_before_draw_or_dispatch')
   });
 
 g.test('render_pass_and_bundle_mix')
-  .desc('Verify interaction between executeBundles and direct render pass commands.')
+  .desc(
+    `
+    Verify immediate values in vertex/fragment shaders when mixing bundles and render pass commands,
+    using direct/indirect and indexed/non-indexed draws. Re-establish pass state after executeBundles.
+  `
+  )
+  .params(kBundleExecutionParams)
   .fn(t => {
+    const { drawType, stage } = t.params;
+    const drawOptions = createIndirectDrawOptions(t, 'render bundle', drawType.includes('indexed'));
+    if (!drawType.includes('indirect')) {
+      drawOptions.indirectBuffer = undefined;
+    }
     const wgslDecl = 'var<immediate> data: vec2<u32>;';
     const fragmentReturnExpr = 'vec4u(data.x, data.y, 0, 0)';
     const renderTargetWidth = 2;
@@ -953,7 +1238,9 @@ g.test('render_pass_and_bundle_mix')
       '', // copyCode unused for render-only test
       fragmentReturnExpr,
       8,
-      renderTargetWidth
+      renderTargetWidth,
+      undefined,
+      stage
     ) as GPURenderPipeline;
 
     const indexUniformBuffer = createOutputIndexBuffer(t, 2);
@@ -970,7 +1257,7 @@ g.test('render_pass_and_bundle_mix')
     bundleEncoder.setPipeline(pipeline);
     bundleEncoder.setBindGroup(0, bindGroup, [0]);
     bundleEncoder.setImmediates(0, new Uint32Array([1, 10]));
-    bundleEncoder.draw(1);
+    dispatchOrDraw('render bundle', bundleEncoder, drawOptions);
     const bundle = bundleEncoder.finish();
 
     const renderTargetTexture = t.createTextureTracked({
@@ -997,7 +1284,7 @@ g.test('render_pass_and_bundle_mix')
     pass.setPipeline(pipeline);
     pass.setBindGroup(0, bindGroup, [256]);
     pass.setImmediates(0, new Uint32Array([2, 20]));
-    pass.draw(1);
+    dispatchOrDraw('render pass', pass, drawOptions);
 
     pass.end();
 
@@ -1032,8 +1319,19 @@ g.test('render_pass_and_bundle_mix')
   });
 
 g.test('render_bundle_isolation')
-  .desc('Verify that immediate data state is isolated between bundles executed in the same pass.')
+  .desc(
+    `
+    Verify immediate values in vertex/fragment shaders are isolated between bundles in the same pass,
+    using direct/indirect and indexed/non-indexed draws with distinct immediate payloads.
+  `
+  )
+  .params(kBundleExecutionParams)
   .fn(t => {
+    const { drawType, stage } = t.params;
+    const drawOptions = createIndirectDrawOptions(t, 'render bundle', drawType.includes('indexed'));
+    if (!drawType.includes('indirect')) {
+      drawOptions.indirectBuffer = undefined;
+    }
     const wgslDecl = 'var<immediate> data: vec2<u32>;';
     const fragmentReturnExpr = 'vec4u(data.x, data.y, 0, 0)';
     const renderTargetWidth = 2;
@@ -1045,7 +1343,9 @@ g.test('render_bundle_isolation')
       '', // copyCode unused for render-only test
       fragmentReturnExpr,
       8,
-      renderTargetWidth
+      renderTargetWidth,
+      undefined,
+      stage
     ) as GPURenderPipeline;
 
     const indexUniformBuffer = createOutputIndexBuffer(t, 2);
@@ -1062,7 +1362,7 @@ g.test('render_bundle_isolation')
     bundleEncoderA.setPipeline(pipeline);
     bundleEncoderA.setBindGroup(0, bindGroup, [0]);
     bundleEncoderA.setImmediates(0, new Uint32Array([1, 2]));
-    bundleEncoderA.draw(1);
+    dispatchOrDraw('render bundle', bundleEncoderA, drawOptions);
     const bundleA = bundleEncoderA.finish();
 
     // Bundle B: Set [3, 4], Draw (Index 1)
@@ -1072,7 +1372,7 @@ g.test('render_bundle_isolation')
     bundleEncoderB.setPipeline(pipeline);
     bundleEncoderB.setBindGroup(0, bindGroup, [256]);
     bundleEncoderB.setImmediates(0, new Uint32Array([3, 4]));
-    bundleEncoderB.draw(1);
+    dispatchOrDraw('render bundle', bundleEncoderB, drawOptions);
     const bundleB = bundleEncoderB.finish();
 
     const renderTargetTexture = t.createTextureTracked({
