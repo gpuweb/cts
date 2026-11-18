@@ -19,6 +19,7 @@ import {
   kEncodableTextureFormats,
 } from '../../../../../format_info.js';
 import { GPUTest } from '../../../../../gpu_test.js';
+import { float32ToFloatBits, packRGB9E5UFloat } from '../../../../../util/conversion.js';
 import {
   align,
   clamp,
@@ -1251,6 +1252,42 @@ function createRandomTexelViewViaBytes(info: {
     for (let i = 0; i < asFloat.length; ++i) {
       asFloat[i] = lerp(min, max, hashU32(hashBase + i) / 0xffff_ffff);
     }
+  } else if (info.format === 'rg11b10ufloat') {
+    const { min, max } = getMinAndMaxTexelValueForComponent(rep, TexelComponent.R);
+    const asU32 = new Uint32Array(data.buffer);
+    for (let i = 0; i < asU32.length; ++i) {
+      const r = float32ToFloatBits(
+        lerp(min, max, hashU32(hashBase + i * 3 + 0) / 0xffff_ffff),
+        0,
+        5,
+        6,
+        15
+      );
+      const g = float32ToFloatBits(
+        lerp(min, max, hashU32(hashBase + i * 3 + 1) / 0xffff_ffff),
+        0,
+        5,
+        6,
+        15
+      );
+      const b = float32ToFloatBits(
+        lerp(min, max, hashU32(hashBase + i * 3 + 2) / 0xffff_ffff),
+        0,
+        5,
+        5,
+        15
+      );
+      asU32[i] = r | (g << 11) | (b << 22);
+    }
+  } else if (info.format === 'rgb9e5ufloat') {
+    const { min, max } = getMinAndMaxTexelValueForComponent(rep, TexelComponent.R);
+    const asU32 = new Uint32Array(data.buffer);
+    for (let i = 0; i < asU32.length; ++i) {
+      const r = lerp(min, max, hashU32(hashBase + i * 3 + 0) / 0xffff_ffff);
+      const g = lerp(min, max, hashU32(hashBase + i * 3 + 1) / 0xffff_ffff);
+      const b = lerp(min, max, hashU32(hashBase + i * 3 + 2) / 0xffff_ffff);
+      asU32[i] = packRGB9E5UFloat(r, g, b);
+    }
   } else if (bytesNeeded % 4 === 0) {
     const asU32 = new Uint32Array(data.buffer);
     for (let i = 0; i < asU32.length; ++i) {
@@ -1291,6 +1328,8 @@ function createRandomTexelView(
     ((format.includes('norm') && type !== 'depth') ||
       format.includes('16float') ||
       (format.includes('32float') && type !== 'depth') ||
+      format === 'rg11b10ufloat' ||
+      format === 'rgb9e5ufloat' ||
       type === 'sint' ||
       type === 'uint');
 
@@ -2209,14 +2248,25 @@ function isOutOfBoundsCall<T extends Dimensionality>(
   return false;
 }
 
-function isValidOutOfBoundsValue(
-  device: GPUDevice,
+type CachedOOBTexels = {
+  /**
+   * Flat array storing 8 numbers per texel across all mip levels:
+   * [R, G, B, A, ulpR, ulpG, ulpB, ulpA]
+   */
+  readonly data: Float64Array;
+};
+
+type OutOfBoundsCache = {
+  texels?: CachedOOBTexels;
+};
+
+const clampUnsigned = (v: number, limit: number) => (v < 0 ? limit : Math.min(v, limit));
+const clampSigned = (v: number, limit: number) => clamp(v, { min: 0, max: limit });
+
+function isValidOutOfBoundsZeroValue(
   softwareTexture: SoftwareTexture,
-  builtin: TextureBuiltin,
-  textureType: string,
-  gotRGBA: PerTexelComponent<number>,
-  maxFractionalDiff: number
-) {
+  gotRGBA: PerTexelComponent<number>
+): boolean {
   // For a texture builtin with no sampler (eg textureLoad),
   // any out of bounds access is allowed to return one of:
   //
@@ -2224,30 +2274,89 @@ function isValidOutOfBoundsValue(
   // * 0,0,0,0 or 0,0,0,1 if not a depth texture
   // * 0 if a depth texture
   if (softwareTexture.descriptor.format.includes('depth')) {
-    if (gotRGBA.R === 0) {
-      return true;
-    }
-  } else {
-    if (
-      gotRGBA.R === 0 &&
-      gotRGBA.B === 0 &&
-      gotRGBA.G === 0 &&
-      (gotRGBA.A === 0 || gotRGBA.A === 1)
-    ) {
-      return true;
-    }
+    return gotRGBA.R === 0;
+  }
+  return (
+    gotRGBA.R === 0 && gotRGBA.B === 0 && gotRGBA.G === 0 && (gotRGBA.A === 0 || gotRGBA.A === 1)
+  );
+}
+
+function matchesClampedTexel<T extends Dimensionality>(
+  device: GPUDevice,
+  softwareTexture: SoftwareTexture,
+  call: TextureCall<T>,
+  textureType: string,
+  gotRGBA: PerTexelComponent<number>,
+  maxFractionalDiff: number,
+  clampFn: (v: number, limit: number) => number
+): boolean {
+  const { baseMipLevel, mipLevelCount, baseArrayLayer, arrayLayerCount } =
+    getBaseMipLevelInfo(softwareTexture);
+  const dimension = softwareTexture.descriptor.dimension || '2d';
+  const clampedMip =
+    baseMipLevel + clampFn(Math.floor(call.mipLevel ?? 0), Math.max(0, mipLevelCount - 1));
+  if (clampedMip < 0 || clampedMip >= softwareTexture.texels.length) {
+    return false;
   }
 
-  // Can be any texel value
+  const mipTexels = softwareTexture.texels[clampedMip];
+  const physicalMipSize = virtualMipSize(dimension, softwareTexture.descriptor.size, clampedMip);
+  const sampleCount = softwareTexture.descriptor.sampleCount ?? 1;
+  const coords = call.coords!;
+  const x = clampFn(Math.floor(coords[0]), physicalMipSize[0] - 1);
+  const coordY = coords[1];
+  const coordZ = coords[2];
+  const y = coordY !== undefined ? clampFn(Math.floor(coordY), physicalMipSize[1] - 1) : 0;
+  const z =
+    call.arrayIndex !== undefined
+      ? clamp(baseArrayLayer + clampFn(Math.floor(call.arrayIndex), arrayLayerCount - 1), {
+          min: 0,
+          max: physicalMipSize[2] - 1,
+        })
+      : coordZ !== undefined
+      ? clampFn(Math.floor(coordZ), physicalMipSize[2] - 1)
+      : clamp(baseArrayLayer, { min: 0, max: physicalMipSize[2] - 1 });
+  const sampleIndex = clampFn(Math.floor(call.sampleIndex ?? 0), sampleCount - 1);
+
+  const texel = mipTexels.color({ x, y, z, sampleIndex });
+  const rgba = swizzleTexel(
+    convertPerTexelComponentToResultFormat(texel, mipTexels.format),
+    softwareTexture.viewDescriptor.swizzle
+  );
+  return texelsApproximatelyEqual(
+    device,
+    call.builtin,
+    textureType,
+    gotRGBA,
+    softwareTexture.descriptor.format,
+    rgba,
+    mipTexels.format,
+    maxFractionalDiff
+  );
+}
+
+function buildCachedOOBTexels(
+  softwareTexture: SoftwareTexture,
+  rgbaComponentsToCheck: readonly TexelComponent[]
+): CachedOOBTexels {
+  const expectedFormat = softwareTexture.texels[0].format;
+  const rep = kTexelRepresentationInfo[expectedFormat];
   const swizzle = softwareTexture.viewDescriptor.swizzle;
+  const dimension = softwareTexture.descriptor.dimension || '2d';
+  const sampleCount = softwareTexture.descriptor.sampleCount ?? 1;
+
+  let totalTexels = 0;
+  for (let mipLevel = 0; mipLevel < softwareTexture.texels.length; ++mipLevel) {
+    const size = virtualMipSize(dimension, softwareTexture.descriptor.size, mipLevel);
+    totalTexels += size[0] * size[1] * size[2] * sampleCount;
+  }
+
+  const data = new Float64Array(totalTexels * 8);
+  let offset = 0;
   for (let mipLevel = 0; mipLevel < softwareTexture.texels.length; ++mipLevel) {
     const mipTexels = softwareTexture.texels[mipLevel];
-    const size = virtualMipSize(
-      softwareTexture.descriptor.dimension || '2d',
-      softwareTexture.descriptor.size,
-      mipLevel
-    );
-    const sampleCount = softwareTexture.descriptor.sampleCount ?? 1;
+    assert(mipTexels.format === expectedFormat);
+    const size = virtualMipSize(dimension, softwareTexture.descriptor.size, mipLevel);
     for (let z = 0; z < size[2]; ++z) {
       for (let y = 0; y < size[1]; ++y) {
         for (let x = 0; x < size[0]; ++x) {
@@ -2257,22 +2366,103 @@ function isValidOutOfBoundsValue(
               convertPerTexelComponentToResultFormat(texel, mipTexels.format),
               swizzle
             );
-            if (
-              texelsApproximatelyEqual(
-                device,
-                builtin,
-                textureType,
-                gotRGBA,
-                softwareTexture.descriptor.format,
-                rgba,
-                mipTexels.format,
-                maxFractionalDiff
-              )
-            ) {
-              return true;
+            const expect = convertResultFormatToTexelViewFormat(rgba, expectedFormat);
+            const eULP = convertPerTexelComponentToResultFormat(
+              rep.bitsToULPFromZero(rep.numberToBits(expect)),
+              expectedFormat
+            );
+            for (const component of rgbaComponentsToCheck) {
+              assert(
+                !isNaN(rgba[component]!),
+                () => `expected component is NaN: ${rgba[component]}`
+              );
             }
+            data[offset++] = rgba.R!;
+            data[offset++] = rgba.G!;
+            data[offset++] = rgba.B!;
+            data[offset++] = rgba.A!;
+            data[offset++] = eULP.R!;
+            data[offset++] = eULP.G!;
+            data[offset++] = eULP.B!;
+            data[offset++] = eULP.A!;
           }
         }
+      }
+    }
+  }
+  return { data };
+}
+
+function isValidOutOfBoundsValue(
+  device: GPUDevice,
+  softwareTexture: SoftwareTexture,
+  builtin: TextureBuiltin,
+  textureType: string,
+  gotRGBA: PerTexelComponent<number>,
+  maxFractionalDiff: number,
+  oobCache?: OutOfBoundsCache
+) {
+  if (isValidOutOfBoundsZeroValue(softwareTexture, gotRGBA)) {
+    return true;
+  }
+
+  if (softwareTexture.texels.length === 0) {
+    return false;
+  }
+
+  // Can be any texel value. Precompute and cache all candidate texel values + ULPs
+  // once lazily per SoftwareTexture, and compute gotRGBA's ULP once outside the loop.
+  const expectedFormat = softwareTexture.texels[0].format;
+  const rep = kTexelRepresentationInfo[expectedFormat];
+  const got = convertResultFormatToTexelViewFormat(gotRGBA, expectedFormat);
+  const gULP = convertPerTexelComponentToResultFormat(
+    rep.bitsToULPFromZero(rep.numberToBits(got)),
+    expectedFormat
+  );
+
+  const rgbaComponentsToCheck = getComponentsToCheck(
+    device,
+    softwareTexture.descriptor.format,
+    builtin,
+    textureType
+  );
+  for (const component of rgbaComponentsToCheck) {
+    assert(!isNaN(gotRGBA[component]!), () => `got component is NaN: ${gotRGBA[component]}`);
+  }
+
+  let cached = oobCache?.texels;
+  if (!cached) {
+    cached = buildCachedOOBTexels(softwareTexture, rgbaComponentsToCheck);
+    if (oobCache) {
+      oobCache.texels = cached;
+    }
+  }
+
+  const { data } = cached;
+  const gR = gotRGBA.R!;
+  const gUR = gULP.R!;
+  if (rgbaComponentsToCheck === kRComponent) {
+    for (let i = 0; i < data.length; i += 8) {
+      if (!(Math.abs(gUR - data[i + 4]) > 3 && Math.abs(gR - data[i]) > maxFractionalDiff)) {
+        return true;
+      }
+    }
+  } else {
+    assert(rgbaComponentsToCheck === kRGBAComponents);
+    const gG = gotRGBA.G!;
+    const gB = gotRGBA.B!;
+    const gA = gotRGBA.A!;
+    const gUG = gULP.G!;
+    const gUB = gULP.B!;
+    const gUA = gULP.A!;
+    for (let i = 0; i < data.length; i += 8) {
+      if (
+        !(Math.abs(gUR - data[i + 4]) > 3 && Math.abs(gR - data[i]) > maxFractionalDiff) &&
+        !(Math.abs(gUG - data[i + 5]) > 3 && Math.abs(gG - data[i + 1]) > maxFractionalDiff) &&
+        !(Math.abs(gUB - data[i + 6]) > 3 && Math.abs(gB - data[i + 2]) > maxFractionalDiff) &&
+        !(Math.abs(gUA - data[i + 7]) > 3 && Math.abs(gA - data[i + 3]) > maxFractionalDiff)
+      ) {
+        return true;
       }
     }
   }
@@ -2294,10 +2484,55 @@ function okBecauseOutOfBounds<T extends Dimensionality>(
   call: TextureCall<T>,
   textureType: string,
   gotRGBA: PerTexelComponent<number>,
-  maxFractionalDiff: number
+  maxFractionalDiff: number,
+  oobCache?: OutOfBoundsCache
 ) {
   if (!isOutOfBoundsCall(softwareTexture, call)) {
     return false;
+  }
+
+  if (isValidOutOfBoundsZeroValue(softwareTexture, gotRGBA)) {
+    return true;
+  }
+
+  // Implementations that don't return zero for OOB loads typically clamp the
+  // out-of-bounds indices/coordinates to texture bounds:
+  // - Unsigned clamping: `min(u32(v), limit)` (negative i32 wraps to large u32 -> `limit`).
+  // - Signed clamping: `clamp(v, 0, limit)` (negative i32 -> `0`).
+  // Check these single in-bounds texels first before falling back to scanning the
+  // entire texture.
+  if (
+    matchesClampedTexel(
+      device,
+      softwareTexture,
+      call,
+      textureType,
+      gotRGBA,
+      maxFractionalDiff,
+      clampUnsigned
+    )
+  ) {
+    return true;
+  }
+
+  const hasNegativeArg =
+    call.coords!.some(v => v < 0) ||
+    (call.arrayIndex !== undefined && call.arrayIndex < 0) ||
+    (call.mipLevel !== undefined && call.mipLevel < 0) ||
+    (call.sampleIndex !== undefined && call.sampleIndex < 0);
+  if (
+    hasNegativeArg &&
+    matchesClampedTexel(
+      device,
+      softwareTexture,
+      call,
+      textureType,
+      gotRGBA,
+      maxFractionalDiff,
+      clampSigned
+    )
+  ) {
+    return true;
   }
 
   return isValidOutOfBoundsValue(
@@ -2306,7 +2541,8 @@ function okBecauseOutOfBounds<T extends Dimensionality>(
     call.builtin,
     textureType,
     gotRGBA,
-    maxFractionalDiff
+    maxFractionalDiff,
+    oobCache
   );
 }
 
@@ -2483,6 +2719,8 @@ export async function checkCallResults<T extends Dimensionality>(
       ? getMaxFractionalDiffForTextureFormat(softwareTexture.descriptor.format)
       : 0;
 
+  const oobCache: OutOfBoundsCache = {};
+
   t.debug(() => getTextureViewDescription(softwareTexture));
 
   for (let callIdx = 0; callIdx < calls.length; callIdx++) {
@@ -2613,7 +2851,8 @@ export async function checkCallResults<T extends Dimensionality>(
         call,
         textureType,
         gotRGBA,
-        callSpecificMaxFractionalDiff
+        callSpecificMaxFractionalDiff,
+        oobCache
       )
     ) {
       continue;
