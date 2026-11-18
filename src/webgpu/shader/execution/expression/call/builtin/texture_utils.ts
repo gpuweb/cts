@@ -19,6 +19,7 @@ import {
   kEncodableTextureFormats,
 } from '../../../../../format_info.js';
 import { GPUTest } from '../../../../../gpu_test.js';
+import { float32ToFloatBits, packRGB9E5UFloat } from '../../../../../util/conversion.js';
 import {
   align,
   clamp,
@@ -1251,6 +1252,42 @@ function createRandomTexelViewViaBytes(info: {
     for (let i = 0; i < asFloat.length; ++i) {
       asFloat[i] = lerp(min, max, hashU32(hashBase + i) / 0xffff_ffff);
     }
+  } else if (info.format === 'rg11b10ufloat') {
+    const { min, max } = getMinAndMaxTexelValueForComponent(rep, TexelComponent.R);
+    const asU32 = new Uint32Array(data.buffer);
+    for (let i = 0; i < asU32.length; ++i) {
+      const r = float32ToFloatBits(
+        lerp(min, max, hashU32(hashBase + i * 3 + 0) / 0xffff_ffff),
+        0,
+        5,
+        6,
+        15
+      );
+      const g = float32ToFloatBits(
+        lerp(min, max, hashU32(hashBase + i * 3 + 1) / 0xffff_ffff),
+        0,
+        5,
+        6,
+        15
+      );
+      const b = float32ToFloatBits(
+        lerp(min, max, hashU32(hashBase + i * 3 + 2) / 0xffff_ffff),
+        0,
+        5,
+        5,
+        15
+      );
+      asU32[i] = r | (g << 11) | (b << 22);
+    }
+  } else if (info.format === 'rgb9e5ufloat') {
+    const { min, max } = getMinAndMaxTexelValueForComponent(rep, TexelComponent.R);
+    const asU32 = new Uint32Array(data.buffer);
+    for (let i = 0; i < asU32.length; ++i) {
+      const r = lerp(min, max, hashU32(hashBase + i * 3 + 0) / 0xffff_ffff);
+      const g = lerp(min, max, hashU32(hashBase + i * 3 + 1) / 0xffff_ffff);
+      const b = lerp(min, max, hashU32(hashBase + i * 3 + 2) / 0xffff_ffff);
+      asU32[i] = packRGB9E5UFloat(r, g, b);
+    }
   } else if (bytesNeeded % 4 === 0) {
     const asU32 = new Uint32Array(data.buffer);
     for (let i = 0; i < asU32.length; ++i) {
@@ -1291,6 +1328,8 @@ function createRandomTexelView(
     ((format.includes('norm') && type !== 'depth') ||
       format.includes('16float') ||
       (format.includes('32float') && type !== 'depth') ||
+      format === 'rg11b10ufloat' ||
+      format === 'rgb9e5ufloat' ||
       type === 'sint' ||
       type === 'uint');
 
