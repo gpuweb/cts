@@ -1,3 +1,4 @@
+import { globalTestConfig } from '../../../../../../common/framework/test_config.js';
 import { keysOf } from '../../../../../../common/util/data_tables.js';
 import { assert, range, unreachable, hasFeature } from '../../../../../../common/util/util.js';
 import { Float16Array } from '../../../../../../external/petamoriken/float16/float16.js';
@@ -2354,6 +2355,8 @@ function buildCachedOOBTexels(
   const data = new Float64Array(totalTexels * 8);
   let offset = 0;
   for (let mipLevel = 0; mipLevel < softwareTexture.texels.length; ++mipLevel) {
+    // Heartbeat to ensure CTS runners know we're alive.
+    globalTestConfig.testHeartbeatCallback();
     const mipTexels = softwareTexture.texels[mipLevel];
     assert(mipTexels.format === expectedFormat);
     const size = virtualMipSize(dimension, softwareTexture.descriptor.size, mipLevel);
@@ -2724,6 +2727,8 @@ export async function checkCallResults<T extends Dimensionality>(
   t.debug(() => getTextureViewDescription(softwareTexture));
 
   for (let callIdx = 0; callIdx < calls.length; callIdx++) {
+    // Heartbeat to ensure CTS runners know we're alive.
+    globalTestConfig.testHeartbeatCallback();
     const call = calls[callIdx];
     t.debug(`#${callIdx}: ${describeTextureCall(call)}`);
     const gotRGBA = results.results[callIdx];
