@@ -26,7 +26,7 @@ import {
   isDepthTextureFormat,
   getBlockInfoForTextureFormat,
   isStencilTextureFormat,
-  isDepthStencilTextureFormat,
+  isDepthAndStencilTextureFormat,
   isTextureFormatPossiblyMultisampled,
   isTextureFormatUsableAsRenderAttachment,
 } from '../../../format_info.js';
@@ -312,7 +312,7 @@ g.test('read_swizzle')
     };
     const { texels: srcTexelViews, texture } =
       await createTextureWithRandomDataAndGetTexelsForEachAspect(t, descriptor);
-    const aspectNdx = isDepthStencilTextureFormat(format) && aspect === 'stencil-only' ? 1 : 0;
+    const aspectNdx = isDepthAndStencilTextureFormat(format) && aspect === 'stencil-only' ? 1 : 0;
     const srcTexelView = srcTexelViews[aspectNdx];
 
     const samples = [];
