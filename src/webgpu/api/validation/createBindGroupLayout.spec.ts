@@ -77,6 +77,79 @@ function isValidBGLEntryForStages(device: GPUDevice, visibility: number, entry: 
 
 export const g = makeTestGroup(AllFeaturesMaxLimitsGPUTest);
 
+type BindingTypeTestCase = { _valid: boolean } & (
+  { errorCase: 'empty' }
+  | { errorCase: 'singleValid' }
+  | { errorCase: 'noType', at: number, size: number }
+  | { errorCase: 'multipleTypes', at: number, size: number }
+)
+
+g.test('binding_types')
+  .desc('Test that one and only one binding type is allowed per entry')
+  .paramsSimple<BindingTypeTestCase>([
+    { errorCase: 'empty', _valid: true },
+    { errorCase: 'singleValid', _valid: true },
+    { errorCase: 'noType', at: 0, size: 1, _valid: false },
+    { errorCase: 'noType', at: 0, size: 2, _valid: false },
+    { errorCase: 'noType', at: 1, size: 2, _valid: false },
+    { errorCase: 'multipleTypes', at: 0, size: 1, _valid: false },
+    { errorCase: 'multipleTypes', at: 0, size: 2, _valid: false },
+    { errorCase: 'multipleTypes', at: 1, size: 2, _valid: false },
+  ])
+  .fn(t => {
+    // TODO: Not sure why this doesn't coerce as expected…🤔
+    const params = t.params as BindingTypeTestCase;
+
+    const entries: Array<GPUBindGroupLayoutEntry> = [];
+
+    const validStorageBufferBinding = (binding: number) => ({
+      binding,
+      visibility: GPUShaderStage.COMPUTE,
+      buffer: { type: 'storage' as const },
+    });
+
+    const createEntriesWithInvalidAt = (at: number, size: number, invalid: GPUBindGroupLayoutEntry) => {
+      for (var i = 0; i < size; i++) {
+        if (i === at) {
+          entries.push(invalid)
+        } else {
+          entries.push(validStorageBufferBinding(i));
+        }
+      }
+    };
+
+    switch (params.errorCase) {
+      case 'empty':
+        // NOTE: `entries` remains empty.
+        break;
+      case 'singleValid': {
+        entries.push(validStorageBufferBinding(0));
+        break;
+      }
+      case 'noType': {
+        const { at, size } = params
+        createEntriesWithInvalidAt(at, size, {
+          binding: at,
+          visibility: GPUShaderStage.COMPUTE,
+          // NOTE: no type specified
+        });
+        break;
+      }
+      case 'multipleTypes':
+        const { at, size } = params
+        createEntriesWithInvalidAt(at, size, {
+          // NOTE: too many types specified
+          ...validStorageBufferBinding(at),
+          sampler: {},
+        });
+        break;
+    }
+
+    t.expectValidationError(() => {
+      t.device.createBindGroupLayout({ entries });
+    }, !params._valid);
+  })
+
 g.test('duplicate_bindings')
   .desc('Test that uniqueness of binding numbers across entries is enforced.')
   .paramsSubcasesOnly([
