@@ -26,7 +26,12 @@ import {
   makeRandomDepthComparisonTexelGenerator,
   queryMipLevelMixWeightsForDevice,
   readTextureToTexelViews,
+  SoftwareTexture,
+  softwareTextureRead,
+  swizzleTexel,
   texelsApproximatelyEqual,
+  TextureCall,
+  vec2,
 } from './texture_utils.js';
 
 export const g = makeTestGroup(AllFeaturesMaxLimitsGPUTest);
@@ -324,4 +329,107 @@ are supposed to work around this issue by poly-filling on devices that fail this
     const weights = await queryMipLevelMixWeightsForDevice(t, t.params.stage);
     validateWeights(t, stage, 'textureSampleLevel', weights.sampleLevelWeights);
     validateWeights(t, stage, 'textureSampleGrad', weights.softwareMixToGPUMixGradWeights);
+  });
+
+g.test('softwareSamplerSwizzle')
+  .desc('test the software sampler swizzles')
+  .params(u =>
+    u
+      .combine('srcFormat', ['rgba8unorm', 'bgra8unorm', 'depth24plus', 'stencil8'] as const)
+      .beginSubcases()
+      .combine('swizzle', ['rgba', 'abgr', '10gr'] as const)
+      .expand('textureType', function* (t) {
+        const type = getTextureFormatType(t.srcFormat, 'all');
+        switch (type) {
+          case 'depth':
+            yield 'texture_2d<f32>';
+            yield 'texture_depth_2d';
+            break;
+          case 'uint':
+            yield 'texture_2d<u32>';
+            break;
+          case 'sint':
+            yield 'texture_2d<i32>';
+            break;
+          default:
+            yield 'texture_2d<f32>';
+        }
+      })
+  )
+  .fn(async t => {
+    t.skipIfDeviceDoesNotHaveFeature('texture-component-swizzle');
+
+    const { srcFormat, swizzle, textureType } = t.params;
+    const size = chooseTextureSize({ minSize: 9, minBlocks: 4, format: srcFormat });
+    t.debug(`size: ${size.map(v => v.toString()).join(', ')}`);
+    const descriptor: GPUTextureDescriptor = {
+      format: srcFormat,
+      size,
+      usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
+    };
+    const { texels, texture } = await createTextureWithRandomDataAndGetTexels(t, descriptor);
+
+    const viewDescriptor = { swizzle };
+    const softwareTexture: SoftwareTexture = {
+      texels,
+      descriptor,
+      viewDescriptor,
+    };
+    const call: TextureCall<vec2> = {
+      builtin: 'textureLoad',
+      coordType: 'u',
+      mipLevel: 0,
+      coords: [0, 0],
+    };
+
+    const type = getTextureFormatType(srcFormat, 'all');
+    const resultFormat =
+      type === 'uint' ? 'rgba32uint' : type === 'sint' ? 'rgba32sint' : 'rgba32float';
+
+    const aspect = srcFormat === 'stencil8' ? 'stencil-only' : 'all';
+
+    // For each pixel in the texelView, convert it to RGBA and swizzle.
+    // Then, call softwareTextureRead for that texel. The results should
+    // be the same.
+    const stage = 'compute';
+    const errors = [];
+    for (let mipLevel = 0; mipLevel < texels.length; ++mipLevel) {
+      const expectedMipLevelTexelView = texels[mipLevel];
+      const mipLevelSize = virtualMipSize(texture.dimension, size, mipLevel);
+      const rep = kTexelRepresentationInfo[expectedMipLevelTexelView.format];
+
+      for (let y = 0; y < mipLevelSize[1]; ++y) {
+        for (let x = 0; x < mipLevelSize[0]; ++x) {
+          const expectedRaw = expectedMipLevelTexelView.color({ x, y, z: 0 });
+          const expectedRGBA = convertPerTexelComponentToResultFormat(
+            expectedRaw,
+            resultFormat,
+            aspect
+          );
+          const expected = swizzleTexel(expectedRGBA, swizzle);
+          call.coords = [x, y];
+          call.mipLevel = mipLevel;
+          const actual = softwareTextureRead<vec2>(t, stage, call, softwareTexture);
+          const maxFractionalDiff = 0;
+          if (
+            !texelsApproximatelyEqual(
+              t.device,
+              call.builtin,
+              textureType,
+              actual,
+              resultFormat,
+              expected,
+              resultFormat,
+              maxFractionalDiff
+            )
+          ) {
+            const actualStr = texelFormat(actual, rep);
+            const expectedStr = texelFormat(expected, rep);
+            errors.push(`texel at ${x}, ${y}, expected: ${expectedStr}, actual: ${actualStr}`);
+          }
+        }
+      }
+
+      assert(errors.length === 0, errors.join('\n'));
+    }
   });
