@@ -7,6 +7,7 @@ Note: entry point matching tests are in shader_module/entry_point.spec.ts
 import { AllFeaturesMaxLimitsGPUTest } from '../.././gpu_test.js';
 import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { keysOf } from '../../../common/util/data_tables.js';
+import { range } from '../../../common/util/util.js';
 import {
   isTextureFormatUsableWithStorageAccessMode,
   kPossibleStorageTextureFormats,
@@ -178,6 +179,48 @@ Tests calling createComputePipeline(Async) validation for compute using <= devic
       },
     };
     vtu.doCreateComputePipelineTest(t, isAsync, count <= countAtLimit, descriptor);
+  });
+
+g.test('limits,workgroup_storage_size,per_variable_rounding')
+  .desc(
+    `
+Tests that createComputePipeline(Async) validation against device.limits.maxComputeWorkgroupStorageSize
+rounds the size of each workgroup variable up to 16 bytes before summing, rather than rounding the
+sum.
+
+- smallVarCount: number of 4-byte \`u32\` variables, each counting as 16 bytes, that follow an
+  array that is 16 bytes under the limit.
+`
+  )
+  .params(u =>
+    u //
+      .combine('isAsync', [true, false])
+      .beginSubcases()
+      .combine('smallVarCount', [1, 2])
+  )
+  .fn(t => {
+    const { isAsync, smallVarCount } = t.params;
+    const limit = t.device.limits.maxComputeWorkgroupStorageSize;
+    const vec4Count = Math.floor(limit / 16) - 1;
+
+    const descriptor = {
+      layout: 'auto' as const,
+      compute: {
+        module: t.device.createShaderModule({
+          code: `
+          var<workgroup> data: array<vec4<f32>, ${vec4Count}>;
+          ${range(smallVarCount, i => `var<workgroup> small${i}: u32;`).join('\n')}
+          @compute @workgroup_size(64) fn main () {
+            _ = data;
+            ${range(smallVarCount, i => `_ = small${i};`).join('\n')}
+          }
+          `,
+        }),
+        entryPoint: 'main',
+      },
+    };
+    const used = (vec4Count + smallVarCount) * 16;
+    vtu.doCreateComputePipelineTest(t, isAsync, used <= limit, descriptor);
   });
 
 g.test('limits,invocations_per_workgroup')
