@@ -259,8 +259,8 @@ class DescriptorToHolderMap {
     for (const holder of holders) {
       assert(holder.state === 'free', 'Device was in use when destroying all devices');
       holder.device.destroy();
-      await holder.device.lost;
     }
+    await Promise.all(holders.map(holder => holder.device.lost));
   }
 
   /** Destroy all the devices and clear the map. This destroys devices even if they're in use. */
