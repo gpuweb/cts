@@ -482,6 +482,7 @@ g.test('method_replacement')
     for (const method of methods) {
       const ctorPrototype = obj.constructor.prototype;
       const origFunc = ctorPrototype[method];
+      const hasOwn = Object.prototype.hasOwnProperty.call(ctorPrototype, method);
 
       t.expect(typeof origFunc === 'function', `${type}.prototype.${method} is a function`);
 
@@ -502,7 +503,11 @@ g.test('method_replacement')
           `replacing method: '${method}' on ${type} returns test value`
         );
       } finally {
-        (ctorPrototype as unknown as Record<string, unknown>)[method] = origFunc;
+        if (hasOwn) {
+          (ctorPrototype as unknown as Record<string, unknown>)[method] = origFunc;
+        } else {
+          delete (ctorPrototype as unknown as Record<string, unknown>)[method];
+        }
       }
 
       // Check the function the prototype and the one on the object are the same after restoring.
