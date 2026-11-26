@@ -405,13 +405,35 @@ g.test('compute,zero_init')
     if (t.params.loop !== 'none') {
       switch (t.params.loop) {
         case 'loop':
-          body = `var idx = 0;\nloop {\nif idx > 0 {\n${body}\n}\ncontinuing {\nidx++;\nbreak if idx > 1;\n}\n}\n`;
+          body = `
+var idx = 0;
+loop {
+  if idx > 0 {
+    ${body}
+  }
+  continuing {
+    idx++;
+    break if idx > 1;
+  }
+}`;
           break;
         case 'for':
-          body = `for (var idx = 0; idx < 4; idx++) {\nif idx == 2 {\n${body}\n}\n}\n`;
+          body = `
+for (var idx = 0; idx < 4; idx++) {
+  if idx == 2 {
+    ${body}
+  }
+}`;
           break;
         case 'while':
-          body = `var idx = 0;\nwhile idx < 3 {\nif idx == 1 {\n${body}\n}\n}\n`;
+          body = `
+var idx = 0;
+while idx < 3 {
+  if idx == 1 {
+    ${body}
+  }
+  idx++;
+}`;
           break;
       }
     }
