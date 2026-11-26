@@ -77,6 +77,8 @@ g.test('compute,zero_init')
         }
       })
       .beginSubcases()
+      .combine('loop', ['none', 'loop', 'for', 'while'] as const)
+      .filter(t => { return t.loop === 'none' || t.addressSpace === 'function'; })
       // Fewer subcases: Only 0 and 2. If double-nested containers work, single-nested should too.
       .combine('_containerDepth', [0, 2])
       .expandWithParams(function* (p) {
@@ -397,12 +399,26 @@ g.test('compute,zero_init')
       }
     })('testVar', t.params._type);
 
+    let body = `${functionScope}\n${checkZeroCode}`;
+    if (t.params.loop !== 'none') {
+      switch (t.params.loop) {
+        case 'loop':
+          body = `var idx = 0;\nloop {\nif idx > 0 {\n${body}\n}\ncontinuing {\nidx++;\nbreak if idx > 1;\n}\n}\n`;
+          break;
+        case 'for':
+          body = `for (var idx = 0; idx < 4; idx++) {\nif idx == 2 {\n${body}\n}\n}\n`;
+          break;
+        case 'while':
+          body = `var idx = 0;\nwhile idx < 3 {\nif idx == 1 {\n${body}\n}\n}\n`;
+          break;
+      }
+    }
+
     const wgsl = `
       ${moduleScope}
       @compute @workgroup_size(${t.params.workgroupSize})
       fn main() {
-        ${functionScope}
-        ${checkZeroCode}
+        ${body}
         _ = zero;
       }
     `;
