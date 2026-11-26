@@ -78,7 +78,9 @@ g.test('compute,zero_init')
       })
       .beginSubcases()
       .combine('loop', ['none', 'loop', 'for', 'while'] as const)
-      .filter(t => { return t.loop === 'none' || t.addressSpace === 'function'; })
+      .filter(t => {
+        return t.loop === 'none' || t.addressSpace === 'function';
+      })
       // Fewer subcases: Only 0 and 2. If double-nested containers work, single-nested should too.
       .combine('_containerDepth', [0, 2])
       .expandWithParams(function* (p) {
