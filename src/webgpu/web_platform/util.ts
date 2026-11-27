@@ -1,4 +1,4 @@
-import { Fixture, SkipTestCase } from '../../common/framework/fixture.js';
+import { Fixture, SkipTestCase, SubcaseBatchState } from '../../common/framework/fixture.js';
 import { getResourcePath } from '../../common/framework/resources.js';
 import { keysOf } from '../../common/util/data_tables.js';
 import { timeout } from '../../common/util/timeout.js';
@@ -512,7 +512,10 @@ export async function getVideoFrameFromVideoElement(
  * @param videoName: Required video name
  *
  */
-export function getVideoElement(t: GPUTest, videoName: VideoName): HTMLVideoElement {
+export function getVideoElement(
+  t: Fixture<SubcaseBatchState>,
+  videoName: VideoName
+): HTMLVideoElement {
   if (typeof HTMLVideoElement === 'undefined') {
     t.skip('HTMLVideoElement not available');
   }
